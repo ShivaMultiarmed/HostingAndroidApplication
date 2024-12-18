@@ -51,125 +51,127 @@ fun VideoScreen(
     onRate: (Boolean) -> Unit,
     onSubscribe: (Boolean) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9)
-                .background(MaterialTheme.colorScheme.primary)
-        ) {
-
-        }
+    if (state.extendedVideoInfo != null) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.onBackground)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 10.dp,
-                        topEnd = 10.dp
-                    )
-                )
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(12.dp)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .aspectRatio(16f / 9)
+                    .background(MaterialTheme.colorScheme.onBackground)
             ) {
-                Text(
-                    text = state.extendedVideoInfo?.videoInfo?.title!!,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 20.sp,
-                    maxLines = 2,
-                    lineHeight = 22.sp
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(vertical = 7.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    text = state.extendedVideoInfo?.videoInfo?.views.toString() + " просмотров",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = state.extendedVideoInfo?.videoInfo?.dateTime!!.toPresentation(),
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 16.sp
-                )
-                Text(
-                    text = "Ещё",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                //Image()
-                Text(
-                    text = "Канал №" + state.extendedVideoInfo?.videoInfo?.channelId.toString(),
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = "150 тыс.",
-                    fontSize = 13.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Button(
-                    contentPadding = PaddingValues(4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier.height(30.dp),
-                    onClick = {
 
-                    },
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.onBackground)
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 10.dp,
+                            topEnd = 10.dp
+                        )
+                    )
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(
-                        text = "Подписаться",
-                        fontSize = 10.sp
+                        text = state.extendedVideoInfo?.videoInfo?.title!!,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 20.sp,
+                        maxLines = 2,
+                        lineHeight = 22.sp
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(vertical = 7.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = state.extendedVideoInfo?.videoInfo?.views.toString() + " просмотров",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = state.extendedVideoInfo?.videoInfo?.dateTime!!.toPresentation(),
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = 16.sp
+                    )
+                    Text(
+                        text = "Ещё",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    //Image()
+                    Text(
+                        text = "Канал №" + state.extendedVideoInfo?.videoInfo?.channelId.toString(),
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "150 тыс.",
+                        fontSize = 13.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(
+                        contentPadding = PaddingValues(4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier.height(30.dp),
+                        onClick = {
+
+                        },
+                    ) {
+                        Text(
+                            text = "Подписаться",
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    VideoButton(
+                        icon = if (state.extendedVideoInfo?.liking == true) Icons.Rounded.ThumbUp
+                        else Icons.Outlined.ThumbUp,
+                        text = state.extendedVideoInfo?.videoInfo?.likes.toString(),
+                        onClick = {
+                            onRate(true)
+                        }
+                    )
+                    VideoButton(
+                        icon = if (state.extendedVideoInfo?.liking == false) Icons.Rounded.ThumbDown
+                        else Icons.Outlined.ThumbDown,
+                        text = state.extendedVideoInfo?.videoInfo?.dislikes.toString(),
+                        onClick = {
+                            onRate(true)
+                        }
                     )
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                VideoButton(
-                    icon = if (state.extendedVideoInfo?.liking == true) Icons.Rounded.ThumbUp
-                    else Icons.Outlined.ThumbUp,
-                    text = state.extendedVideoInfo?.videoInfo?.likes.toString(),
-                    onClick = {
-                        onRate(true)
-                    }
-                )
-                VideoButton(
-                    icon = if (state.extendedVideoInfo?.liking == false) Icons.Rounded.ThumbDown
-                    else Icons.Outlined.ThumbDown,
-                    text = state.extendedVideoInfo?.videoInfo?.dislikes.toString(),
-                    onClick = {
-                        onRate(true)
-                    }
-                )
-            }
-        }
 
+        }
     }
 }
 
@@ -224,7 +226,7 @@ fun VideoButton(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
     ) {
-        Row (
+        Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -253,8 +255,7 @@ fun LocalDateTime.toPresentation(): String {
             in 2..4 -> "$diff часа назад"
             else -> "$diff часов назад"
         }
-    }
-    else if (now.minusDays(30) < this) {
+    } else if (now.minusDays(30) < this) {
         val diff = Duration.between(this, now).toDays().toInt()
 
         when (diff % 10) {
@@ -262,7 +263,7 @@ fun LocalDateTime.toPresentation(): String {
             in 2..4 -> "$diff дня назад"
             else -> "$diff дней назад"
         }
-    } else if (now.minusMonths(12) < this){
+    } else if (now.minusMonths(12) < this) {
         val diff = Duration.between(this, now).toDays().div(30).toInt()
         when (diff % 10) {
             1 -> "$diff месяц назад"

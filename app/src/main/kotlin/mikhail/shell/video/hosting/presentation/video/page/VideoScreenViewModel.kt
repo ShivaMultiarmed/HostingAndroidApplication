@@ -23,6 +23,10 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
 
+    init {
+        loadVideo()
+    }
+
     fun loadVideo() {
         _state.value = VideoScreenState()
         viewModelScope.launch {

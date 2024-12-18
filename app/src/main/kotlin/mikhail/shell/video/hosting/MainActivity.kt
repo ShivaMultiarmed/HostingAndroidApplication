@@ -24,19 +24,18 @@ class MainActivity : ComponentActivity() {
                     factory.create(userId, videoId)
                 }
                 val state by videoScreenViewModel.state.collectAsState()
-//                VideoScreen(
-//                    state = state,
-//                    {
-//
-//                    },
-//                    {
-//
-//                    },
-//                    {
-//
-//                    }
-//                )
-                VideoScreenPreview()
+                VideoScreen(
+                    state = state,
+                    {
+                        videoScreenViewModel.loadVideo()
+                    },
+                    {
+                        videoScreenViewModel.rate(it)
+                    },
+                    {
+
+                    }
+                )
             }
         }
     }
