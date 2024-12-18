@@ -17,5 +17,5 @@ interface VideoRepository {
         videoId: Long,
         userId: Long,
         liking: Boolean
-    ) : Result<Boolean?, VideoError>
+    ) : Result<ExtendedVideoInfo, VideoError>
 }

@@ -22,5 +22,5 @@ interface VideoApi {
         @Path("videoId") videoId: Long,
         @Query("userId") userId: Long,
         @Query("liking") liking: Boolean
-    ) : Boolean?
+    ) : ExtendedVideoInfo
 }

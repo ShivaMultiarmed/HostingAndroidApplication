@@ -6,6 +6,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
+import okio.EOFException
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -47,7 +48,7 @@ class VideoRepositoryWithApi @Inject constructor(
         videoId: Long,
         userId: Long,
         liking: Boolean
-    ): Result<Boolean?, VideoError> {
+    ): Result<ExtendedVideoInfo, VideoError> {
         return try {
             Result.Success(videoApi.rateVideo(videoId, userId, liking))
         } catch (e: HttpException) {

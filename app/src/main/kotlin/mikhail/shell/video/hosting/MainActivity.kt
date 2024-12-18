@@ -26,13 +26,13 @@ class MainActivity : ComponentActivity() {
                 val state by videoScreenViewModel.state.collectAsState()
                 VideoScreen(
                     state = state,
-                    {
+                    onRefresh = {
                         videoScreenViewModel.loadVideo()
                     },
-                    {
+                    onRate = {
                         videoScreenViewModel.rate(it)
                     },
-                    {
+                    onSubscribe = {
 
                     }
                 )

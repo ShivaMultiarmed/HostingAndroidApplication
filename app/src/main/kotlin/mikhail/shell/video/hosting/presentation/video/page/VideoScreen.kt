@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.presentation.video.page
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.rounded.Refresh
@@ -37,8 +43,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastCbrt
 import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
 import mikhail.shell.video.hosting.domain.models.VideoInfo
+import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import java.time.Duration
 import java.time.LocalDateTime
@@ -95,7 +104,8 @@ fun VideoScreen(
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(vertical = 7.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = state.extendedVideoInfo?.videoInfo?.views.toString() + " просмотров",
@@ -137,14 +147,14 @@ fun VideoScreen(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        modifier = Modifier.height(30.dp),
+                        modifier = Modifier.height(38.dp),
                         onClick = {
 
                         },
                     ) {
                         Text(
                             text = "Подписаться",
-                            fontSize = 10.sp
+                            fontSize = 13.sp
                         )
                     }
                 }
@@ -152,26 +162,90 @@ fun VideoScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    val likeVector =
+                        when(state.extendedVideoInfo.liking){
+                            true -> Icons.Rounded.ThumbUp
+                            false, null -> Icons.Outlined.ThumbUp
+                        }
+
                     VideoButton(
-                        icon = if (state.extendedVideoInfo?.liking == true) Icons.Rounded.ThumbUp
-                        else Icons.Outlined.ThumbUp,
-                        text = state.extendedVideoInfo?.videoInfo?.likes.toString(),
+                        icon = likeVector,
+                        text = state.extendedVideoInfo.videoInfo.likes.toString(),
                         onClick = {
                             onRate(true)
                         }
                     )
+                    val dislikeVector =
+                        when(state.extendedVideoInfo.liking) {
+                            false -> Icons.Rounded.ThumbDown
+                            true, null -> Icons.Outlined.ThumbDown
+                        }
                     VideoButton(
-                        icon = if (state.extendedVideoInfo?.liking == false) Icons.Rounded.ThumbDown
-                        else Icons.Outlined.ThumbDown,
-                        text = state.extendedVideoInfo?.videoInfo?.dislikes.toString(),
+                        icon = dislikeVector,
+                        text = state.extendedVideoInfo.videoInfo.dislikes.toString(),
                         onClick = {
-                            onRate(true)
+                            onRate(false)
                         }
                     )
+                    VideoButton(
+                        icon = Icons.Outlined.Repeat,
+                        text = "Поделиться",
+                        onClick = {
+
+                        }
+                    )
+                    VideoButton(
+                        icon = Icons.Outlined.Download,
+                        text = "Скачать",
+                        onClick = {
+
+                        }
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = "Комментарии"
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(top = 10.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                .padding(vertical = 3.dp, horizontal = 10.dp)
+                        ) {
+                            Text(
+                                text = "Введите комментарий",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
         }
+    } else if (state.isLoading) {
+        LoadingComponent(
+            modifier = Modifier.fillMaxSize()
+        )
+    } else {
+        ErrorComponent(
+            modifier = Modifier.fillMaxSize(),
+            onRetry = {
+                onRefresh()
+            }
+        )
     }
 }
 
@@ -216,17 +290,18 @@ fun VideoButton(
     text: String,
     onClick: () -> Unit
 ) {
-
     Button(
-        contentPadding = PaddingValues(10.dp),
+        contentPadding = PaddingValues(0.dp),
         onClick = onClick,
-        modifier = Modifier,
+        modifier = Modifier.height(28.dp),
         colors = ButtonDefaults.buttonColors(
             contentColor = MaterialTheme.colorScheme.onSurface,
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
+        shape = CircleShape
     ) {
         Row(
+            modifier = Modifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -248,7 +323,14 @@ fun LocalDateTime.toPresentation(): String {
     val now = LocalDateTime.now()
     return if (now.minusMinutes(10) < this)
         "Только что"
-    else if (now.minusHours(24) < this) {
+    else if (now.minusMinutes(60) < this) {
+        val diff = Duration.between(this, now).toMinutes().toInt()
+        when (diff % 10) {
+            1 -> "$diff минуту назад назад"
+            in 2..4 -> "$diff минуты назад"
+            else -> "$diff минут назад"
+        }
+    } else if (now.minusHours(24) < this) {
         val diff = Duration.between(this, now).toHours().toInt()
         when (diff % 10) {
             1 -> "$diff час назад"
