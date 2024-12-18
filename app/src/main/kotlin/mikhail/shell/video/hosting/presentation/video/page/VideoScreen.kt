@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.page
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -44,6 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCbrt
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.ui.PlayerView
 import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -56,6 +59,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun VideoScreen(
     state: VideoScreenState,
+    exoPlayerConnection: (Context) -> PlayerView,
     onRefresh: () -> Unit,
     onRate: (Boolean) -> Unit,
     onSubscribe: (Boolean) -> Unit
@@ -72,7 +76,9 @@ fun VideoScreen(
                     .aspectRatio(16f / 9)
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
-
+                AndroidView(
+                    factory = exoPlayerConnection
+                )
             }
             Column(
                 modifier = Modifier
@@ -278,6 +284,9 @@ fun VideoScreenPreview() {
                 liking = true
             )
         ),
+        exoPlayerConnection = { context ->
+            PlayerView(context)
+        },
         onRefresh = {},
         onRate = {},
         onSubscribe = {}
