@@ -49,7 +49,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                     error = null
                 )
                 player.prepare()
-                val url = "http://192.168.14.132:9999/api/v1/videos/$videoId/play" // TODO
+                val url = "http://192.168.1.107:9999/api/v1/videos/$videoId/play"
                 val uri = Uri.parse(url)
                 player.setMediaItem(MediaItem.fromUri(uri))
                 changePlaybackState()

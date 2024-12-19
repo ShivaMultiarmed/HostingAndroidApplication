@@ -73,7 +73,7 @@ fun VideoScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9)
+                    //.aspectRatio(16f / 9)
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
                 AndroidView(
