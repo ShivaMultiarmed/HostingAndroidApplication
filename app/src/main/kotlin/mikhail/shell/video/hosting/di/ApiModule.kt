@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.data.LocalDateTimeDeserializer
+import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -49,4 +50,10 @@ object ApiModule {
     fun provideVideoApi(
         retrofit: Retrofit
     ) = retrofit.create<VideoApi>()
+
+    @Provides
+    @Singleton
+    fun provideChannelApi(
+        retrofit: Retrofit
+    ) = retrofit.create<ChannelApi>()
 }
