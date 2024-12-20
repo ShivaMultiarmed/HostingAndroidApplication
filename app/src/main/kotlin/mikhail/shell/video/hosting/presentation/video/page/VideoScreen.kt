@@ -2,21 +2,17 @@ package mikhail.shell.video.hosting.presentation.video.page
 
 import android.content.Context
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,37 +20,34 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastCbrt
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.ui.PlayerView
 import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import mikhail.shell.video.hosting.presentation.utils.toCorrectSuffix
+import mikhail.shell.video.hosting.presentation.utils.toCorrectWordForm
+import mikhail.shell.video.hosting.presentation.utils.toRoundString
+import mikhail.shell.video.hosting.presentation.utils.toSubscribers
+import mikhail.shell.video.hosting.presentation.utils.toViews
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun VideoScreen(
@@ -64,7 +57,11 @@ fun VideoScreen(
     onRate: (Boolean) -> Unit,
     onSubscribe: (Boolean) -> Unit
 ) {
-    if (state.extendedVideoInfo != null) {
+    if (state.videoDetails != null) {
+        val video = state.videoDetails.video.videoInfo
+        val channel = state.videoDetails.channel.info
+        val liking = state.videoDetails.video.liking
+        val subscription = state.videoDetails.channel.subscription
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,7 +70,6 @@ fun VideoScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    //.aspectRatio(16f / 9)
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
                 AndroidView(
@@ -98,7 +94,7 @@ fun VideoScreen(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = state.extendedVideoInfo?.videoInfo?.title!!,
+                        text = video.title,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 20.sp,
                         maxLines = 2,
@@ -114,12 +110,12 @@ fun VideoScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = state.extendedVideoInfo?.videoInfo?.views.toString() + " просмотров",
+                        text = video.views.toViews(),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = state.extendedVideoInfo?.videoInfo?.dateTime!!.toPresentation(),
+                        text = video.dateTime.toPresentation(),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface,
                         lineHeight = 16.sp
@@ -139,13 +135,15 @@ fun VideoScreen(
                 ) {
                     //Image()
                     Text(
-                        text = "Канал №" + state.extendedVideoInfo?.videoInfo?.channelId.toString(),
+                        text = channel.title,
+                        modifier = Modifier
+                            .weight(1f),
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "150 тыс.",
+                        text = channel.subscribers.toSubscribers(),
                         fontSize = 13.sp,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.padding(horizontal = 5.dp)
                     )
                     Button(
                         contentPadding = PaddingValues(4.dp),
@@ -169,26 +167,26 @@ fun VideoScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     val likeVector =
-                        when(state.extendedVideoInfo.liking){
+                        when(state.videoDetails.video.liking){
                             true -> Icons.Rounded.ThumbUp
                             false, null -> Icons.Outlined.ThumbUp
                         }
 
                     VideoButton(
                         icon = likeVector,
-                        text = state.extendedVideoInfo.videoInfo.likes.toString(),
+                        text = video.likes.toString(),
                         onClick = {
                             onRate(true)
                         }
                     )
                     val dislikeVector =
-                        when(state.extendedVideoInfo.liking) {
+                        when(liking) {
                             false -> Icons.Rounded.ThumbDown
                             true, null -> Icons.Outlined.ThumbDown
                         }
                     VideoButton(
                         icon = dislikeVector,
-                        text = state.extendedVideoInfo.videoInfo.dislikes.toString(),
+                        text = video.dislikes.toString(),
                         onClick = {
                             onRate(false)
                         }
@@ -255,43 +253,46 @@ fun VideoScreen(
     }
 }
 
-@Composable
-@Preview(
-    //name = "Dark Mode Preview",
-    //uiMode = Configuration.UI_MODE_NIGHT_YES,
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    showBackground = true
-)
-fun VideoScreenPreview() {
-    VideoScreen(
-        state = VideoScreenState(
-            ExtendedVideoInfo(
-                videoInfo = VideoInfo(
-                    1,
-                    1,
-                    "Какой-то заголовок видео",
-                    LocalDateTime.of(
-                        2024,
-                        12,
-                        9,
-                        10,
-                        9
-                    ),
-                    views = 100,
-                    likes = 23,
-                    dislikes = 14
-                ),
-                liking = true
-            )
-        ),
-        exoPlayerConnection = { context ->
-            PlayerView(context)
-        },
-        onRefresh = {},
-        onRate = {},
-        onSubscribe = {}
-    )
-}
+
+
+//@Composable
+//@Preview(
+//    //name = "Dark Mode Preview",
+//    //uiMode = Configuration.UI_MODE_NIGHT_YES,
+//    uiMode = Configuration.UI_MODE_NIGHT_NO,
+//    showBackground = true
+//)
+//fun VideoScreenPreview() {
+//    VideoScreen(
+//        state = VideoScreenState(
+//
+//            ExtendedVideoInfo(
+//                videoInfo = VideoInfo(
+//                    1,
+//                    1,
+//                    "Какой-то заголовок видео",
+//                    LocalDateTime.of(
+//                        2024,
+//                        12,
+//                        9,
+//                        10,
+//                        9
+//                    ),
+//                    views = 100,
+//                    likes = 23,
+//                    dislikes = 14
+//                ),
+//                liking = true
+//            )
+//        ),
+//        exoPlayerConnection = { context ->
+//            PlayerView(context)
+//        },
+//        onRefresh = {},
+//        onRate = {},
+//        onSubscribe = {}
+//    )
+//}
 
 @Composable
 fun VideoButton(

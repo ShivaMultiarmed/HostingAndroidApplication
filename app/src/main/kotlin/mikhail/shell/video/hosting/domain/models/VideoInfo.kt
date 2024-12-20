@@ -11,3 +11,8 @@ data class VideoInfo(
     val likes: Long,
     val dislikes: Long
 )
+
+data class ExtendedVideoInfo(
+    val videoInfo: VideoInfo,
+    val liking: Boolean?
+)

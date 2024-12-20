@@ -13,18 +13,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.usecases.videos.GetExtendedVideoInfo
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
-import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
-import mikhail.shell.video.hosting.presentation.exoplayer.VideoItem
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("player") val player: Player,
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
-    private val _getExtendedVideoInfo: GetExtendedVideoInfo,
+    private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo
 ): ViewModel() {
 
@@ -38,12 +36,12 @@ class VideoScreenViewModel @AssistedInject constructor(
     fun loadVideo() {
         _state.value = VideoScreenState()
         viewModelScope.launch {
-            _getExtendedVideoInfo(
+            _getVideoDetails(
                 videoId,
                 userId
             ).onSuccess {
                 _state.value = VideoScreenState(
-                    extendedVideoInfo = it,
+                    videoDetails = it,
                     isLoading = false,
                     playbackState = PLAYING,
                     error = null
@@ -55,7 +53,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 changePlaybackState()
             }.onFailure {
                 _state.value = VideoScreenState(
-                    extendedVideoInfo = _state.value.extendedVideoInfo,
+                    videoDetails = _state.value.videoDetails,
                     isLoading = false,
                     playbackState = PAUSED,
                     error = it
@@ -70,10 +68,12 @@ class VideoScreenViewModel @AssistedInject constructor(
                 videoId,
                 userId,
                 liking
-            ).onSuccess { newExtendedVideoInfo ->
+            ).onSuccess { newExtVidInfo ->
                 _state.update {
                     it.copy(
-                        extendedVideoInfo = newExtendedVideoInfo
+                        videoDetails = it.videoDetails?.copy(
+                            video = newExtVidInfo
+                        )
                     )
                 }
             }.onFailure {

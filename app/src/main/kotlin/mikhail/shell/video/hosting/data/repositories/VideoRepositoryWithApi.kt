@@ -4,9 +4,9 @@ import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
-import okio.EOFException
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -17,7 +17,7 @@ class VideoRepositoryWithApi @Inject constructor(
         return try {
             Result.Success(videoApi.fetchVideoInfo(videoId))
         } catch (e: HttpException) {
-            val error = when(e.code()) {
+            val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
                 else -> VideoError.UNEXPECTED_ERROR
             }
@@ -27,14 +27,14 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun fetchExtendedVideoInfo(
+    override suspend fun fetchVideoDetails(
         videoId: Long,
         userId: Long
-    ): Result<ExtendedVideoInfo, VideoError> {
+    ): Result<VideoDetails, VideoError> {
         return try {
             Result.Success(videoApi.fetchExtendedVideoInfo(videoId, userId))
         } catch (e: HttpException) {
-            val error = when(e.code()) {
+            val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
                 else -> VideoError.UNEXPECTED_ERROR
             }
@@ -52,8 +52,32 @@ class VideoRepositoryWithApi @Inject constructor(
         return try {
             Result.Success(videoApi.rateVideo(videoId, userId, liking))
         } catch (e: HttpException) {
-            val error = when(e.code()) {
+            val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
+                else -> VideoError.UNEXPECTED_ERROR
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Result.Failure(VideoError.UNEXPECTED_ERROR)
+        }
+    }
+    override suspend fun fetchVideoDetailsList(
+        channelId: Long,
+        userId: Long,
+        partNumber: Long,
+        partSize: Int
+    ): Result<List<VideoInfo>, VideoError> {
+        return try {
+            Result.Success(
+                videoApi.fetchVideoDetailsList(
+                    channelId,
+                    userId,
+                    partNumber,
+                    partSize
+                )
+            )
+        } catch (e: HttpException) {
+            val error = when (e.code()) {
                 else -> VideoError.UNEXPECTED_ERROR
             }
             Result.Failure(error)

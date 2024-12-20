@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,26 +32,33 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.ChannelInfo
 import mikhail.shell.video.hosting.domain.models.ExtendedChannelInfo
+import mikhail.shell.video.hosting.domain.models.VideoDetails
+import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.toViews
+import mikhail.shell.video.hosting.presentation.video.page.toPresentation
 
 @Composable
 fun ChannelScreen(
     state: ChannelScreenState,
     onRefresh: () -> Unit,
-    onSubscription: () -> Unit
+    onSubscription: () -> Unit,
+    onVideoClick: (Long) -> Unit
 ) {
     if (state.info != null) {
         val scrollState = rememberScrollState()
         val channel = state.info.info
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(scrollState)
                 .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
         ) {
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .height(120.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer)
@@ -60,8 +70,9 @@ fun ChannelScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Row (
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -73,8 +84,9 @@ fun ChannelScreen(
                         .size(80.dp)
                         .clip(CircleShape)
                 )
-                Column (
-                    modifier = Modifier.weight(1f)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
                         .padding(start = 10.dp),
                     verticalArrangement = Arrangement.Top
                 ) {
@@ -102,8 +114,20 @@ fun ChannelScreen(
                     fontSize = 14.sp
                 )
             }
+            LazyColumn (
+                modifier = Modifier.weight(1f)
+            ) {
+                items(state.videos) {
+                    VideoSnippet(
+                        video = it,
+                        onClick = {
+                            onVideoClick(it)
+                        }
+                    )
+                }
+            }
         }
-    }else if (state.isLoading) {
+    } else if (state.isLoading) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()
         )
@@ -132,6 +156,41 @@ fun ChannelScreenPreview() {
             error = null
         ),
         onRefresh = {},
-        onSubscription = {}
+        onSubscription = {},
+        onVideoClick = {}
     )
+}
+
+
+@Composable
+fun VideoSnippet(
+    modifier: Modifier = Modifier,
+    video: VideoInfo,
+    onClick: (Long) -> Unit
+) {
+    Row(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        AsyncImage(
+            model = "http://192.168.1.107:9999/api/v1/videos/${video.videoId}/snippet",
+            contentDescription = video.title,
+            modifier = Modifier.fillMaxWidth(0.4f)
+                .aspectRatio(16f / 9)
+                .clip(RoundedCornerShape(6.dp))
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+        )
+        Column (
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = video.title,
+                maxLines = 3,
+                fontSize = 16.sp
+            )
+            Text(
+                text = video.views.toViews() + " - " + video.dateTime.toPresentation()
+            )
+        }
+    }
+
 }
