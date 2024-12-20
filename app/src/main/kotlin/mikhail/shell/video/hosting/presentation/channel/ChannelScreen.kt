@@ -39,6 +39,8 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.page.toPresentation
 
+val BASE = "http://192.168.1.107:9999/api/v1"
+
 @Composable
 fun ChannelScreen(
     state: ChannelScreenState,
@@ -46,15 +48,16 @@ fun ChannelScreen(
     onSubscription: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
+
     if (state.info != null) {
         val scrollState = rememberScrollState()
         val channel = state.info.info
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
+                .verticalScroll(scrollState)
         ) {
             Box(
                 modifier = Modifier
@@ -64,7 +67,7 @@ fun ChannelScreen(
                     .background(MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 AsyncImage(
-                    model = "http://192.168.1.107:9999/api/v1/channels/${channel.channelId}/cover",
+                    model = "$BASE/channels/${channel.channelId}/cover",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -115,7 +118,9 @@ fun ChannelScreen(
                 )
             }
             LazyColumn (
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .padding(vertical = 10.dp)
+                    .weight(1f)
             ) {
                 items(state.videos) {
                     VideoSnippet(
@@ -172,15 +177,18 @@ fun VideoSnippet(
         modifier = modifier.fillMaxWidth()
     ) {
         AsyncImage(
-            model = "http://192.168.1.107:9999/api/v1/videos/${video.videoId}/snippet",
+            model = "${BASE}/videos/${video.videoId}/cover",
             contentDescription = video.title,
-            modifier = Modifier.fillMaxWidth(0.4f)
+            modifier = Modifier.fillMaxWidth(0.5f)
                 .aspectRatio(16f / 9)
                 .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+            contentScale = ContentScale.Crop
         )
         Column (
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .weight(1f)
         ) {
             Text(
                 text = video.title,
