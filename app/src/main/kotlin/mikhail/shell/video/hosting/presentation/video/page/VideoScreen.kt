@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.page
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,12 +32,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.ui.PlayerView
+import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.LikingState.*
+import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
@@ -50,7 +54,8 @@ fun VideoScreen(
     exoPlayerConnection: (Context) -> PlayerView,
     onRefresh: () -> Unit,
     onRate: (LikingState) -> Unit,
-    onSubscribe: (Boolean) -> Unit
+    onSubscribe: (Boolean) -> Unit,
+    onChannelLinkClick: (Long) -> Unit
 ) {
     if (state.videoDetails != null) {
         val video = state.videoDetails.video
@@ -127,13 +132,27 @@ fun VideoScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    //Image()
-                    Text(
-                        text = channel.title,
+                    Row(
                         modifier = Modifier
-                            .weight(1f),
-                        fontSize = 16.sp
-                    )
+                            .clickable { onChannelLinkClick(channel.channelId) }
+                            .weight(1f)
+                    ) {
+                        AsyncImage(
+                            model = channel.avatarUrl,
+                            contentDescription = "Ссылка на канал",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+                        Text(
+                            text = channel.title,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp),
+                            fontSize = 16.sp
+                        )
+                    }
                     Text(
                         text = channel.subscribers.toSubscribers(),
                         fontSize = 13.sp,
@@ -150,8 +169,11 @@ fun VideoScreen(
 
                         },
                     ) {
+                        val text = if (channel.subscription == SubscriptionState.SUBSCRIBED)
+                            "Отписаться"
+                            else "Подписаться"
                         Text(
-                            text = "Подписаться",
+                            text = text,
                             fontSize = 13.sp
                         )
                     }

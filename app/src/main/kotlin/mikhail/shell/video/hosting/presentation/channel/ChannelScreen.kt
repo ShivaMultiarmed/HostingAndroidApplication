@@ -43,10 +43,9 @@ fun ChannelScreen(
     onSubscription: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-
-    if (state.info != null) {
+    if (state.channelInfo != null) {
         val scrollState = rememberScrollState()
-        val channel = state.info
+        val channel = state.channelInfo
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,7 +75,7 @@ fun ChannelScreen(
             ) {
                 AsyncImage(
                     model = channel.avatarUrl,
-                    contentDescription = "Ссылка на канал",
+                    contentDescription = "Аватар канала",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(80.dp)

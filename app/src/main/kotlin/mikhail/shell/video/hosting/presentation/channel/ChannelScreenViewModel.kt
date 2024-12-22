@@ -41,7 +41,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
             ).onSuccess { chInfo ->
                 _state.update {
                     it.copy(
-                        info = chInfo,
+                        channelInfo = chInfo,
                         isLoading = false,
                         error = null
                     )

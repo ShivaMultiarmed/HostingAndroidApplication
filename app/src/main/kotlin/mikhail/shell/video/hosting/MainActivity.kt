@@ -111,6 +111,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onSubscribe = {
 
+                                },
+                                onChannelLinkClick = {
+                                    navController.navigate(Route.Channel(it))
                                 }
                             )
                         }
