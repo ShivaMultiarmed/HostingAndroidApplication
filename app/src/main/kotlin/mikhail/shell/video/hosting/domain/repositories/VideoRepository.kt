@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
+import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
+import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
@@ -21,10 +23,10 @@ interface VideoRepository {
     suspend fun rateVideo(
         videoId: Long,
         userId: Long,
-        liking: Boolean
-    ) : Result<ExtendedVideoInfo, VideoError>
+        liking: LikingState
+    ) : Result<VideoInfo, VideoError>
 
-    suspend fun fetchVideoDetailsList(
+    suspend fun fetchChannelVideoList(
         channelId: Long,
         userId: Long,
         partNumber: Long,

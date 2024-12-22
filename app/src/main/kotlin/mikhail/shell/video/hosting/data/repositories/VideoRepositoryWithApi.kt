@@ -1,9 +1,11 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
-import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.data.dto.VideoDto
+import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
@@ -15,7 +17,7 @@ class VideoRepositoryWithApi @Inject constructor(
 ) : VideoRepository {
     override suspend fun fetchVideoInfo(videoId: Long): Result<VideoInfo, VideoError> {
         return try {
-            Result.Success(videoApi.fetchVideoInfo(videoId))
+            Result.Success(videoApi.fetchVideoDto(videoId).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
@@ -32,7 +34,7 @@ class VideoRepositoryWithApi @Inject constructor(
         userId: Long
     ): Result<VideoDetails, VideoError> {
         return try {
-            Result.Success(videoApi.fetchExtendedVideoInfo(videoId, userId))
+            Result.Success(videoApi.fetchVideoDetails(videoId, userId).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
@@ -47,10 +49,10 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun rateVideo(
         videoId: Long,
         userId: Long,
-        liking: Boolean
-    ): Result<ExtendedVideoInfo, VideoError> {
+        liking: LikingState
+    ): Result<VideoInfo, VideoError> {
         return try {
-            Result.Success(videoApi.rateVideo(videoId, userId, liking))
+            Result.Success(videoApi.rateVideo(videoId, userId, liking).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 404 -> VideoError.NOT_FOUND
@@ -61,7 +63,7 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Failure(VideoError.UNEXPECTED_ERROR)
         }
     }
-    override suspend fun fetchVideoDetailsList(
+    override suspend fun fetchChannelVideoList(
         channelId: Long,
         userId: Long,
         partNumber: Long,
@@ -74,7 +76,9 @@ class VideoRepositoryWithApi @Inject constructor(
                     userId,
                     partNumber,
                     partSize
-                )
+                ).map {
+                    it.toDomain()
+                }
             )
         } catch (e: HttpException) {
             val error = when (e.code()) {

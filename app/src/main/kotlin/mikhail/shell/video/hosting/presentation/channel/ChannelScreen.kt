@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.channel
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -26,20 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import mikhail.shell.video.hosting.domain.models.ChannelInfo
-import mikhail.shell.video.hosting.domain.models.ExtendedChannelInfo
-import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoInfo
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.page.toPresentation
 
-val BASE = "http://192.168.1.107:9999/api/v1"
 
 @Composable
 fun ChannelScreen(
@@ -51,7 +46,7 @@ fun ChannelScreen(
 
     if (state.info != null) {
         val scrollState = rememberScrollState()
-        val channel = state.info.info
+        val channel = state.info
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -67,7 +62,7 @@ fun ChannelScreen(
                     .background(MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 AsyncImage(
-                    model = "$BASE/channels/${channel.channelId}/cover",
+                    model = channel.coverUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -80,7 +75,7 @@ fun ChannelScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    model = "http://192.168.1.107:9999/api/v1/channels/${channel.channelId}/avatar",
+                    model = channel.avatarUrl,
                     contentDescription = "Ссылка на канал",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -146,25 +141,25 @@ fun ChannelScreen(
     }
 }
 
-@Composable
-@Preview
-fun ChannelScreenPreview() {
-    ChannelScreen(
-        state = ChannelScreenState(
-            info = ExtendedChannelInfo(
-                info = ChannelInfo(
-                    1, 1, "Some title", "sometitle", "Lorem ipsum is simply dummy text", 100
-                ),
-                subscription = true
-            ),
-            isLoading = false,
-            error = null
-        ),
-        onRefresh = {},
-        onSubscription = {},
-        onVideoClick = {}
-    )
-}
+//@Composable
+//@Preview
+//fun ChannelScreenPreview() {
+//    ChannelScreen(
+//        state = ChannelScreenState(
+//            info = ExtendedChannelInfo(
+//                info = ChannelInfo(
+//                    1, 1, "Some title", "sometitle", "Lorem ipsum is simply dummy text", 100
+//                ),
+//                subscription = true
+//            ),
+//            isLoading = false,
+//            error = null
+//        ),
+//        onRefresh = {},
+//        onSubscription = {},
+//        onVideoClick = {}
+//    )
+//}
 
 
 @Composable
@@ -175,9 +170,12 @@ fun VideoSnippet(
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
+            .clickable {
+                onClick(video.videoId)
+            }
     ) {
         AsyncImage(
-            model = "${BASE}/videos/${video.videoId}/cover",
+            model = video.coverUrl,
             contentDescription = video.title,
             modifier = Modifier.fillMaxWidth(0.5f)
                 .aspectRatio(16f / 9)

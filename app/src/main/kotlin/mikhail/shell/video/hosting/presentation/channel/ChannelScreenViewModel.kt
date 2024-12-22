@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.presentation.channel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -11,14 +10,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.usecases.channels.GetExtendedChannelInfo
+import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelInfo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
 
 @HiltViewModel(assistedFactory = ChannelScreenViewModel.Factory::class)
 class ChannelScreenViewModel @AssistedInject constructor(
     @Assisted("channelId") private val _channelId: Long,
     @Assisted("userId") private val _userId: Long,
-    private val _getExtendedChannelInfo: GetExtendedChannelInfo,
+    private val _getChannelInfo: GetChannelInfo,
     private val _getVideoList: GetVideoList
 ) : ViewModel() {
     private val _state = MutableStateFlow(ChannelScreenState())
@@ -36,7 +35,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
             )
         }
         viewModelScope.launch {
-            _getExtendedChannelInfo(
+            _getChannelInfo(
                 _channelId,
                 _userId
             ).onSuccess { chInfo ->

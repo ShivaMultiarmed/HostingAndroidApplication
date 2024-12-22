@@ -9,10 +9,8 @@ data class VideoInfo(
     val dateTime: LocalDateTime,
     val views: Long,
     val likes: Long,
-    val dislikes: Long
-)
-
-data class ExtendedVideoInfo(
-    val videoInfo: VideoInfo,
-    val liking: Boolean?
+    val dislikes: Long,
+    val liking: LikingState,
+    val sourceUrl: String,
+    val coverUrl: String
 )

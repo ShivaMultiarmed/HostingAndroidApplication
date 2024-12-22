@@ -15,6 +15,6 @@ class GetVideoList @Inject constructor(
         partNumber: Long,
         partSize: Int
     ): Result<List<VideoInfo>, VideoError> {
-        return repository.fetchVideoDetailsList(channelId, userId, partNumber, partSize)
+        return repository.fetchChannelVideoList(channelId, userId, partNumber, partSize)
     }
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
@@ -47,7 +48,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                     error = null
                 )
                 player.prepare()
-                val url = "http://192.168.1.107:9999/api/v1/videos/$videoId/play"
+                val url = it.video.sourceUrl
                 val uri = Uri.parse(url)
                 player.setMediaItem(MediaItem.fromUri(uri))
                 changePlaybackState()
@@ -62,17 +63,17 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun rate(liking: Boolean) {
+    fun rate(likingState: LikingState) {
         viewModelScope.launch {
             _rateVideo(
                 videoId,
                 userId,
-                liking
-            ).onSuccess { newExtVidInfo ->
-                _state.update {
-                    it.copy(
-                        videoDetails = it.videoDetails?.copy(
-                            video = newExtVidInfo
+                likingState
+            ).onSuccess { updatedVideoInfo ->
+                _state.update { screenState ->
+                    screenState.copy(
+                        videoDetails = screenState.videoDetails?.copy(
+                            video = updatedVideoInfo
                         )
                     )
                 }

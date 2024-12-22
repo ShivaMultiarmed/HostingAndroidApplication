@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.page
 
 import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,18 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.ui.PlayerView
-import mikhail.shell.video.hosting.domain.models.ExtendedVideoInfo
-import mikhail.shell.video.hosting.domain.models.VideoInfo
+import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.LikingState.*
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.toCorrectSuffix
-import mikhail.shell.video.hosting.presentation.utils.toCorrectWordForm
-import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import java.time.Duration
@@ -54,14 +49,12 @@ fun VideoScreen(
     state: VideoScreenState,
     exoPlayerConnection: (Context) -> PlayerView,
     onRefresh: () -> Unit,
-    onRate: (Boolean) -> Unit,
+    onRate: (LikingState) -> Unit,
     onSubscribe: (Boolean) -> Unit
 ) {
     if (state.videoDetails != null) {
-        val video = state.videoDetails.video.videoInfo
-        val channel = state.videoDetails.channel.info
-        val liking = state.videoDetails.video.liking
-        val subscription = state.videoDetails.channel.subscription
+        val video = state.videoDetails.video
+        val channel = state.videoDetails.channel
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,6 +66,7 @@ fun VideoScreen(
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
                 AndroidView(
+                    modifier = Modifier.fillMaxWidth(),
                     factory = exoPlayerConnection
                 )
             }
@@ -167,28 +161,34 @@ fun VideoScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     val likeVector =
-                        when(state.videoDetails.video.liking){
-                            true -> Icons.Rounded.ThumbUp
-                            false, null -> Icons.Outlined.ThumbUp
+                        when (video.liking) {
+                            LIKED -> Icons.Rounded.ThumbUp
+                            else -> Icons.Outlined.ThumbUp
                         }
 
                     VideoButton(
                         icon = likeVector,
                         text = video.likes.toString(),
                         onClick = {
-                            onRate(true)
+                            if (video.liking != LIKED)
+                                onRate(LIKED)
+                            else
+                                onRate(NONE)
                         }
                     )
                     val dislikeVector =
-                        when(liking) {
-                            false -> Icons.Rounded.ThumbDown
-                            true, null -> Icons.Outlined.ThumbDown
+                        when (video.liking) {
+                            DISLIKED -> Icons.Rounded.ThumbDown
+                            else -> Icons.Outlined.ThumbDown
                         }
                     VideoButton(
                         icon = dislikeVector,
                         text = video.dislikes.toString(),
                         onClick = {
-                            onRate(false)
+                            if (video.liking != DISLIKED)
+                                onRate(DISLIKED)
+                            else
+                                onRate(NONE)
                         }
                     )
                     VideoButton(
