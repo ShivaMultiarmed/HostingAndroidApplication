@@ -1,6 +1,8 @@
 package mikhail.shell.video.hosting.presentation.video.page
 
 import android.content.Context
+import android.util.Log
+import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +39,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -51,10 +56,10 @@ import java.time.LocalDateTime
 @Composable
 fun VideoScreen(
     state: VideoScreenState,
-    exoPlayerConnection: (Context) -> PlayerView,
     onRefresh: () -> Unit,
     onRate: (LikingState) -> Unit,
     onSubscribe: (Boolean) -> Unit,
+    player: Player,
     onChannelLinkClick: (Long) -> Unit
 ) {
     if (state.videoDetails != null) {
@@ -71,8 +76,18 @@ fun VideoScreen(
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
                 AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = exoPlayerConnection
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9),
+                    factory = {
+                        PlayerView(it).also {
+                            it.layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                            )
+                            it.player = player
+                        }
+                    }
                 )
             }
             Column(
@@ -171,7 +186,7 @@ fun VideoScreen(
                     ) {
                         val text = if (channel.subscription == SubscriptionState.SUBSCRIBED)
                             "Отписаться"
-                            else "Подписаться"
+                        else "Подписаться"
                         Text(
                             text = text,
                             fontSize = 13.sp
@@ -274,7 +289,6 @@ fun VideoScreen(
         )
     }
 }
-
 
 
 //@Composable

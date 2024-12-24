@@ -85,8 +85,8 @@ dependencies {
     implementation (libs.okhttp)
     implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    implementation("androidx.media3:media3-exoplayer:1.5.1")
-    implementation ("androidx.media3:media3-ui:1.5.1")
+    implementation("androidx.media3:media3-exoplayer:1.0.0-beta02")
+    implementation ("androidx.media3:media3-ui:1.0.0-beta02")
 
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")

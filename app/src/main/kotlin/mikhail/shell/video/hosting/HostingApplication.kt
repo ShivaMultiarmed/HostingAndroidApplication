@@ -6,15 +6,20 @@ import coil.ImageLoader
 import dagger.hilt.android.HiltAndroidApp
 import mikhail.shell.video.hosting.data.TokenInterceptor
 import mikhail.shell.video.hosting.di.ApiModule
+import okhttp3.OkHttpClient
+import javax.inject.Inject
 
 @HiltAndroidApp
 class HostingApplication: Application() {
+    @Inject
+    lateinit var httpClient: OkHttpClient
+    private val imageLoader: ImageLoader by lazy {
+        ImageLoader.Builder(this).okHttpClient(httpClient).build()
+    }
     override fun onCreate() {
         super.onCreate()
         Coil.setImageLoader(
-            ImageLoader.Builder(this).okHttpClient(
-                ApiModule.provideHttpClient(TokenInterceptor())
-            ).build()
+            imageLoader
         )
     }
 }

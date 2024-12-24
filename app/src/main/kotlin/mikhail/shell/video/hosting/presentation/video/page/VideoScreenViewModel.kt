@@ -5,6 +5,7 @@ import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted
@@ -44,16 +45,17 @@ class VideoScreenViewModel @AssistedInject constructor(
                 videoId,
                 userId
             ).onSuccess {
+                player.prepare()
                 _state.value = VideoScreenState(
                     videoDetails = it,
                     isLoading = false,
                     playbackState = PLAYING,
                     error = null
                 )
-                player.prepare()
                 val url = it.video.sourceUrl
                 val uri = Uri.parse(url)
-                player.setMediaItem(MediaItem.fromUri(uri))
+                val mediaItem = MediaItem.fromUri(uri)
+                player.setMediaItem(mediaItem)
                 changePlaybackState()
             }.onFailure {
                 _state.value = VideoScreenState(

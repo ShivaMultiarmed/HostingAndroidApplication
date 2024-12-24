@@ -61,7 +61,7 @@ fun SignInScreen(
                 Text(
                     text = text
                 )
-            } else {
+            } else if (state.authModel != null) {
                 Text(
                     text = "Вы успешно вошли"
                 )
