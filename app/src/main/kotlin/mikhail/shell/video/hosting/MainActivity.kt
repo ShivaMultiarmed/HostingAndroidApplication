@@ -42,8 +42,12 @@ import javax.inject.Inject
 @UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    //    @Inject
-//    lateinit var dsFactory: DefaultMediaSourceFactory
+
+    @Inject
+    lateinit var userDetailsProvider: UserDetailsProvider
+    @Inject
+    lateinit var dsFactory: DefaultMediaSourceFactory
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -87,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable<Route.Channel> {
                             val channelRouteInfo = it.toRoute<Route.Channel>()
-                            val userId = 1L
+                            val userId = userDetailsProvider.getUserId()
                             val channelId = channelRouteInfo.channelId
                             val viewModel =
                                 hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> {
@@ -110,19 +114,14 @@ class MainActivity : ComponentActivity() {
                         }
                         composable<Route.Video> {
                             val videoRouteInfo = it.toRoute<Route.Video>()
-                            val userId = 1L
                             val videoId = videoRouteInfo.videoId
                             val context = LocalContext.current
-                            val player = ExoPlayer.Builder(context)
-//                                .setMediaSourceFactory(
-//                                    DefaultMediaSourceFactory(
-//                                        DefaultHttpDataSource.Factory()
-//                                    )
-//                                )
-                                //.setMediaSourceFactory(DefaultMediaSourceFactory(DSWithTokenFactory(UserDetailsProvider(this@MainActivity))))
-                                .build()
                             val videoScreenViewModel =
                                 hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
+                                    val userId = userDetailsProvider.getUserId()
+                                    val player = ExoPlayer.Builder(context)
+                                        .setMediaSourceFactory(dsFactory)
+                                        .build()
                                     factory.create(player, userId, videoId)
                                 }
                             val state by videoScreenViewModel.state.collectAsStateWithLifecycle()
