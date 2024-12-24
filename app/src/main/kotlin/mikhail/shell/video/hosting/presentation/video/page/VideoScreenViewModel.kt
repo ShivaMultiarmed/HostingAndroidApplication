@@ -1,10 +1,12 @@
 package mikhail.shell.video.hosting.presentation.video.page
 
 import android.net.Uri
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +36,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         loadVideo()
     }
 
+    @OptIn(UnstableApi::class)
     fun loadVideo() {
         _state.value = VideoScreenState()
         viewModelScope.launch {

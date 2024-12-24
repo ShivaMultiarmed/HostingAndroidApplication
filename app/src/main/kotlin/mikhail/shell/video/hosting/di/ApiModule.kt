@@ -7,6 +7,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.data.LocalDateTimeDeserializer
+import mikhail.shell.video.hosting.data.TokenInterceptor
+import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import okhttp3.OkHttpClient
@@ -22,19 +24,26 @@ import javax.inject.Singleton
 object ApiModule {
     @Provides
     @Singleton
-    fun provideHttpClient() = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
+    fun provideHttpClient(
+        tokenInterceptor: TokenInterceptor
+    ) = OkHttpClient.Builder()
+        .addInterceptor(tokenInterceptor)
+        .addInterceptor(
+            HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+        )
         .build()
     @Provides
     @Singleton
     fun provideGson() = GsonBuilder()
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
         .create()
+
     @Provides
     @Singleton
     fun provideGsonConverterFactory(gson: Gson) = GsonConverterFactory.create(gson)
+
     @Provides
     @Singleton
     fun provideRetrofit(
@@ -42,9 +51,10 @@ object ApiModule {
         converterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
-        .baseUrl("http://192.168.14.132:9999/api/v1/")
+        .baseUrl("http://192.168.199.132:9999/api/v1/")
         .addConverterFactory(converterFactory)
         .build()
+
     @Provides
     @Singleton
     fun provideVideoApi(
@@ -56,4 +66,10 @@ object ApiModule {
     fun provideChannelApi(
         retrofit: Retrofit
     ) = retrofit.create<ChannelApi>()
+
+    @Provides
+    @Singleton
+    fun provideAuthApi(
+        retrofit: Retrofit
+    ) = retrofit.create<AuthApi>()
 }
