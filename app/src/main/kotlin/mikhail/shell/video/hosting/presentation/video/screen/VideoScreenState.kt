@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.video.page
+package mikhail.shell.video.hosting.presentation.video.screen
 
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.VideoDetails

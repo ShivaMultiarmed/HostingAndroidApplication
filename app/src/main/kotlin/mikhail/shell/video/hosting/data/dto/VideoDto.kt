@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.data.dto
 
+import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithUser
 import java.time.LocalDateTime
 
@@ -78,4 +80,14 @@ fun VideoWithUserDto.toDomain() = VideoWithUser(
     liking,
     sourceUrl,
     coverUrl
+)
+
+data class VideoWithChannelDto(
+    val video: VideoDto,
+    val channel: ChannelDto
+)
+
+fun VideoWithChannelDto.toDomain() = VideoWithChannel(
+    video.toDomain(),
+    channel.toDomain()
 )

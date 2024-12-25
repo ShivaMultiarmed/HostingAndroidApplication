@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.domain.errors.ChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import retrofit2.HttpException
@@ -15,7 +16,7 @@ class ChannelRepositoryWithApi @Inject constructor(
     override suspend fun fetchChannelInfo(
         channelId: Long,
         userId: Long
-    ): Result<Channel, ChannelError> {
+    ): Result<ChannelWithUser, ChannelError> {
         return try {
             Result.Success(_channelApi.fetchChannelInfo(channelId, userId).toDomain())
         } catch (e: HttpException) {

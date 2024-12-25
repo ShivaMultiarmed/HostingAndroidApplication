@@ -26,3 +26,8 @@ data class VideoWithUser(
     val sourceUrl: String,
     val coverUrl: String,
 )
+
+data class VideoWithChannel(
+    val video: Video,
+    val channel: Channel
+)

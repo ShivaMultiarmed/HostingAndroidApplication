@@ -1,11 +1,10 @@
-package mikhail.shell.video.hosting.presentation.video.page
+package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dagger.assisted.Assisted

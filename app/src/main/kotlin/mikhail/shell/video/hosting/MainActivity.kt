@@ -1,11 +1,8 @@
 package mikhail.shell.video.hosting
 
 import android.os.Bundle
-import android.util.Log
-import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -16,20 +13,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.ui.PlayerView
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.data.DSWithTokenFactory
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.Route
 import mikhail.shell.video.hosting.presentation.channel.ChannelScreen
@@ -38,8 +30,10 @@ import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpWithPasswordViewModel
-import mikhail.shell.video.hosting.presentation.video.page.VideoScreen
-import mikhail.shell.video.hosting.presentation.video.page.VideoScreenViewModel
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
+import mikhail.shell.video.hosting.presentation.video.search.SearchVideosScreen
+import mikhail.shell.video.hosting.presentation.video.search.SearchVideosViewModel
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
 
@@ -56,7 +50,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             VideoHostingTheme {
-                // VideoScreenComposable()
                 val navController = rememberNavController()
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
@@ -167,6 +160,19 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onChannelLinkClick = {
                                     navController.navigate(Route.Channel(it))
+                                }
+                            )
+                        }
+                        composable<Route.Search> {
+                            val viewModel = hiltViewModel<SearchVideosViewModel>()
+                            val state by viewModel.state.collectAsStateWithLifecycle()
+                            SearchVideosScreen (
+                                state = state,
+                                onSubmit = {
+                                    viewModel.search(it)
+                                },
+                                onScrollToBottom = { partNumber, partSize ->
+                                    viewModel.loadVideoPart(partSize, partNumber)
                                 }
                             )
                         }

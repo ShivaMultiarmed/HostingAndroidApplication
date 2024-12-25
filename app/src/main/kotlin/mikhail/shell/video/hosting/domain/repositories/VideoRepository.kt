@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
+import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 
 interface VideoRepository {
     suspend fun fetchVideoInfo(
@@ -27,4 +28,10 @@ interface VideoRepository {
         partNumber: Long,
         partSize: Int
     ): Result<List<Video>, VideoError>
+
+    suspend fun fetchVideosWithChannelsByQuery(
+        query: String,
+        partNumber: Long,
+        partSize: Int
+    ): Result<List<VideoWithChannel>, VideoError>
 }

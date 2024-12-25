@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
+import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.LikingState
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -10,7 +11,7 @@ import retrofit2.http.Query
 
 interface VideoApi {
     @GET("videos/{videoId}")
-    suspend fun fetchVideoDto(
+    suspend fun fetchVideo(
         @Path("videoId") videoId: Long
     ) : VideoDto
     @GET("videos/{videoId}/details")
@@ -25,10 +26,16 @@ interface VideoApi {
         @Query("likingState") liking: LikingState
     ) : VideoDto
     @GET("videos/channel/{channelId}")
-    suspend fun fetchVideoDetailsList(
+    suspend fun fetchVideoList(
         @Path("channelId") channelId: Long,
         @Query("userId") userId: Long,
         @Query("partNumber") partNumber: Long,
         @Query("partSize") partSize: Int
     ): List<VideoDto>
+    @GET("videos/search")
+    suspend fun fetchVideoListByQuery(
+        @Query("query") query: String,
+        @Query("partNumber") partNumber: Long,
+        @Query("partSize") partSize: Int
+    ): List<VideoWithChannelDto>
 }

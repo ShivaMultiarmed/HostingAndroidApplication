@@ -38,10 +38,10 @@ class ChannelScreenViewModel @AssistedInject constructor(
             _getChannelInfo(
                 _channelId,
                 _userId
-            ).onSuccess { chInfo ->
+            ).onSuccess { channelWithUser ->
                 _state.update {
                     it.copy(
-                        channel = chInfo,
+                        channel = channelWithUser,
                         isLoading = false,
                         error = null
                     )

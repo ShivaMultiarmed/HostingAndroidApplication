@@ -33,7 +33,7 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.toViews
-import mikhail.shell.video.hosting.presentation.video.page.toPresentation
+import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 
 
 @Composable
