@@ -1,9 +1,8 @@
 package mikhail.shell.video.hosting.data.api
 
-import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
+import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.domain.models.LikingState
-import mikhail.shell.video.hosting.domain.models.VideoInfo
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.Path

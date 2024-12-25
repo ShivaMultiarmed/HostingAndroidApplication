@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import mikhail.shell.video.hosting.domain.models.VideoInfo
+import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -43,9 +43,9 @@ fun ChannelScreen(
     onSubscription: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-    if (state.channelInfo != null) {
+    if (state.channel != null) {
         val scrollState = rememberScrollState()
-        val channel = state.channelInfo
+        val channel = state.channel
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -164,7 +164,7 @@ fun ChannelScreen(
 @Composable
 fun VideoSnippet(
     modifier: Modifier = Modifier,
-    video: VideoInfo,
+    video: Video,
     onClick: (Long) -> Unit
 ) {
     Row(

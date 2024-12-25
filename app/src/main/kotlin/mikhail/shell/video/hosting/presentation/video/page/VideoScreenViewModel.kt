@@ -74,11 +74,15 @@ class VideoScreenViewModel @AssistedInject constructor(
                 videoId,
                 userId,
                 likingState
-            ).onSuccess { updatedVideoInfo ->
+            ).onSuccess { updVideo ->
                 _state.update { screenState ->
                     screenState.copy(
                         videoDetails = screenState.videoDetails?.copy(
-                            video = updatedVideoInfo
+                            video = screenState.videoDetails.video.copy(
+                                likes = updVideo.likes,
+                                dislikes = updVideo.dislikes,
+                                liking = likingState
+                            )
                         )
                     )
                 }

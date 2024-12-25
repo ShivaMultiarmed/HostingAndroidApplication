@@ -1,13 +1,13 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.util.Log
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
-import mikhail.shell.video.hosting.domain.models.VideoInfo
+import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi
 ) : VideoRepository {
-    override suspend fun fetchVideoInfo(videoId: Long): Result<VideoInfo, VideoError> {
+    override suspend fun fetchVideoInfo(videoId: Long): Result<Video, VideoError> {
         return try {
             Result.Success(videoApi.fetchVideoDto(videoId).toDomain())
         } catch (e: HttpException) {
@@ -50,7 +50,7 @@ class VideoRepositoryWithApi @Inject constructor(
         videoId: Long,
         userId: Long,
         liking: LikingState
-    ): Result<VideoInfo, VideoError> {
+    ): Result<Video, VideoError> {
         return try {
             Result.Success(videoApi.rateVideo(videoId, userId, liking).toDomain())
         } catch (e: HttpException) {
@@ -68,7 +68,7 @@ class VideoRepositoryWithApi @Inject constructor(
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<VideoInfo>, VideoError> {
+    ): Result<List<Video>, VideoError> {
         return try {
             Result.Success(
                 videoApi.fetchVideoDetailsList(

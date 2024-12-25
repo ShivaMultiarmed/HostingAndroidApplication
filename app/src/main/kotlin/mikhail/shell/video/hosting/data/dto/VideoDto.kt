@@ -1,7 +1,8 @@
 package mikhail.shell.video.hosting.data.dto
 
 import mikhail.shell.video.hosting.domain.models.LikingState
-import mikhail.shell.video.hosting.domain.models.VideoInfo
+import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoWithUser
 import java.time.LocalDateTime
 
 data class VideoDto(
@@ -12,12 +13,11 @@ data class VideoDto(
     val views: Long,
     val likes: Long,
     val dislikes: Long,
-    val liking: LikingState,
     val sourceUrl: String,
     val coverUrl: String
 )
 
-fun VideoInfo.toDto() = VideoDto(
+fun Video.toDto() = VideoDto(
     videoId,
     channelId,
     title,
@@ -25,12 +25,49 @@ fun VideoInfo.toDto() = VideoDto(
     views,
     likes,
     dislikes,
-    liking,
     sourceUrl,
     coverUrl
 )
 
-fun VideoDto.toDomain() = VideoInfo(
+fun VideoDto.toDomain() = Video(
+    videoId,
+    channelId,
+    title,
+    dateTime,
+    views,
+    likes,
+    dislikes,
+    sourceUrl,
+    coverUrl
+)
+
+data class VideoWithUserDto(
+    val videoId: Long,
+    val channelId: Long,
+    val title: String,
+    val dateTime: LocalDateTime,
+    val views: Long,
+    val likes: Long,
+    val liking: LikingState,
+    val dislikes: Long,
+    val sourceUrl: String,
+    val coverUrl: String
+)
+
+fun VideoWithUser.toDto() = VideoWithUserDto(
+    videoId,
+    channelId,
+    title,
+    dateTime,
+    views,
+    likes,
+    liking,
+    dislikes,
+    sourceUrl,
+    coverUrl
+)
+
+fun VideoWithUserDto.toDomain() = VideoWithUser(
     videoId,
     channelId,
     title,
