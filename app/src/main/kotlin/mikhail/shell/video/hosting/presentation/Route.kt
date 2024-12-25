@@ -7,6 +7,8 @@ sealed class Route {
     @Serializable
     data object SignIn: Route()
     @Serializable
+    data object SignUp: Route()
+    @Serializable
     data class Channel(val channelId: Long): Route()
     @Serializable
     data class Video(val videoId: Long): Route()

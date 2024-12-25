@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.signin.password
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -22,7 +23,8 @@ fun SignInScreen(
     modifier: Modifier = Modifier,
     state: SignInWithPasswordState,
     onSubmit: (String, String) -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: () -> Unit,
+    onSigningUp: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     Column (
@@ -53,9 +55,16 @@ fun SignInScreen(
                 text = "Войти"
             )
         }
+        Text(
+            text = "Зарегистрироваться",
+            modifier = Modifier.clickable {
+                onSigningUp()
+            }
+        )
         if (state != SignInWithPasswordState()) {
             if (state.error != null) {
                 val text = when (state.error) {
+                    AuthError.FIELDS_EMPTY -> "Незаполнены поля"
                     AuthError.UNEXPECTED -> "Непредвиденная ошибка"
                 }
                 Text(

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
@@ -27,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.data.DSWithTokenFactory
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.Route
@@ -34,6 +36,8 @@ import mikhail.shell.video.hosting.presentation.channel.ChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpScreen
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpWithPasswordViewModel
 import mikhail.shell.video.hosting.presentation.video.page.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.page.VideoScreenViewModel
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -64,6 +68,27 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Route.SignIn
                     ) {
+                        composable<Route.SignUp> {
+                            val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
+                            val state by viewModel.state.collectAsStateWithLifecycle()
+                            val sharedPref =
+                                LocalContext.current.applicationContext.getSharedPreferences(
+                                    "user_details",
+                                    MODE_PRIVATE
+                                )
+                            val coroutineScope = rememberCoroutineScope()
+                            SignUpScreen(
+                                state = state,
+                                onSubmit =  {
+                                    viewModel.signUp(it)
+                                },
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        navController.navigate(Route.Channel(1))
+                                    }
+                                }
+                            )
+                        }
                         composable<Route.SignIn> {
                             val viewModel = hiltViewModel<SignInWithPasswordViewModel>()
                             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -86,6 +111,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     navController.navigate(Route.Channel(1))
+                                },
+                                onSigningUp = {
+                                    navController.navigate(Route.SignUp)
                                 }
                             )
                         }

@@ -6,10 +6,10 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
 import javax.inject.Inject
 
-class SignInWithEmailAndPassword @Inject constructor(
+class SignInWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthModel, AuthError> {
-        return authRepository.signInWithEmailAndPassword(email, password)
+        return authRepository.signInWithPassword(email, password)
     }
 }

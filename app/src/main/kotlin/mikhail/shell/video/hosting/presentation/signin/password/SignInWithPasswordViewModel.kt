@@ -7,12 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithEmailAndPassword
+import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
-    private val _signInWithEmailAndPassword: SignInWithEmailAndPassword
+    private val _signInWithPassword: SignInWithPassword
 ) : ViewModel() {
     private val _state = MutableStateFlow(SignInWithPasswordState())
     val state = _state.asStateFlow()
@@ -24,7 +24,7 @@ class SignInWithPasswordViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            _signInWithEmailAndPassword(
+            _signInWithPassword(
                 email,
                 password
             ).onSuccess {
