@@ -18,4 +18,8 @@ interface ChannelApi {
     suspend fun createChannel(
         @Body channelDto: ChannelDto
     ): ChannelDto
+    @GET("channels/owner/{userId}")
+    suspend fun getChannelsByOwner(
+        @Path("userId") userId: Long
+    ): List<ChannelDto>
 }

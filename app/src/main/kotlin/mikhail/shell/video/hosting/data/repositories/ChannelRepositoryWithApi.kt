@@ -34,7 +34,20 @@ class ChannelRepositoryWithApi @Inject constructor(
         return try {
             Result.Success(_channelApi.createChannel(channel.toDto()).toDomain())
         } catch (e: HttpException) {
-            val error = when(e.code()) {
+            val error = when (e.code()) {
+                else -> ChannelError.UNEXPECTED
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Result.Failure(ChannelError.UNEXPECTED)
+        }
+    }
+
+    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, ChannelError> {
+        return try {
+            Result.Success(_channelApi.getChannelsByOwner(userId).map { it.toDomain() })
+        } catch (e: HttpException) {
+            val error = when (e.code()) {
                 else -> ChannelError.UNEXPECTED
             }
             Result.Failure(error)

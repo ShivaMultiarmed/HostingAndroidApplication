@@ -4,8 +4,12 @@ import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.LikingState
+import okhttp3.MultipartBody
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
+import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -38,4 +42,11 @@ interface VideoApi {
         @Query("partNumber") partNumber: Long,
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>
+    @Multipart
+    @POST("videos/upload")
+    suspend fun uploadVideo(
+        @Part("video") video: VideoDto,
+        @Part source: MultipartBody.Part,
+        @Part cover: MultipartBody.Part?
+    ): VideoDto
 }

@@ -13,6 +13,8 @@ sealed class Route {
     @Serializable
     data object CreateChannel: Route()
     @Serializable
+    data object UploadVideo: Route()
+    @Serializable
     data class Channel(val channelId: Long): Route()
     @Serializable
     data class Video(val videoId: Long): Route()

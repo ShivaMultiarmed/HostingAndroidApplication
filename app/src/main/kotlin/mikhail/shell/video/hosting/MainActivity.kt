@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.Route
@@ -36,6 +37,8 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 import mikhail.shell.video.hosting.presentation.video.search.SearchVideosScreen
 import mikhail.shell.video.hosting.presentation.video.search.SearchVideosViewModel
+import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoScreen
+import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewModel
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
 
@@ -45,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
+
     @Inject
     lateinit var dsFactory: DefaultMediaSourceFactory
 
@@ -61,7 +65,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding),
                         navController = navController,
-                        startDestination = Route.CreateChannel
+                        startDestination = Route.UploadVideo
                     ) {
                         composable<Route.SignUp> {
                             val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
@@ -74,7 +78,7 @@ class MainActivity : ComponentActivity() {
                             val coroutineScope = rememberCoroutineScope()
                             SignUpScreen(
                                 state = state,
-                                onSubmit =  {
+                                onSubmit = {
                                     viewModel.signUp(it)
                                 },
                                 onSuccess = {
@@ -168,7 +172,7 @@ class MainActivity : ComponentActivity() {
                         composable<Route.Search> {
                             val viewModel = hiltViewModel<SearchVideosViewModel>()
                             val state by viewModel.state.collectAsStateWithLifecycle()
-                            SearchVideosScreen (
+                            SearchVideosScreen(
                                 state = state,
                                 onSubmit = {
                                     viewModel.search(it)
@@ -191,6 +195,30 @@ class MainActivity : ComponentActivity() {
                                     coroutineScope.launch {
                                         navController.navigate(Route.Channel(it.channelId!!))
                                     }
+                                }
+                            )
+                        }
+                        composable<Route.UploadVideo> {
+                            val userId = userDetailsProvider.getUserId()
+                            val viewModel =
+                                hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory>() {
+                                    it.create(userId)
+                                }
+                            val state by viewModel.state.collectAsStateWithLifecycle()
+                            val coroutineScope = rememberCoroutineScope()
+                            UploadVideoScreen(
+                                state = state,
+                                onSubmit = {
+                                    viewModel.uploadVideo(it)
+                                },
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        delay(1000)
+                                        navController.navigate(Route.Video(it.videoId!!))
+                                    }
+                                },
+                                onRefresh = {
+                                    viewModel.loadChannels()
                                 }
                             )
                         }

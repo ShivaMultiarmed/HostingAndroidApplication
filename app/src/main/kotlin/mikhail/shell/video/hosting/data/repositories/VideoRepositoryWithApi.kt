@@ -1,14 +1,22 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.net.Uri
+import android.util.Log
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -114,5 +122,35 @@ class VideoRepositoryWithApi @Inject constructor(
         } catch (e: Exception) {
             Result.Failure(VideoError.UNEXPECTED_ERROR)
         }
+    }
+
+    override suspend fun uploadVideo(
+        video: Video,
+        source: File,
+        cover: File?
+    ): Result<Video, VideoError> {
+        return try {
+            val sourcePart = fileToPart("source", source)
+            val coverPart = if (cover != null) fileToPart("cover", cover) else null
+            Result.Success(
+                videoApi.uploadVideo(
+                    video.toDto(),
+                    sourcePart,
+                    coverPart,
+                ).toDomain()
+            )
+        } catch (e: HttpException) {
+            val error = when (e.code()) {
+                else -> VideoError.UNEXPECTED_ERROR
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Log.e("VideoRepositoryWithApi", e.stackTraceToString())
+            Result.Failure(VideoError.UNEXPECTED_ERROR)
+        }
+    }
+    private fun fileToPart(partName: String, file: File): MultipartBody.Part {
+        val requestBody = RequestBody.create(file.mimeType!!.toMediaTypeOrNull(), file.content!!,0, file.content.size)
+        return MultipartBody.Part.createFormData(partName, file.name, requestBody)
     }
 }

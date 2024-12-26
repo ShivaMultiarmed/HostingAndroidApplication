@@ -3,28 +3,28 @@ package mikhail.shell.video.hosting.domain.models
 import java.time.LocalDateTime
 
 data class Video(
-    val videoId: Long,
+    val videoId: Long? = null,
     val channelId: Long,
     val title: String,
-    val dateTime: LocalDateTime,
-    val views: Long,
-    val likes: Long,
-    val dislikes: Long,
-    val sourceUrl: String,
-    val coverUrl: String
+    val dateTime: LocalDateTime = LocalDateTime.now(),
+    val views: Long = 0,
+    val likes: Long = 0,
+    val dislikes: Long = 0,
+    val sourceUrl: String? = null,
+    val coverUrl: String? = null
 )
 
 data class VideoWithUser(
-    val videoId: Long,
+    val videoId: Long? = null,
     val channelId: Long,
     val title: String,
-    val dateTime: LocalDateTime,
-    val views: Long,
-    val likes: Long,
-    val dislikes: Long,
-    val liking: LikingState,
-    val sourceUrl: String,
-    val coverUrl: String,
+    val dateTime: LocalDateTime = LocalDateTime.now(),
+    val views: Long = 0,
+    val likes: Long = 0,
+    val dislikes: Long = 0,
+    val liking: LikingState = LikingState.NONE,
+    val sourceUrl: String? = null,
+    val coverUrl: String? = null,
 )
 
 data class VideoWithChannel(

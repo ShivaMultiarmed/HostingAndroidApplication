@@ -170,7 +170,7 @@ fun VideoSnippet(
     Row(
         modifier = modifier.fillMaxWidth()
             .clickable {
-                onClick(video.videoId)
+                onClick(video.videoId!!)
             }
     ) {
         AsyncImage(
