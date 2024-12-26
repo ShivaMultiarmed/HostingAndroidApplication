@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.channel
+package mikhail.shell.video.hosting.presentation.channel.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

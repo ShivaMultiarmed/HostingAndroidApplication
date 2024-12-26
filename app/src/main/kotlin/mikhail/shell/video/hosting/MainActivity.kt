@@ -24,8 +24,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.Route
-import mikhail.shell.video.hosting.presentation.channel.ChannelScreen
-import mikhail.shell.video.hosting.presentation.channel.ChannelScreenViewModel
+import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelScreen
+import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelViewModel
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpScreen
@@ -59,7 +61,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding),
                         navController = navController,
-                        startDestination = Route.SignIn
+                        startDestination = Route.CreateChannel
                     ) {
                         composable<Route.SignUp> {
                             val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
@@ -173,6 +175,22 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onScrollToBottom = { partNumber, partSize ->
                                     viewModel.loadVideoPart(partSize, partNumber)
+                                }
+                            )
+                        }
+                        composable<Route.CreateChannel> {
+                            val viewModel = hiltViewModel<CreateChannelViewModel>()
+                            val state by viewModel.state.collectAsStateWithLifecycle()
+                            val coroutineScope = rememberCoroutineScope()
+                            CreateChannelScreen(
+                                state = state,
+                                onSubmit = {
+                                    viewModel.createChannel(it)
+                                },
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        navController.navigate(Route.Channel(it.channelId!!))
+                                    }
                                 }
                             )
                         }

@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.channel
+package mikhail.shell.video.hosting.presentation.channel.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

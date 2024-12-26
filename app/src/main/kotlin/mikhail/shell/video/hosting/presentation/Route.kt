@@ -11,6 +11,8 @@ sealed class Route {
     @Serializable
     data object Search: Route()
     @Serializable
+    data object CreateChannel: Route()
+    @Serializable
     data class Channel(val channelId: Long): Route()
     @Serializable
     data class Video(val videoId: Long): Route()

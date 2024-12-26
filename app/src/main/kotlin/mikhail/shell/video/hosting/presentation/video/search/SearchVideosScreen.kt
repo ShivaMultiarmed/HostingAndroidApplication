@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
-import mikhail.shell.video.hosting.presentation.channel.VideoSnippet
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 

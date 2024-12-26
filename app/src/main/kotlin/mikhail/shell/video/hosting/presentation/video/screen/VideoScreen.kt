@@ -146,7 +146,7 @@ fun VideoScreen(
                 ) {
                     Row(
                         modifier = Modifier
-                            .clickable { onChannelLinkClick(channel.channelId) }
+                            .clickable { onChannelLinkClick(channel.channelId!!) }
                             .weight(1f)
                     ) {
                         AsyncImage(

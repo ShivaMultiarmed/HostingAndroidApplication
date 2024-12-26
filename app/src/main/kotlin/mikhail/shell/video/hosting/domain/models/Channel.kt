@@ -1,23 +1,23 @@
 package mikhail.shell.video.hosting.domain.models
 
 data class Channel(
-    val channelId: Long,
+    val channelId: Long? = null,
     val ownerId: Long,
     val title: String,
     val alias: String,
     val description: String,
-    val subscribers: Long,
-    val coverUrl: String,
-    val avatarUrl: String
+    val subscribers: Long = 0,
+    val coverUrl: String? = null,
+    val avatarUrl: String? = null
 )
 data class ChannelWithUser(
-    val channelId: Long,
+    val channelId: Long? = null,
     val ownerId: Long,
     val title: String,
     val alias: String,
     val description: String,
-    val subscribers: Long,
+    val subscribers: Long = 0,
     val subscription: SubscriptionState,
-    val coverUrl: String,
-    val avatarUrl: String
+    val coverUrl: String? = null,
+    val avatarUrl: String? = null
 )

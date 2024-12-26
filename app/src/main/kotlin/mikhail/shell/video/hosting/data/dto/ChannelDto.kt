@@ -5,14 +5,14 @@ import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 
 data class ChannelDto(
-    val channelId: Long,
+    val channelId: Long? = null,
     val ownerId: Long,
     val title: String,
     val alias: String,
     val description: String,
     val subscribers: Long,
-    val coverUrl: String,
-    val avatarUrl: String
+    val coverUrl: String? = null,
+    val avatarUrl: String? = null
 )
 
 fun Channel.toDto() = ChannelDto(
@@ -38,15 +38,15 @@ fun ChannelDto.toDomain() = Channel(
 )
 
 data class ChannelWithUserDto(
-    val channelId: Long,
+    val channelId: Long? = null,
     val ownerId: Long,
     val title: String,
     val alias: String,
     val description: String,
     val subscribers: Long,
     val subscription: SubscriptionState,
-    val coverUrl: String,
-    val avatarUrl: String
+    val coverUrl: String? = null,
+    val avatarUrl: String? = null
 )
 
 fun ChannelWithUser.toDto() = ChannelWithUserDto(

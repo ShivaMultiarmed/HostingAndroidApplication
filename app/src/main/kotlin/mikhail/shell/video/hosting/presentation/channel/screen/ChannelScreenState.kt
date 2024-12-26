@@ -1,7 +1,6 @@
-package mikhail.shell.video.hosting.presentation.channel
+package mikhail.shell.video.hosting.presentation.channel.screen
 
 import mikhail.shell.video.hosting.domain.errors.ChannelError
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Video
 

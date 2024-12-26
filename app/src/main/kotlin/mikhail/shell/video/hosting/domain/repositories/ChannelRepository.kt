@@ -6,5 +6,11 @@ import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Result
 
 interface ChannelRepository {
-    suspend fun fetchChannelInfo(channelId: Long, userId: Long): Result<ChannelWithUser, ChannelError>
+    suspend fun fetchChannelForUser(
+        channelId: Long,
+        userId: Long
+    ): Result<ChannelWithUser, ChannelError>
+    suspend fun createChannel(
+        channel: Channel
+    ): Result<Channel, ChannelError>
 }
