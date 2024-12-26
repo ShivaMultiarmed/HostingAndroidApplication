@@ -18,17 +18,27 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.presentation.Route
+import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
+import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelViewModel
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
+import mikhail.shell.video.hosting.presentation.navigation.channelRoute
+import mikhail.shell.video.hosting.presentation.navigation.createChannelRoute
+import mikhail.shell.video.hosting.presentation.navigation.profileRoute
+import mikhail.shell.video.hosting.presentation.navigation.searchRoute
+import mikhail.shell.video.hosting.presentation.navigation.signInRoute
+import mikhail.shell.video.hosting.presentation.navigation.signUpRoute
+import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
+import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpScreen
@@ -58,170 +68,37 @@ class MainActivity : ComponentActivity() {
             VideoHostingTheme {
                 val navController = rememberNavController()
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        val backStackEntry by navController.currentBackStackEntryAsState()
+                        if (backStackEntry?.destination?.route !in
+                            listOf(
+                                Route.SignIn::class.qualifiedName, Route.SignUp::class.qualifiedName
+                            )
+                        ) {
+                            BottomNavBar(
+                                onClick = {
+                                    navController.navigate(it.route)
+                                }
+                            )
+                        }
+                    }
                 ) { padding ->
                     NavHost(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding),
                         navController = navController,
-                        startDestination = Route.UploadVideo
+                        startDestination = Route.SignIn
                     ) {
-                        composable<Route.SignUp> {
-                            val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            val sharedPref =
-                                LocalContext.current.applicationContext.getSharedPreferences(
-                                    "user_details",
-                                    MODE_PRIVATE
-                                )
-                            val coroutineScope = rememberCoroutineScope()
-                            SignUpScreen(
-                                state = state,
-                                onSubmit = {
-                                    viewModel.signUp(it)
-                                },
-                                onSuccess = {
-                                    coroutineScope.launch {
-                                        navController.navigate(Route.Channel(1))
-                                    }
-                                }
-                            )
-                        }
-                        composable<Route.SignIn> {
-                            val viewModel = hiltViewModel<SignInWithPasswordViewModel>()
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            val sharedPref =
-                                LocalContext.current.applicationContext.getSharedPreferences(
-                                    "user_details",
-                                    MODE_PRIVATE
-                                )
-                            SignInScreen(
-                                state = state,
-                                onSubmit = { email, password ->
-                                    viewModel.signIn(email, password)
-                                },
-                                onSuccess = {
-                                    if (state.authModel != null) {
-                                        sharedPref.edit {
-                                            putLong("userId", state.authModel!!.userId)
-                                            putString("token", state.authModel!!.token)
-                                            commit()
-                                        }
-                                    }
-                                    navController.navigate(Route.Channel(1))
-                                },
-                                onSigningUp = {
-                                    navController.navigate(Route.SignUp)
-                                }
-                            )
-                        }
-                        composable<Route.Channel> {
-                            val channelRouteInfo = it.toRoute<Route.Channel>()
-                            val userId = userDetailsProvider.getUserId()
-                            val channelId = channelRouteInfo.channelId
-                            val viewModel =
-                                hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> {
-                                    it.create(channelId, userId)
-                                }
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            ChannelScreen(
-                                state = state,
-                                onRefresh = {
-                                    viewModel.loadChannelInfo()
-                                    viewModel.loadVideosPart()
-                                },
-                                onSubscription = {
-
-                                },
-                                onVideoClick = {
-                                    navController.navigate(Route.Video(it))
-                                }
-                            )
-                        }
-                        composable<Route.Video> {
-                            val videoRouteInfo = it.toRoute<Route.Video>()
-                            val videoId = videoRouteInfo.videoId
-                            val context = LocalContext.current
-                            val videoScreenViewModel =
-                                hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-                                    val userId = userDetailsProvider.getUserId()
-                                    val player = ExoPlayer.Builder(context)
-                                        .setMediaSourceFactory(dsFactory)
-                                        .build()
-                                    factory.create(player, userId, videoId)
-                                }
-                            val state by videoScreenViewModel.state.collectAsStateWithLifecycle()
-                            VideoScreen(
-                                state = state,
-                                player = videoScreenViewModel.player,
-                                onRefresh = {
-                                    videoScreenViewModel.loadVideo()
-                                },
-                                onRate = {
-                                    videoScreenViewModel.rate(it)
-                                },
-                                onSubscribe = {
-
-                                },
-                                onChannelLinkClick = {
-                                    navController.navigate(Route.Channel(it))
-                                }
-                            )
-                        }
-                        composable<Route.Search> {
-                            val viewModel = hiltViewModel<SearchVideosViewModel>()
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            SearchVideosScreen(
-                                state = state,
-                                onSubmit = {
-                                    viewModel.search(it)
-                                },
-                                onScrollToBottom = { partNumber, partSize ->
-                                    viewModel.loadVideoPart(partSize, partNumber)
-                                }
-                            )
-                        }
-                        composable<Route.CreateChannel> {
-                            val viewModel = hiltViewModel<CreateChannelViewModel>()
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            val coroutineScope = rememberCoroutineScope()
-                            CreateChannelScreen(
-                                state = state,
-                                onSubmit = {
-                                    viewModel.createChannel(it)
-                                },
-                                onSuccess = {
-                                    coroutineScope.launch {
-                                        navController.navigate(Route.Channel(it.channelId!!))
-                                    }
-                                }
-                            )
-                        }
-                        composable<Route.UploadVideo> {
-                            val userId = userDetailsProvider.getUserId()
-                            val viewModel =
-                                hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory>() {
-                                    it.create(userId)
-                                }
-                            val state by viewModel.state.collectAsStateWithLifecycle()
-                            val coroutineScope = rememberCoroutineScope()
-                            UploadVideoScreen(
-                                state = state,
-                                onSubmit = {
-                                    viewModel.uploadVideo(it)
-                                },
-                                onSuccess = {
-                                    coroutineScope.launch {
-                                        delay(1000)
-                                        navController.navigate(Route.Video(it.videoId!!))
-                                    }
-                                },
-                                onRefresh = {
-                                    viewModel.loadChannels()
-                                }
-                            )
-                        }
+                        signUpRoute(navController)
+                        signInRoute(navController)
+                        channelRoute(navController, userDetailsProvider)
+                        videoRoute(navController, dsFactory, userDetailsProvider)
+                        searchRoute()
+                        createChannelRoute(navController, userDetailsProvider)
+                        uploadVideoRoute(navController, userDetailsProvider)
+                        profileRoute(navController, userDetailsProvider)
                     }
                 }
             }

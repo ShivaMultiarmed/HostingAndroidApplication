@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation
+package mikhail.shell.video.hosting.presentation.navigation
 
 import kotlinx.serialization.Serializable
 
@@ -14,6 +14,10 @@ sealed class Route {
     data object CreateChannel: Route()
     @Serializable
     data object UploadVideo: Route()
+    @Serializable
+    data object Profile: Route()
+    @Serializable
+    data object Subscriptions: Route()
     @Serializable
     data class Channel(val channelId: Long): Route()
     @Serializable

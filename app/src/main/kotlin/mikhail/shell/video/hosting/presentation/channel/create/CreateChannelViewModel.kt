@@ -2,6 +2,9 @@ package mikhail.shell.video.hosting.presentation.channel.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,12 +15,11 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import javax.inject.Inject
 
-@HiltViewModel
-class CreateChannelViewModel @Inject constructor(
-    private val userDetailsProvider: UserDetailsProvider,
+@HiltViewModel(assistedFactory = CreateChannelViewModel.Factory::class)
+class CreateChannelViewModel @AssistedInject constructor(
+    @Assisted("userId") private val userId: Long,
     private val _createChannel: CreateChannel
 ): ViewModel() {
-    private val userId = userDetailsProvider.getUserId()
     private val _state = MutableStateFlow(CreateChannelScreenState())
     val state = _state.asStateFlow()
 
@@ -48,5 +50,9 @@ class CreateChannelViewModel @Inject constructor(
                 )
             }
         }
+    }
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted("userId") userId: Long): CreateChannelViewModel
     }
 }
