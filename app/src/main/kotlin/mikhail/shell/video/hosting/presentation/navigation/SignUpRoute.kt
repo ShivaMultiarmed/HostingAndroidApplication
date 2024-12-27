@@ -4,6 +4,7 @@ import android.app.Activity.MODE_PRIVATE
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -32,6 +33,11 @@ fun NavGraphBuilder.signUpRoute(
             },
             onSuccess = {
                 coroutineScope.launch {
+                    sharedPref.edit {
+                        putLong("userId", it.userId)
+                        putString("token", it.token)
+                        commit()
+                    }
                     navController.navigate(Route.Channel(1))
                 }
             }

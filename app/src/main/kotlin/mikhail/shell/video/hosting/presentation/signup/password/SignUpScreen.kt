@@ -14,21 +14,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import mikhail.shell.video.hosting.domain.errors.AuthError
+import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
+import mikhail.shell.video.hosting.domain.errors.contains
+import mikhail.shell.video.hosting.domain.models.AuthModel
 
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     state: SignUpWithPasswordState,
     onSubmit: (SignUpInputState) -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: (AuthModel) -> Unit
 ) {
     val scrollState = rememberScrollState()
     Column (
         modifier = modifier.fillMaxSize()
             .verticalScroll(scrollState)
     ) {
+        val compoundError = state.error
         var userName by remember { mutableStateOf("") }
         TextField(
             value = userName,
@@ -36,6 +39,11 @@ fun SignUpScreen(
                 userName = it
             }
         )
+        if (compoundError.contains(SignUpError.EMAIL_EMPTY)) {
+            Text("Введите почту")
+        } else if (compoundError.contains(SignUpError.EMAIL_INVALID)) {
+            Text("Некорректная почта")
+        }
         var password by remember { mutableStateOf("") }
         TextField(
             value = password,
@@ -44,6 +52,9 @@ fun SignUpScreen(
             },
             visualTransformation = PasswordVisualTransformation()
         )
+        if (compoundError.contains(SignUpError.PASSWORD_EMPTY)) {
+            Text("Введите пароль")
+        }
         var name by remember { mutableStateOf("") }
         TextField(
             value = name,
@@ -51,6 +62,9 @@ fun SignUpScreen(
                 name = it
             }
         )
+        if (compoundError.contains(SignUpError.NAME_EMPTY)) {
+            Text("Введите имя")
+        }
         Button(
             onClick = {
                 onSubmit(
@@ -66,19 +80,11 @@ fun SignUpScreen(
                 text = "Зарегистрироваться"
             )
         }
-        if (state.error != null) {
-            val errorMsg = when (state.error) {
-                AuthError.FIELDS_EMPTY -> "Не заполнены поля."
-                AuthError.UNEXPECTED -> "Непредвиденная ошибка"
-            }
-            Text(
-                text = errorMsg
-            )
-        } else if (state.authModel != null) {
+        if (state.authModel != null) {
             Text(
                 text = "Вы успешно зарегистрировались"
             )
-            onSuccess()
+            onSuccess(state.authModel)
         }
     }
 }

@@ -28,3 +28,7 @@ data class CompoundError<T: Error>(
         return _errors.contains(error)
     }
 }
+
+fun <T: Error> CompoundError<T>?.contains(error: T): Boolean {
+    return this?.contains(error) ?: false
+}
