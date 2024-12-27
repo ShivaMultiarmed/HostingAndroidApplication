@@ -54,16 +54,18 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, ChannelError> {
+    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, ChannelLoadingError> {
         return try {
             Result.Success(_channelApi.getChannelsByOwner(userId).map { it.toDomain() })
         } catch (e: HttpException) {
             val error = when (e.code()) {
-                else -> ChannelError.UNEXPECTED
+                403 -> ChannelLoadingError.USER_NOT_SPECIFIED
+                404 -> ChannelLoadingError.NOT_FOUND
+                else -> ChannelLoadingError.UNEXPECTED
             }
             Result.Failure(error)
         } catch (e: Exception) {
-            Result.Failure(ChannelError.UNEXPECTED)
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
 }

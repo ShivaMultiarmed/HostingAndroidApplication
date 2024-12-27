@@ -8,6 +8,7 @@ interface Error
 data class CompoundError<T: Error>(
     @SerializedName("errors") private val _errors: MutableList<T> = mutableListOf()
 ): Error {
+    //constructor(immutableErrors: List<T>): this(immutableErrors.toMutableList())
     //@Expose(serialize = true, deserialize = true)
     val errors: List<T>
         get() = _errors.toList()

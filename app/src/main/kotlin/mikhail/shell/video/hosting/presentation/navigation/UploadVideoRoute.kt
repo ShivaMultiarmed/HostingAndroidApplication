@@ -20,7 +20,7 @@ fun NavGraphBuilder.uploadVideoRoute(
     composable<Route.UploadVideo> {
         val userId = userDetailsProvider.getUserId()
         val viewModel =
-            hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory>() {
+            hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory> {
                 it.create(userId)
             }
         val state by viewModel.state.collectAsStateWithLifecycle()

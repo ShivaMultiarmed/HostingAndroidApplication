@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
@@ -44,7 +45,8 @@ class UploadVideoViewModel @AssistedInject constructor(
             }.onFailure {
                 _state.update {
                     it.copy(
-                        isLoading = false
+                        isLoading = false,
+                        error = CompoundError(mutableListOf(ChannelLoadingError.UNEXPECTED))
                     )
                 }
             }
@@ -79,7 +81,7 @@ class UploadVideoViewModel @AssistedInject constructor(
                         it.copy(
                             video = null,
                             isLoading = false,
-                            error = err
+                            error = CompoundError(err.errors.toMutableList())
                         )
                     }
                 }
@@ -87,7 +89,7 @@ class UploadVideoViewModel @AssistedInject constructor(
         } else {
             _state.update {
                 it.copy(
-                    error = compoundError,
+                    error = CompoundError(compoundError.errors.toMutableList()),
                     isLoading = false
                 )
             }
