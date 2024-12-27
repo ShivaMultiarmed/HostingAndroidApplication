@@ -4,12 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.dto.SignUpDto
-import mikhail.shell.video.hosting.data.dto.UserDto
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.AuthError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
-import mikhail.shell.video.hosting.domain.errors.SignUpError.UNEXPECTED
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -24,13 +23,16 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun signInWithPassword(
         email: String,
         password: String
-    ): Result<AuthModel, AuthError> {
+    ): Result<AuthModel, CompoundError<SignInError>> {
         return try {
             Result.Success(authApi.signInWithPassword(email, password))
         } catch (e: HttpException) {
-            Result.Failure(AuthError.UNEXPECTED)
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<SignInError>>() {}.type
+            val compoundError = gson.fromJson(json, type)?: DEFAULT_SIGN_IN_ERROR
+            Result.Failure(compoundError)
         } catch (e: Exception) {
-            Result.Failure(AuthError.UNEXPECTED)
+            Result.Failure(DEFAULT_SIGN_IN_ERROR)
         }
     }
 
@@ -49,13 +51,14 @@ class AuthRepositoryWithApi @Inject constructor(
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-            val compoundError = gson.fromJson(json, type)?: DEFAULT_ERROR
+            val compoundError = gson.fromJson(json, type)?: DEFAULT_SIGN_UP_ERROR
             Result.Failure(compoundError)
         } catch (e: Exception) {
-            Result.Failure(DEFAULT_ERROR)
+            Result.Failure(DEFAULT_SIGN_UP_ERROR)
         }
     }
     companion object {
-        private val DEFAULT_ERROR = CompoundError(mutableListOf(UNEXPECTED))
+        private val DEFAULT_SIGN_UP_ERROR = CompoundError(mutableListOf(SignUpError.UNEXPECTED))
+        private val DEFAULT_SIGN_IN_ERROR = CompoundError(mutableListOf(SignInError.UNEXPECTED))
     }
 }

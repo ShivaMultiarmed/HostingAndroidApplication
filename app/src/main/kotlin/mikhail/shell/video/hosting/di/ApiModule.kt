@@ -49,7 +49,6 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideGson() = GsonBuilder()
-        //.registerTypeAdapter(ChannelCreationError::class.java, ChannelCreationErrorAdapter())
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
         .create()
 

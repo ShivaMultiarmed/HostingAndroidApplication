@@ -9,14 +9,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import mikhail.shell.video.hosting.domain.errors.AuthError
+import mikhail.shell.video.hosting.domain.errors.SignInError
+import mikhail.shell.video.hosting.domain.errors.contains
 
 @Composable
 fun SignInScreen(
@@ -27,11 +28,30 @@ fun SignInScreen(
     onSigningUp: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    Column (
-        modifier = modifier.fillMaxSize()
+    val error = state.error
+    LaunchedEffect(state.authModel) {
+        if (state.authModel != null) {
+            onSuccess()
+        }
+    }
+    if (state.authModel != null) {
+        Text(
+            text = "Вы успешно вошли"
+        )
+    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
         var email by remember { mutableStateOf(DEFAULT_EMAIL) }
+        if (error.contains(SignInError.EMAIL_EMPTY)) {
+            Text(text = "Заполните email")
+        } else if (error.contains(SignInError.EMAIL_INVALID)) {
+            Text(text = "Email не корректно введён")
+        } else if (error.contains(SignInError.EMAIL_NOT_FOUND)) {
+            Text(text = "Пользователь с email $email не найден")
+        }
         TextField(
             value = email,
             onValueChange = {
@@ -39,6 +59,11 @@ fun SignInScreen(
             }
         )
         var password by remember { mutableStateOf(DEFAULT_PASSWORD) }
+        if (error.contains(SignInError.PASSWORD_EMPTY)) {
+            Text(text = "Введите пароль")
+        } else if (error.contains(SignInError.PASSWORD_INCORRECT)) {
+            Text(text = "Неправильный пароль")
+        }
         TextField(
             value = password,
             onValueChange = {
@@ -61,24 +86,9 @@ fun SignInScreen(
                 onSigningUp()
             }
         )
-        if (state != SignInWithPasswordState()) {
-            if (state.error != null) {
-                val text = when (state.error) {
-                    AuthError.FIELDS_EMPTY -> "Незаполнены поля"
-                    AuthError.UNEXPECTED -> "Непредвиденная ошибка"
-                }
-                Text(
-                    text = text
-                )
-            } else if (state.authModel != null) {
-                Text(
-                    text = "Вы успешно вошли"
-                )
-                onSuccess()
-            }
-        }
 
     }
 }
+
 const val DEFAULT_EMAIL = "mikhail.shell@yandex.ru"
 const val DEFAULT_PASSWORD = "qwerty"
