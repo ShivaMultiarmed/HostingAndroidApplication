@@ -11,8 +11,8 @@ class SearchForVideos @Inject constructor(
 ) {
     suspend operator fun invoke(
         query: String,
-        partNumber: Long,
-        partSize: Int
+        partNumber: Long = 1,
+        partSize: Int = 10
     ): Result<List<VideoWithChannel>, VideoError> {
         return videoRepository.fetchVideosWithChannelsByQuery(
             query,

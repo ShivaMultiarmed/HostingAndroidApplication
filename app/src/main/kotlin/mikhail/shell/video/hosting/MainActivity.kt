@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
                         val backStackEntry by navController.currentBackStackEntryAsState()
-                        if (backStackEntry?.destination?.route !in
+                        if (backStackEntry != null && backStackEntry?.destination?.route !in
                             listOf(
                                 Route.SignIn::class.qualifiedName, Route.SignUp::class.qualifiedName
                             )

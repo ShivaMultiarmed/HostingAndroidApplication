@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.signup.password
 
-import mikhail.shell.video.hosting.domain.errors.AuthError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel

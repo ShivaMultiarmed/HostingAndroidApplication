@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.domain.repositories
 
+import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -7,7 +9,6 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
-import okhttp3.MultipartBody
 
 interface VideoRepository {
     suspend fun fetchVideoInfo(
@@ -41,5 +42,5 @@ interface VideoRepository {
         video: Video,
         source: File,
         cover: File?
-    ): Result<Video, VideoError>
+    ): Result<Video, CompoundError<UploadVideoError>>
 }

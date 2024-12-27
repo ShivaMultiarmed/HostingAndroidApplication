@@ -19,13 +19,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
+import mikhail.shell.video.hosting.domain.errors.contains
+import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -46,8 +48,17 @@ fun UploadVideoScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
+            if (state.video != null) {
+                Text (
+                    text = "Видео успешно опубликовано"
+                )
+            }
             val contentResolver = LocalContext.current.contentResolver
             var title by remember { mutableStateOf("Some video title") } // TODO
+            val compoundError = state.error
+            if (compoundError.contains(UploadVideoError.TITLE_EMPTY)) {
+                Text("Заполните название")
+            }
             TextField(
                 value = title,
                 onValueChange = {
@@ -55,6 +66,9 @@ fun UploadVideoScreen(
                 }
             )
             var channelId by remember { mutableStateOf<Long?>(null) }
+            if (compoundError.contains(UploadVideoError.CHANNEL_NOT_CHOSEN)) {
+                Text("Выберите канал")
+            }
             Dropdown(
                 placeHolder = "Выберите канал",
                 values = state.channels.associate { it.channelId!! to it.title },
@@ -74,6 +88,11 @@ fun UploadVideoScreen(
                 ActivityResultContracts.GetContent()
             ) {
                 sourceUri = it
+            }
+            if (compoundError.contains(UploadVideoError.SOURCE_EMPTY)) {
+                Text("Выберите видео")
+            } else if (compoundError.contains(UploadVideoError.SOURCE_TYPE_INVALID)) {
+                Text("Некорректный формат видео")
             }
             Button(
                 onClick = {
@@ -134,18 +153,10 @@ fun UploadVideoScreen(
                 )
             }
         }
-        if (state.error != null) {
-            val errorMsg = when(state.error) {
-                else -> "Непредвиденная ошибка"
+        LaunchedEffect(state.video) {
+            if (state.video != null) {
+                onSuccess(state.video)
             }
-            Text(
-                text = errorMsg
-            )
-        } else if (state.video != null) {
-            Text (
-                text = "Видео успешно опубликовано"
-            )
-            onSuccess(state.video)
         }
     } else if (state.error != null) {
         ErrorComponent(

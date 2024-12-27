@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
@@ -54,32 +56,54 @@ class UploadVideoViewModel @AssistedInject constructor(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
-            _uploadVideo(
-                video = Video(
-                    channelId = input.channelId?: 0,
-                    title = input.title
-                ),
-                source = input.source,
-                cover = input.cover,
-            ).onSuccess { vid ->
-                _state.update {
-                    it.copy(
-                        video = vid,
-                        isLoading = false,
-                        error = null
-                    )
-                }
-            }.onFailure { err ->
-                _state.update {
-                    it.copy(
-                        video = null,
-                        isLoading = false,
-                        error = err
-                    )
+        val compoundError = validateVideoInput(input)
+        if (compoundError == null) {
+            viewModelScope.launch {
+                _uploadVideo(
+                    video = Video(
+                        channelId = input.channelId?: 0,
+                        title = input.title
+                    ),
+                    source = input.source!!,
+                    cover = input.cover,
+                ).onSuccess { vid ->
+                    _state.update {
+                        it.copy(
+                            video = vid,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                }.onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            video = null,
+                            isLoading = false,
+                            error = err
+                        )
+                    }
                 }
             }
+        } else {
+            _state.update {
+                it.copy(
+                    error = compoundError,
+                    isLoading = false
+                )
+            }
         }
+    }
+    private fun validateVideoInput(input: UploadVideoInput): CompoundError<UploadVideoError>? {
+        val compoundError = CompoundError<UploadVideoError>()
+        if (input.title.isEmpty())
+            compoundError.add(UploadVideoError.TITLE_EMPTY)
+        if (input.source?.name == null || input.source.content == null) {
+            compoundError.add(UploadVideoError.SOURCE_EMPTY)
+        }
+        if (input.channelId == null) {
+            compoundError.add(UploadVideoError.CHANNEL_NOT_CHOSEN)
+        }
+        return if (compoundError.isNotNull()) compoundError else null
     }
     @AssistedFactory
     interface Factory {

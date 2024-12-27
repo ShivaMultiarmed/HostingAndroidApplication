@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.dto.SignUpDto
 import mikhail.shell.video.hosting.data.dto.toDto
-import mikhail.shell.video.hosting.domain.errors.AuthError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.errors.SignUpError

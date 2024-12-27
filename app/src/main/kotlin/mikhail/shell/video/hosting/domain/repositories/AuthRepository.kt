@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.errors.AuthError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
