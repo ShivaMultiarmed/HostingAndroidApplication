@@ -13,20 +13,8 @@ class CreateChannel @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(
-        input: ChannelInputState,
-        ownerId: Long
+        channel: Channel
     ): Result<Channel, CompoundError<ChannelCreationError>> {
-        val error = CompoundError<ChannelCreationError>()
-        if (input.title.isBlank())
-            error.add(ChannelCreationError.TITLE_EMPTY)
-        if (error.isNotNull())
-            return Result.Failure(error)
-        val channel = Channel(
-            ownerId = ownerId,
-            description = input.description,
-            title = input.title!!,
-            alias = input.alias
-        )
         return channelRepository.createChannel(channel)
     }
 }

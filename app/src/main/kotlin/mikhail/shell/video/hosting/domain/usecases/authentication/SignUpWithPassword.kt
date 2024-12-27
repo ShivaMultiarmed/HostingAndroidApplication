@@ -13,27 +13,15 @@ import javax.inject.Inject
 class SignUpWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
+
     suspend operator fun invoke(
-        signUpInputState: SignUpInputState
+        userName: String,
+        password: String,
+        user: User
     ): Result<AuthModel, CompoundError<SignUpError>> {
-        val error = CompoundError<SignUpError>()
-        if (signUpInputState.userName == "")
-            error.add(EMAIL_EMPTY)
-        else if (!emailRegex.matches(signUpInputState.userName))
-            error.add(EMAIL_INVALID)
-        if (signUpInputState.password == "")
-            error.add(PASSWORD_EMPTY)
-        if (signUpInputState.name == "")
-            error.add(NAME_EMPTY)
-        if (error.isNotNull())
-            return Result.Failure(error)
-        val user = User(
-            name = signUpInputState.name
-        )
         return authRepository.signUpWithPassword(
-            signUpInputState.userName,
-            signUpInputState.password,
+            userName,
+            password,
             user
         )
     }

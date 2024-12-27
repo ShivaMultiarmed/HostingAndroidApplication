@@ -10,10 +10,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
-import javax.inject.Inject
+import mikhail.shell.video.hosting.domain.utils.isBlank
 
 @HiltViewModel(assistedFactory = CreateChannelViewModel.Factory::class)
 class CreateChannelViewModel @AssistedInject constructor(
@@ -29,21 +31,39 @@ class CreateChannelViewModel @AssistedInject constructor(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
-            _createChannel(input, userId).onSuccess {
-                _state.value = CreateChannelScreenState(
-                    channel = it,
-                    error = null,
-                    isLoading = false
-                )
-            }.onFailure {
-                _state.value = CreateChannelScreenState(
-                    channel = null,
-                    error = it,
-                    isLoading = false
-                )
+        val compoundError = validateChannelInput(input)
+        if (compoundError == null) {
+            val channel = Channel(
+                ownerId = userId,
+                description = input.description,
+                title = input.title!!,
+                alias = input.alias
+            )
+            viewModelScope.launch {
+                _createChannel(channel).onSuccess {
+                    _state.value = CreateChannelScreenState(
+                        channel = it,
+                        error = null,
+                        isLoading = false
+                    )
+                }.onFailure {
+                    _state.value = CreateChannelScreenState(
+                        channel = null,
+                        error = it,
+                        isLoading = false
+                    )
+                }
             }
         }
+    }
+    private fun validateChannelInput(input: ChannelInputState): CompoundError<ChannelCreationError>? {
+        val error = CompoundError<ChannelCreationError>()
+        if (input.title.isBlank())
+            error.add(ChannelCreationError.TITLE_EMPTY)
+        return if (error.isNotNull())
+            error
+        else
+            null
     }
     @AssistedFactory
     interface Factory {
