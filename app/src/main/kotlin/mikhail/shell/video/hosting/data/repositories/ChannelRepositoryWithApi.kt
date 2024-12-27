@@ -1,9 +1,14 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelError
+import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Result
@@ -12,7 +17,8 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
-    private val _channelApi: ChannelApi
+    private val _channelApi: ChannelApi,
+    private val gson: Gson
 ) : ChannelRepository {
     override suspend fun fetchChannelForUser(
         channelId: Long,
@@ -30,16 +36,18 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun createChannel(channel: Channel): Result<Channel, ChannelError> {
+    override suspend fun createChannel(channel: Channel): Result<Channel, CompoundError<ChannelCreationError>> {
         return try {
-            Result.Success(_channelApi.createChannel(channel.toDto()).toDomain())
+            val response = _channelApi.createChannel(channel.toDto())
+            Result.Success(response.toDomain())
         } catch (e: HttpException) {
-            val error = when (e.code()) {
-                else -> ChannelError.UNEXPECTED
-            }
+            val responseBody = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
+            val error = gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
             Result.Failure(error)
         } catch (e: Exception) {
-            Result.Failure(ChannelError.UNEXPECTED)
+            val error = CompoundError(mutableListOf(ChannelCreationError.UNEXPECTED))
+            Result.Failure(error)
         }
     }
 
@@ -56,3 +64,10 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 }
+
+//inline fun <reified T: Error> Gson.compoundErrorFromGson(
+//    json: String
+//): CompoundError<T> {
+//    val type = object : TypeToken<CompoundError<T>>() {}.type
+//    return this.fromJson(json, type)
+//}

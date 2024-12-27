@@ -10,9 +10,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.data.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.TokenInterceptor
+import mikhail.shell.video.hosting.data.adapters.ChannelCreationErrorAdapter
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.VideoApi
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
@@ -47,6 +49,7 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideGson() = GsonBuilder()
+        //.registerTypeAdapter(ChannelCreationError::class.java, ChannelCreationErrorAdapter())
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
         .create()
 

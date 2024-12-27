@@ -29,14 +29,8 @@ class CreateChannelViewModel @AssistedInject constructor(
                 isLoading = true
             )
         }
-        val channel = Channel(
-            ownerId = userId,
-            title = input.title,
-            alias = input.alias,
-            description = input.description
-        )
         viewModelScope.launch {
-            _createChannel(channel).onSuccess {
+            _createChannel(input, userId).onSuccess {
                 _state.value = CreateChannelScreenState(
                     channel = it,
                     error = null,

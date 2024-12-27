@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result

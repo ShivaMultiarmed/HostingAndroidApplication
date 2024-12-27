@@ -14,6 +14,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.EXISTS
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.UNEXPECTED
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Channel
 
@@ -62,12 +66,21 @@ fun CreateChannelScreen(
             )
         }
         if (state.error != null) {
-            val errorMsg = when (state.error) {
-                else -> "Непредвиденная ошибка"
+            if (state.error.contains(TITLE_EMPTY)) {
+                Text(
+                    text = "Заполните название"
+                )
             }
-            Text(
-                text = errorMsg
-            )
+            if (state.error.contains(UNEXPECTED)) {
+                Text(
+                    text = "Непредвиденная ошибка"
+                )
+            }
+            if (state.error.contains(EXISTS)) {
+                Text(
+                    text = "Канал уже существует"
+                )
+            }
         } else if (state.channel != null) {
             Text(
                 text = "Вы успешно создали канал"
