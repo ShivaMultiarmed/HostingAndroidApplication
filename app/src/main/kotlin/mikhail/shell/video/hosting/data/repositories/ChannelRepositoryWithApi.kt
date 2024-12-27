@@ -7,6 +7,7 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelError
+import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Channel
@@ -23,16 +24,18 @@ class ChannelRepositoryWithApi @Inject constructor(
     override suspend fun fetchChannelForUser(
         channelId: Long,
         userId: Long
-    ): Result<ChannelWithUser, ChannelError> {
+    ): Result<ChannelWithUser, ChannelLoadingError> {
         return try {
             Result.Success(_channelApi.fetchChannelDetails(channelId, userId).toDomain())
         } catch (e: HttpException) {
-            when (e.code()) {
-                404 -> Result.Failure(ChannelError.NOT_FOUND)
-                else -> Result.Failure(ChannelError.UNEXPECTED)
+            val error = when (e.code()) {
+                403 -> ChannelLoadingError.USER_NOT_SPECIFIED
+                404 -> ChannelLoadingError.NOT_FOUND
+                else -> ChannelLoadingError.UNEXPECTED
             }
+            Result.Failure(error)
         } catch (e: Exception) {
-            Result.Failure(ChannelError.UNEXPECTED)
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
 

@@ -39,20 +39,21 @@ import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 @Composable
 fun ChannelScreen(
     state: ChannelScreenState,
-    onRefresh: () -> Unit,
+    onChannelRefresh: () -> Unit,
+    onVideosRefresh: () -> Unit,
     onSubscription: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-    if (state.channel != null) {
-        val scrollState = rememberScrollState()
-        val channel = state.channel
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
-                .verticalScroll(scrollState)
-        ) {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+            .verticalScroll(scrollState)
+    ) {
+        if (state.channel != null) {
+            val channel = state.channel
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,7 +112,24 @@ fun ChannelScreen(
                     fontSize = 14.sp
                 )
             }
-            LazyColumn (
+        } else if (state.isChannelLoading) {
+            LoadingComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        } else {
+            ErrorComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                onRetry = {
+                    onChannelRefresh()
+                }
+            )
+        }
+        if (state.videos != null) {
+            LazyColumn(
                 modifier = Modifier
                     .padding(vertical = 10.dp)
                     .weight(1f)
@@ -125,18 +143,22 @@ fun ChannelScreen(
                     )
                 }
             }
+        } else if (state.isChannelLoading) {
+            LoadingComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(3f)
+            )
+        } else {
+            ErrorComponent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(3f),
+                onRetry = {
+                    onVideosRefresh()
+                }
+            )
         }
-    } else if (state.isLoading) {
-        LoadingComponent(
-            modifier = Modifier.fillMaxSize()
-        )
-    } else {
-        ErrorComponent(
-            modifier = Modifier.fillMaxSize(),
-            onRetry = {
-                onRefresh()
-            }
-        )
     }
 }
 
@@ -168,7 +190,8 @@ fun VideoSnippet(
     onClick: (Long) -> Unit
 ) {
     Row(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
             .clickable {
                 onClick(video.videoId!!)
             }
@@ -176,13 +199,14 @@ fun VideoSnippet(
         AsyncImage(
             model = video.coverUrl,
             contentDescription = video.title,
-            modifier = Modifier.fillMaxWidth(0.5f)
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
                 .aspectRatio(16f / 9)
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.secondaryContainer),
             contentScale = ContentScale.Crop
         )
-        Column (
+        Column(
             modifier = Modifier
                 .padding(start = 10.dp)
                 .weight(1f)

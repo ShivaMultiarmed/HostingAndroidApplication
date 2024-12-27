@@ -9,6 +9,7 @@ import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -80,7 +81,7 @@ class VideoRepositoryWithApi @Inject constructor(
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, VideoError> {
+    ): Result<List<Video>, VideoLoadingError> {
         return try {
             Result.Success(
                 videoApi.fetchVideoList(
@@ -94,11 +95,13 @@ class VideoRepositoryWithApi @Inject constructor(
             )
         } catch (e: HttpException) {
             val error = when (e.code()) {
-                else -> VideoError.UNEXPECTED_ERROR
+                403 -> VideoLoadingError.USER_NOT_SPECIFIED
+                404 -> VideoLoadingError.CHANNEL_NOT_FOUND
+                else -> VideoLoadingError.UNEXPECTED
             }
             Result.Failure(error)
         } catch (e: Exception) {
-            Result.Failure(VideoError.UNEXPECTED_ERROR)
+            Result.Failure(VideoLoadingError.UNEXPECTED)
         }
     }
 

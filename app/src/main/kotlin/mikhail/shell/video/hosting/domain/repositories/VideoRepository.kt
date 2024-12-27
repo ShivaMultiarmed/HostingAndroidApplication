@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.domain.repositories
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Video
@@ -30,7 +31,7 @@ interface VideoRepository {
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, VideoError>
+    ): Result<List<Video>, VideoLoadingError>
 
     suspend fun fetchVideosWithChannelsByQuery(
         query: String,

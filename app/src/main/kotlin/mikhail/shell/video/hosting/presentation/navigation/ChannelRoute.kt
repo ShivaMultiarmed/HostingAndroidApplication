@@ -26,8 +26,10 @@ fun NavGraphBuilder.channelRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         ChannelScreen(
             state = state,
-            onRefresh = {
+            onChannelRefresh = {
                 viewModel.loadChannelInfo()
+            },
+            onVideosRefresh = {
                 viewModel.loadVideosPart()
             },
             onSubscription = {

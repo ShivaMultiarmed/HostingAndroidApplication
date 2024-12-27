@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelInfo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
 
@@ -31,7 +32,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
     fun loadChannelInfo() {
         _state.update {
             it.copy(
-                isLoading = true
+                isChannelLoading = true
             )
         }
         viewModelScope.launch {
@@ -42,15 +43,15 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         channel = channelWithUser,
-                        isLoading = false,
-                        error = null
+                        isChannelLoading = false,
+                        channelLoadingError = null
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = error
+                        isChannelLoading = false,
+                        channelLoadingError = error
                     )
                 }
             }
@@ -73,13 +74,15 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         areVideosLoading = false,
-                        videos = it.videos + videos
+                        videos = (it.videos ?: listOf()) + videos,
+                        videosLoadingError = null
                     )
                 }
-            }.onFailure {
+            }.onFailure { err ->
                 _state.update {
                     it.copy(
-                        areVideosLoading = false
+                        areVideosLoading = false,
+                        videosLoadingError = err
                     )
                 }
             }
