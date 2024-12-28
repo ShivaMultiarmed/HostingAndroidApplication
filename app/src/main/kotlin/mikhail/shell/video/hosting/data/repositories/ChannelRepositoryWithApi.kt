@@ -73,4 +73,19 @@ class ChannelRepositoryWithApi @Inject constructor(
             Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
+
+    override suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, ChannelLoadingError> {
+        return try {
+            Result.Success(_channelApi.getChannelsBySubscriber(userId).map { it.toDomain() })
+        } catch (e: HttpException) {
+            val error = when (e.code()) {
+                403 -> ChannelLoadingError.USER_NOT_SPECIFIED
+                404 -> ChannelLoadingError.NOT_FOUND
+                else -> ChannelLoadingError.UNEXPECTED
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
+        }
+    }
 }

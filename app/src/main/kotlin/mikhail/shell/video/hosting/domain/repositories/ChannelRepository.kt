@@ -23,4 +23,8 @@ interface ChannelRepository {
     suspend fun fetchChannelsByOwner(
         userId: Long
     ): Result<List<Channel>, ChannelLoadingError>
+
+    suspend fun fetchChannelsBySubscriber(
+        userId: Long
+    ): Result<List<Channel>, ChannelLoadingError>
 }

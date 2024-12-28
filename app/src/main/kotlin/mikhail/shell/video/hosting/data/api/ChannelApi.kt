@@ -28,4 +28,8 @@ interface ChannelApi {
     suspend fun getChannelsByOwner(
         @Path("userId") userId: Long
     ): List<ChannelDto>
+    @GET("channels/subscriber/{userId}")
+    suspend fun getChannelsBySubscriber(
+        @Path("userId") userId: Long
+    ): List<ChannelDto>
 }
