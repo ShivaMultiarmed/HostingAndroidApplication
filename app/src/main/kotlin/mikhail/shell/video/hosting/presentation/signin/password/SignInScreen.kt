@@ -1,11 +1,17 @@
 package mikhail.shell.video.hosting.presentation.signin.password
 
+import android.renderscript.ScriptGroup.Input
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -14,9 +20,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.SignInError
+import mikhail.shell.video.hosting.presentation.utils.FormMessage
+import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.domain.errors.contains
 
 @Composable
@@ -28,67 +41,88 @@ fun SignInScreen(
     onSigningUp: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val error = state.error
-    LaunchedEffect(state.authModel) {
-        if (state.authModel != null) {
-            onSuccess()
-        }
-    }
-    if (state.authModel != null) {
-        Text(
-            text = "Вы успешно вошли"
-        )
-    }
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
     ) {
-        var email by remember { mutableStateOf(DEFAULT_EMAIL) }
-        if (error.contains(SignInError.EMAIL_EMPTY)) {
-            Text(text = "Заполните email")
-        } else if (error.contains(SignInError.EMAIL_INVALID)) {
-            Text(text = "Email не корректно введён")
-        } else if (error.contains(SignInError.EMAIL_NOT_FOUND)) {
-            Text(text = "Пользователь с email $email не найден")
+        val error = state.error
+        Title("Войти")
+        LaunchedEffect(state.authModel) {
+            if (state.authModel != null) {
+                onSuccess()
+            }
         }
-        TextField(
+        if (state.authModel != null) {
+            FormMessage(
+                text = "Вы успешно вошли"
+            )
+        }
+        var email by remember { mutableStateOf("") }
+        val emailErrorMsg = if (error.contains(SignInError.EMAIL_EMPTY)) {
+            "Заполните email"
+        } else if (error.contains(SignInError.EMAIL_INVALID)) {
+            "Email не корректно введён"
+        } else if (error.contains(SignInError.EMAIL_NOT_FOUND)) {
+            "Пользователь с email $email не найден"
+        } else null
+        InputField(
+            placeholder = "E-mail",
             value = email,
             onValueChange = {
                 email = it
-            }
+            },
+            errorMsg = emailErrorMsg
         )
-        var password by remember { mutableStateOf(DEFAULT_PASSWORD) }
-        if (error.contains(SignInError.PASSWORD_EMPTY)) {
-            Text(text = "Введите пароль")
+        var password by remember { mutableStateOf("") }
+        val passwordErrorMsg = if (error.contains(SignInError.PASSWORD_EMPTY)) {
+            "Введите пароль"
         } else if (error.contains(SignInError.PASSWORD_INCORRECT)) {
-            Text(text = "Неправильный пароль")
-        }
-        TextField(
+            "Неправильный пароль"
+        } else null
+        InputField(
+            placeholder = "Пароль",
             value = password,
             onValueChange = {
                 password = it
             },
-            visualTransformation = PasswordVisualTransformation()
+            secure = true,
+            errorMsg = passwordErrorMsg
         )
-        Button(
-            onClick = {
-                onSubmit(email, password)
-            }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            PrimaryButton(
+                text = "Войти",
+                onClick = {
+                    onSubmit(email, password)
+                }
+            )
             Text(
-                text = "Войти"
+                text = "Зарегистрироваться",
+                modifier = Modifier.clickable {
+                    onSigningUp()
+                }
             )
         }
-        Text(
-            text = "Зарегистрироваться",
-            modifier = Modifier.clickable {
-                onSigningUp()
-            }
-        )
-
     }
 }
 
 const val DEFAULT_EMAIL = "mikhail.shell@yandex.ru"
 const val DEFAULT_PASSWORD = "qwerty"
+
+
+@Composable
+@Preview
+fun SignInScreenPreview() {
+    SignInScreen(
+        state = SignInWithPasswordState(),
+        onSuccess = {},
+        onSubmit = { a, b -> },
+        onSigningUp = {}
+    )
+}

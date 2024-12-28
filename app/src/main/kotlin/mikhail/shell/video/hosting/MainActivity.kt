@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
                         signInRoute(navController)
                         channelRoute(navController, userDetailsProvider)
                         videoRoute(navController, dsFactory, userDetailsProvider)
-                        searchRoute()
+                        searchRoute(navController)
                         createChannelRoute(navController, userDetailsProvider)
                         uploadVideoRoute(navController, userDetailsProvider)
                         profileRoute(navController, userDetailsProvider)

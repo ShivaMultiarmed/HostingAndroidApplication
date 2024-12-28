@@ -36,7 +36,7 @@ fun NavGraphBuilder.signInRoute(
                         commit()
                     }
                 }
-                navController.navigate(Route.Channel(1))
+                navController.navigate(Route.Search)
             },
             onSigningUp = {
                 navController.navigate(Route.SignUp)

@@ -38,7 +38,7 @@ fun NavGraphBuilder.signUpRoute(
                         putString("token", it.token)
                         commit()
                     }
-                    navController.navigate(Route.Channel(1))
+                    navController.navigate(Route.Search)
                 }
             }
         )

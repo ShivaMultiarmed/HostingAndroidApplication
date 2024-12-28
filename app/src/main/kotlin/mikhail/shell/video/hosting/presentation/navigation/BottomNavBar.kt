@@ -25,7 +25,7 @@ sealed class BottomNavItem(
     val title: String,
     val icon: ImageVector
 ) {
-   data object Subscriptions: BottomNavItem(Route.Subscriptions, "Подписки", Icons.Rounded.Subscriptions)
+   //data object Subscriptions: BottomNavItem(Route.Subscriptions, "Подписки", Icons.Rounded.Subscriptions)
    data object Search: BottomNavItem(Route.Search, "Поиск", Icons.Rounded.Search)
    data object Profile: BottomNavItem(Route.Profile, "Профиль", Icons.Rounded.Person)
 }
@@ -35,7 +35,11 @@ fun BottomNavBar(
     onClick: (BottomNavItem) -> Unit
 ) {
     BottomNavBar(
-        navItems = listOf(BottomNavItem.Subscriptions, BottomNavItem.Search, BottomNavItem.Profile),
+        navItems = listOf(
+            //BottomNavItem.Subscriptions,
+            BottomNavItem.Search,
+            BottomNavItem.Profile
+        ),
         onClick = onClick
     )
 }
