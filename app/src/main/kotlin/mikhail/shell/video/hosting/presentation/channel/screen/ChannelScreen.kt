@@ -26,12 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 
@@ -90,17 +93,21 @@ fun ChannelScreen(
                 ) {
                     Text(
                         text = channel.title,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    val alias = if (!channel.alias.isBlank()) channel.alias else channel.channelId
                     Text(
-                        text = "@${channel.alias}",
+                        text = "@$alias",
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(top = 10.dp)
+                        modifier = Modifier.padding(top = 10.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${channel.subscribers} подписчиков",
-                        fontSize = 14.sp
+                        text = channel.subscribers.toFullSubscribers(),
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -109,7 +116,8 @@ fun ChannelScreen(
             ) {
                 Text(
                     text = channel.description,
-                    fontSize = 14.sp
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else if (state.isChannelLoading) {
@@ -131,7 +139,7 @@ fun ChannelScreen(
         if (state.videos != null) {
             LazyColumn(
                 modifier = Modifier
-                    .padding(vertical = 10.dp)
+                    .padding(top = 10.dp)
                     .weight(1f)
             ) {
                 items(state.videos) {
@@ -194,13 +202,13 @@ fun VideoSnippet(
             .fillMaxWidth()
             .clickable {
                 onClick(video.videoId!!)
-            }
+            }.padding(vertical = 10.dp)
     ) {
         AsyncImage(
             model = video.coverUrl,
             contentDescription = video.title,
             modifier = Modifier
-                .fillMaxWidth(0.5f)
+                .fillMaxWidth(0.45f)
                 .aspectRatio(16f / 9)
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.secondaryContainer),
@@ -212,12 +220,22 @@ fun VideoSnippet(
                 .weight(1f)
         ) {
             Text(
+                modifier = Modifier.padding(top = 7.dp),
                 text = video.title,
-                maxLines = 3,
-                fontSize = 16.sp
+                maxLines = 2,
+                fontSize = 14.sp,
+                lineHeight = 16.sp,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = video.views.toViews() + " - " + video.dateTime.toPresentation()
+                modifier = Modifier.padding(top = 7.dp),
+                maxLines = 2,
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
+                text = video.views.toViews() + " - " + video.dateTime.toPresentation(),
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

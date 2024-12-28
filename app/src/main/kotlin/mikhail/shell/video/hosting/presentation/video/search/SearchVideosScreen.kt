@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.video.search
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
@@ -42,6 +45,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun SearchVideosScreen(
@@ -51,26 +55,33 @@ fun SearchVideosScreen(
     onScrollToBottom: (Long, Int) -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-    Scaffold (
+    Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 var query by remember {
                     mutableStateOf("")
                 }
+                var errorMsg by remember { mutableStateOf<String?>(null) }
                 InputField(
                     value = query,
                     onValueChange = {
                         query = it
-                    }
+                    },
+                    errorMsg = errorMsg
                 )
                 PrimaryButton(
                     onClick = {
-                        onSubmit(query)
+                        if (query.isNotEmpty()) {
+                            errorMsg = null
+                            onSubmit(query)
+                        }
                     }
                 ) {
                     Icon(
@@ -83,8 +94,9 @@ fun SearchVideosScreen(
         }
     ) {
         if (state.videos != null) {
-            LazyColumn (
-                modifier = Modifier.padding(it)
+            LazyColumn(
+                modifier = Modifier
+                    .padding(it)
                     .fillMaxSize()
             ) {
                 items(state.videos) {
@@ -105,56 +117,56 @@ fun VideoWithChannelSnippet(
 ) {
     val video = videoWithChannel.video
     val channel = videoWithChannel.channel
-    Column (
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
                 onClick(video.videoId!!)
-            }
+            }.padding(top = 10.dp)
     ) {
         AsyncImage(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .aspectRatio(16f / 9),
             model = video.coverUrl,
             contentDescription = video.title,
             contentScale = ContentScale.Crop
         )
-        Row (
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                 .height(100.dp)
+                .padding(10.dp)
         ) {
             AsyncImage(
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier
+                    .size(48.dp)
                     .clip(CircleShape),
                 model = channel.avatarUrl,
                 contentDescription = channel.title,
                 contentScale = ContentScale.Crop
             )
-            Column (
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp)
             ) {
                 Text(
                     text = video.title,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 18.sp
+                    fontSize = 14.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2
                 )
-                Row {
-                    Text(
-                        text = channel.title,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        text = video.views.toViews(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        text = video.dateTime.toPresentation(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 18.sp
-                    )
-                }
+                Text(
+                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime.toPresentation(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    lineHeight = 13.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2
+                )
             }
         }
     }
@@ -164,12 +176,14 @@ fun VideoWithChannelSnippet(
 @Composable
 @Preview
 fun SearchVideosScreenPreview() {
-    SearchVideosScreen(
-        state = SearchVideosScreenState(),
-        onSubmit = {},
-        onScrollToBottom = {a, b ->
+    VideoHostingTheme {
+        SearchVideosScreen(
+            state = SearchVideosScreenState(),
+            onSubmit = {},
+            onScrollToBottom = { a, b ->
 
-        },
-        onVideoClick = {}
-    )
+            },
+            onVideoClick = {}
+        )
+    }
 }

@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.video.screen
 import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,8 +34,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -43,8 +47,10 @@ import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.LikingState.*
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import java.time.Duration
@@ -117,7 +123,7 @@ fun VideoScreen(
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
                         .padding(vertical = 7.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -147,7 +153,8 @@ fun VideoScreen(
                     Row(
                         modifier = Modifier
                             .clickable { onChannelLinkClick(channel.channelId!!) }
-                            .weight(1f)
+                            .weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         AsyncImage(
                             model = channel.avatarUrl,
@@ -161,37 +168,30 @@ fun VideoScreen(
                             text = channel.title,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(start = 16.dp),
-                            fontSize = 16.sp
+                                .padding(start = 13.dp),
+                            fontSize = 15.sp,
+                            lineHeight = 17.sp,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1
                         )
                     }
                     Text(
-                        text = channel.subscribers.toSubscribers(),
+                        text = channel.subscribers.toSubscribers() + " \uD83D\uDC64",
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(horizontal = 5.dp)
+                        modifier = Modifier.padding(end = 5.dp)
                     )
-                    Button(
-                        contentPadding = PaddingValues(4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        modifier = Modifier.height(38.dp),
+                    val subscriptionText = if (channel.subscription == SubscriptionState.SUBSCRIBED)
+                        "Отписаться"
+                    else "Подписаться"
+                    PrimaryButton(
+                        text = subscriptionText,
                         onClick = {
 
-                        },
-                    ) {
-                        val text = if (channel.subscription == SubscriptionState.SUBSCRIBED)
-                            "Отписаться"
-                        else "Подписаться"
-                        Text(
-                            text = text,
-                            fontSize = 13.sp
-                        )
-                    }
+                        }
+                    )
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     val likeVector =
@@ -200,7 +200,7 @@ fun VideoScreen(
                             else -> Icons.Outlined.ThumbUp
                         }
 
-                    VideoButton(
+                    ActionButton(
                         icon = likeVector,
                         text = video.likes.toString(),
                         onClick = {
@@ -215,7 +215,7 @@ fun VideoScreen(
                             DISLIKED -> Icons.Rounded.ThumbDown
                             else -> Icons.Outlined.ThumbDown
                         }
-                    VideoButton(
+                    ActionButton(
                         icon = dislikeVector,
                         text = video.dislikes.toString(),
                         onClick = {
@@ -225,14 +225,14 @@ fun VideoScreen(
                                 onRate(NONE)
                         }
                     )
-                    VideoButton(
+                    ActionButton(
                         icon = Icons.Outlined.Repeat,
                         text = "Поделиться",
                         onClick = {
 
                         }
                     )
-                    VideoButton(
+                    ActionButton(
                         icon = Icons.Outlined.Download,
                         text = "Скачать",
                         onClick = {
@@ -327,40 +327,7 @@ fun VideoScreen(
 //    )
 //}
 
-@Composable
-fun VideoButton(
-    icon: ImageVector,
-    text: String,
-    onClick: () -> Unit
-) {
-    Button(
-        contentPadding = PaddingValues(0.dp),
-        onClick = onClick,
-        modifier = Modifier.height(28.dp),
-        colors = ButtonDefaults.buttonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        shape = CircleShape
-    ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = text,
-                fontSize = 12.sp
-            )
-        }
-    }
-}
+
 
 fun LocalDateTime.toPresentation(): String {
     val now = LocalDateTime.now()

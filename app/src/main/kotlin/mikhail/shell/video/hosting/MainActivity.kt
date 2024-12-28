@@ -37,6 +37,7 @@ import mikhail.shell.video.hosting.presentation.navigation.profileRoute
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
 import mikhail.shell.video.hosting.presentation.navigation.signInRoute
 import mikhail.shell.video.hosting.presentation.navigation.signUpRoute
+import mikhail.shell.video.hosting.presentation.navigation.subscriptionsRoute
 import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
@@ -89,7 +90,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding),
                         navController = navController,
-                        startDestination = Route.SignIn
+                        startDestination = if (userDetailsProvider.getUserId() == 0L) Route.SignIn else Route.Search
                     ) {
                         signUpRoute(navController)
                         signInRoute(navController)
@@ -99,6 +100,7 @@ class MainActivity : ComponentActivity() {
                         createChannelRoute(navController, userDetailsProvider)
                         uploadVideoRoute(navController, userDetailsProvider)
                         profileRoute(navController, userDetailsProvider)
+                        subscriptionsRoute(navController, userDetailsProvider)
                     }
                 }
             }

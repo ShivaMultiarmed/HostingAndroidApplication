@@ -1,9 +1,14 @@
 package mikhail.shell.video.hosting.presentation.utils
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -11,11 +16,16 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mikhail.shell.video.hosting.domain.errors.Error
 
 @Composable
@@ -33,24 +43,57 @@ fun InputField(
         if (errorMsg != null) {
             ErrorText(errorMsg)
         }
-        OutlinedTextField(
-            modifier = modifier.width(300.dp),
+        BasicTextField(
+            modifier = modifier.width(300.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(10.dp),
             value = value,
             onValueChange = onValueChange,
-            shape = RoundedCornerShape(10.dp),
-            colors = TextFieldDefaults.colors(
-                errorIndicatorColor = MaterialTheme.colorScheme.error
+            singleLine = true,
+            textStyle = TextStyle(
+                fontSize = 14.sp,
+                lineHeight = 16.sp
             ),
-            visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None,
-            isError = errorMsg != null,
-            textStyle = TextStyle.Default.copy(
-                color = MaterialTheme.colorScheme.onBackground
-            ),
-            placeholder = {
-                Text(text = placeholder)
+            cursorBrush = SolidColor(Color.Black),
+            decorationBox = {
+                if (value.isEmpty()) {
+                    Text(
+                        fontSize = 14.sp,
+                        lineHeight = 16.sp,
+                        color = Color.Black,
+                        text = placeholder
+                    )
+                }
+                it()
             },
-            singleLine = true
+            visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None
         )
+        //OutlinedTextField(
+//            shape = CircleShape,
+//            colors = TextFieldDefaults.colors(
+//                errorIndicatorColor = MaterialTheme.colorScheme.error,
+//                unfocusedIndicatorColor = Color.Transparent
+//            ),
+//            visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None,
+//            isError = errorMsg != null,
+//            textStyle = TextStyle.Default.copy(
+//                color = MaterialTheme.colorScheme.onSurface,
+//                fontSize = 14.sp,
+//                lineHeight = 16.sp
+//            ),
+////            placeholder = {
+////                ErrorText(errorMsg!!)
+////            },
+//            label = {
+//                Text(
+//                    text = placeholder,
+//                    fontSize = 14.sp,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            },
+//            singleLine = true,
+        //)
     }
 }
 
