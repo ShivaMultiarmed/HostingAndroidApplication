@@ -59,6 +59,13 @@ class CreateChannelViewModel @AssistedInject constructor(
                     )
                 }
             }
+        } else {
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    error = compoundError
+                )
+            }
         }
     }
     private fun validateChannelInput(input: ChannelInputState): CompoundError<ChannelCreationError>? {
