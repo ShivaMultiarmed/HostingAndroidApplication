@@ -6,6 +6,7 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Result
 
 interface ChannelRepository {
@@ -14,7 +15,9 @@ interface ChannelRepository {
         userId: Long
     ): Result<ChannelWithUser, ChannelLoadingError>
     suspend fun createChannel(
-        channel: Channel
+        channel: Channel,
+        avatar: File?,
+        cover: File?
     ): Result<Channel, CompoundError<ChannelCreationError>>
 
     suspend fun fetchChannelsByOwner(

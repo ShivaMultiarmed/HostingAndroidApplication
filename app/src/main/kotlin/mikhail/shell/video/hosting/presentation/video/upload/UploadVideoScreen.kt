@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.video.upload
 import android.app.Instrumentation.ActivityResult
 import android.content.ContentResolver
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -52,7 +53,7 @@ fun UploadVideoScreen(
                 .verticalScroll(scrollState)
         ) {
             if (state.video != null) {
-                Text (
+                Text(
                     text = "Видео успешно опубликовано"
                 )
             }
@@ -99,7 +100,7 @@ fun UploadVideoScreen(
             }
             Button(
                 onClick = {
-                    sourcePicker.launch("video/mp4")
+                    sourcePicker.launch("video/*")
                 }
             ) {
                 Text(
@@ -114,7 +115,7 @@ fun UploadVideoScreen(
             }
             Button(
                 onClick = {
-                    coverPicker.launch("image/png")
+                    coverPicker.launch("image/*")
                 }
             ) {
                 Text(
@@ -126,21 +127,28 @@ fun UploadVideoScreen(
                     val sourceFile: File?
                     if (sourceUri == null)
                         sourceFile = null
-                    else
+                    else {
+                        val mimeType = contentResolver.getType(sourceUri!!)
+                        val extension =
+                            MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
                         sourceFile = File(
-                            name = sourceUri!!.lastPathSegment,
-                            mimeType = contentResolver.getType(sourceUri!!),
+                            name = sourceUri!!.lastPathSegment + "." + extension,
+                            mimeType = mimeType,
                             content = contentResolver.getFileBytes(sourceUri!!)
                         )
+                    }
                     val coverFile: File?
                     if (coverUri == null)
                         coverFile = null
-                    else
+                    else {
+                        val mimeType = contentResolver.getType(coverUri!!)
+                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
                         coverFile = File(
-                            name = coverUri!!.lastPathSegment,
+                            name = coverUri!!.lastPathSegment + "." + extension,
                             mimeType = contentResolver.getType(coverUri!!),
                             content = contentResolver.getFileBytes(coverUri!!),
                         )
+                    }
                     val input = UploadVideoInput(
                         channelId = channelId,
                         title = title,

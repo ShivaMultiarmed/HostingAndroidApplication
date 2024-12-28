@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.utils.isBlank
@@ -40,7 +41,11 @@ class CreateChannelViewModel @AssistedInject constructor(
                 alias = input.alias
             )
             viewModelScope.launch {
-                _createChannel(channel).onSuccess {
+                _createChannel(
+                    channel,
+                    input.avatar,
+                    input.cover
+                ).onSuccess {
                     _state.value = CreateChannelScreenState(
                         channel = it,
                         error = null,

@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.VideoApi
@@ -136,8 +135,8 @@ class VideoRepositoryWithApi @Inject constructor(
         cover: File?
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
-            val sourcePart = fileToPart("source", source)
-            val coverPart = if (cover != null) fileToPart("cover", cover) else null
+            val sourcePart = source.fileToPart("source")
+            val coverPart = cover?.fileToPart("cover")
             Result.Success(
                 videoApi.uploadVideo(
                     video.toDto(),
@@ -154,12 +153,13 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Failure(DEFAULT_UPLOAD_ERROR)
         }
     }
-    private fun fileToPart(partName: String, file: File): MultipartBody.Part {
-        val requestBody = RequestBody.create(file.mimeType!!.toMediaTypeOrNull(), file.content!!,0, file.content.size)
-        return MultipartBody.Part.createFormData(partName, file.name, requestBody)
-    }
 
     companion object {
         private val DEFAULT_UPLOAD_ERROR = CompoundError(mutableListOf(UploadVideoError.UNEXPECTED))
     }
+}
+
+fun File.fileToPart(partName: String): MultipartBody.Part {
+    val requestBody = RequestBody.create(this.mimeType!!.toMediaTypeOrNull(), this.content!!,0, this.content.size)
+    return MultipartBody.Part.createFormData(partName, this.name, requestBody)
 }

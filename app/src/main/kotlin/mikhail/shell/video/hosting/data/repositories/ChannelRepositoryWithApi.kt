@@ -6,12 +6,11 @@ import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
-import mikhail.shell.video.hosting.domain.errors.ChannelError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import retrofit2.HttpException
@@ -39,9 +38,15 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun createChannel(channel: Channel): Result<Channel, CompoundError<ChannelCreationError>> {
+    override suspend fun createChannel(channel: Channel, avatar: File?, cover: File?): Result<Channel, CompoundError<ChannelCreationError>> {
         return try {
-            val response = _channelApi.createChannel(channel.toDto())
+            val avatarPart = avatar?.fileToPart("avatar")
+            val coverPart = cover?.fileToPart("cover")
+            val response = _channelApi.createChannel(
+                channel.toDto(),
+                avatarPart,
+                coverPart
+            )
             Result.Success(response.toDomain())
         } catch (e: HttpException) {
             val responseBody = e.response()?.errorBody()?.string()
@@ -69,10 +74,3 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 }
-
-//inline fun <reified T: Error> Gson.compoundErrorFromGson(
-//    json: String
-//): CompoundError<T> {
-//    val type = object : TypeToken<CompoundError<T>>() {}.type
-//    return this.fromJson(json, type)
-//}
