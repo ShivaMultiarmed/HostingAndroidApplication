@@ -15,7 +15,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
@@ -26,7 +29,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
     private val _getVideoDetails: GetVideoDetails,
-    private val _rateVideo: RateVideo
+    private val _rateVideo: RateVideo,
+    private val _subscribe: Subscribe
 ): ViewModel() {
 
     private val _state = MutableStateFlow(VideoScreenState())
@@ -63,6 +67,36 @@ class VideoScreenViewModel @AssistedInject constructor(
                     playbackState = PAUSED,
                     error = it
                 )
+            }
+        }
+    }
+
+    fun subscribe(subscriptionState: SubscriptionState) {
+        _state.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            val channelId = _state.value.videoDetails?.channel?.channelId!!
+            _subscribe(channelId, userId, subscriptionState).onSuccess { channelWithUser ->
+                _state.update {
+                    it.copy(
+                        videoDetails = it.videoDetails?.copy(
+                            channel = channelWithUser
+                        ),
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }.onFailure {
+                _state.update {
+                    it.copy(
+                        videoDetails = null,
+                        isLoading = false,
+                        error = VideoError.FAILED_LOADING
+                    )
+                }
             }
         }
     }

@@ -47,6 +47,8 @@ import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.LikingState.*
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
@@ -61,7 +63,7 @@ fun VideoScreen(
     state: VideoScreenState,
     onRefresh: () -> Unit,
     onRate: (LikingState) -> Unit,
-    onSubscribe: (Boolean) -> Unit,
+    onSubscribe: (SubscriptionState) -> Unit,
     player: Player,
     onChannelLinkClick: (Long) -> Unit
 ) {
@@ -180,13 +182,16 @@ fun VideoScreen(
                         fontSize = 13.sp,
                         modifier = Modifier.padding(end = 5.dp)
                     )
-                    val subscriptionText = if (channel.subscription == SubscriptionState.SUBSCRIBED)
+                    val subscriptionText = if (channel.subscription == SUBSCRIBED)
                         "Отписаться"
                     else "Подписаться"
                     PrimaryButton(
                         text = subscriptionText,
                         onClick = {
-
+                            val subscriptionState = if (channel.subscription == SUBSCRIBED)
+                                NOT_SUBSCRIBED
+                            else SUBSCRIBED
+                            onSubscribe(subscriptionState)
                         }
                     )
                 }

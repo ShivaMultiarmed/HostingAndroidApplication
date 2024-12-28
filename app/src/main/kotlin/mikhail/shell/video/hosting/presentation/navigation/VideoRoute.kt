@@ -42,7 +42,7 @@ fun NavGraphBuilder.videoRoute(
                 videoScreenViewModel.rate(it)
             },
             onSubscribe = {
-
+                videoScreenViewModel.subscribe(it)
             },
             onChannelLinkClick = {
                 navController.navigate(Route.Channel(it))

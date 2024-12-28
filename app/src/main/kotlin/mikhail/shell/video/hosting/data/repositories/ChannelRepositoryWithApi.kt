@@ -12,6 +12,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -77,6 +78,25 @@ class ChannelRepositoryWithApi @Inject constructor(
     override suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, ChannelLoadingError> {
         return try {
             Result.Success(_channelApi.getChannelsBySubscriber(userId).map { it.toDomain() })
+        } catch (e: HttpException) {
+            val error = when (e.code()) {
+                403 -> ChannelLoadingError.USER_NOT_SPECIFIED
+                404 -> ChannelLoadingError.NOT_FOUND
+                else -> ChannelLoadingError.UNEXPECTED
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
+        }
+    }
+
+    override suspend fun subscribe(
+        channelId: Long,
+        userId: Long,
+        subscriptionState: SubscriptionState
+    ): Result<ChannelWithUser, ChannelLoadingError> {
+        return try {
+            Result.Success(_channelApi.subscribe(channelId, userId, subscriptionState).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 403 -> ChannelLoadingError.USER_NOT_SPECIFIED
