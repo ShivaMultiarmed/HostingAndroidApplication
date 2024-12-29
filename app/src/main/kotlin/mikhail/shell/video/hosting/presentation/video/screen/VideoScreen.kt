@@ -80,10 +80,12 @@ fun VideoScreen(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
+                var videoModifier = Modifier
+                    .fillMaxWidth()
+                //if (state.isLoading)
+                    videoModifier = videoModifier.aspectRatio(16f / 9)
                 AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9),
+                    modifier = videoModifier,
                     factory = {
                         PlayerView(it).also {
                             it.layoutParams = ViewGroup.LayoutParams(

@@ -31,12 +31,24 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo,
     private val _subscribe: Subscribe
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
 
     init {
+        player.addListener(
+            object : Player.Listener {
+                override fun onRenderedFirstFrame() {
+                    super.onRenderedFirstFrame()
+                    _state.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+                }
+            }
+        )
         loadVideo()
     }
 
@@ -51,7 +63,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                 player.prepare()
                 _state.value = VideoScreenState(
                     videoDetails = it,
-                    isLoading = false,
                     playbackState = PLAYING,
                     error = null
                 )
@@ -148,6 +159,10 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("player") player: Player, @Assisted("userId") userId: Long, @Assisted("videoId") videoId: Long): VideoScreenViewModel
+        fun create(
+            @Assisted("player") player: Player,
+            @Assisted("userId") userId: Long,
+            @Assisted("videoId") videoId: Long
+        ): VideoScreenViewModel
     }
 }
