@@ -6,9 +6,11 @@ import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -151,6 +153,19 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Failure(compoundError)
         } catch (e: Exception) {
             Result.Failure(DEFAULT_UPLOAD_ERROR)
+        }
+    }
+
+    override suspend fun incrementViews(videoId: Long): Result<Long, Error> {
+        return try {
+            Result.Success(videoApi.incrementViews(videoId))
+        } catch (e: HttpException) {
+            val error = when(e.code()) {
+                else -> VideoPatchingError.VIEWS_NOT_INCREMENTED
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            Result.Failure(VideoPatchingError.UNEXPECTED)
         }
     }
 

@@ -46,6 +46,9 @@ fun NavGraphBuilder.videoRoute(
             },
             onChannelLinkClick = {
                 navController.navigate(Route.Channel(it))
+            },
+            onView = {
+                videoScreenViewModel.incrementViews()
             }
         )
     }

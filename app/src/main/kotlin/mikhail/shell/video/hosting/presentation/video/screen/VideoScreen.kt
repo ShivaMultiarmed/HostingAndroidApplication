@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,8 +66,14 @@ fun VideoScreen(
     onRate: (LikingState) -> Unit,
     onSubscribe: (SubscriptionState) -> Unit,
     player: Player,
-    onChannelLinkClick: (Long) -> Unit
+    onChannelLinkClick: (Long) -> Unit,
+    onView: () -> Unit
 ) {
+    LaunchedEffect(state.isViewed) {
+        if (state.isViewed) {
+            onView()
+        }
+    }
     if (state.videoDetails != null) {
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel

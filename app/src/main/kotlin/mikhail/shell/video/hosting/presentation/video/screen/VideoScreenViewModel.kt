@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
+import android.media.session.PlaybackState
 import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
@@ -20,6 +21,7 @@ import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
+import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
 
@@ -30,7 +32,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
     private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo,
-    private val _subscribe: Subscribe
+    private val _subscribe: Subscribe,
+    private val _incrementViews: IncrementViews
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VideoScreenState())
@@ -40,11 +43,19 @@ class VideoScreenViewModel @AssistedInject constructor(
         player.addListener(
             object : Player.Listener {
                 override fun onRenderedFirstFrame() {
-                    super.onRenderedFirstFrame()
                     _state.update {
                         it.copy(
                             isLoading = false
                         )
+                    }
+                }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
+                        _state.update {
+                            it.copy(
+                                isViewed = true
+                            )
+                        }
                     }
                 }
             }
@@ -148,6 +159,24 @@ class VideoScreenViewModel @AssistedInject constructor(
                 it.copy(
                     playbackState = PAUSED
                 )
+            }
+        }
+    }
+
+    fun incrementViews() {
+        viewModelScope.launch {
+            _incrementViews(videoId).onSuccess { newViews ->
+                _state.update {
+                    it.copy(
+                        videoDetails = it.videoDetails?.copy(
+                            video = it.videoDetails.video.copy(
+                                views = newViews
+                            )
+                        )
+                    )
+                }
+            }.onFailure {
+
             }
         }
     }

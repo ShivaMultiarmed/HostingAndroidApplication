@@ -49,4 +49,8 @@ interface VideoApi {
         @Part source: MultipartBody.Part,
         @Part cover: MultipartBody.Part?
     ): VideoDto
+    @PATCH("videos/{videoId}/increment-views")
+    suspend fun incrementViews(
+        @Path("videoId") videoId: Long
+    ): Long
 }

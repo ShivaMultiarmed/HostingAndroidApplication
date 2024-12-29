@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.File
@@ -44,4 +45,8 @@ interface VideoRepository {
         source: File,
         cover: File?
     ): Result<Video, CompoundError<UploadVideoError>>
+
+    suspend fun incrementViews(
+        videoId: Long
+    ): Result<Long, Error>
 }
