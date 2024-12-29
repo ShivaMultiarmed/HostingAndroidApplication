@@ -11,3 +11,11 @@ fun FormMessage(text: String) {
         color = MaterialTheme.colorScheme.primary
     )
 }
+
+@Composable
+fun ErrorMessage(text: String) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.error
+    )
+}

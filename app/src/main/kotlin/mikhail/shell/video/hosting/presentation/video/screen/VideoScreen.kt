@@ -165,6 +165,7 @@ fun VideoScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondaryContainer)
                         )
                         Text(
                             text = channel.title,

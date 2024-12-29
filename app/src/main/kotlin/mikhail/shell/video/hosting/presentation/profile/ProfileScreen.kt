@@ -46,7 +46,8 @@ fun ProfileScreen(
     onGoToChannel: (Long) -> Unit,
     onPublishVideo: () -> Unit,
     onCreateChannel: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onLogOut: () -> Unit
 ) {
     if (state.channels != null) {
         Column (
@@ -67,6 +68,10 @@ fun ProfileScreen(
                 ActionButton(
                     text = "Создать канал",
                     onClick = onCreateChannel
+                )
+                ActionButton(
+                    text = "Выйти",
+                    onClick = onLogOut
                 )
             }
             LazyColumn(
@@ -104,7 +109,8 @@ fun ProfileScreenPreview() {
             onGoToChannel = {},
             onRefresh = {},
             onPublishVideo = {},
-            onCreateChannel = {}
+            onCreateChannel = {},
+            onLogOut = {}
         )
     }
 }

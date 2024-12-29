@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun Title(text: String) {
     Text(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier,
         text = text,
         color = MaterialTheme.colorScheme.primary,
         fontSize = 22.sp,

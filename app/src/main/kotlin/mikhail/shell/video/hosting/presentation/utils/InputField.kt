@@ -15,6 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -35,7 +39,9 @@ fun InputField(
     placeholder: String = "",
     onValueChange: (String) -> Unit,
     errorMsg: String? = null,
-    secure: Boolean = false
+    secure: Boolean = false,
+    maxLines: Int = 1,
+    readOnly: Boolean = false
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -44,6 +50,7 @@ fun InputField(
             ErrorText(errorMsg)
         }
         BasicTextField(
+            readOnly = readOnly,
             modifier = modifier.width(300.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainer)
@@ -57,6 +64,7 @@ fun InputField(
             ),
             cursorBrush = SolidColor(Color.Black),
             decorationBox = {
+                it()
                 if (value.isEmpty()) {
                     Text(
                         fontSize = 14.sp,
@@ -65,8 +73,8 @@ fun InputField(
                         text = placeholder
                     )
                 }
-                it()
             },
+            maxLines = maxLines,
             visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None
         )
         //OutlinedTextField(
@@ -108,10 +116,11 @@ fun ErrorText(errorMsg: String) {
 @Composable
 @Preview
 fun InputFieldPreview() {
+    var value by remember { mutableStateOf("") }
     InputField(
-        value = "",
+        value = value,
         onValueChange = {
-
+            value = it
         },
         placeholder = "Имя"
         //errorMsg = "Ошибка"

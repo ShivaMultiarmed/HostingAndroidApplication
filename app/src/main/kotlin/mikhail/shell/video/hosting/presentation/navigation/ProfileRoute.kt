@@ -1,6 +1,9 @@
 package mikhail.shell.video.hosting.presentation.navigation
 
+import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -20,6 +23,7 @@ fun NavGraphBuilder.profileRoute(
             it.create(userId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val sharedPref = LocalContext.current.getSharedPreferences("auth_details", Context.MODE_PRIVATE)
         ProfileScreen(
             state = state,
             onGoToChannel = {
@@ -36,6 +40,14 @@ fun NavGraphBuilder.profileRoute(
             },
             onCreateChannel = {
                 navController.navigate(Route.CreateChannel)
+            },
+            onLogOut = {
+                sharedPref.edit {
+                    remove("userId")
+                    remove("token")
+                    commit()
+                }
+                navController.navigate(Route.SignIn)
             }
         )
     }
