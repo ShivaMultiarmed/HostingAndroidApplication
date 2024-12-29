@@ -63,7 +63,7 @@ object ApiModule {
         converterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
-        .baseUrl("http://192.168.1.101:9999/api/v1/")
+        .baseUrl("http://158.160.22.54:9999/api/v1/")
         .addConverterFactory(converterFactory)
         .build()
 
