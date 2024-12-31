@@ -9,8 +9,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.contains
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
@@ -99,6 +102,7 @@ fun UploadVideoScreen(
                 )
                 var description by remember { mutableStateOf("") }
                 InputField(
+                    modifier = Modifier.height(300.dp),
                     value = description,
                     onValueChange = {
                         description = it
@@ -120,12 +124,22 @@ fun UploadVideoScreen(
                 if (sourceErrMsg != null) {
                     ErrorMessage(sourceErrMsg)
                 }
-                SecondaryButton(
-                    onClick = {
-                        sourcePicker.launch("video/*")
-                    },
-                    text = "Выбрать запись"
-                )
+                Row {
+                    SecondaryButton(
+                        onClick = {
+                            sourcePicker.launch("video/*")
+                        },
+                        text = if (sourceUri == null) "Выбрать запись" else "Изменить запись"
+                    )
+                    if (sourceUri != null) {
+                        SecondaryButton(
+                            text = "Удалить запись",
+                            onClick = {
+                                sourceUri = null
+                            }
+                        )
+                    }
+                }
                 var coverUri by remember { mutableStateOf<Uri?>(null) }
                 val coverPicker = rememberLauncherForActivityResult(
                     ActivityResultContracts.GetContent()
@@ -133,12 +147,22 @@ fun UploadVideoScreen(
                     if (it != null)
                         coverUri = it
                 }
-                SecondaryButton(
-                    onClick = {
-                        coverPicker.launch("image/*")
-                    },
-                    text = "Выбрать обложку"
-                )
+                Row {
+                    SecondaryButton(
+                        onClick = {
+                            coverPicker.launch("image/*")
+                        },
+                        text = if (coverUri == null) "Выбрать обложку" else "Изменить обложку"
+                    )
+                    if (coverUri != null) {
+                        SecondaryButton(
+                            text = "Удалить обложку",
+                            onClick = {
+                                coverUri = null
+                            }
+                        )
+                    }
+                }
                 PrimaryButton(
                     text = "Выложить",
                     onClick = {

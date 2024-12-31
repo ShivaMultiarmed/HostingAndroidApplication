@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,7 +43,9 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
@@ -55,6 +59,9 @@ fun SearchVideosScreen(
     onScrollToBottom: (Long, Int) -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
+    var query by remember {
+        mutableStateOf("")
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -65,9 +72,7 @@ fun SearchVideosScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                var query by remember {
-                    mutableStateOf("")
-                }
+
                 var errorMsg by remember { mutableStateOf<String?>(null) }
                 InputField(
                     value = query,
@@ -105,6 +110,29 @@ fun SearchVideosScreen(
                         onClick = onVideoClick
                     )
                 }
+            }
+        } else if (state.error != null) {
+            ErrorComponent(
+                modifier = modifier.fillMaxSize(),
+                onRetry = {
+                    if (query.isNotEmpty())
+                        onSubmit(query)
+                }
+            )
+        } else if (state.isLoading) {
+            LoadingComponent(
+                modifier = modifier.fillMaxSize()
+            )
+        } else {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Введите запрос\n" +
+                            "Чтобы найти все видео введите пробел",
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

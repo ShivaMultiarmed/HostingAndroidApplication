@@ -52,7 +52,7 @@ fun InputField(
         BasicTextField(
             readOnly = readOnly,
             modifier = modifier.width(300.dp)
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(20.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainer)
                 .padding(10.dp),
             value = value,

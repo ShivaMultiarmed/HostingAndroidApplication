@@ -80,6 +80,7 @@ fun CreateChannelScreen(
                 onValueChange = {
                     alias = it
                 },
+                placeholder = "ник канала"
             )
             var description by rememberSaveable { mutableStateOf("") }
             InputField(

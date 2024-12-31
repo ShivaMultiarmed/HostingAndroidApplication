@@ -62,7 +62,8 @@ fun SignUpScreen(
             onValueChange = {
                 userName = it
             },
-            errorMsg = userNameErrorMsg
+            errorMsg = userNameErrorMsg,
+            placeholder = "E-mail"
         )
         val passwordErrorMsg = if (compoundError.contains(SignUpError.PASSWORD_EMPTY)) {
             "Введите пароль"
@@ -74,7 +75,8 @@ fun SignUpScreen(
                 password = it
             },
             errorMsg = passwordErrorMsg,
-            secure = true
+            secure = true,
+            placeholder = "Пароль"
         )
         var name by remember { mutableStateOf("") }
         val nameErrMsg = if (compoundError.contains(SignUpError.NAME_EMPTY))
@@ -85,7 +87,8 @@ fun SignUpScreen(
             onValueChange = {
                 name = it
             },
-             errorMsg = nameErrMsg
+             errorMsg = nameErrMsg,
+            placeholder = "Имя"
         )
 
         PrimaryButton(
