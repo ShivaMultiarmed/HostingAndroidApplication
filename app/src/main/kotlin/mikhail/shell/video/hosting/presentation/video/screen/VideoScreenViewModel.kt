@@ -20,6 +20,7 @@ import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
+import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
@@ -33,7 +34,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo,
     private val _subscribe: Subscribe,
-    private val _incrementViews: IncrementViews
+    private val _incrementViews: IncrementViews,
+    private val _deleteVideo: DeleteVideo
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VideoScreenState())
@@ -177,6 +179,30 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
             }.onFailure {
 
+            }
+        }
+    }
+
+    fun deleteVideo() {
+        _state.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            _deleteVideo(videoId).onSuccess {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        videoDetails = null
+                    )
+                }
+            }.onFailure {
+                _state.update {
+                    it.copy(
+                        isLoading = false
+                    )
+                }
             }
         }
     }

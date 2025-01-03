@@ -8,6 +8,7 @@ import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
@@ -148,7 +149,7 @@ class VideoRepositoryWithApi @Inject constructor(
             )
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<UploadVideoError>>(){}.type
+            val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
             val compoundError = gson.fromJson<CompoundError<UploadVideoError>>(json, type)
             Result.Failure(compoundError)
         } catch (e: Exception) {
@@ -160,12 +161,23 @@ class VideoRepositoryWithApi @Inject constructor(
         return try {
             Result.Success(videoApi.incrementViews(videoId))
         } catch (e: HttpException) {
-            val error = when(e.code()) {
+            val error = when (e.code()) {
                 else -> VideoPatchingError.VIEWS_NOT_INCREMENTED
             }
             Result.Failure(error)
         } catch (e: Exception) {
             Result.Failure(VideoPatchingError.UNEXPECTED)
+        }
+    }
+
+    override suspend fun deleteVideo(videoId: Long): Result<Boolean, VideoDeletingError> {
+        return try {
+            videoApi.deleteVideo(videoId)
+            Result.Success(true)
+        } catch (e: HttpException) {
+            Result.Failure(VideoDeletingError.UNEXPECTED)
+        } catch (e: Exception) {
+            Result.Failure(VideoDeletingError.UNEXPECTED)
         }
     }
 
@@ -175,6 +187,11 @@ class VideoRepositoryWithApi @Inject constructor(
 }
 
 fun File.fileToPart(partName: String): MultipartBody.Part {
-    val requestBody = RequestBody.create(this.mimeType!!.toMediaTypeOrNull(), this.content!!,0, this.content.size)
+    val requestBody = RequestBody.create(
+        this.mimeType!!.toMediaTypeOrNull(),
+        this.content!!,
+        0,
+        this.content.size
+    )
     return MultipartBody.Part.createFormData(partName, this.name, requestBody)
 }

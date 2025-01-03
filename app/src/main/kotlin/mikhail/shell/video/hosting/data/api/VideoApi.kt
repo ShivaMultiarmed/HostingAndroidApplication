@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.LikingState
 import okhttp3.MultipartBody
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -53,4 +54,8 @@ interface VideoApi {
     suspend fun incrementViews(
         @Path("videoId") videoId: Long
     ): Long
+    @DELETE("videos/{videoId}")
+    suspend fun deleteVideo(
+        @Path("videoId") videoId: Long
+    ): Void
 }

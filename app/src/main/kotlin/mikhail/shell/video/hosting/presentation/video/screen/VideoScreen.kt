@@ -23,6 +23,8 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.Button
@@ -32,6 +34,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +57,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
+import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
@@ -61,13 +68,15 @@ import java.time.LocalDateTime
 
 @Composable
 fun VideoScreen(
+    userId: Long,
     state: VideoScreenState,
     onRefresh: () -> Unit,
     onRate: (LikingState) -> Unit,
     onSubscribe: (SubscriptionState) -> Unit,
     player: Player,
     onChannelLinkClick: (Long) -> Unit,
-    onView: () -> Unit
+    onView: () -> Unit,
+    onDelete: () -> Unit
 ) {
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
@@ -153,6 +162,38 @@ fun VideoScreen(
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    if (channel.ownerId == userId) {
+                        var isDeletingDialogOpen by remember { mutableStateOf(false) }
+                        Button(
+                            onClick = {
+                                isDeletingDialogOpen = true
+                            }
+                        ) {
+                            Text(
+                                text = "Удалить",
+                                fontSize = 12.sp
+                            )
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Дополнительные действия",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surface)
+                            )
+                        }
+                        if (isDeletingDialogOpen) {
+                            Dialog(
+                                onSubmit = onDelete,
+                                onDismiss = {
+                                    isDeletingDialogOpen = false
+                                },
+                                dialogTitle = "Удалить видео",
+                                dialogDescription = "Вы уверены, что хотите продолжить?"
+                            )
+                        }
+                    }
                 }
                 Row(
                     modifier = Modifier
@@ -206,7 +247,9 @@ fun VideoScreen(
                     )
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     val likeVector =
