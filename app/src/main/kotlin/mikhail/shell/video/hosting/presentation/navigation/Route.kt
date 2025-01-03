@@ -15,6 +15,8 @@ sealed class Route {
     @Serializable
     data object UploadVideo: Route()
     @Serializable
+    data class EditVideo(val videoId: Long): Route()
+    @Serializable
     data object Profile: Route()
     @Serializable
     data object Subscriptions: Route()

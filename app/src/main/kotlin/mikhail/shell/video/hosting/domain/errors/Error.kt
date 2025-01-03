@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.domain.errors
 
-import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
 interface Error
@@ -25,11 +24,14 @@ data class CompoundError<T: Error>(
     fun isNotNull(): Boolean {
         return _errors.isNotEmpty()
     }
-    fun contains(error: T): Boolean {
+    fun contains(error: Error): Boolean {
         return _errors.contains(error)
     }
 }
 
-fun <T: Error> CompoundError<T>?.contains(error: T): Boolean {
-    return this?.contains(error) ?: false
+inline fun <reified T: Error> Error?.equivalentTo(error: T): Boolean {
+    return if (this is CompoundError<*>)
+        this.contains(error)
+    else
+        this == error
 }

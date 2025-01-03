@@ -39,6 +39,7 @@ import mikhail.shell.video.hosting.presentation.navigation.signInRoute
 import mikhail.shell.video.hosting.presentation.navigation.signUpRoute
 import mikhail.shell.video.hosting.presentation.navigation.subscriptionsRoute
 import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
+import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
@@ -101,6 +102,7 @@ class MainActivity : ComponentActivity() {
                         uploadVideoRoute(navController, userDetailsProvider)
                         profileRoute(navController, userDetailsProvider)
                         subscriptionsRoute(navController, userDetailsProvider)
+                        videoEditRoute(navController, userDetailsProvider)
                     }
                 }
             }

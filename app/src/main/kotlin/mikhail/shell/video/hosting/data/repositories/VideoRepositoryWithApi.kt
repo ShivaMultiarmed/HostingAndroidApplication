@@ -9,9 +9,11 @@ import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
+import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -178,6 +180,17 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Failure(VideoDeletingError.UNEXPECTED)
         } catch (e: Exception) {
             Result.Failure(VideoDeletingError.UNEXPECTED)
+        }
+    }
+
+    override suspend fun editVideo(video: Video, coverAction: EditAction, cover: File?): Result<Video, VideoEditingError> {
+        return try {
+            val coverPart = cover?.fileToPart("cover")
+            Result.Success(videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain())
+        } catch (e: HttpException) {
+            Result.Failure(VideoEditingError.UNEXPECTED)
+        } catch (e: HttpException) {
+            Result.Failure(VideoEditingError.UNEXPECTED)
         }
     }
 

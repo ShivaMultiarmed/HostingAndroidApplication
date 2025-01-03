@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.TurnLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -15,13 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun ActionButton(
     icon: ImageVector? = null,
-    text: String,
+    text: String? = null,
     onClick: () -> Unit
 ) {
     Button(
@@ -47,10 +51,31 @@ fun ActionButton(
                     modifier = Modifier.size(14.dp)
                 )
             }
-            Text(
-                text = text,
-                fontSize = 12.sp
-            )
+            text?.let {
+                Text(
+                    text = text,
+                    fontSize = 12.sp
+                )
+            }
         }
     }
+}
+@Composable
+fun RemoveButton(
+    onClick: () -> Unit
+) {
+    ActionButton (
+        icon = Icons.Rounded.Close,
+        onClick = onClick
+    )
+}
+@Composable
+@Preview
+fun RevertButton(
+    onClick: () -> Unit = {}
+) {
+    ActionButton(
+        icon = Icons.Rounded.TurnLeft,
+        onClick = onClick
+    )
 }

@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.api
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
@@ -54,6 +55,13 @@ interface VideoApi {
     suspend fun incrementViews(
         @Path("videoId") videoId: Long
     ): Long
+    @Multipart
+    @PATCH("videos/edit")
+    suspend fun editVideo(
+        @Part("video") video: VideoDto,
+        @Part("coverAction") coverAction: EditAction,
+        @Part cover: MultipartBody.Part?
+    ): VideoDto
     @DELETE("videos/{videoId}")
     suspend fun deleteVideo(
         @Path("videoId") videoId: Long

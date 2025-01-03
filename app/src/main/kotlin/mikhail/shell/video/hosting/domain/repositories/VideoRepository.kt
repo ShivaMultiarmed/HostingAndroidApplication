@@ -4,8 +4,10 @@ import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
+import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Video
@@ -51,5 +53,13 @@ interface VideoRepository {
         videoId: Long
     ): Result<Long, Error>
 
-    suspend fun deleteVideo(videoId: Long): Result<Boolean, VideoDeletingError>
+    suspend fun deleteVideo(
+        videoId: Long
+    ): Result<Boolean, VideoDeletingError>
+
+    suspend fun editVideo(
+        video: Video,
+        coverAction: EditAction,
+        cover: File?
+    ): Result<Video, VideoEditingError>
 }

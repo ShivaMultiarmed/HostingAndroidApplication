@@ -61,6 +61,12 @@ fun NavGraphBuilder.videoRoute(
                     delay(1000)
                     navController.navigate(Route.Profile)
                 }
+            },
+            onUpdate = {
+                coroutineScope.launch {
+                    delay(1000)
+                    navController.navigate(Route.EditVideo(it))
+                }
             }
         )
     }

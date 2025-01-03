@@ -1,28 +1,21 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
-import android.app.Instrumentation.ActivityResult
-import android.content.ContentResolver
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,15 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
-import mikhail.shell.video.hosting.domain.errors.contains
+import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.FormMessage
@@ -48,6 +39,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.SecondaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.utils.getFileBytes
 
 @Composable
 fun UploadVideoScreen(
@@ -76,7 +68,7 @@ fun UploadVideoScreen(
                 val contentResolver = LocalContext.current.contentResolver
                 var title by remember { mutableStateOf("") }
                 val compoundError = state.error
-                val titleErrMsg = if (compoundError.contains(UploadVideoError.TITLE_EMPTY)) {
+                val titleErrMsg = if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
                     "Заполните название"
                 } else null
                 InputField(
@@ -89,7 +81,7 @@ fun UploadVideoScreen(
                 )
                 var channelId by remember { mutableStateOf<Long?>(null) }
                 val channelErrMsg =
-                    if (compoundError.contains(UploadVideoError.CHANNEL_NOT_CHOSEN)) {
+                    if (compoundError.equivalentTo(UploadVideoError.CHANNEL_NOT_CHOSEN)) {
                         "Выберите канал"
                     } else null
                 Dropdown(
@@ -116,9 +108,9 @@ fun UploadVideoScreen(
                     if (it != null)
                         sourceUri = it
                 }
-                val sourceErrMsg = if (compoundError.contains(UploadVideoError.SOURCE_EMPTY)) {
+                val sourceErrMsg = if (compoundError.equivalentTo(UploadVideoError.SOURCE_EMPTY)) {
                     "Выберите видео"
-                } else if (compoundError.contains(UploadVideoError.SOURCE_TYPE_INVALID)) {
+                } else if (compoundError.equivalentTo(UploadVideoError.SOURCE_TYPE_INVALID)) {
                     "Некорректный формат видео"
                 } else null
                 if (sourceErrMsg != null) {
@@ -209,7 +201,7 @@ fun UploadVideoScreen(
                 onSuccess(state.video)
             }
         }
-    } else if (state.error.contains(ChannelLoadingError.UNEXPECTED)) {
+    } else if (state.error.equivalentTo(ChannelLoadingError.UNEXPECTED)) {
         ErrorComponent(
             modifier = Modifier.fillMaxSize(),
             onRetry = {
@@ -276,7 +268,3 @@ fun <T> Dropdown(
     }
 }
 
-fun ContentResolver.getFileBytes(uri: Uri): ByteArray? {
-    val inputStream = this.openInputStream(uri)
-    return inputStream?.readBytes()
-}

@@ -57,9 +57,11 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
+import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -76,7 +78,8 @@ fun VideoScreen(
     player: Player,
     onChannelLinkClick: (Long) -> Unit,
     onView: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onUpdate: (Long) -> Unit
 ) {
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
@@ -164,23 +167,23 @@ fun VideoScreen(
                     )
                     if (channel.ownerId == userId) {
                         var isDeletingDialogOpen by remember { mutableStateOf(false) }
+                        var isAdvancedDialogOpen by remember { mutableStateOf(false) }
                         Button(
                             onClick = {
                                 isDeletingDialogOpen = true
                             }
                         ) {
-                            Text(
-                                text = "Удалить",
-                                fontSize = 12.sp
-                            )
                             Icon(
-                                imageVector = Icons.Rounded.Close,
-                                contentDescription = "Дополнительные действия",
-                                tint = MaterialTheme.colorScheme.error,
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = "Дополнительно",
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
                                     .size(20.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .clickable {
+                                        isAdvancedDialogOpen = true
+                                    }
                             )
                         }
                         if (isDeletingDialogOpen) {
@@ -191,6 +194,28 @@ fun VideoScreen(
                                 },
                                 dialogTitle = "Удалить видео",
                                 dialogDescription = "Вы уверены, что хотите продолжить?"
+                            )
+                        }
+                        if (isAdvancedDialogOpen) {
+                            ContextMenu(
+                                isExpanded = isAdvancedDialogOpen,
+                                menuItems = listOf(
+                                    MenuItem(
+                                        title = "Редактировать",
+                                        onClick = {
+                                            onUpdate(video.videoId!!)
+                                        }
+                                    ),
+                                    MenuItem(
+                                        title = "Удалить",
+                                        onClick = {
+                                            isDeletingDialogOpen = true
+                                        }
+                                    )
+                                ),
+                                onDismiss = {
+                                    isAdvancedDialogOpen = false
+                                }
                             )
                         }
                     }
