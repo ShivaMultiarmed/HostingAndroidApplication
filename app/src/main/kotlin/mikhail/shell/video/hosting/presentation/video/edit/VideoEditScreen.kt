@@ -176,7 +176,11 @@ fun VideoEditScreen(
                             val painter = rememberAsyncImagePainter(model = coverUri)
                             Image(
                                 painter = painter,
-                                contentDescription = video.title
+                                contentDescription = video.title,
+                                modifier = Modifier.width(300.dp)
+                                    .aspectRatio(16f / 9)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop
                             )
                         }
                         if (coverExists == true) {
