@@ -35,6 +35,9 @@ fun NavGraphBuilder.videoEditRoute(
             },
             onSuccess = {
                 navController.navigate(Route.Video(it.videoId!!))
+            },
+            onCancel = {
+                navController.navigate(Route.Video(it))
             }
         )
     }
