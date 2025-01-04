@@ -118,7 +118,7 @@ fun VideoEditScreen(
                         text = if (coverUri == null && video.coverUrl.isBlank())
                             "Выбрать обложку" else "Изменить обложку"
                     )
-                    if (coverUri != null && video.coverUrl.isNotBlank()) {
+                    if (coverAction != KEEP) {
                         RevertButton(
                             onClick = {
                                 coverUri = null
@@ -126,7 +126,7 @@ fun VideoEditScreen(
                             }
                         )
                     }
-                    if (coverUri != null || video.coverUrl.isNotBlank()) {
+                    if (coverAction != REMOVE && (video.coverUrl.isNotBlank() || coverUri != null)) {
                         RemoveButton (
                             onClick = {
                                 coverUri = null
