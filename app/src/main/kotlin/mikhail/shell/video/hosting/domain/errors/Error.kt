@@ -35,3 +35,11 @@ inline fun <reified T: Error> Error?.equivalentTo(error: T): Boolean {
     else
         this == error
 }
+fun Error?.isNull(): Boolean {
+    return if (this is CompoundError<*>)
+        this.isNull()
+    else
+        this == null
+}
+
+fun Error?.isNotNull(): Boolean = !this.isNull()

@@ -59,7 +59,7 @@ fun VideoEditScreen(
     modifier: Modifier = Modifier,
     state: VideoEditScreenState,
     onRefresh: () -> Unit,
-    onSubmit: (Video, EditAction, File?) -> Unit,
+    onSubmit: (VideoEditInputState) -> Unit,
     onSuccess: (Video) -> Unit,
     onCancel: (Long) -> Unit
 ) {
@@ -196,11 +196,14 @@ fun VideoEditScreen(
                     PrimaryButton(
                         text = "Отправить",
                         onClick = {
-                            val video = state.initialVideo.copy(
-                                title = title,
-                            )
                             val coverFile = coverUri?.let { contentResolver.uriToFile(it) }
-                            onSubmit(video, coverAction, coverFile)
+                            onSubmit(
+                                VideoEditInputState(
+                                    title = title,
+                                    coverAction = coverAction,
+                                    cover = coverFile
+                                )
+                            )
                         }
                     )
                     SecondaryButton(

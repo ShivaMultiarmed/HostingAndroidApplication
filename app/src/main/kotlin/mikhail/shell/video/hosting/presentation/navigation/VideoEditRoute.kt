@@ -26,12 +26,8 @@ fun NavGraphBuilder.videoEditRoute(
             onRefresh = {
                 viewModel.loadInitialVideo()
             },
-            onSubmit = { video, editAction, cover ->
-                viewModel.edit(
-                    video = video,
-                    coverAction = editAction,
-                    cover = cover
-                )
+            onSubmit = {
+                viewModel.edit(it)
             },
             onSuccess = {
                 navController.navigate(Route.Video(it.videoId!!))

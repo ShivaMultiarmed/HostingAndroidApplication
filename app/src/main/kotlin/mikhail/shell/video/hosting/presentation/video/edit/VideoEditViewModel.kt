@@ -10,7 +10,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.VideoEditingError
+import mikhail.shell.video.hosting.domain.errors.VideoEditingError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.isNotNull
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
@@ -57,35 +62,55 @@ class VideoEditViewModel @AssistedInject constructor(
         }
     }
 
-    fun edit(video: Video, coverAction: EditAction, cover: File?) {
+    fun edit(input: VideoEditInputState) {
         _state.update {
             it.copy(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
-            _editVideo(
-                video,
-                coverAction,
-                cover
-            ).onSuccess { updatedVideo ->
-                _state.update {
-                    it.copy(
-                        updatedVideo = updatedVideo,
-                        error = null,
-                        isLoading = false
-                    )
-                }
-            }.onFailure { err ->
-                _state.update {
-                    it.copy(
-                        updatedVideo = null,
-                        error = err,
-                        isLoading = false
-                    )
+        val error = validate(input)
+        if (error.isNotNull()) {
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    error = error
+                )
+            }
+        } else {
+            val video = _state.value.initialVideo!!.copy(
+                title = input.title,
+            )
+            viewModelScope.launch {
+                _editVideo(
+                    video,
+                    input.coverAction,
+                    input.cover
+                ).onSuccess { updatedVideo ->
+                    _state.update {
+                        it.copy(
+                            updatedVideo = updatedVideo,
+                            error = null,
+                            isLoading = false
+                        )
+                    }
+                }.onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            updatedVideo = null,
+                            error = err,
+                            isLoading = false
+                        )
+                    }
                 }
             }
         }
+    }
+    private fun validate(input: VideoEditInputState): Error {
+        val error = CompoundError<VideoEditingError>()
+        if (input.title.isEmpty()) {
+            error.add(TITLE_EMPTY)
+        }
+        return error
     }
     @AssistedFactory
     interface Factory {
