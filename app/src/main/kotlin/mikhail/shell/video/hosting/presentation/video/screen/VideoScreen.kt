@@ -59,6 +59,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
+import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
@@ -168,23 +169,36 @@ fun VideoScreen(
                     if (channel.ownerId == userId) {
                         var isDeletingDialogOpen by remember { mutableStateOf(false) }
                         var isAdvancedDialogOpen by remember { mutableStateOf(false) }
-                        Button(
-                            onClick = {
-                                isDeletingDialogOpen = true
-                            }
-                        ) {
-                            Icon(
+                        Box {
+                            EditButton(
                                 imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Дополнительно",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                                    .clickable {
-                                        isAdvancedDialogOpen = true
-                                    }
+                                onClick = {
+                                    isAdvancedDialogOpen = true
+                                }
                             )
+                            if (isAdvancedDialogOpen) {
+                                ContextMenu(
+                                    modifier = Modifier,
+                                    isExpanded = true,
+                                    menuItems = listOf(
+                                        MenuItem(
+                                            title = "Редактировать",
+                                            onClick = {
+                                                onUpdate(video.videoId!!)
+                                            }
+                                        ),
+                                        MenuItem(
+                                            title = "Удалить",
+                                            onClick = {
+                                                isDeletingDialogOpen = true
+                                            }
+                                        )
+                                    ),
+                                    onDismiss = {
+                                        isAdvancedDialogOpen = false
+                                    }
+                                )
+                            }
                         }
                         if (isDeletingDialogOpen) {
                             Dialog(
@@ -194,28 +208,6 @@ fun VideoScreen(
                                 },
                                 dialogTitle = "Удалить видео",
                                 dialogDescription = "Вы уверены, что хотите продолжить?"
-                            )
-                        }
-                        if (isAdvancedDialogOpen) {
-                            ContextMenu(
-                                isExpanded = isAdvancedDialogOpen,
-                                menuItems = listOf(
-                                    MenuItem(
-                                        title = "Редактировать",
-                                        onClick = {
-                                            onUpdate(video.videoId!!)
-                                        }
-                                    ),
-                                    MenuItem(
-                                        title = "Удалить",
-                                        onClick = {
-                                            isDeletingDialogOpen = true
-                                        }
-                                    )
-                                ),
-                                onDismiss = {
-                                    isAdvancedDialogOpen = false
-                                }
                             )
                         }
                     }
@@ -268,7 +260,8 @@ fun VideoScreen(
                                 NOT_SUBSCRIBED
                             else SUBSCRIBED
                             onSubscribe(subscriptionState)
-                        }
+                        },
+                        isActivated = channel.subscription == SUBSCRIBED
                     )
                 }
                 Row(

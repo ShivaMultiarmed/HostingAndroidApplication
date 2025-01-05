@@ -35,6 +35,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.utils.isBlank
+import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
@@ -101,13 +102,14 @@ fun ChannelScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    val alias = if (!channel.alias.isBlank()) channel.alias else channel.channelId
-                    Text(
-                        text = "@$alias",
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(top = 10.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (channel.alias.isNotBlank()) {
+                        Text(
+                            text = "@${channel.alias}",
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(top = 10.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
                         text = channel.subscribers.toFullSubscribers(),
                         fontSize = 13.sp,
@@ -116,11 +118,13 @@ fun ChannelScreen(
                 }
             }
             PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
                 text = if (channel.subscription == SUBSCRIBED) "Отписаться" else "Подписаться",
                 onClick = {
                     val subscriptionState = if (channel.subscription == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
                     onSubscription(subscriptionState)
-                }
+                },
+                isActivated = channel.subscription == SUBSCRIBED
             )
             Text(
                 modifier = Modifier.fillMaxWidth(),

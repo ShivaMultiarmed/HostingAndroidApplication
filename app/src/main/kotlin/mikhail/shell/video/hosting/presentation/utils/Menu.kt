@@ -21,6 +21,7 @@ fun ContextMenu(
     onDismiss: () -> Unit
 ) {
     DropdownMenu(
+        modifier = modifier,
         expanded = isExpanded,
         onDismissRequest = onDismiss
     ) {
@@ -31,7 +32,10 @@ fun ContextMenu(
                         text = it.title
                     )
                 },
-                onClick = it.onClick
+                onClick = {
+                    it.onClick()
+                    onDismiss()
+                }
             )
         }
     }

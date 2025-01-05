@@ -82,19 +82,14 @@ fun SearchVideosScreen(
                     errorMsg = errorMsg
                 )
                 PrimaryButton(
+                    icon = Icons.Rounded.Search,
                     onClick = {
                         if (query.isNotEmpty()) {
                             errorMsg = null
                             onSubmit(query)
                         }
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Search,
-                        tint = Color.White,
-                        contentDescription = "Поиск"
-                    )
-                }
+                )
             }
         }
     ) {
