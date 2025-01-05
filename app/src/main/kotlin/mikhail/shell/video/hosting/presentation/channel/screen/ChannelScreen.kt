@@ -30,10 +30,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
@@ -44,7 +48,7 @@ fun ChannelScreen(
     state: ChannelScreenState,
     onChannelRefresh: () -> Unit,
     onVideosRefresh: () -> Unit,
-    onSubscription: () -> Unit,
+    onSubscription: (SubscriptionState) -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -111,15 +115,19 @@ fun ChannelScreen(
                     )
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = channel.description,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            PrimaryButton(
+                text = if (channel.subscription == SUBSCRIBED) "Отписаться" else "Подписаться",
+                onClick = {
+                    val subscriptionState = if (channel.subscription == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
+                    onSubscription(subscriptionState)
+                }
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = channel.description,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         } else if (state.isChannelLoading) {
             LoadingComponent(
                 modifier = Modifier
@@ -202,7 +210,8 @@ fun VideoSnippet(
             .fillMaxWidth()
             .clickable {
                 onClick(video.videoId!!)
-            }.padding(vertical = 10.dp)
+            }
+            .padding(vertical = 10.dp)
     ) {
         AsyncImage(
             model = video.coverUrl,

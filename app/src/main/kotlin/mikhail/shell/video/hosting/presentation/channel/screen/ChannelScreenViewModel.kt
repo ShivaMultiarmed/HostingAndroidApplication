@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelInfo
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
@@ -20,7 +21,8 @@ class ChannelScreenViewModel @AssistedInject constructor(
     @Assisted("channelId") private val _channelId: Long,
     @Assisted("userId") private val _userId: Long,
     private val _getChannelInfo: GetChannelInfo,
-    private val _getVideoList: GetVideoList
+    private val _getVideoList: GetVideoList,
+    private val _subscribe: Subscribe
 ) : ViewModel() {
     private val _state = MutableStateFlow(ChannelScreenState())
     val state = _state.asStateFlow()
@@ -86,6 +88,19 @@ class ChannelScreenViewModel @AssistedInject constructor(
                         videosLoadingError = err
                     )
                 }
+            }
+        }
+    }
+    fun subscribe(subscriptionState: SubscriptionState) {
+        viewModelScope.launch {
+            _subscribe(_channelId, _userId, subscriptionState).onSuccess { updatedChannelWithUser ->
+                _state.update {
+                    it.copy(
+                        channel = updatedChannelWithUser
+                    )
+                }
+            }.onFailure {
+
             }
         }
     }

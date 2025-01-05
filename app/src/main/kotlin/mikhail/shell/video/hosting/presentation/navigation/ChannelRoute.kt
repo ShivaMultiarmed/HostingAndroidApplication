@@ -33,7 +33,7 @@ fun NavGraphBuilder.channelRoute(
                 viewModel.loadVideosPart()
             },
             onSubscription = {
-
+                viewModel.subscribe(it)
             },
             onVideoClick = {
                 navController.navigate(Route.Video(it))
