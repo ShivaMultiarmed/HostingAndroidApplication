@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
                         videoRoute(navController, dsFactory, userDetailsProvider)
                         searchRoute(navController)
                         createChannelRoute(navController, userDetailsProvider)
-                        uploadVideoRoute(navController, userDetailsProvider)
+                        uploadVideoRoute(navController, userDetailsProvider, dsFactory)
                         profileRoute(navController, userDetailsProvider)
                         subscriptionsRoute(navController, userDetailsProvider)
                         videoEditRoute(navController, userDetailsProvider)

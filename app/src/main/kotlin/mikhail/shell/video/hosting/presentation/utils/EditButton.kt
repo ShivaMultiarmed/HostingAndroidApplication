@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.utils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -21,7 +22,8 @@ fun EditButton(
     onClick: () -> Unit
 ) {
     Box(
-        modifier.size(22.dp)
+        modifier
+            .aspectRatio(1f)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .clickable(onClick = onClick),

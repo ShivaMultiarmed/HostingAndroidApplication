@@ -1,8 +1,15 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.view.ViewGroup
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,9 +22,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Repeat
@@ -37,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,9 +54,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
@@ -63,6 +76,7 @@ import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
+import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -88,6 +102,16 @@ fun VideoScreen(
         }
     }
     if (state.videoDetails != null) {
+        var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
+        val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
+        val idealMinVideoHeight = 9f / 16 * idealVideoWidth
+        val idealMaxVideoHeight = 16f / 9 * idealVideoWidth
+        val scrollState = rememberScrollState()
+        val animatedHeight by animateDpAsState(
+            targetValue = if (videoInfoExpanded) idealMinVideoHeight else 0.dp,//idealMaxVideoHeight,
+            animationSpec = tween(durationMillis = 250),
+            label = "videoAnimation"
+        )
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
         Column(
@@ -100,21 +124,17 @@ fun VideoScreen(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.onBackground)
             ) {
-                var videoModifier = Modifier
-                    .fillMaxWidth()
-                //if (state.isLoading)
-                    videoModifier = videoModifier.aspectRatio(16f / 9)
-                AndroidView(
-                    modifier = videoModifier,
-                    factory = {
-                        PlayerView(it).also {
-                            it.layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            )
-                            it.player = player
-                        }
-                    }
+                PlayerComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (videoInfoExpanded && animatedHeight < idealMaxVideoHeight
+                                || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
+                                Modifier.height(animatedHeight)
+                            else
+                                Modifier.wrapContentHeight()
+                        ),
+                    player = player
                 )
             }
             Column(
@@ -129,6 +149,17 @@ fun VideoScreen(
                     )
                     .background(MaterialTheme.colorScheme.background)
                     .padding(12.dp)
+                    .verticalScroll(scrollState)
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = rememberDraggableState {
+                            if (it < -50f) {
+                                videoInfoExpanded = true
+                            } else if (it > 50f) {
+                                videoInfoExpanded = false
+                            }
+                        }
+                    )
             ) {
                 Box(
                     modifier = Modifier
@@ -171,6 +202,7 @@ fun VideoScreen(
                         var isAdvancedDialogOpen by remember { mutableStateOf(false) }
                         Box {
                             EditButton(
+                                modifier = Modifier.size(22.dp),
                                 imageVector = Icons.Rounded.MoreVert,
                                 onClick = {
                                     isAdvancedDialogOpen = true
