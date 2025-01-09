@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +42,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -59,29 +63,36 @@ fun SearchVideosScreen(
     onScrollToBottom: (Long, Int) -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-    var query by remember {
+    var query by rememberSaveable {
         mutableStateOf("")
     }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(
+            ConstraintLayout (
                 modifier = Modifier
+                    .borderBottom(
+                        strokeWidth = 3,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
                     .fillMaxWidth()
-                    .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    .padding(10.dp)
             ) {
-
-                var errorMsg by remember { mutableStateOf<String?>(null) }
+                val (input, button) = createRefs()
+                var errorMsg by rememberSaveable { mutableStateOf<String?>(null) }
                 InputField(
+                    modifier = Modifier.fillMaxWidth(),
                     value = query,
                     onValueChange = {
                         query = it
                     },
-                    errorMsg = errorMsg
+                    errorMsg = errorMsg,
+                    placeholder = "Искать"
                 )
                 PrimaryButton(
+                    modifier = Modifier.constrainAs(button) {
+                        end.linkTo(parent.end)
+                    },
                     icon = Icons.Rounded.Search,
                     onClick = {
                         if (query.isNotEmpty()) {
@@ -94,17 +105,24 @@ fun SearchVideosScreen(
         }
     ) {
         if (state.videos != null) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize()
-            ) {
-                items(state.videos) {
-                    VideoWithChannelSnippet(
-                        videoWithChannel = it,
-                        onClick = onVideoClick
-                    )
+            if (state.videos.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(it)
+                        .fillMaxSize()
+                ) {
+                    items(state.videos) {
+                        VideoWithChannelSnippet(
+                            videoWithChannel = it,
+                            onClick = onVideoClick
+                        )
+                    }
                 }
+            } else {
+                EmptyResultComponent(
+                    modifier = modifier.padding(it).fillMaxSize(),
+                    message = "Ничего не найдено"
+                )
             }
         } else if (state.error != null) {
             ErrorComponent(
@@ -151,7 +169,8 @@ fun VideoWithChannelSnippet(
         AsyncImage(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9),
+                .aspectRatio(16f / 9)
+                .background(MaterialTheme.colorScheme.secondaryContainer),
             model = video.coverUrl,
             contentDescription = video.title,
             contentScale = ContentScale.Crop

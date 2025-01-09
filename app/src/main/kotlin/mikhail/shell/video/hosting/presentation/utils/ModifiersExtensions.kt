@@ -4,10 +4,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import mikhail.shell.video.hosting.ui.theme.Black
 
 fun Modifier.borderBottom(
     strokeWidth: Int = 1,
-    color: Color
+    color: Color = Black
 ): Modifier {
     return this.drawBehind {
         val y = size.height - strokeWidth / 2
