@@ -32,6 +32,9 @@ fun NavGraphBuilder.createChannelRoute(
                 coroutineScope.launch {
                     navController.navigate(Route.Channel(it.channelId!!))
                 }
+            },
+            onPopup = {
+                navController.popBackStack()
             }
         )
     }

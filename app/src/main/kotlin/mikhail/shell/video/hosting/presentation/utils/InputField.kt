@@ -6,12 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.Icon
@@ -214,10 +216,14 @@ fun EditFileFieldPreview() {
     }
 }
 
-
-data class ActionItem(
+open class ActionItem(
     val icon: ImageVector,
     val action: () -> Unit
+)
+
+data class DeletingItem (val deleting: () -> Unit) : ActionItem(
+    icon = Icons.Rounded.Delete,
+    action = deleting
 )
 
 @Composable

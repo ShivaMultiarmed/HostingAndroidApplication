@@ -55,6 +55,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
+import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.Dropdown
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -65,6 +66,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.getFileBytes
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -88,68 +90,53 @@ fun UploadVideoScreen(
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
         var description by rememberSaveable { mutableStateOf("") }
-
         Scaffold(
             topBar = {
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .borderBottom(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 2)
-                        .padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowBackIosNew,
-                        contentDescription = "Вернуться назад",
-                        modifier = Modifier.clickable(onClick = onPopup)
-                    )
-                    Title(
-                        text = if (state.video == null) "Выложить видео" else "Готово"
-                    )
-                    PrimaryButton(
-                        modifier = Modifier.padding(start = 10.dp),
-                        text = "Выложить",
-                        onClick = {
-
-                            val sourceFile: File?
-                            if (sourceUri == null)
-                                sourceFile = null
-                            else {
-                                val mimeType = contentResolver.getType(sourceUri!!)
-                                val extension =
-                                    MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                                sourceFile = File(
-                                    name = sourceUri!!.lastPathSegment + "." + extension,
-                                    mimeType = mimeType,
-                                    content = contentResolver.getFileBytes(sourceUri!!)
-                                )
-                            }
-                            val coverFile: File?
-                            if (coverUri == null)
-                                coverFile = null
-                            else {
-                                val mimeType = contentResolver.getType(coverUri!!)
-                                val extension =
-                                    MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                                coverFile = File(
-                                    name = coverUri!!.lastPathSegment + "." + extension,
-                                    mimeType = contentResolver.getType(coverUri!!),
-                                    content = contentResolver.getFileBytes(coverUri!!),
-                                )
-                            }
-                            val input = UploadVideoInput(
-                                channelId = channelId,
-                                title = title,
-                                description = description,
-                                source = sourceFile,
-                                cover = coverFile,
+                TopBar(
+                    onPopup = onPopup,
+                    buttonTitle = "Выложить",
+                    topBarTitle = "Выложить видео",
+                    onSubmit = {
+                        val sourceFile: File?
+                        if (sourceUri == null)
+                            sourceFile = null
+                        else {
+                            val mimeType = contentResolver.getType(sourceUri!!)
+                            val extension =
+                                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                            sourceFile = File(
+                                name = sourceUri!!.lastPathSegment + "." + extension,
+                                mimeType = mimeType,
+                                content = contentResolver.getFileBytes(sourceUri!!)
                             )
-                            onSubmit(input)
                         }
-                    )
-                }
+                        val coverFile: File?
+                        if (coverUri == null)
+                            coverFile = null
+                        else {
+                            val mimeType = contentResolver.getType(coverUri!!)
+                            val extension =
+                                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                            coverFile = File(
+                                name = coverUri!!.lastPathSegment + "." + extension,
+                                mimeType = contentResolver.getType(coverUri!!),
+                                content = contentResolver.getFileBytes(coverUri!!),
+                            )
+                        }
+                        val input = UploadVideoInput(
+                            channelId = channelId,
+                            title = title,
+                            description = description,
+                            source = sourceFile,
+                            cover = coverFile,
+                        )
+                        onSubmit(input)
+                    }
+                )
             },
-            modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             Box(
                 modifier = Modifier
@@ -185,9 +172,8 @@ fun UploadVideoScreen(
 
                     val sourceActionItems = if (sourceUri == null) listOf()
                     else listOf(
-                        ActionItem(
-                            icon = Icons.Rounded.Delete,
-                            action = {
+                        DeletingItem(
+                            deleting = {
                                 sourceUri = null
                             }
                         )
