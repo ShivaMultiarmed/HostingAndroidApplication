@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation
 
 import android.text.Html.ImageGetter
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.rounded.Subscriptions
 import androidx.compose.material.icons.sharp.Search
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
@@ -34,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mikhail.shell.video.hosting.presentation.utils.borderTop
 
 sealed class BottomNavItem(
     val route: Route,
@@ -86,7 +89,8 @@ fun BottomNavBar(
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp),
+            .height(60.dp)
+            .borderTop(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 2),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()

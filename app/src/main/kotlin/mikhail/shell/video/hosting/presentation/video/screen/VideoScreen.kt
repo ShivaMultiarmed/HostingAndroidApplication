@@ -435,8 +435,6 @@ fun VideoScreen(
 //    )
 //}
 
-
-
 fun LocalDateTime.toPresentation(): String {
     val now = LocalDateTime.now()
     return if (now.minusMinutes(10) < this)

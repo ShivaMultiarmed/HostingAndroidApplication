@@ -33,8 +33,8 @@ fun ActionButton(
         onClick = onClick,
         modifier = Modifier.height(28.dp),
         colors = ButtonDefaults.buttonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
         ),
         shape = CircleShape
     ) {

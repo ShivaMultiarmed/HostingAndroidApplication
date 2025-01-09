@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.utils
 
 import android.app.Notification.Action
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
@@ -35,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun InputField(
@@ -49,9 +53,14 @@ fun InputField(
     icon: ImageVector? = null,
     enabled: Boolean = true
 ) {
-    Column {
+    Column(
+        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        var focused by rememberSaveable { mutableStateOf(false) }
         TextField(
-            modifier = modifier,
+            modifier = modifier.onFocusChanged {
+                focused = it.isFocused
+            },
             value = value,
             onValueChange = onValueChange,
             label = {
@@ -71,7 +80,13 @@ fun InputField(
                         Icon(
                             imageVector = icon,
                             contentDescription = placeholder,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(22.dp),
+                            tint = when {
+                                errorMsg != null -> MaterialTheme.colorScheme.error
+                                focused -> MaterialTheme.colorScheme.primary
+                                !focused -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.tertiary
+                            }
                         )
                     }
                 }
@@ -79,7 +94,11 @@ fun InputField(
             shape = RoundedCornerShape(0.dp),
             colors = TextFieldDefaults.colors(
                 errorIndicatorColor = MaterialTheme.colorScheme.error,
-                unfocusedIndicatorColor = Color.Transparent
+                unfocusedIndicatorColor = Color.Transparent,
+                errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                focusedContainerColor = MaterialTheme.colorScheme.secondary
             ),
             visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None,
             isError = errorMsg != null,
@@ -161,33 +180,37 @@ fun EditField(
 @Composable
 @Preview
 fun EditInputFieldPreview() {
-    EditField(
-        actionItems = listOf(
-            ActionItem(
-                icon = Icons.Rounded.Replay,
-                action = { }
-            )
-        ),
-    ) {
-        InputFieldPreview()
+    VideoHostingTheme {
+        EditField(
+            actionItems = listOf(
+                ActionItem(
+                    icon = Icons.Rounded.Replay,
+                    action = { }
+                )
+            ),
+        ) {
+            InputFieldPreview()
+        }
     }
 }
 
 @Composable
 @Preview
 fun EditFileFieldPreview() {
-    EditField(
-        actionItems = listOf(
-            ActionItem(
-                icon = Icons.Rounded.Replay,
-                action = { }
+    VideoHostingTheme {
+        EditField(
+            actionItems = listOf(
+                ActionItem(
+                    icon = Icons.Rounded.Replay,
+                    action = { }
+                )
             )
-        )
-    ) {
-        FileInputField(
-            placeholder = "Выберите файл",
-            icon = Icons.Rounded.FileUpload,
-        )
+        ) {
+            FileInputField(
+                placeholder = "Выберите файл",
+                icon = Icons.Rounded.FileUpload,
+            )
+        }
     }
 }
 
@@ -213,14 +236,16 @@ fun ErrorText(
 @Composable
 @Preview
 fun InputFieldPreview() {
-    var value by remember { mutableStateOf("") }
-    InputField(
-        value = value,
-        onValueChange = {
-            value = it
-        },
-        placeholder = "Имя",
-        icon = Icons.Outlined.Person,
-        errorMsg = "Ошибка"
-    )
+    VideoHostingTheme {
+        var value by remember { mutableStateOf("") }
+        InputField(
+            value = value,
+            onValueChange = {
+                value = it
+            },
+            placeholder = "Имя",
+            icon = Icons.Outlined.Person,
+            errorMsg = "Ошибка"
+        )
+    }
 }

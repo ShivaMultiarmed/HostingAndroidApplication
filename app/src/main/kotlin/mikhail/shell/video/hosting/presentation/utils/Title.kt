@@ -13,7 +13,7 @@ fun Title(text: String) {
     Text(
         modifier = Modifier,
         text = text,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurface,
         fontSize = 22.sp,
         textAlign = TextAlign.Center
     )

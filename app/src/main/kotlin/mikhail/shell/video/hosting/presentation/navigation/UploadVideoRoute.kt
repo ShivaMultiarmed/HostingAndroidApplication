@@ -47,6 +47,9 @@ fun NavGraphBuilder.uploadVideoRoute(
             },
             onRefresh = {
                 viewModel.loadChannels()
+            },
+            onPopup = {
+                navController.popBackStack()
             }
         )
     }

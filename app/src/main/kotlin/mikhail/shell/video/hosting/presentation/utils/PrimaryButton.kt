@@ -31,9 +31,9 @@ fun PrimaryButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (!isActivated) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.secondaryContainer,
+            else MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = if (!isActivated) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onSecondaryContainer,
+            else MaterialTheme.colorScheme.onTertiaryContainer,
         )
     ) {
         if (icon != null) {

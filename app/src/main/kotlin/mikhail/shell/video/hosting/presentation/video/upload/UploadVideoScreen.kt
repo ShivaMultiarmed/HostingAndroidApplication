@@ -1,13 +1,14 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
-import android.app.Notification.Action
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,37 +17,29 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DensityMedium
-import androidx.compose.material.icons.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.VideoLibrary
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,25 +49,23 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
+import mikhail.shell.video.hosting.presentation.utils.Dropdown
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorMessage
-import mikhail.shell.video.hosting.presentation.utils.ErrorText
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.FormMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
-import mikhail.shell.video.hosting.presentation.utils.SecondaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.getFileBytes
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -85,7 +76,8 @@ fun UploadVideoScreen(
     player: Player,
     onSubmit: (UploadVideoInput) -> Unit,
     onRefresh: () -> Unit,
-    onSuccess: (Video) -> Unit
+    onSuccess: (Video) -> Unit,
+    onPopup: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val compoundError = state.error
@@ -97,20 +89,22 @@ fun UploadVideoScreen(
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
         var description by rememberSaveable { mutableStateOf("") }
 
-        Scaffold (
+        Scaffold(
             topBar = {
-                Row (
+                Row(
                     modifier = Modifier.fillMaxWidth()
+                        .borderBottom(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 2)
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.ArrowBack,
+                        imageVector = Icons.Rounded.ArrowBackIosNew,
                         contentDescription = "Вернуться назад",
-                        modifier = Modifier.clickable { 
-
-                        }
+                        modifier = Modifier.clickable(onClick = onPopup)
                     )
                     Title(
-                        text = if (state.video == null) "Выложить видео" else "Вы успешно выложили видео"
+                        text = if (state.video == null) "Выложить видео" else "Готово"
                     )
                     PrimaryButton(
                         modifier = Modifier.padding(start = 10.dp),
@@ -155,26 +149,26 @@ fun UploadVideoScreen(
                     )
                 }
             },
-            modifier = modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) {
             Box(
                 modifier = Modifier
                     .padding(it)
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
+                        .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(scrollState)
                 ) {
-                    if (state.video != null) {
-                        FormMessage(
-                            text = "Видео успешно опубликовано"
-                        )
-                    }
+//                    if (state.video != null) {
+//                        FormMessage(
+//                            text = "Видео успешно опубликовано"
+//                        )
+//                    }
 
                     val sourcePicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
@@ -182,11 +176,12 @@ fun UploadVideoScreen(
                         if (it != null)
                             sourceUri = it
                     }
-                    val sourceErrMsg = if (compoundError.equivalentTo(UploadVideoError.SOURCE_EMPTY)) {
-                        "Выберите видео"
-                    } else if (compoundError.equivalentTo(UploadVideoError.SOURCE_TYPE_INVALID)) {
-                        "Некорректный формат видео"
-                    } else null
+                    val sourceErrMsg =
+                        if (compoundError.equivalentTo(UploadVideoError.SOURCE_EMPTY)) {
+                            "Выберите видео"
+                        } else if (compoundError.equivalentTo(UploadVideoError.SOURCE_TYPE_INVALID)) {
+                            "Некорректный формат видео"
+                        } else null
 
                     val sourceActionItems = if (sourceUri == null) listOf()
                     else listOf(
@@ -223,9 +218,10 @@ fun UploadVideoScreen(
                         )
                     }
 
-                    val titleErrMsg = if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
-                        "Заполните название"
-                    } else null
+                    val titleErrMsg =
+                        if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
+                            "Заполните название"
+                        } else null
                     val titleActionItems = if (title.isBlank()) emptyList() else listOf(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
@@ -234,7 +230,7 @@ fun UploadVideoScreen(
                             }
                         )
                     )
-                    EditField (
+                    EditField(
                         actionItems = titleActionItems
                     ) {
                         InputField(
@@ -261,7 +257,7 @@ fun UploadVideoScreen(
                             }
                         )
                     )
-                    EditField (
+                    EditField(
                         actionItems = channelActionItems
                     ) {
                         Dropdown(
@@ -284,7 +280,7 @@ fun UploadVideoScreen(
                         if (it != null)
                             coverUri = it
                     }
-                    EditField (
+                    EditField(
                         actionItems = if (coverUri == null) emptyList() else listOf(
                             ActionItem(
                                 icon = Icons.Rounded.Delete,
@@ -305,7 +301,9 @@ fun UploadVideoScreen(
                     }
                     if (coverUri != null) {
                         Image(
-                            modifier = Modifier.fillMaxSize().aspectRatio(16f / 9),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .aspectRatio(16f / 9),
                             contentScale = ContentScale.Crop,
                             painter = rememberAsyncImagePainter(coverUri),
                             contentDescription = "Обложка для видео"
@@ -313,7 +311,7 @@ fun UploadVideoScreen(
                     }
 
 
-                    EditField (
+                    EditField(
                         actionItems = if (description.isEmpty()) emptyList() else listOf(
                             ActionItem(
                                 icon = Icons.Rounded.Delete,
@@ -357,86 +355,29 @@ fun UploadVideoScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T> Dropdown(
-    modifier: Modifier = Modifier,
-    placeHolder: String,
-    selected: T?,
-    values: Map<T, String>,
-    onValueChange: (T) -> Unit,
-    errorMsg: String? = null,
-    icon: ImageVector? = null
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Column {
-        Box {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = {
-                    expanded = it
-                }
-            ) {
-                InputField(
-                    modifier = modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    readOnly = true,
-                    value = values[selected] ?: "",
-                    onValueChange = {},
-                    icon = icon,
-                    placeholder = placeHolder,
-                    errorMsg = errorMsg
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    }
-                ) {
-                    values.forEach {
-                        DropdownMenuItem(
-                            onClick = {
-                                expanded = false
-                                onValueChange(it.key)
-                            },
-                            text = {
-                                Text(
-                                    text = it.value
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-            Box(
-                modifier = modifier.matchParentSize().clickable {
-                    expanded = true
-                }
-            )
-        }
-    }
-}
-
-@Composable
-@Preview
+@Preview(
+    name = "Day Theme Upload Video Screen",
+    showBackground = true
+)
 fun UploadVideoScreenPreview() {
-    VideoHostingTheme {
-        val player = ExoPlayer.Builder(LocalContext.current)
-            .build()
-        UploadVideoScreen(
-            state = UploadVideoScreenState(
-                channels = listOf(
-                    Channel(
-                        channelId = 100500,
-                        ownerId = 100,
-                        title = "Канал №1"
-                    )
-                ),
+    val player = ExoPlayer.Builder(LocalContext.current)
+        .build()
+    UploadVideoScreen(
+        state = UploadVideoScreenState(
+            channels = listOf(
+                Channel(
+                    channelId = 100500,
+                    ownerId = 100,
+                    title = "Канал №1"
+                )
             ),
-            player = player,
-            onSubmit = {},
-            onRefresh = {},
-            onSuccess = {}
-        )
-    }
+        ),
+        player = player,
+        onSubmit = {},
+        onRefresh = {},
+        onSuccess = {}
+    )
+
 }
 
