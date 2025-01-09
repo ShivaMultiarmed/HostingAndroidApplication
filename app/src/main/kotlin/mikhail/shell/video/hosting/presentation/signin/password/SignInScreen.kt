@@ -6,8 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Password
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +31,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun SignInScreen(
@@ -56,7 +62,7 @@ fun SignInScreen(
                 text = "Вы успешно вошли"
             )
         }
-        var email by remember { mutableStateOf("") }
+        var email by rememberSaveable { mutableStateOf("") }
         val emailErrorMsg = if (error.equivalentTo(SignInError.EMAIL_EMPTY)) {
             "Заполните email"
         } else if (error.equivalentTo(SignInError.EMAIL_INVALID)) {
@@ -65,6 +71,8 @@ fun SignInScreen(
             "Пользователь с email $email не найден"
         } else null
         InputField(
+            modifier = Modifier.width(280.dp),
+            icon = Icons.Rounded.Email,
             placeholder = "E-mail",
             value = email,
             onValueChange = {
@@ -72,13 +80,15 @@ fun SignInScreen(
             },
             errorMsg = emailErrorMsg
         )
-        var password by remember { mutableStateOf("") }
+        var password by rememberSaveable { mutableStateOf("") }
         val passwordErrorMsg = if (error.equivalentTo(SignInError.PASSWORD_EMPTY)) {
             "Введите пароль"
         } else if (error.equivalentTo(SignInError.PASSWORD_INCORRECT)) {
             "Неправильный пароль"
         } else null
         InputField(
+            modifier = Modifier.width(280.dp),
+            icon = Icons.Rounded.Password,
             placeholder = "Пароль",
             value = password,
             onValueChange = {
@@ -106,18 +116,15 @@ fun SignInScreen(
         }
     }
 }
-
-const val DEFAULT_EMAIL = "mikhail.shell@yandex.ru"
-const val DEFAULT_PASSWORD = "qwerty"
-
-
 @Composable
 @Preview
 fun SignInScreenPreview() {
-    SignInScreen(
-        state = SignInWithPasswordState(),
-        onSuccess = {},
-        onSubmit = { a, b -> },
-        onSigningUp = {}
-    )
+    VideoHostingTheme {
+        SignInScreen(
+            state = SignInWithPasswordState(),
+            onSuccess = {},
+            onSubmit = { a, b -> },
+            onSigningUp = {}
+        )
+    }
 }

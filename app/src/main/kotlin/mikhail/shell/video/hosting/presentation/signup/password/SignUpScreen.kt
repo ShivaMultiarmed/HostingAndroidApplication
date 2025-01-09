@@ -4,26 +4,36 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Password
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.AuthModel
+import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FormMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun SignUpScreen(
@@ -39,7 +49,7 @@ fun SignUpScreen(
             .verticalScroll(scrollState)
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp,  Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
     ) {
         Title("Зарегистрироваться")
         if (state.authModel != null) {
@@ -47,13 +57,15 @@ fun SignUpScreen(
             onSuccess(state.authModel)
         }
         val compoundError = state.error
-        var userName by remember { mutableStateOf("") }
+        var userName by rememberSaveable { mutableStateOf("") }
         val userNameErrorMsg = if (compoundError.equivalentTo(SignUpError.EMAIL_EMPTY)) {
             "Введите почту"
         } else if (compoundError.equivalentTo(SignUpError.EMAIL_INVALID)) {
             "Некорректная почта"
         } else null
         InputField(
+            modifier = Modifier.width(280.dp),
+            icon = Icons.Rounded.Email,
             value = userName,
             onValueChange = {
                 userName = it
@@ -64,8 +76,10 @@ fun SignUpScreen(
         val passwordErrorMsg = if (compoundError.equivalentTo(SignUpError.PASSWORD_EMPTY)) {
             "Введите пароль"
         } else null
-        var password by remember { mutableStateOf("") }
+        var password by rememberSaveable { mutableStateOf("") }
         InputField(
+            modifier = Modifier.width(280.dp),
+            icon = Icons.Rounded.Password,
             value = password,
             onValueChange = {
                 password = it
@@ -74,16 +88,18 @@ fun SignUpScreen(
             secure = true,
             placeholder = "Пароль"
         )
-        var name by remember { mutableStateOf("") }
+        var name by rememberSaveable { mutableStateOf("") }
         val nameErrMsg = if (compoundError.equivalentTo(SignUpError.NAME_EMPTY))
             "Введите имя"
         else null
         InputField(
+            modifier = Modifier.width(280.dp),
+            icon = Icons.Rounded.Person,
             value = name,
             onValueChange = {
                 name = it
             },
-             errorMsg = nameErrMsg,
+            errorMsg = nameErrMsg,
             placeholder = "Имя"
         )
 
@@ -105,9 +121,11 @@ fun SignUpScreen(
 @Composable
 @Preview
 fun SignUpScreenPreview() {
-    SignUpScreen(
-        state = SignUpWithPasswordState(),
-        onSubmit = {},
-        onSuccess = {}
-    )
+    VideoHostingTheme {
+        SignUpScreen(
+            state = SignUpWithPasswordState(),
+            onSubmit = {},
+            onSuccess = {}
+        )
+    }
 }

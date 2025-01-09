@@ -90,7 +90,7 @@ fun BottomNavBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
-            .borderTop(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 2),
+            .borderTop(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 3),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()

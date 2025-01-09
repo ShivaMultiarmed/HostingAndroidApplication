@@ -23,7 +23,7 @@ fun NavGraphBuilder.profileRoute(
             it.create(userId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref = LocalContext.current.getSharedPreferences("auth_details", Context.MODE_PRIVATE)
+        val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         ProfileScreen(
             state = state,
             onGoToChannel = {
@@ -43,8 +43,7 @@ fun NavGraphBuilder.profileRoute(
             },
             onLogOut = {
                 sharedPref.edit {
-                    remove("userId")
-                    remove("token")
+                    clear()
                     commit()
                 }
                 navController.navigate(Route.SignIn)

@@ -21,6 +21,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,19 +67,28 @@ fun ChannelScreen(
     ) {
         if (state.channel != null) {
             val channel = state.channel
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-            ) {
-                AsyncImage(
-                    model = channel.coverUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+            var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
+            if (hasCover != true) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    AsyncImage(
+                        model = channel.coverUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                        onSuccess = {
+                            hasCover = true
+                        },
+                        onError = {
+                            hasCover = false
+                        }
+                    )
+                }
             }
             Row(
                 modifier = Modifier
@@ -89,6 +103,7 @@ fun ChannelScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                 )
                 Column(
                     modifier = Modifier
@@ -117,6 +132,12 @@ fun ChannelScreen(
                     )
                 }
             }
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = channel.description,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
                 text = if (channel.subscription == SUBSCRIBED) "Отписаться" else "Подписаться",
@@ -125,12 +146,6 @@ fun ChannelScreen(
                     onSubscription(subscriptionState)
                 },
                 isActivated = channel.subscription == SUBSCRIBED
-            )
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = channel.description,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else if (state.isChannelLoading) {
             LoadingComponent(
