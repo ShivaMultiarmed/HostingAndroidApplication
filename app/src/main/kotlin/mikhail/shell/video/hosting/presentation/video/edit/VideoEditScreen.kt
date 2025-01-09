@@ -6,16 +6,24 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DensitySmall
+import androidx.compose.material.icons.rounded.Title
+import androidx.compose.material.icons.rounded.Wallpaper
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,9 +34,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -42,17 +52,24 @@ import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
+import mikhail.shell.video.hosting.presentation.utils.DeletingItem
+import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.FormMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.RemoveButton
 import mikhail.shell.video.hosting.presentation.utils.RevertButton
+import mikhail.shell.video.hosting.presentation.utils.RevertingItem
 import mikhail.shell.video.hosting.presentation.utils.SecondaryButton
+import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.getFileBytes
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun VideoEditScreen(
@@ -64,58 +81,81 @@ fun VideoEditScreen(
     onCancel: (Long) -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val contentResolver = LocalContext.current.contentResolver
     if (state.initialVideo != null) {
         val video = state.initialVideo
         val compoundError = state.error
-        Box(
+        var coverUri by remember { mutableStateOf<Uri?>(null) }
+        var title by remember { mutableStateOf(video.title) }
+        var coverAction by remember { mutableStateOf(KEEP) }
+        var description by remember { mutableStateOf("") }
+        Scaffold (
             modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            topBar = {
+                TopBar(
+                    topBarTitle = if (state.updatedVideo == null) "Обновить видео" else "Готово",
+                    onPopup = {
+                        onCancel(state.initialVideo.videoId!!)
+                    },
+                    buttonTitle = "Сохранить",
+                    onSubmit = {
+                        val coverFile = coverUri?.let { contentResolver.uriToFile(it) }
+                        onSubmit(
+                            VideoEditInputState(
+                                title = title,
+                                coverAction = coverAction,
+                                cover = coverFile
+                            )
+                        )
+                    }
+                )
+            }
         ) {
             Column(
                 modifier = Modifier
+                    .padding(it)
                     .verticalScroll(scrollState)
             ) {
-                Title("Редактировать видео")
-                if (state.updatedVideo != null) {
-                    FormMessage(
-                        text = "Видео успешно отредактировано"
-                    )
-                }
-                val contentResolver = LocalContext.current.contentResolver
-                var title by remember { mutableStateOf(video.title) }
                 val titleErrMsg = if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
                     "Заполните название"
                 } else null
-                Row {
+                StandardEditField (
+                    firstTime = false,
+                    updated = title != state.initialVideo.title,
+                    empty = title.isEmpty(),
+                    onDelete = { title = "" },
+                    onRevert = { title = state.initialVideo.title }
+                ) {
                     InputField(
+                        modifier = Modifier.fillMaxWidth(),
                         value = title,
                         onValueChange = {
                             title = it
                         },
                         errorMsg = titleErrMsg,
-                        placeholder = "Название"
+                        placeholder = "Название",
+                        icon = Icons.Rounded.Title
                     )
-                    if (title != video.title) {
-                        RevertButton(
-                            onClick = {
-                                title = video.title
-                            }
-                        )
-                    }
                 }
-                var description by remember { mutableStateOf("") }
-                Row {
+                StandardEditField(
+                    firstTime = false,
+                    updated = description != "", // TODO state.initialVideo.description
+                    empty = description.isEmpty(),
+                    onRevert = { description = "" },
+                    onDelete = { description = "" }
+                ) {
                     InputField(
-                        modifier = Modifier.height(300.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
                         value = description,
                         onValueChange = {
                             description = it
                         },
-                        placeholder = "Описание"
+                        placeholder = "Описание",
+                        icon = Icons.Rounded.DensitySmall
                     )
                 }
-                var coverUri by remember { mutableStateOf<Uri?>(null) }
-                var coverAction by remember { mutableStateOf(KEEP) }
                 val coverPicker = rememberLauncherForActivityResult(
                     ActivityResultContracts.GetContent()
                 ) {
@@ -126,30 +166,28 @@ fun VideoEditScreen(
                 }
                 var coverExists by remember { mutableStateOf<Boolean?>(null) }
                 Column {
-                    Row {
-                        SecondaryButton(
+                    StandardEditField(
+                        firstTime = false,
+                        updated = coverAction == UPDATE || coverAction == REMOVE && coverExists == true,
+                        empty = !(coverUri != null || coverExists == true && coverAction != REMOVE),
+                        onRevert = {
+                            coverUri = null
+                            coverAction = KEEP
+                        },
+                        onDelete = {
+                            coverUri = null
+                            coverAction = REMOVE
+                        }
+                    ) {
+                        FileInputField(
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 coverPicker.launch("image/*")
                             },
-                            text = if (coverUri != null || coverExists == true && coverAction == KEEP)
-                                "Изменить обложку" else "Выбрать обложку"
+                            placeholder = if (coverUri != null || coverExists == true && coverAction == KEEP)
+                                "Изменить обложку" else "Выбрать обложку",
+                            icon = Icons.Rounded.Wallpaper
                         )
-                        if (coverAction == UPDATE || coverAction == REMOVE && coverExists == true) {
-                            RevertButton(
-                                onClick = {
-                                    coverUri = null
-                                    coverAction = KEEP
-                                }
-                            )
-                        }
-                        if (coverUri != null || coverExists == true && coverAction != REMOVE) {
-                            RemoveButton(
-                                onClick = {
-                                    coverUri = null
-                                    coverAction = REMOVE
-                                }
-                            )
-                        }
                     }
                     Column {
                         if (coverExists != false) {
@@ -192,27 +230,6 @@ fun VideoEditScreen(
                         }
                     }
                 }
-                Row {
-                    PrimaryButton(
-                        text = "Отправить",
-                        onClick = {
-                            val coverFile = coverUri?.let { contentResolver.uriToFile(it) }
-                            onSubmit(
-                                VideoEditInputState(
-                                    title = title,
-                                    coverAction = coverAction,
-                                    cover = coverFile
-                                )
-                            )
-                        }
-                    )
-                    SecondaryButton(
-                        text = "Отмена",
-                        onClick = {
-                            onCancel(video.videoId!!)
-                        }
-                    )
-                }
             }
         }
         LaunchedEffect(state.updatedVideo) {
@@ -228,6 +245,26 @@ fun VideoEditScreen(
         ErrorComponent(
             modifier = modifier.fillMaxSize(),
             onRetry = onRefresh
+        )
+    }
+}
+
+@Composable
+@Preview
+fun EditVideoScreenPreview() {
+    VideoHostingTheme {
+        VideoEditScreen(
+            state = VideoEditScreenState(
+                initialVideo = Video(
+                    100500L,
+                    1981L,
+                    "Some video"
+                )
+            ),
+            onSubmit = {},
+            onSuccess = {},
+            onRefresh = {},
+            onCancel = {}
         )
     }
 }

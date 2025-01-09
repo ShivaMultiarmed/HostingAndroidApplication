@@ -29,7 +29,7 @@ data class CompoundError<T: Error>(
     }
 }
 
-inline fun <reified T: Error> Error?.equivalentTo(error: T): Boolean {
+fun <T: Error> Error?.equivalentTo(error: T): Boolean {
     return if (this is CompoundError<*>)
         this.contains(error)
     else

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileUpload
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -180,6 +181,36 @@ fun EditField(
 }
 
 @Composable
+fun StandardEditField(
+    modifier: Modifier = Modifier,
+    firstTime: Boolean = true,
+    updated: Boolean = true,
+    empty: Boolean,
+    onDelete: () -> Unit,
+    onRevert: () -> Unit,
+    field: @Composable () -> Unit
+) {
+    val actionList = mutableListOf<ActionItem>()
+    if (!firstTime && updated) {
+        actionList.add(
+            RevertingItem(
+                reverting = onRevert
+            )
+        )
+    }
+    if (!empty) actionList.add(
+        DeletingItem(
+            deleting = onDelete
+        )
+    )
+    EditField(
+        modifier = modifier,
+        actionItems = actionList,
+        field = field
+    )
+}
+
+@Composable
 @Preview
 fun EditInputFieldPreview() {
     VideoHostingTheme {
@@ -221,9 +252,14 @@ open class ActionItem(
     val action: () -> Unit
 )
 
-data class DeletingItem (val deleting: () -> Unit) : ActionItem(
+data class DeletingItem(val deleting: () -> Unit) : ActionItem(
     icon = Icons.Rounded.Delete,
     action = deleting
+)
+
+data class RevertingItem(val reverting: () -> Unit) : ActionItem(
+    icon = Icons.Rounded.Refresh,
+    action = reverting
 )
 
 @Composable
