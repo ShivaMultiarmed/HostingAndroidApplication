@@ -75,11 +75,11 @@ fun SearchVideosScreen(
         topBar = {
             ConstraintLayout (
                 modifier = Modifier
+                    .fillMaxWidth()
                     .borderBottom(
                         strokeWidth = 3,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
                     )
-                    .fillMaxWidth()
             ) {
                 val (input, button) = createRefs()
                 var errorMsg by rememberSaveable { mutableStateOf<String?>(null) }

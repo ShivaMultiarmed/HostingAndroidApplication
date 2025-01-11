@@ -24,8 +24,8 @@ fun TopBar(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
-            .borderBottom(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 3)
-            .padding(10.dp),
+            .padding(10.dp)
+            .borderBottom(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f), strokeWidth = 3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
