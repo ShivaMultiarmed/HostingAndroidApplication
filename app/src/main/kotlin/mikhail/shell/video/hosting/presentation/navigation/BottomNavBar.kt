@@ -104,7 +104,7 @@ fun BottomNavBar(
                     onClick = {
                         selectedItemNumber = i
                         onClick(navItems[selectedItemNumber])
-                    },
+                    }
                 )
             }
         }
