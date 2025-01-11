@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mikhail.shell.video.hosting.presentation.profile.ChannelComponent
+import mikhail.shell.video.hosting.presentation.profile.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 
@@ -25,7 +25,7 @@ fun SubscriptionsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(state.channels) {
-                    ChannelComponent(
+                    ChannelSnippet(
                         channel = it,
                         onClick = onChannelClick
                     )

@@ -68,28 +68,34 @@ fun ChannelScreen(
         if (state.channel != null) {
             val channel = state.channel
             var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
-            if (hasCover != true) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                ) {
-                    AsyncImage(
-                        model = channel.coverUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                        onSuccess = {
-                            hasCover = true
-                        },
-                        onError = {
-                            hasCover = false
+            Box(
+                modifier = Modifier
+                    .then(
+                        if (hasCover == true) {
+                            Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                        } else {
+                            Modifier//.fillMaxSize(0f)
                         }
                     )
-                }
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                AsyncImage(
+                    model = channel.coverUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    onSuccess = {
+                        hasCover = true
+                    },
+                    onError = {
+                        hasCover = false
+                    }
+                )
             }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,7 +148,8 @@ fun ChannelScreen(
                 modifier = Modifier.fillMaxWidth(),
                 text = if (channel.subscription == SUBSCRIBED) "Отписаться" else "Подписаться",
                 onClick = {
-                    val subscriptionState = if (channel.subscription == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
+                    val subscriptionState =
+                        if (channel.subscription == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
                     onSubscription(subscriptionState)
                 },
                 isActivated = channel.subscription == SUBSCRIBED
