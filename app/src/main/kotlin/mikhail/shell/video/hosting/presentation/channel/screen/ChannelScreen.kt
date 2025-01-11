@@ -75,12 +75,13 @@ fun ChannelScreen(
                             Modifier
                                 .fillMaxWidth()
                                 .height(120.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                         } else {
-                            Modifier//.fillMaxSize(0f)
+                            Modifier
                         }
                     )
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
+
             ) {
                 AsyncImage(
                     model = channel.coverUrl,
@@ -109,7 +110,7 @@ fun ChannelScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
                 Column(
                     modifier = Modifier
@@ -246,7 +247,7 @@ fun VideoSnippet(
                 .fillMaxWidth(0.45f)
                 .aspectRatio(16f / 9)
                 .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.secondaryContainer),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = ContentScale.Crop
         )
         Column(

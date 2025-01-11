@@ -97,8 +97,24 @@ fun ProfileScreen(
 
 @Composable
 @Preview
-fun ProfileScreenPreview() {
+fun ProfileScreenPreviewDay() {
     VideoHostingTheme {
+        ProfileScreen(
+            state = ProfileScreenState(),
+            onGoToChannel = {},
+            onRefresh = {},
+            onPublishVideo = {},
+            onCreateChannel = {},
+            onLogOut = {}
+        )
+    }
+}
+@Composable
+@Preview
+fun ProfileScreenPreviewNight() {
+    VideoHostingTheme(
+        true
+    ) {
         ProfileScreen(
             state = ProfileScreenState(),
             onGoToChannel = {},
@@ -135,7 +151,7 @@ fun ChannelSnippet(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
             Column(

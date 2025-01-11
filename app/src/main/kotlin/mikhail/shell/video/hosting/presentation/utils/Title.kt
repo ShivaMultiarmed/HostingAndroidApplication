@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,7 +13,8 @@ fun Title(text: String) {
         modifier = Modifier,
         text = text,
         color = MaterialTheme.colorScheme.onSurface,
-        fontSize = 22.sp,
+        fontSize = 19.sp,
+        lineHeight = 21.sp,
         textAlign = TextAlign.Center
     )
 }

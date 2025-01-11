@@ -90,7 +90,9 @@ fun BottomNavBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
+            .background(MaterialTheme.colorScheme.surface)
             .borderTop(color = MaterialTheme.colorScheme.tertiary, strokeWidth = 3),
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
@@ -126,7 +128,8 @@ fun RowScope.BottomNavBarItem(
             Icon(
                 imageVector = imageVector,
                 contentDescription = navItem.title,
-                modifier = Modifier.size(27.dp)
+                modifier = Modifier.size(27.dp),
+                tint = MaterialTheme.colorScheme.onSurface
             )
         },
         label = {

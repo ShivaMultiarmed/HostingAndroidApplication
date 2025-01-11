@@ -47,14 +47,15 @@ fun ActionButton(
                 Icon(
                     imageVector = it,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.size(14.dp)
                 )
             }
             text?.let {
                 Text(
                     text = text,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }

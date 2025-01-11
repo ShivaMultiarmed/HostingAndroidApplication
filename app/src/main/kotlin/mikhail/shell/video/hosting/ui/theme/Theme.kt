@@ -12,12 +12,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-//private val DarkColorScheme = darkColorScheme(
-//    primary = Color.Green,
-//    secondary = PurpleGrey80,
-//    tertiary = Pink80,
-//    background = Color.Black
-//)
+private val DarkColorScheme = darkColorScheme(
+    primary = Blue500,
+    onPrimary = White,
+
+    secondary = Blue900,
+    onSecondary = White,
+
+    secondaryContainer = Gray,
+    onSecondaryContainer = White,
+
+    tertiary = LighterGray,
+    onTertiary = Black,
+    tertiaryContainer = LightGray,
+    onTertiaryContainer = Black,
+
+    background = Black,
+    onBackground = White,
+
+    surface = Black,
+    surfaceContainer = Black,
+    onSurface = White,
+    onSurfaceVariant = White,
+
+    error = Red,
+    onError = White
+)
 
 private val LightColorScheme = lightColorScheme(
     primary = Blue700,
@@ -38,6 +58,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Black,
 
     surface = White,
+    surfaceVariant = LightGray,
     surfaceContainer = White,
     onSurface = Black,
 
@@ -56,7 +77,7 @@ fun VideoHostingTheme(
 //            val context = LocalContext.current
 //            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
 //        }
-        //darkTheme -> DarkColorScheme
+        darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
     MaterialTheme(

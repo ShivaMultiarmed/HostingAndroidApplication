@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material.icons.rounded.Title
+import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -45,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -76,7 +80,6 @@ fun SearchVideosScreen(
                         color = MaterialTheme.colorScheme.tertiary
                     )
                     .fillMaxWidth()
-                    .padding(10.dp)
             ) {
                 val (input, button) = createRefs()
                 var errorMsg by rememberSaveable { mutableStateOf<String?>(null) }
@@ -87,20 +90,25 @@ fun SearchVideosScreen(
                         query = it
                     },
                     errorMsg = errorMsg,
-                    placeholder = "Искать"
+                    placeholder = "Искать",
+                    icon = Icons.Rounded.Search
                 )
-                PrimaryButton(
-                    modifier = Modifier.constrainAs(button) {
-                        end.linkTo(parent.end)
-                    },
-                    icon = Icons.Rounded.Search,
-                    onClick = {
-                        if (query.isNotEmpty()) {
-                            errorMsg = null
-                            onSubmit(query)
+                if (query.isNotBlank()) {
+                    PrimaryButton(
+                        modifier = Modifier.constrainAs(button) {
+                            end.linkTo(parent.end, 10.dp)
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        },
+                        icon = Icons.Rounded.Send,
+                        onClick = {
+                            if (query.isNotEmpty()) {
+                                errorMsg = null
+                                onSubmit(query)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     ) {

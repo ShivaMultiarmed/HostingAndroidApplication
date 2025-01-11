@@ -37,7 +37,7 @@ fun TopBar(
             )
         }
         Title(
-            text = topBarTitle
+            text = topBarTitle,
         )
         if (onSubmit != null) {
             PrimaryButton(

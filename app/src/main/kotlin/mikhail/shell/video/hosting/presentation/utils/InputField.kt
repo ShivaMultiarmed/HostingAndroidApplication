@@ -101,7 +101,9 @@ fun InputField(
                 errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 errorLabelColor = MaterialTheme.colorScheme.error,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                focusedContainerColor = MaterialTheme.colorScheme.secondary
+                focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
             ),
             visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None,
             isError = errorMsg != null,
