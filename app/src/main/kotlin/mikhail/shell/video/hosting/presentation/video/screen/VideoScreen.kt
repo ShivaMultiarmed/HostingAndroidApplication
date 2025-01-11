@@ -80,6 +80,7 @@ import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
+import mikhail.shell.video.hosting.ui.theme.Black
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -140,7 +141,7 @@ fun VideoScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.onBackground)
+                    .background(Black)
                     .clip(
                         RoundedCornerShape(
                             topStart = 10.dp,
