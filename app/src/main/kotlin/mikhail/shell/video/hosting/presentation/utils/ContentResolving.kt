@@ -5,7 +5,6 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import mikhail.shell.video.hosting.domain.models.File
 import java.io.ByteArrayOutputStream
-import kotlin.math.min
 
 fun ContentResolver.getFileBytes(uri: Uri): ByteArray? {
     val inputStream = this.openInputStream(uri) ?: return null

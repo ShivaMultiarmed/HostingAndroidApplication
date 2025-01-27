@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.domain.models
 
-import androidx.activity.result.contract.ActivityResultContracts
-
 data class File(
     val name: String? = null,
     val mimeType: String? = null,
@@ -20,8 +18,6 @@ data class File(
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + content.contentHashCode()
-        return result
+        return 31 * name.hashCode() + content.contentHashCode()
     }
 }
