@@ -33,6 +33,7 @@ import retrofit2.HttpException
 import java.io.File
 
 import javax.inject.Inject
+import kotlin.math.sin
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
@@ -208,11 +209,17 @@ class VideoRepositoryWithApi @Inject constructor(
 
 fun File.fileToPart(partName: String): MultipartBody.Part {
     val requestBody = object : RequestBody() {
+        private val LEN = 100 * 1024
+
         override fun contentType() = partName.toMediaTypeOrNull()
 
         override fun writeTo(sink: BufferedSink) {
             this@fileToPart.inputStream().use { input ->
-                input.copyTo(sink.outputStream())
+                val buffer = ByteArray(LEN)
+                var bytesRead: Int
+                while (input.read(buffer, 0, LEN).also { bytesRead = it } != -1) {
+                    sink.write(buffer, 0, bytesRead)
+                }
             }
         }
     }
