@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
-import android.net.Uri
-import mikhail.shell.video.hosting.domain.models.File
+import java.io.File
+
 
 data class UploadVideoInput(
     val title: String,

@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.repositories
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
@@ -14,17 +15,23 @@ import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
 import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
+
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+
+import okio.BufferedSink
+
 import retrofit2.HttpException
+
+import java.io.File
+
 import javax.inject.Inject
 
 class VideoRepositoryWithApi @Inject constructor(
@@ -200,11 +207,42 @@ class VideoRepositoryWithApi @Inject constructor(
 }
 
 fun File.fileToPart(partName: String): MultipartBody.Part {
-    val requestBody = RequestBody.create(
-        this.mimeType!!.toMediaTypeOrNull(),
-        this.content!!,
-        0,
-        this.content.size
-    )
+    val requestBody = object : RequestBody() {
+        override fun contentType() = partName.toMediaTypeOrNull()
+
+        override fun writeTo(sink: BufferedSink) {
+            this@fileToPart.inputStream().use { input ->
+                input.copyTo(sink.outputStream())
+            }
+        }
+    }
     return MultipartBody.Part.createFormData(partName, this.name, requestBody)
 }
+
+//fun InputStream.streamToPart(
+//    partName: String,
+//    file: File
+//): MultipartBody.Part {
+//    val requestBody = object : RequestBody() {
+//        private val BUFFER_SIZE = 100 * 1024
+//
+//        private var size = 0L
+//
+//        override fun contentLength(): Long {
+//            return size
+//        }
+//
+//        override fun contentType(): MediaType? = file.mimeType?.toMediaTypeOrNull()
+//
+//        override fun writeTo(sink: BufferedSink) {
+//            val buffer = ByteArray(BUFFER_SIZE)
+//            var bytesRead: Int
+//            while (this@streamToPart.read(buffer).also { bytesRead = it } != -1) {
+//                sink.write(buffer, 0, bytesRead)
+//                size += bytesRead
+//            }
+//        }
+//    }
+//
+//    return MultipartBody.Part.createFormData(partName, file.name, requestBody)
+//}

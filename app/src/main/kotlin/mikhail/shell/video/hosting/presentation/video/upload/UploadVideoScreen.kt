@@ -6,9 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,13 +18,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DensityMedium
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.VideoLibrary
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -38,8 +33,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,7 +45,6 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
@@ -60,15 +52,12 @@ import mikhail.shell.video.hosting.presentation.utils.Dropdown
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
-import mikhail.shell.video.hosting.presentation.utils.FormMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
-import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.getFileBytes
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import mikhail.shell.video.hosting.presentation.utils.uriToFile
+import java.io.File
 
 @Composable
 fun UploadVideoScreen(
@@ -84,7 +73,8 @@ fun UploadVideoScreen(
     val compoundError = state.error
     if (state.channels != null) {
         var title by rememberSaveable { mutableStateOf("") }
-        val contentResolver = LocalContext.current.contentResolver
+        val context = LocalContext.current
+        val contentResolver = context.contentResolver
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -103,11 +93,7 @@ fun UploadVideoScreen(
                             val mimeType = contentResolver.getType(sourceUri!!)
                             val extension =
                                 MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                            sourceFile = File(
-                                name = sourceUri!!.lastPathSegment + "." + extension,
-                                mimeType = mimeType,
-                                content = contentResolver.getFileBytes(sourceUri!!)
-                            )
+                            sourceFile = context.uriToFile(sourceUri!!)
                         }
                         val coverFile: File?
                         if (coverUri == null)
@@ -116,11 +102,7 @@ fun UploadVideoScreen(
                             val mimeType = contentResolver.getType(coverUri!!)
                             val extension =
                                 MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                            coverFile = File(
-                                name = coverUri!!.lastPathSegment + "." + extension,
-                                mimeType = contentResolver.getType(coverUri!!),
-                                content = contentResolver.getFileBytes(coverUri!!),
-                            )
+                            coverFile = context.uriToFile(coverUri!!)
                         }
                         val input = UploadVideoInput(
                             channelId = channelId,

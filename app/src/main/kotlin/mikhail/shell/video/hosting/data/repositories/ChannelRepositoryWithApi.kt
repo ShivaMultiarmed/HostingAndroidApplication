@@ -10,11 +10,11 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
-import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import retrofit2.HttpException
+import java.io.File
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(

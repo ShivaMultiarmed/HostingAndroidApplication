@@ -16,10 +16,12 @@ class HostingApplication: Application() {
     private val imageLoader: ImageLoader by lazy {
         ImageLoader.Builder(this).okHttpClient(httpClient).build()
     }
+    lateinit var CACHE_DIR: String
     override fun onCreate() {
         super.onCreate()
         Coil.setImageLoader(
             imageLoader
         )
+        CACHE_DIR = cacheDir.absolutePath
     }
 }

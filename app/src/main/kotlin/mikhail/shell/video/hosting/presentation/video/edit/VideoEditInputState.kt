@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.presentation.video.edit
 
 import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.File
+import java.io.File
 
 data class VideoEditInputState(
     val title: String,

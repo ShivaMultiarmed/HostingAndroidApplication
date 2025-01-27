@@ -101,7 +101,7 @@ class UploadVideoViewModel @AssistedInject constructor(
         val compoundError = CompoundError<UploadVideoError>()
         if (input.title.isEmpty())
             compoundError.add(UploadVideoError.TITLE_EMPTY)
-        if (input.source?.name == null || input.source.content == null) {
+        if (input.source == null) {
             compoundError.add(UploadVideoError.SOURCE_EMPTY)
         }
         if (input.channelId == null) {

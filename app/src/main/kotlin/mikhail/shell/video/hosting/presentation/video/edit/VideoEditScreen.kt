@@ -1,15 +1,10 @@
 package mikhail.shell.video.hosting.presentation.video.edit
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,11 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,30 +36,16 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
-import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
-import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.utils.isBlank
-import mikhail.shell.video.hosting.domain.utils.isNotBlank
-import mikhail.shell.video.hosting.presentation.utils.DeletingItem
-import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
-import mikhail.shell.video.hosting.presentation.utils.FormMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
-import mikhail.shell.video.hosting.presentation.utils.RemoveButton
-import mikhail.shell.video.hosting.presentation.utils.RevertButton
-import mikhail.shell.video.hosting.presentation.utils.RevertingItem
-import mikhail.shell.video.hosting.presentation.utils.SecondaryButton
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
-import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.getFileBytes
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -81,7 +59,8 @@ fun VideoEditScreen(
     onCancel: (Long) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val contentResolver = LocalContext.current.contentResolver
+    val context = LocalContext.current
+    val contentResolver = context.contentResolver
     if (state.initialVideo != null) {
         val video = state.initialVideo
         val compoundError = state.error
@@ -99,7 +78,7 @@ fun VideoEditScreen(
                     },
                     buttonTitle = "Сохранить",
                     onSubmit = {
-                        val coverFile = coverUri?.let { contentResolver.uriToFile(it) }
+                        val coverFile = coverUri?.let { context.uriToFile(it) }
                         onSubmit(
                             VideoEditInputState(
                                 title = title,

@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.presentation.channel.create
 
-import mikhail.shell.video.hosting.domain.models.File
+import java.io.File
 
 class ChannelInputState(
     val title: String? = null,

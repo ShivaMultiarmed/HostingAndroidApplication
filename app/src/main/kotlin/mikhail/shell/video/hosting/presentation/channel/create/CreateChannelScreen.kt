@@ -5,9 +5,7 @@ import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,22 +24,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toFile
 import androidx.media3.common.util.UnstableApi
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
-import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
-import mikhail.shell.video.hosting.presentation.utils.SecondaryButton
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.getFileBytes
+import mikhail.shell.video.hosting.presentation.utils.uriToFile
+import java.io.File
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -52,13 +48,14 @@ fun CreateChannelScreen(
     onSuccess: (Channel) -> Unit,
     onPopup: () -> Unit
 ) {
+    val context = LocalContext.current
     var title by rememberSaveable { mutableStateOf("") }
     var alias by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
     var description by rememberSaveable { mutableStateOf("") }
     var avatarUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    val contentResolver = LocalContext.current.contentResolver
+    val contentResolver = context.contentResolver
     Scaffold (
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -67,24 +64,8 @@ fun CreateChannelScreen(
                 onPopup = onPopup,
                 buttonTitle = "Создать",
                 onSubmit = {
-                    val coverFile = coverUri?.let {
-                        val mimeType = contentResolver.getType(it)
-                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                        File(
-                            name = it.lastPathSegment+ "." + extension,
-                            mimeType = mimeType,
-                            content = contentResolver.getFileBytes(it)
-                        )
-                    }
-                    val avatarFile = avatarUri?.let {
-                        val mimeType = contentResolver.getType(it)
-                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                        File(
-                            name = it.lastPathSegment + "." + extension,
-                            mimeType = mimeType,
-                            content = contentResolver.getFileBytes(it)
-                        )
-                    }
+                    val coverFile = coverUri?.let { context.uriToFile(it) }
+                    val avatarFile = avatarUri?.let { context.uriToFile(it) }
                     val input = ChannelInputState(title, alias, description, coverFile, avatarFile)
                     onSubmit(input)
                 }
