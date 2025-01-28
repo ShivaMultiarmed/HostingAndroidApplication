@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -20,7 +22,8 @@ fun TopBar(
     onPopup: () -> Unit,
     canPopUp: Boolean = true,
     buttonTitle: String? = null,
-    onSubmit: (() -> Unit)? = null
+    onSubmit: (() -> Unit)? = null,
+    inProccess: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -40,11 +43,23 @@ fun TopBar(
             text = topBarTitle,
         )
         if (onSubmit != null) {
-            PrimaryButton(
-                modifier = Modifier.padding(start = 10.dp),
-                text = buttonTitle,
-                onClick = onSubmit
-            )
+            if (!inProccess) {
+                PrimaryButton(
+                    modifier = Modifier.padding(start = 10.dp),
+                    text = buttonTitle,
+                    onClick = onSubmit
+                )
+            } else {
+                PrimaryButton(
+                    modifier = Modifier.padding(start = 10.dp),
+                    onClick = {},
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     }
 }

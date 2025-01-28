@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.utils
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -25,7 +26,9 @@ fun ContentResolver.getFileBytes(uri: Uri): ByteArray? {
 fun Context.uriToFile(uri: Uri): File? {
     val BUFFER_SIZE = 100 * 1024
     val inputStream = this.contentResolver.openInputStream(uri)?: return null
-    val tmpFile = File(cacheDir.absolutePath, "tmp_file_${System.currentTimeMillis()}.tmp")
+    val mimeType = this.contentResolver.getType(uri)
+    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+    val tmpFile = File(cacheDir.absolutePath, "tmp_file_${System.currentTimeMillis()}.$extension")
     val outputStream = FileOutputStream(tmpFile)
     inputStream.use {
         val buffer = ByteArray(BUFFER_SIZE)

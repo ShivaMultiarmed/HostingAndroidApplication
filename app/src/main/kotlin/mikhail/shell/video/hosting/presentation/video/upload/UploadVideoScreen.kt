@@ -85,6 +85,7 @@ fun UploadVideoScreen(
                     onPopup = onPopup,
                     buttonTitle = "Выложить",
                     topBarTitle = "Выложить видео",
+                    inProccess = state.isLoading,
                     onSubmit = {
                         val sourceFile: File?
                         if (sourceUri == null)

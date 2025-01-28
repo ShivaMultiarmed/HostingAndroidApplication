@@ -6,6 +6,8 @@ import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
@@ -51,6 +53,23 @@ interface VideoApi {
         @Part source: MultipartBody.Part,
         @Part cover: MultipartBody.Part?
     ): VideoDto
+    @POST("videos/upload/details")
+    suspend fun uploadVideoDetails(
+        @Body video: VideoDto
+    ): VideoDto
+    @POST("videos/upload/{videoId}/cover")
+    suspend fun uploadVideoCover(
+        @Path("videoId") videoId: Long,
+        @Query("extension") extension: String,
+        @Body cover: RequestBody
+    ): Boolean
+    @POST("videos/upload/{videoId}/source")
+    suspend fun uploadVideoSource(
+        @Path("videoId") videoId: Long,
+        @Query("chunkNumber") chunkNumber: Int,
+        @Query("extension") extension: String,
+        @Body source: RequestBody
+    ): Boolean
     @PATCH("videos/{videoId}/increment-views")
     suspend fun incrementViews(
         @Path("videoId") videoId: Long

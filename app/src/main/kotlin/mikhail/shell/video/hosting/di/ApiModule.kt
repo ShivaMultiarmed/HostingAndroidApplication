@@ -10,11 +10,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.data.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.TokenInterceptor
-import mikhail.shell.video.hosting.data.adapters.ChannelCreationErrorAdapter
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
@@ -63,8 +61,8 @@ object ApiModule {
         converterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
-        //.baseUrl("http://192.168.1.101:9999/api/v1/")
-        .baseUrl("http://158.160.22.54:9999/api/v1/")
+        .baseUrl("http://192.168.1.2:9999/api/v1/")
+        //.baseUrl("http://158.160.22.54:9999/api/v1/")
         .addConverterFactory(converterFactory)
         .build()
 

@@ -52,6 +52,27 @@ fun PrimaryButton(
 }
 
 @Composable
+fun PrimaryButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    isActivated: Boolean = false,
+    content: @Composable RowScope.() -> Unit
+) {
+    Button(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 10.dp),
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (!isActivated) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = if (!isActivated) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onTertiaryContainer,
+        ),
+        content = content
+    )
+}
+
+@Composable
 @Preview
 fun PrimaryButtonPreview() {
     VideoHostingTheme {

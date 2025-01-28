@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.webkit.MimeTypeMap
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -33,7 +34,6 @@ import retrofit2.HttpException
 import java.io.File
 
 import javax.inject.Inject
-import kotlin.math.sin
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
@@ -148,15 +148,23 @@ class VideoRepositoryWithApi @Inject constructor(
         cover: File?
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
-            val sourcePart = source.fileToPart("source")
-            val coverPart = cover?.fileToPart("cover")
-            Result.Success(
-                videoApi.uploadVideo(
-                    video.toDto(),
-                    sourcePart,
-                    coverPart,
-                ).toDomain()
-            )
+            val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
+            source.proccess { bytesRead, buffer, chunkNumber ->
+                videoApi.uploadVideoSource(
+                    videoResponse.videoId!!,
+                    chunkNumber,
+                    source.extension,
+                    buffer.toOctetStream(bytesRead)
+                )
+            }
+            cover?.let {
+                videoApi.uploadVideoCover(
+                    videoResponse.videoId!!,
+                    cover.extension,
+                    it.toOctetStream()
+                )
+            }
+            Result.Success(videoResponse)
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
@@ -193,7 +201,7 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun editVideo(video: Video, coverAction: EditAction, cover: File?): Result<Video, VideoEditingError> {
         return try {
-            val coverPart = cover?.fileToPart("cover")
+            val coverPart = cover?.toPart("cover")
             Result.Success(videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain())
         } catch (e: HttpException) {
             Result.Failure(VideoEditingError.UNEXPECTED)
@@ -207,49 +215,49 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 }
 
-fun File.fileToPart(partName: String): MultipartBody.Part {
-    val requestBody = object : RequestBody() {
-        private val LEN = 100 * 1024
-
-        override fun contentType() = partName.toMediaTypeOrNull()
-
-        override fun writeTo(sink: BufferedSink) {
-            this@fileToPart.inputStream().use { input ->
-                val buffer = ByteArray(LEN)
-                var bytesRead: Int
-                while (input.read(buffer, 0, LEN).also { bytesRead = it } != -1) {
-                    sink.write(buffer, 0, bytesRead)
-                }
-            }
-        }
-    }
+fun File.toPart(partName: String): MultipartBody.Part {
+    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(this.extension)!!
+    val requestBody = StreamedRequestBody(this, mimeType)
     return MultipartBody.Part.createFormData(partName, this.name, requestBody)
 }
 
-//fun InputStream.streamToPart(
-//    partName: String,
-//    file: File
-//): MultipartBody.Part {
-//    val requestBody = object : RequestBody() {
-//        private val BUFFER_SIZE = 100 * 1024
-//
-//        private var size = 0L
-//
-//        override fun contentLength(): Long {
-//            return size
-//        }
-//
-//        override fun contentType(): MediaType? = file.mimeType?.toMediaTypeOrNull()
-//
-//        override fun writeTo(sink: BufferedSink) {
-//            val buffer = ByteArray(BUFFER_SIZE)
-//            var bytesRead: Int
-//            while (this@streamToPart.read(buffer).also { bytesRead = it } != -1) {
-//                sink.write(buffer, 0, bytesRead)
-//                size += bytesRead
-//            }
-//        }
-//    }
-//
-//    return MultipartBody.Part.createFormData(partName, file.name, requestBody)
-//}
+fun File.toOctetStream(mimeType: String = "application/octet-stream"): RequestBody {
+    return RequestBody.create(mimeType.toMediaTypeOrNull(), this)
+}
+
+fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
+    return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, this.size)
+}
+
+class StreamedRequestBody (
+    val file: File,
+    val mimeType: String = "application/octet-stream"
+): RequestBody() {
+    private val LEN = 100 * 1024
+
+    override fun contentType() = mimeType.toMediaTypeOrNull()
+
+    override fun writeTo(sink: BufferedSink) {
+        val buffer = ByteArray(LEN)
+        var bytesRead: Int
+        val input = file.inputStream().buffered(LEN)
+        while (input.read(buffer).also { bytesRead = it } != -1) {
+            sink.outputStream().write(buffer)
+            sink.flush()
+        }
+    }
+}
+
+suspend fun File.proccess(
+    onChunkRead: suspend (bytesRead: Int, buffer: ByteArray, chunkNumber: Int) -> Unit
+) {
+    this.inputStream().use {
+        val buffer = ByteArray(40 * 1024 * 1024)
+        var curChunkNumber = 0
+        var bytesRead: Int
+        while (it.read(buffer).also { bytesRead = it } != -1) {
+            onChunkRead(bytesRead, buffer, curChunkNumber)
+            curChunkNumber++
+        }
+    }
+}

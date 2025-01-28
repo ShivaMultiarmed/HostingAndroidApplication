@@ -41,8 +41,8 @@ class ChannelRepositoryWithApi @Inject constructor(
 
     override suspend fun createChannel(channel: Channel, avatar: File?, cover: File?): Result<Channel, CompoundError<ChannelCreationError>> {
         return try {
-            val avatarPart = avatar?.fileToPart("avatar")
-            val coverPart = cover?.fileToPart("cover")
+            val avatarPart = avatar?.toPart("avatar")
+            val coverPart = cover?.toPart("cover")
             val response = _channelApi.createChannel(
                 channel.toDto(),
                 avatarPart,
