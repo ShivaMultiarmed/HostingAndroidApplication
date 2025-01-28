@@ -109,7 +109,7 @@ fun VideoScreen(
         val idealMaxVideoHeight = 16f / 9 * idealVideoWidth
         val scrollState = rememberScrollState()
         val animatedHeight by animateDpAsState(
-            targetValue = if (videoInfoExpanded) idealMinVideoHeight else 0.dp,//idealMaxVideoHeight,
+            targetValue = if (videoInfoExpanded) idealMinVideoHeight else 0.dp,
             animationSpec = tween(durationMillis = 250),
             label = "videoAnimation"
         )
@@ -129,8 +129,9 @@ fun VideoScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (videoInfoExpanded && animatedHeight < idealMaxVideoHeight
+                            if ((videoInfoExpanded && animatedHeight < idealMaxVideoHeight
                                 || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
+                                && (player.playerError != null || player.isLoading))
                                 Modifier.height(animatedHeight)
                             else
                                 Modifier.wrapContentHeight()

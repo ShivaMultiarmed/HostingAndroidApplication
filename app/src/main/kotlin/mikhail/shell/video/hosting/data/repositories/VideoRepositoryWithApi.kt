@@ -35,6 +35,8 @@ import java.io.File
 
 import javax.inject.Inject
 
+const val TRANSFER_BUFFER_SIZE = 40 * 1024 * 1024
+
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
     private val gson: Gson
@@ -229,18 +231,19 @@ fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
     return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, this.size)
 }
 
+
+
 class StreamedRequestBody (
     val file: File,
     val mimeType: String = "application/octet-stream"
 ): RequestBody() {
-    private val LEN = 100 * 1024
 
     override fun contentType() = mimeType.toMediaTypeOrNull()
 
     override fun writeTo(sink: BufferedSink) {
-        val buffer = ByteArray(LEN)
+        val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
         var bytesRead: Int
-        val input = file.inputStream().buffered(LEN)
+        val input = file.inputStream().buffered(TRANSFER_BUFFER_SIZE)
         while (input.read(buffer).also { bytesRead = it } != -1) {
             sink.outputStream().write(buffer)
             sink.flush()
@@ -252,7 +255,7 @@ suspend fun File.proccess(
     onChunkRead: suspend (bytesRead: Int, buffer: ByteArray, chunkNumber: Int) -> Unit
 ) {
     this.inputStream().use {
-        val buffer = ByteArray(40 * 1024 * 1024)
+        val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
         var curChunkNumber = 0
         var bytesRead: Int
         while (it.read(buffer).also { bytesRead = it } != -1) {
