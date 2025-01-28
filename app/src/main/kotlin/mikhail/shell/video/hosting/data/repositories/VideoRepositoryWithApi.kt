@@ -228,7 +228,7 @@ fun File.toOctetStream(mimeType: String = "application/octet-stream"): RequestBo
 }
 
 fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
-    return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, this.size)
+    return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, nonNullBytesNumber)
 }
 
 
