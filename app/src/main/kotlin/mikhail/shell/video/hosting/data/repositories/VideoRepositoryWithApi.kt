@@ -35,7 +35,7 @@ import java.io.File
 
 import javax.inject.Inject
 
-const val TRANSFER_BUFFER_SIZE = 40 * 1024 * 1024
+const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
@@ -171,6 +171,7 @@ class VideoRepositoryWithApi @Inject constructor(
                     it.toOctetStream()
                 )
             }
+            videoApi.confirmVideoUpload(videoResponse.videoId!!)
             Result.Success(videoResponse)
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()

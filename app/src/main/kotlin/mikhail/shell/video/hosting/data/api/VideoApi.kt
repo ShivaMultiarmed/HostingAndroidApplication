@@ -70,6 +70,10 @@ interface VideoApi {
         @Query("extension") extension: String,
         @Body source: RequestBody
     ): Boolean
+    @POST("videos/upload/{videoId}/confirm")
+    suspend fun confirmVideoUpload(
+        @Path("videoId") videoId: Long
+    ): Boolean
     @PATCH("videos/{videoId}/increment-views")
     suspend fun incrementViews(
         @Path("videoId") videoId: Long
