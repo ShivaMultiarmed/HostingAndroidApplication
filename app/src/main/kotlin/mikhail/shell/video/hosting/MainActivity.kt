@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding),
                         navController = navController,
-                        startDestination = if (userDetailsProvider.getUserId() == 0L) Route.SignIn else Route.Search
+                        startDestination = if (userDetailsProvider.getUserId() == 0L) Route.SignIn else getHomeDestination()
                     ) {
                         signUpRoute(navController)
                         signInRoute(navController)
@@ -107,5 +107,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun getHomeDestination(): Route {
+        intent.extras?.let {
+            if (it.getLong("videoId") != 0L) {
+                return Route.Video(it.getLong("videoId"))
+            }
+            it.clear()
+        }
+        return Route.Search
     }
 }

@@ -1,7 +1,11 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
+import android.app.Activity
+import android.app.NotificationManager
 import android.net.Uri
+import android.os.Build
 import android.webkit.MimeTypeMap
+import android.webkit.PermissionRequest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -37,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -69,11 +74,18 @@ fun UploadVideoScreen(
     onSuccess: (Video) -> Unit,
     onPopup: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ActivityCompat.requestPermissions(
+            context as Activity,
+            arrayOf("android.permission.POST_NOTIFICATIONS"),
+            0
+        )
+    }
     val scrollState = rememberScrollState()
     val compoundError = state.error
     if (state.channels != null) {
         var title by rememberSaveable { mutableStateOf("") }
-        val context = LocalContext.current
         val contentResolver = context.contentResolver
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }

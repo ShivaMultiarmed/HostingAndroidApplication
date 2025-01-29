@@ -46,7 +46,8 @@ interface VideoRepository {
     suspend fun uploadVideo(
         video: Video,
         source: File,
-        cover: File?
+        cover: File?,
+        onProgress: (Float) -> Unit = {}
     ): Result<Video, CompoundError<UploadVideoError>>
 
     suspend fun incrementViews(

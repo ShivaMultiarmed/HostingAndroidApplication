@@ -54,50 +54,7 @@ class UploadVideoViewModel @AssistedInject constructor(
             }
         }
     }
-    fun uploadVideo(input: UploadVideoInput) {
-        _state.update {
-            it.copy(
-                isLoading = true
-            )
-        }
-        val compoundError = validateVideoInput(input)
-        if (compoundError == null) {
-            viewModelScope.launch {
-                _uploadVideo(
-                    video = Video(
-                        channelId = input.channelId?: 0,
-                        title = input.title
-                    ),
-                    source = input.source!!,
-                    cover = input.cover,
-                ).onSuccess { vid ->
-                    _state.update {
-                        it.copy(
-                            video = vid,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-                }.onFailure { err ->
-                    _state.update {
-                        it.copy(
-                            video = null,
-                            isLoading = false,
-                            error = CompoundError(err.errors.toMutableList())
-                        )
-                    }
-                }
-            }
-        } else {
-            _state.update {
-                it.copy(
-                    error = CompoundError(compoundError.errors.toMutableList()),
-                    isLoading = false
-                )
-            }
-        }
-    }
-    private fun validateVideoInput(input: UploadVideoInput): CompoundError<UploadVideoError>? {
+    fun validateVideoInput(input: UploadVideoInput): CompoundError<UploadVideoError>? {
         val compoundError = CompoundError<UploadVideoError>()
         if (input.title.isEmpty())
             compoundError.add(UploadVideoError.TITLE_EMPTY)
@@ -107,7 +64,15 @@ class UploadVideoViewModel @AssistedInject constructor(
         if (input.channelId == null) {
             compoundError.add(UploadVideoError.CHANNEL_NOT_CHOSEN)
         }
-        return if (compoundError.isNotNull()) compoundError else null
+        return if (compoundError.isNotNull()) compoundError.also { cerr ->
+            _state.update {
+                it.copy(
+                    video = null,
+                    isLoading = false,
+                    error = CompoundError(cerr.errors.toMutableList())
+                )
+            }
+        } else null
     }
     @AssistedFactory
     interface Factory {

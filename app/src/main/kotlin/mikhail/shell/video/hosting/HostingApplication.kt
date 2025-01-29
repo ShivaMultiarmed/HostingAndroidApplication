@@ -1,11 +1,14 @@
 package mikhail.shell.video.hosting
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import android.provider.Settings
 import coil.Coil
 import coil.ImageLoader
 import dagger.hilt.android.HiltAndroidApp
-import mikhail.shell.video.hosting.data.TokenInterceptor
-import mikhail.shell.video.hosting.di.ApiModule
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -16,12 +19,19 @@ class HostingApplication: Application() {
     private val imageLoader: ImageLoader by lazy {
         ImageLoader.Builder(this).okHttpClient(httpClient).build()
     }
-    lateinit var CACHE_DIR: String
     override fun onCreate() {
         super.onCreate()
         Coil.setImageLoader(
             imageLoader
         )
-        CACHE_DIR = cacheDir.absolutePath
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val videoUploadingChannel = NotificationChannel(
+                "video_uploading",
+                "Загрузка видео",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(videoUploadingChannel)
+        }
     }
 }

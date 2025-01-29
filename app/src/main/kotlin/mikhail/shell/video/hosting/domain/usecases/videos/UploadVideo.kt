@@ -13,8 +13,8 @@ class UploadVideo @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
     suspend operator fun invoke(
-        video: Video, source: File, cover: File?
+        video: Video, source: File, cover: File?, onProgress: (Float) -> Unit = {}
     ): Result<Video,CompoundError<UploadVideoError>> {
-        return videoRepository.uploadVideo(video, source, cover)
+        return videoRepository.uploadVideo(video, source, cover, onProgress)
     }
 }

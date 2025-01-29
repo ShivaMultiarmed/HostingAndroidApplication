@@ -147,10 +147,12 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun uploadVideo(
         video: Video,
         source: File,
-        cover: File?
+        cover: File?,
+        onProgress: (Float) -> Unit
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
             val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
+            var bytesTransfered = 0
             source.proccess { bytesRead, buffer, chunkNumber ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
@@ -158,6 +160,9 @@ class VideoRepositoryWithApi @Inject constructor(
                     source.extension,
                     buffer.toOctetStream(bytesRead)
                 )
+                bytesTransfered += bytesRead
+                val progress = bytesTransfered.toFloat() / source.length()
+                onProgress(progress)
             }
             cover?.let {
                 videoApi.uploadVideoCover(
@@ -230,8 +235,6 @@ fun File.toOctetStream(mimeType: String = "application/octet-stream"): RequestBo
 fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
     return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, nonNullBytesNumber)
 }
-
-
 
 class StreamedRequestBody (
     val file: File,

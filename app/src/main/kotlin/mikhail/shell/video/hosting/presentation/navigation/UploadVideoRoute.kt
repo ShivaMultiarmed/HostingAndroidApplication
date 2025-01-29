@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -13,6 +15,7 @@ import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.services.VideoSourceUploadingService
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoScreen
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewModel
 
@@ -36,8 +39,20 @@ fun NavGraphBuilder.uploadVideoRoute(
         UploadVideoScreen(
             state = state,
             player = player,
-            onSubmit = {
-                viewModel.uploadVideo(it)
+            onSubmit = { input ->
+                if (viewModel.validateVideoInput(input) == null) {
+                    coroutineScope.launch {
+                        delay(1000)
+                        Toast.makeText(context, "Когда видео загрузится, вы увидите уведомление.", Toast.LENGTH_LONG).show()
+                        context.startService(Intent(context, VideoSourceUploadingService::class.java).also {
+                            it.putExtra("channelId", input.channelId)
+                            it.putExtra("title", input.title)
+                            it.putExtra("source", input.source!!.absolutePath)
+                            it.putExtra("cover", input.cover?.absolutePath)
+                        })
+                        navController.navigate(Route.Channel(input.channelId!!))
+                    }
+                }
             },
             onSuccess = {
                 coroutineScope.launch {
