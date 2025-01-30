@@ -19,7 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.MainActivity
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.di.EntryPoint
+import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
@@ -28,15 +28,15 @@ import java.io.File
 
 @AndroidEntryPoint
 class VideoSourceUploadingService : Service() {
-    private lateinit var entryPoint: EntryPoint
+    private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
     private lateinit var _uploadVideo: UploadVideo
-    private var NOTIFICATION_COUNT = 0
+    var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
-        entryPoint = EntryPointAccessors.fromApplication(this, EntryPoint::class.java)
-        _uploadVideo = entryPoint.getUploadVideoUsecase()
+        videoUploadingEntryPoint = EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
+        _uploadVideo = videoUploadingEntryPoint.getUploadVideo()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

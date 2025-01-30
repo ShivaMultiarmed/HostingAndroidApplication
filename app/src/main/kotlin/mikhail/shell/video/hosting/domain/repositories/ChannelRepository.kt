@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
+import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -33,4 +34,8 @@ interface ChannelRepository {
         userId: Long,
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, ChannelLoadingError>
+
+    suspend fun resubscribe(
+        userId: Long
+    ): Result<Void, ChannelSubscriptionError>
 }

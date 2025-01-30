@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.ChannelApi
@@ -7,6 +8,8 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
+import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
+import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.RESUBSCRIBING_FAILED
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -19,7 +22,8 @@ import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
     private val _channelApi: ChannelApi,
-    private val gson: Gson
+    private val gson: Gson,
+    private val fcm: FirebaseMessaging
 ) : ChannelRepository {
     override suspend fun fetchChannelForUser(
         channelId: Long,
@@ -96,7 +100,8 @@ class ChannelRepositoryWithApi @Inject constructor(
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, ChannelLoadingError> {
         return try {
-            Result.Success(_channelApi.subscribe(channelId, userId, subscriptionState).toDomain())
+            val token = fcm.token.result
+            Result.Success(_channelApi.subscribe(channelId, userId, token, subscriptionState).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 403 -> ChannelLoadingError.USER_NOT_SPECIFIED
@@ -106,6 +111,18 @@ class ChannelRepositoryWithApi @Inject constructor(
             Result.Failure(error)
         } catch (e: Exception) {
             Result.Failure(ChannelLoadingError.UNEXPECTED)
+        }
+    }
+    override suspend fun resubscribe(
+        userId: Long
+    ): Result<Void, ChannelSubscriptionError> {
+        return try {
+            val token = fcm.token.result
+            Result.Success(_channelApi.resubscribe(userId, token))
+        } catch (e: HttpException) {
+            Result.Failure(RESUBSCRIBING_FAILED)
+        } catch (e: Exception) {
+            Result.Failure(RESUBSCRIBING_FAILED)
         }
     }
 }

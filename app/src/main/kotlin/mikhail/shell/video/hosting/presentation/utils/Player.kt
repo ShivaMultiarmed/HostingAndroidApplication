@@ -63,7 +63,7 @@ fun PlayerComponent(
                 playActions()
             }
         }
-        val audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        val audioFocusRequest = AudioFocusRequest.Builder(AUDIOFOCUS_GAIN)
             .setOnAudioFocusChangeListener(audioListener).build()
         audioManager.requestAudioFocus(audioFocusRequest)
         val eventObserver = LifecycleEventObserver { owner, event ->

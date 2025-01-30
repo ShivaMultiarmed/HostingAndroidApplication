@@ -6,6 +6,8 @@ plugins {
     id ("kotlin-kapt")
     id ("dagger.hilt.android.plugin")
     alias(libs.plugins.compose.compiler)
+
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -55,6 +57,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.monitor)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -92,4 +95,6 @@ dependencies {
 
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
+
+    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 }

@@ -38,6 +38,12 @@ interface ChannelApi {
     suspend fun subscribe(
         @Path("channelId") channelId: Long,
         @Query("userId") userId: Long,
+        @Query("token") token: String,
         @Query("subscriptionState") subscriptionState: SubscriptionState
     ): ChannelWithUserDto
+    @PATCH("channels/resubscribe")
+    suspend fun resubscribe(
+        @Query("userId") userId: Long,
+        @Query("token") token: String
+    ): Void
 }

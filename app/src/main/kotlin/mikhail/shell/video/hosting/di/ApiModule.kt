@@ -1,6 +1,8 @@
 package mikhail.shell.video.hosting.di
 
 import android.content.Context
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -83,4 +85,8 @@ object ApiModule {
     fun provideAuthApi(
         retrofit: Retrofit
     ) = retrofit.create<AuthApi>()
+
+    @Provides
+    @Singleton
+    fun provideFCM() = Firebase.messaging
 }
