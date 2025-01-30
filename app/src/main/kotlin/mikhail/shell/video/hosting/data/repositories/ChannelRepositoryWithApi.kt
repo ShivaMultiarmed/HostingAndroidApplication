@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
@@ -100,7 +101,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, ChannelLoadingError> {
         return try {
-            val token = fcm.token.result
+            val token = fcm.token.await()
             Result.Success(_channelApi.subscribe(channelId, userId, token, subscriptionState).toDomain())
         } catch (e: HttpException) {
             val error = when (e.code()) {
