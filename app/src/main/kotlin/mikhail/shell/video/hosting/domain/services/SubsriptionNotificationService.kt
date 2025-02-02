@@ -62,6 +62,7 @@ class SubsriptionNotificationService: FirebaseMessagingService() {
             .setContentTitle("Новое видео на канале $channelTitle")
             .setContentText(videoTitle)
             .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
         notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
     }

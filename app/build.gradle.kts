@@ -97,4 +97,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
 
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+
+    implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
 }
