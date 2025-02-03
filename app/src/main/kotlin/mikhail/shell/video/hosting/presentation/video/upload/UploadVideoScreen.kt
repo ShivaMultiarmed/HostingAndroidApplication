@@ -1,11 +1,15 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
+import android.Manifest
 import android.app.Activity
 import android.app.NotificationManager
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.webkit.MimeTypeMap
 import android.webkit.PermissionRequest
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -42,6 +46,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -52,6 +58,7 @@ import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
+import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.Dropdown
 import mikhail.shell.video.hosting.presentation.utils.EditField
@@ -59,6 +66,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
@@ -99,23 +107,15 @@ fun UploadVideoScreen(
                     topBarTitle = "Выложить видео",
                     inProccess = state.isLoading,
                     onSubmit = {
-                        val sourceFile: File?
-                        if (sourceUri == null)
-                            sourceFile = null
+                        val sourceFile: File? = if (sourceUri == null)
+                            null
                         else {
-                            val mimeType = contentResolver.getType(sourceUri!!)
-                            val extension =
-                                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                            sourceFile = context.uriToFile(sourceUri!!)
+                            context.uriToFile(sourceUri!!)
                         }
-                        val coverFile: File?
-                        if (coverUri == null)
-                            coverFile = null
+                        val coverFile: File? = if (coverUri == null)
+                            null
                         else {
-                            val mimeType = contentResolver.getType(coverUri!!)
-                            val extension =
-                                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                            coverFile = context.uriToFile(coverUri!!)
+                            context.uriToFile(coverUri!!)
                         }
                         val input = UploadVideoInput(
                             channelId = channelId,
@@ -145,11 +145,13 @@ fun UploadVideoScreen(
                         .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(scrollState)
                 ) {
-//                    if (state.video != null) {
-//                        FormMessage(
-//                            text = "Видео успешно опубликовано"
-//                        )
-//                    }
+                    val sourceCreator = rememberLauncherForActivityResult(
+                        ActivityResultContracts.CaptureVideo()
+                    ) {
+                        if (!it) {
+                            sourceUri = null
+                        }
+                    }
 
                     val sourcePicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
@@ -172,6 +174,7 @@ fun UploadVideoScreen(
                             }
                         )
                     )
+                    var isVideoDialogOpen by rememberSaveable { mutableStateOf(false) }
                     Row {
                         EditField(
                             actionItems = sourceActionItems
@@ -180,12 +183,42 @@ fun UploadVideoScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = if (sourceUri == null) "Выбрать запись" else "Изменить запись",
                                 onClick = {
-                                    sourcePicker.launch("video/*")
+                                    isVideoDialogOpen = true
                                 },
                                 icon = Icons.Rounded.VideoLibrary,
                                 errorMsg = sourceErrMsg
                             )
                         }
+                        val cacheDir = context.cacheDir.absolutePath
+                        ContextMenu(
+                            isExpanded = isVideoDialogOpen,
+                            onDismiss = {
+                                isVideoDialogOpen = false
+                            },
+                            menuItems = listOf(
+                                MenuItem(
+                                    title = "Создать видео",
+                                    onClick = {
+                                        val isCameraPermissionGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                                        if (isCameraPermissionGranted) {
+                                            val file = File(cacheDir, "tmp_file_${System.currentTimeMillis()}.mp4")
+                                            sourceUri = FileProvider.getUriForFile(context, "mikhail.shell.video.hosting.fileprovider",file)
+                                            sourceCreator.launch(sourceUri!!)
+                                        } else {
+                                            if (ActivityCompat.shouldShowRequestPermissionRationale(context as Activity,"android.permission.CAMERA")) {
+                                                Toast.makeText(context, "Разрешите приложению доступ к камере в настройках телефона.", Toast.LENGTH_LONG).show()
+                                            } else {
+                                                ActivityCompat.requestPermissions(context as Activity, arrayOf("android.permission.CAMERA"), 0)
+                                            }
+                                        }
+                                    }
+                                ),
+                                MenuItem(
+                                    title = "Выбрать видео",
+                                    onClick = { sourcePicker.launch("video/*") }
+                                )
+                            )
+                        )
                     }
                     if (sourceUri != null)
                         player.setMediaItem(MediaItem.fromUri(sourceUri!!))
