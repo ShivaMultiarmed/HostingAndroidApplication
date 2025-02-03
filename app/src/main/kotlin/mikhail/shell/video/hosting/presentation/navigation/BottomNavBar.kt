@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -89,7 +90,7 @@ fun BottomNavBar(
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            //.height(60.dp)
             .background(MaterialTheme.colorScheme.surface)
             .borderTop(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f), strokeWidth = 3),
         contentColor = MaterialTheme.colorScheme.onSurface
@@ -128,7 +129,7 @@ fun RowScope.BottomNavBarItem(
             Icon(
                 imageVector = imageVector,
                 contentDescription = navItem.title,
-                modifier = Modifier.size(27.dp),
+                modifier = Modifier.size(26.dp),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         },
