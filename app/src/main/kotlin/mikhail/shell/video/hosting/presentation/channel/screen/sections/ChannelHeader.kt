@@ -58,18 +58,16 @@ fun ColumnScope.ChannelHeader(
     val context = LocalContext.current
     val config = LocalConfiguration.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
-    val orientation = config.orientation
-
     if (channel != null) {
         var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && orientation == ORIENTATION_PORTRAIT) {
+        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
             ChannelHeaderShrinked(
                 hasCover,
                 { hasCover = it },
                 channel,
                 onSubscription
             )
-        } else if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Medium && windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
+        } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
             ChannelHeaderWide(
                 channel,
                 onSubscription
