@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.Password
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
@@ -58,7 +60,13 @@ fun SignUpScreen(
         Title("Зарегистрироваться")
         if (state.authModel != null) {
             FormMessage(text = "Вы успешно зарегистрировались")
-            onSuccess(state.authModel)
+
+        }
+        LaunchedEffect(state.authModel) {
+            if (state.authModel != null) {
+                delay(1000)
+                onSuccess(state.authModel)
+            }
         }
         val compoundError = state.error
         var userName by rememberSaveable { mutableStateOf("") }
