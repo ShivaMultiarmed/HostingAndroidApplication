@@ -32,21 +32,23 @@ fun ColumnScope.VideoGridSection(
     onVideosRefresh: () -> Unit,
     onScrollToBottom: () -> Unit
 ) {
-    val scrollState = rememberLazyGridState()
-    val buffer = 2
+    val gridState = rememberLazyGridState()
+    val buffer = 4
     val reachedEnd by remember {
         derivedStateOf {
-            val lastVisibleItemIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            lastVisibleItemIndex != 0 && lastVisibleItemIndex == scrollState.layoutInfo.totalItemsCount - buffer
+            val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index?: return@derivedStateOf true
+            val lastItemIndexInBuffer = gridState.layoutInfo.totalItemsCount - 1 - buffer
+            lastVisibleItemIndex >= lastItemIndexInBuffer
         }
     }
+
     if (videos != null) {
         LazyVerticalGrid(
             modifier = Modifier
                 .padding(top = 10.dp)
                 .weight(1f),
             columns = GridCells.Adaptive(minSize = 300.dp),
-            state = scrollState
+            state = gridState
         ) {
             items(videos) {
                 VideoSnippet(
