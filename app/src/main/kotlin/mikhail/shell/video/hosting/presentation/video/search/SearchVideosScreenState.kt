@@ -7,5 +7,7 @@ data class SearchVideosScreenState(
     val query: String? = null,
     val videos: List<VideoWithChannel>? = null,
     val error: VideoError? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val areAllVideosLoaded: Boolean = false,
+    val nextPartNumber: Long = 0
 )

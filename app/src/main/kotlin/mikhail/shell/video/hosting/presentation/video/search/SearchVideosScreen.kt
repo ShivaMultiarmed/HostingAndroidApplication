@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +33,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +61,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
+import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -64,16 +71,14 @@ fun SearchVideosScreen(
     modifier: Modifier = Modifier,
     state: SearchVideosScreenState,
     onSubmit: (String) -> Unit,
-    onScrollToBottom: (Long, Int) -> Unit,
+    onScrollToBottom: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
-    var query by rememberSaveable {
-        mutableStateOf("")
-    }
+    var query by rememberSaveable { mutableStateOf("") }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            ConstraintLayout (
+            ConstraintLayout(
                 modifier = Modifier
                     .fillMaxWidth()
                     .borderBottom(
@@ -93,7 +98,7 @@ fun SearchVideosScreen(
                     placeholder = "Искать",
                     icon = Icons.Rounded.Search
                 )
-                if (query.isNotBlank()) {
+                //if (query.isNotBlank()) {
                     PrimaryButton(
                         modifier = Modifier.constrainAs(button) {
                             end.linkTo(parent.end, 10.dp)
@@ -102,58 +107,78 @@ fun SearchVideosScreen(
                         },
                         icon = Icons.Rounded.Send,
                         onClick = {
-                            if (query.isNotEmpty()) {
-                                errorMsg = null
-                                onSubmit(query)
-                            }
+                            errorMsg = null
+                            onSubmit(query)
                         }
                     )
-                }
+                //}
             }
         }
     ) {
-        if (state.videos != null) {
-            if (state.videos.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(it)
-                        .fillMaxSize()
-                ) {
-                    items(state.videos) {
-                        VideoWithChannelSnippet(
-                            videoWithChannel = it,
-                            onClick = onVideoClick
-                        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
+            if (state.videos != null) {
+                if (state.videos.isNotEmpty()) {
+                    val lazyGridState = rememberLazyGridState()
+                    val buffer = 4
+                    val reachedBottom by remember {
+                        derivedStateOf {
+                            lazyGridState.reachedBottom(
+                                buffer
+                            )
+                        }
                     }
+                    LazyVerticalGrid(
+                        modifier = Modifier.weight(1f),
+                        columns = GridCells.Fixed(1),
+                        state = lazyGridState
+                    ) {
+                        items(state.videos) {
+                            VideoWithChannelSnippet(
+                                videoWithChannel = it,
+                                onClick = onVideoClick
+                            )
+                        }
+                    }
+                    LaunchedEffect(reachedBottom) {
+                        if (reachedBottom) {
+                            onScrollToBottom()
+                        }
+                    }
+                } else {
+                    EmptyResultComponent(
+                        modifier = modifier
+                            .padding(it)
+                            .fillMaxSize(),
+                        message = "Ничего не найдено"
+                    )
                 }
+            } else if (state.error != null) {
+                ErrorComponent(
+                    modifier = modifier.fillMaxSize(),
+                    onRetry = {
+                        if (query.isNotEmpty())
+                            onSubmit(query)
+                    }
+                )
+            } else if (state.isLoading) {
+                LoadingComponent(
+                    modifier = modifier.fillMaxSize()
+                )
             } else {
-                EmptyResultComponent(
-                    modifier = modifier.padding(it).fillMaxSize(),
-                    message = "Ничего не найдено"
-                )
-            }
-        } else if (state.error != null) {
-            ErrorComponent(
-                modifier = modifier.fillMaxSize(),
-                onRetry = {
-                    if (query.isNotEmpty())
-                        onSubmit(query)
+                Box(
+                    modifier = modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Введите запрос\n" +
+                                "Чтобы найти все видео введите пробел",
+                        textAlign = TextAlign.Center
+                    )
                 }
-            )
-        } else if (state.isLoading) {
-            LoadingComponent(
-                modifier = modifier.fillMaxSize()
-            )
-        } else {
-            Box(
-                modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Введите запрос\n" +
-                            "Чтобы найти все видео введите пробел",
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }
@@ -172,7 +197,8 @@ fun VideoWithChannelSnippet(
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
                 onClick(video.videoId!!)
-            }.padding(top = 10.dp)
+            }
+            .padding(top = 10.dp)
     ) {
         AsyncImage(
             modifier = Modifier
@@ -230,9 +256,7 @@ fun SearchVideosScreenPreview() {
         SearchVideosScreen(
             state = SearchVideosScreenState(),
             onSubmit = {},
-            onScrollToBottom = { a, b ->
-
-            },
+            onScrollToBottom = {},
             onVideoClick = {}
         )
     }

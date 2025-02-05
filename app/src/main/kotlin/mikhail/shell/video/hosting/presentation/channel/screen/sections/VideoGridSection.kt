@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
 
 @Composable
@@ -34,14 +35,7 @@ fun ColumnScope.VideoGridSection(
 ) {
     val gridState = rememberLazyGridState()
     val buffer = 4
-    val reachedEnd by remember {
-        derivedStateOf {
-            val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index?: return@derivedStateOf true
-            val lastItemIndexInBuffer = gridState.layoutInfo.totalItemsCount - 1 - buffer
-            lastVisibleItemIndex >= lastItemIndexInBuffer
-        }
-    }
-
+    val reachedEnd by remember { derivedStateOf { gridState.reachedBottom(buffer) } }
     if (videos != null) {
         LazyVerticalGrid(
             modifier = Modifier

@@ -18,8 +18,10 @@ fun NavGraphBuilder.searchRoute(navController: NavController) {
             onSubmit = {
                 viewModel.search(it)
             },
-            onScrollToBottom = { partNumber, partSize ->
-                viewModel.loadVideoPart(partSize, partNumber)
+            onScrollToBottom = {
+                if (!state.areAllVideosLoaded) {
+                    viewModel.loadVideoPart()
+                }
             },
             onVideoClick = {
                 navController.navigate(Route.Video(it))
