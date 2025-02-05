@@ -11,5 +11,7 @@ data class ChannelScreenState(
     val isChannelLoading: Boolean = false,
     val areVideosLoading: Boolean = false,
     val channelLoadingError: ChannelLoadingError? = null,
-    val videosLoadingError: VideoLoadingError? = null
+    val videosLoadingError: VideoLoadingError? = null,
+    val areAllVideosLoaded: Boolean = false,
+    val nextPartNumber: Long = 1
 )

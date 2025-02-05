@@ -37,6 +37,11 @@ fun NavGraphBuilder.channelRoute(
             },
             onVideoClick = {
                 navController.navigate(Route.Video(it))
+            },
+            onScrollToBottom = {
+                if (!viewModel.areAllVideosLoaded()) {
+                    viewModel.loadVideosPart()
+                }
             }
         )
     }

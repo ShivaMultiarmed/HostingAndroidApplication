@@ -1,19 +1,12 @@
 package mikhail.shell.video.hosting.presentation.channel.screen
 
-import android.content.res.Configuration.UI_MODE_NIGHT_NO
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.di.ApiModule
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeaderShrinked
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 val videosSamples: List<Video> = ApiModule.provideGson().fromJson("""
@@ -76,7 +69,8 @@ fun ChannelScreenPreview() {
             onChannelRefresh = {},
             onVideosRefresh = {},
             onSubscription = {},
-            onVideoClick = {}
+            onVideoClick = {},
+            onScrollToBottom = {}
         )
     }
 }
@@ -103,7 +97,8 @@ fun ChannelCoverShrinkedPreview() {
             onChannelRefresh = {},
             onVideosRefresh = {},
             onSubscription = {},
-            onVideoClick = {}
+            onVideoClick = {},
+            onScrollToBottom = {}
         )
     }
 }

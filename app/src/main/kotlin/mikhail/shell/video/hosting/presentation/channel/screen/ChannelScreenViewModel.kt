@@ -61,6 +61,8 @@ class ChannelScreenViewModel @AssistedInject constructor(
         }
     }
 
+    fun areAllVideosLoaded() = _state.value.areAllVideosLoaded
+
     fun loadVideosPart() {
         _state.update {
             it.copy(
@@ -71,14 +73,16 @@ class ChannelScreenViewModel @AssistedInject constructor(
             _getVideoList(
                 _channelId,
                 _userId,
-                1,
-                10
+                _state.value.nextPartNumber,
+                PART_SIZE
             ).onSuccess { videos ->
                 _state.update {
                     it.copy(
                         areVideosLoading = false,
                         videos = (it.videos ?: listOf()) + videos,
-                        videosLoadingError = null
+                        videosLoadingError = null,
+                        areAllVideosLoaded = videos.size < PART_SIZE,
+                        nextPartNumber = it.nextPartNumber + 1
                     )
                 }
             }.onFailure { err ->
@@ -108,5 +112,9 @@ class ChannelScreenViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("channelId") channelId: Long, @Assisted("userId") userId: Long) : ChannelScreenViewModel
+    }
+
+    companion object {
+        const val PART_SIZE = 10
     }
 }

@@ -56,7 +56,6 @@ fun ColumnScope.ChannelHeader(
     onChannelRefresh: () -> Unit
 ) {
     val context = LocalContext.current
-    val config = LocalConfiguration.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
     if (channel != null) {
         var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -104,8 +103,7 @@ fun ColumnScope.ChannelHeaderShrinked(
     onSubscription: (SubscriptionState) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .weight(1f),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Top
     ) {
         ChannelCover(
@@ -188,13 +186,16 @@ fun ColumnScope.ChannelHeaderExpanded(
     ) {
         val coverRef = createRef()
         ChannelCover(
-            modifier = Modifier
-                .fillMaxWidth()
-                .constrainAs(coverRef) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                },
+            modifier = Modifier.then(
+                if (hasCover == true) {
+                    Modifier.fillMaxWidth()
+                        .constrainAs(coverRef) {
+                            top.linkTo(parent.top)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
+                } else Modifier
+            ),
             hasCover = hasCover,
             coverUrlAssignment = coverUrlAssignment,
             coverUrl = channel.coverUrl,
@@ -202,7 +203,11 @@ fun ColumnScope.ChannelHeaderExpanded(
         val avatarRef = createRef()
         ChannelAvatar(
             modifier = Modifier.constrainAs(avatarRef) {
-                top.linkTo(coverRef.bottom, -65.dp)
+                if (hasCover == true) {
+                    top.linkTo(coverRef.bottom, -65.dp)
+                } else {
+                    top.linkTo(parent.top)
+                }
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
@@ -252,7 +257,7 @@ fun ChannelCover(
                         .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 } else {
-                    Modifier
+                    Modifier.size(0.dp)
                 }
             )
 
