@@ -104,11 +104,17 @@ fun VideoScreen(
     onChannelLinkClick: (Long) -> Unit,
     onView: () -> Unit,
     onDelete: () -> Unit,
-    onUpdate: (Long) -> Unit
+    onUpdate: (Long) -> Unit,
+    onLoaded: (url: String) -> Unit
 ) {
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
             onView()
+        }
+    }
+    LaunchedEffect(state.videoDetails) {
+        if (state.videoDetails != null) {
+            onLoaded(state.videoDetails.video.sourceUrl!!)
         }
     }
     val context = LocalContext.current

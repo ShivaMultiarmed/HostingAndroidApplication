@@ -89,7 +89,9 @@ class MainActivity : ComponentActivity() {
                             signUpRoute(navController)
                             signInRoute(navController)
                             channelRoute(navController, userDetailsProvider)
-                            videoRoute(navController, player, userDetailsProvider)
+                            videoRoute(navController, player, userDetailsProvider) {
+                                playerService?.setVideo(it)
+                            }
                             searchRoute(navController)
                             createChannelRoute(navController, userDetailsProvider)
                             uploadVideoRoute(navController, userDetailsProvider)

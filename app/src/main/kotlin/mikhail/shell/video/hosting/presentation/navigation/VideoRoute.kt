@@ -26,7 +26,8 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewMode
 fun NavGraphBuilder.videoRoute(
     navController: NavController,
     player: Player?,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    onLoaded: (url: String) -> Unit
 ) {
     composable<Route.Video> {
         if (player != null) {
@@ -38,7 +39,7 @@ fun NavGraphBuilder.videoRoute(
             val userId = userDetailsProvider.getUserId()
             val videoScreenViewModel =
                 hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-                    factory.create(player, userId, videoId)
+                    factory.create(userId, videoId)
                 }
             val state by videoScreenViewModel.state.collectAsStateWithLifecycle()
             VideoScreen(
@@ -72,7 +73,8 @@ fun NavGraphBuilder.videoRoute(
                         delay(1000)
                         navController.navigate(Route.EditVideo(it))
                     }
-                }
+                },
+                onLoaded = onLoaded
             )
         } else {
 

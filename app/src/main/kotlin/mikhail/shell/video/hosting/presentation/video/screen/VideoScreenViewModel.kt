@@ -28,7 +28,6 @@ import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
-    @Assisted("player") private val player: Player,
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
     private val _getVideoDetails: GetVideoDetails,
@@ -42,26 +41,26 @@ class VideoScreenViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
 
     init {
-        player.addListener(
-            object : Player.Listener {
-                override fun onRenderedFirstFrame() {
-                    _state.update {
-                        it.copy(
-                            isLoading = false
-                        )
-                    }
-                }
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
-                        _state.update {
-                            it.copy(
-                                isViewed = true
-                            )
-                        }
-                    }
-                }
-            }
-        )
+//        player.addListener(
+//            object : Player.Listener {
+//                override fun onRenderedFirstFrame() {
+//                    _state.update {
+//                        it.copy(
+//                            isLoading = false
+//                        )
+//                    }
+//                }
+//                override fun onPlaybackStateChanged(playbackState: Int) {
+//                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
+//                        _state.update {
+//                            it.copy(
+//                                isViewed = true
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        )
         loadVideo()
     }
 
@@ -75,20 +74,14 @@ class VideoScreenViewModel @AssistedInject constructor(
             ).onSuccess {
                 _state.value = VideoScreenState(
                     videoDetails = it,
-                    playbackState = PAUSED,
+                    //playbackState = PAUSED,
                     error = null
                 )
-                val url = it.video.sourceUrl
-                val uri = Uri.parse(url)
-                val mediaItem = MediaItem.fromUri(uri)
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                changePlaybackState()
             }.onFailure {
                 _state.value = VideoScreenState(
                     videoDetails = _state.value.videoDetails,
                     isLoading = false,
-                    playbackState = PAUSED,
+                    //playbackState = PAUSED,
                     error = it
                 )
             }
@@ -149,22 +142,6 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun changePlaybackState() {
-        _state.update {
-            if (it.playbackState == PAUSED) {
-                player.play()
-                it.copy(
-                    playbackState = PLAYING
-                )
-            } else {
-                player.pause()
-                it.copy(
-                    playbackState = PAUSED
-                )
-            }
-        }
-    }
-
     fun incrementViews() {
         viewModelScope.launch {
             _incrementViews(videoId).onSuccess { newViews ->
@@ -206,16 +183,9 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        player.release()
-    }
-
     @AssistedFactory
     interface Factory {
         fun create(
-            @Assisted("player") player: Player,
             @Assisted("userId") userId: Long,
             @Assisted("videoId") videoId: Long
         ): VideoScreenViewModel

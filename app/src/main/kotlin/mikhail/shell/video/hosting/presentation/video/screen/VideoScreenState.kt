@@ -6,7 +6,7 @@ import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState
 
 data class VideoScreenState(
     val videoDetails: VideoDetails? = null,
-    val playbackState: PlaybackState = PlaybackState.PAUSED,
+    //val playbackState: PlaybackState = PlaybackState.PAUSED,
     val isLoading: Boolean = true,
     val isViewed: Boolean = false,
     val error: VideoError? = null
