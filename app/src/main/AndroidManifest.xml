@@ -30,6 +30,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:supportsPictureInPicture="true"
             android:theme="@style/Theme.VideoHosting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,6 +38,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".domain.services.PlayerService"
+            android:exported="false" />
         <service
             android:name=".domain.services.VideoSourceUploadingService"
             android:foregroundServiceType="dataSync"

@@ -64,7 +64,7 @@ object ApiModule {
     ) = Retrofit.Builder()
         .client(httpClient)
         //.baseUrl("http://192.168.1.2:9999/api/v1/")
-        .baseUrl("https://somespace.ru:10000/api/v1/")
+        .baseUrl("https://digit-verse.ru:10000/api/v1/")
         .addConverterFactory(converterFactory)
         .build()
 

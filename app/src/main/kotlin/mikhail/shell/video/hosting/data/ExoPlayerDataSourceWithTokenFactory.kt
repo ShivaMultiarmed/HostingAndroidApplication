@@ -20,10 +20,6 @@ class DSWithTokenFactory @Inject constructor(
     }
 
     override fun setDefaultRequestProperties(defaultRequestProperties: MutableMap<String, String>): HttpDataSource.Factory {
-//        provider.getJwt().let { jwt ->
-//            defaultRequestProperties["Authorization"] = "Bearer $jwt"
-//        }
-//        return this
         return DefaultHttpDataSource.Factory()
     }
 }

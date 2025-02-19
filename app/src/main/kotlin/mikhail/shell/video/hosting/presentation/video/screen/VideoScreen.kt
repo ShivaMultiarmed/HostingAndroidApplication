@@ -1,5 +1,9 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
+import android.app.Activity
+import android.app.PictureInPictureParams
+import android.os.Build
+import android.util.Rational
 import android.view.ViewGroup
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -42,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,12 +60,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
@@ -102,6 +111,8 @@ fun VideoScreen(
             onView()
         }
     }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     if (state.videoDetails != null) {
         var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
         val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -381,8 +392,26 @@ fun VideoScreen(
                     }
                 }
             }
-
         }
+//        DisposableEffect(lifecycleOwner) {
+//            val eventObserver = LifecycleEventObserver { owner, event ->
+//                if (event == Lifecycle.Event.ON_PAUSE) {
+//                    (context as Activity).enterPictureInPictureMode(
+//                        PictureInPictureParams.Builder()
+//                            .setAspectRatio(Rational(16, 9))
+//                            .also {
+//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                                    it.setSeamlessResizeEnabled(true)
+//                                }
+//                            }.build()
+//                    )
+//                }
+//            }
+//            lifecycleOwner.lifecycle.addObserver(eventObserver)
+//            onDispose {
+//                lifecycleOwner.lifecycle.removeObserver(eventObserver)
+//            }
+//        }
     } else if (state.isLoading) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()

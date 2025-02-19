@@ -28,7 +28,7 @@ import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
-    @Assisted("player") val player: Player,
+    @Assisted("player") private val player: Player,
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
     private val _getVideoDetails: GetVideoDetails,
@@ -73,16 +73,16 @@ class VideoScreenViewModel @AssistedInject constructor(
                 videoId,
                 userId
             ).onSuccess {
-                player.prepare()
                 _state.value = VideoScreenState(
                     videoDetails = it,
-                    playbackState = PLAYING,
+                    playbackState = PAUSED,
                     error = null
                 )
                 val url = it.video.sourceUrl
                 val uri = Uri.parse(url)
                 val mediaItem = MediaItem.fromUri(uri)
                 player.setMediaItem(mediaItem)
+                player.prepare()
                 changePlaybackState()
             }.onFailure {
                 _state.value = VideoScreenState(

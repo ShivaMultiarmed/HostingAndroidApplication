@@ -9,7 +9,7 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -19,12 +19,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 
+@OptIn(UnstableApi::class)
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
@@ -66,26 +66,18 @@ fun PlayerComponent(
         val audioFocusRequest = AudioFocusRequest.Builder(AUDIOFOCUS_GAIN)
             .setOnAudioFocusChangeListener(audioListener).build()
         audioManager.requestAudioFocus(audioFocusRequest)
-        val eventObserver = LifecycleEventObserver { owner, event ->
-            if (event == Lifecycle.Event.ON_PAUSE && windowDecorView.hasWindowFocus()) {
-                pauseActions()
-            } else if (event == Lifecycle.Event.ON_RESUME && savedPlayState) {
-                playActions()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(eventObserver)
-        val windowFocusListener = ViewTreeObserver.OnWindowFocusChangeListener {
-            if (!it) {
-                pauseActions()
-            } else if (savedPlayState) {
-                playActions()
-            }
-        }
-        windowDecorView.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
+//        val windowFocusListener = ViewTreeObserver.OnWindowFocusChangeListener {
+//            if (!it) {
+//                pauseActions()
+//            } else if (savedPlayState) {
+//                playActions()
+//            }
+//        }
+//        windowDecorView.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         onDispose {
             audioManager.abandonAudioFocusRequest(audioFocusRequest)
-            lifecycleOwner.lifecycle.removeObserver(eventObserver)
-            windowDecorView.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
+            //lifecycleOwner.lifecycle.removeObserver(eventObserver)
+            //windowDecorView.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
         }
     }
 }

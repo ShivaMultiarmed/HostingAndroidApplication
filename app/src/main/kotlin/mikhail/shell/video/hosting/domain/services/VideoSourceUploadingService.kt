@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.Messenger
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
@@ -30,7 +31,7 @@ import java.io.File
 class VideoSourceUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
     private lateinit var _uploadVideo: UploadVideo
-    var NOTIFICATION_COUNT = 0
+    private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     override fun onCreate() {
