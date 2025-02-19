@@ -24,7 +24,6 @@ import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
-import mikhail.shell.video.hosting.presentation.exoplayer.PlaybackState.*
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
@@ -36,34 +35,11 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _incrementViews: IncrementViews,
     private val _deleteVideo: DeleteVideo
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
-
     init {
-//        player.addListener(
-//            object : Player.Listener {
-//                override fun onRenderedFirstFrame() {
-//                    _state.update {
-//                        it.copy(
-//                            isLoading = false
-//                        )
-//                    }
-//                }
-//                override fun onPlaybackStateChanged(playbackState: Int) {
-//                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
-//                        _state.update {
-//                            it.copy(
-//                                isViewed = true
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        )
         loadVideo()
     }
-
     @OptIn(UnstableApi::class)
     fun loadVideo() {
         _state.value = VideoScreenState()
@@ -74,20 +50,18 @@ class VideoScreenViewModel @AssistedInject constructor(
             ).onSuccess {
                 _state.value = VideoScreenState(
                     videoDetails = it,
-                    //playbackState = PAUSED,
-                    error = null
+                    error = null,
+                    isLoading = false
                 )
             }.onFailure {
                 _state.value = VideoScreenState(
                     videoDetails = _state.value.videoDetails,
                     isLoading = false,
-                    //playbackState = PAUSED,
                     error = it
                 )
             }
         }
     }
-
     fun subscribe(subscriptionState: SubscriptionState) {
         _state.update {
             it.copy(
