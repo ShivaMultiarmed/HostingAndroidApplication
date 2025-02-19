@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import android.app.Activity
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.AUDIOFOCUS_GAIN
@@ -10,6 +9,8 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
 import android.view.ViewGroup
 import androidx.annotation.OptIn
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -41,9 +42,8 @@ fun PlayerComponent(
     }
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val windowDecorView = (context as Activity).window.decorView
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.background(MaterialTheme.colorScheme.onBackground),
         factory = {
             PlayerView(it).also {
                 it.layoutParams = ViewGroup.LayoutParams(
@@ -66,18 +66,8 @@ fun PlayerComponent(
         val audioFocusRequest = AudioFocusRequest.Builder(AUDIOFOCUS_GAIN)
             .setOnAudioFocusChangeListener(audioListener).build()
         audioManager.requestAudioFocus(audioFocusRequest)
-//        val windowFocusListener = ViewTreeObserver.OnWindowFocusChangeListener {
-//            if (!it) {
-//                pauseActions()
-//            } else if (savedPlayState) {
-//                playActions()
-//            }
-//        }
-//        windowDecorView.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         onDispose {
             audioManager.abandonAudioFocusRequest(audioFocusRequest)
-            //lifecycleOwner.lifecycle.removeObserver(eventObserver)
-            //windowDecorView.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
         }
     }
 }
