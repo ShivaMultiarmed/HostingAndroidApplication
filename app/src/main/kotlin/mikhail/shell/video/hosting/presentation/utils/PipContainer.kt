@@ -2,9 +2,8 @@ package mikhail.shell.video.hosting.presentation.utils
 
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,8 +72,7 @@ fun PipContainer(
                 }
             }.onGloballyPositioned { coordinates ->
                 pipSize = coordinates.size
-            }.width(300.dp)
-            .height(250.dp)
+            }.wrapContentHeight()
             .clip(RoundedCornerShape(10.dp)),
     ) {
         content()

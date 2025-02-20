@@ -2,15 +2,11 @@ package mikhail.shell.video.hosting.domain.services
 
 import android.app.Service
 import android.content.Intent
-import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @UnstableApi
@@ -18,8 +14,6 @@ import javax.inject.Inject
 class PlayerService: Service() {
     @Inject
     lateinit var player: Player
-    private val _preparedStateFlow = MutableStateFlow(false)
-    val isPrepared = _preparedStateFlow.asStateFlow()
     private val binder = PlayerBinder()
     override fun onBind(intent: Intent?): IBinder {
         return binder
@@ -30,17 +24,6 @@ class PlayerService: Service() {
     }
     inner class PlayerBinder : Binder() {
         fun getService() = this@PlayerService
-    }
-    fun setVideo(url: String) {
-        val uri = Uri.parse(url)
-        val mediaItem = MediaItem.fromUri(uri)
-        player.setMediaItem(mediaItem)
-        player.prepare()
-        _preparedStateFlow.value = true
-    }
-    fun clearVideo() {
-        player.clearMediaItems()
-        _preparedStateFlow.value = false
     }
     override fun onDestroy() {
         player.release()

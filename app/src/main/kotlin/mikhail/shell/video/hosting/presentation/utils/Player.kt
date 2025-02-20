@@ -43,7 +43,8 @@ fun PlayerComponent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     AndroidView(
-        modifier = modifier.background(MaterialTheme.colorScheme.onBackground),
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.onBackground),
         factory = {
             PlayerView(it).also {
                 it.layoutParams = ViewGroup.LayoutParams(

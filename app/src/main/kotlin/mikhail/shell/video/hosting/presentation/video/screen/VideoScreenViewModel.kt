@@ -29,6 +29,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
+    @Assisted("player") private val player: Player,
     private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo,
     private val _subscribe: Subscribe,
@@ -38,6 +39,26 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
     init {
+        player.addListener(
+            object : Player.Listener {
+                override fun onRenderedFirstFrame() {
+                    _state.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+                }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
+                        _state.update {
+                            it.copy(
+                                isViewed = true
+                            )
+                        }
+                    }
+                }
+            }
+        )
         loadVideo()
     }
     @OptIn(UnstableApi::class)
@@ -51,14 +72,39 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.value = VideoScreenState(
                     videoDetails = it,
                     error = null,
-                    isLoading = false
                 )
+                val url = _state.value.videoDetails?.video?.sourceUrl
+                val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
+                if (url != previousUri) {
+                    val uri = Uri.parse(url)
+                    val mediaItem = MediaItem.fromUri(uri)
+                    player.setMediaItem(mediaItem)
+                    player.prepare()
+                    player.play()
+                }
             }.onFailure {
                 _state.value = VideoScreenState(
                     videoDetails = _state.value.videoDetails,
                     isLoading = false,
                     error = it
                 )
+            }
+        }
+    }
+    fun incrementViews() {
+        viewModelScope.launch {
+            _incrementViews(videoId).onSuccess { newViews ->
+                _state.update {
+                    it.copy(
+                        videoDetails = it.videoDetails?.copy(
+                            video = it.videoDetails.video.copy(
+                                views = newViews
+                            )
+                        )
+                    )
+                }
+            }.onFailure {
+
             }
         }
     }
@@ -111,24 +157,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                     )
                 }
             }.onFailure {
-                _state
-            }
-        }
-    }
-
-    fun incrementViews() {
-        viewModelScope.launch {
-            _incrementViews(videoId).onSuccess { newViews ->
-                _state.update {
-                    it.copy(
-                        videoDetails = it.videoDetails?.copy(
-                            video = it.videoDetails.video.copy(
-                                views = newViews
-                            )
-                        )
-                    )
-                }
-            }.onFailure {
 
             }
         }
@@ -161,7 +189,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     interface Factory {
         fun create(
             @Assisted("userId") userId: Long,
-            @Assisted("videoId") videoId: Long
+            @Assisted("videoId") videoId: Long,
+            @Assisted("player") player: Player
         ): VideoScreenViewModel
     }
 }
