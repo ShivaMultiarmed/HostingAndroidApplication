@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -53,7 +52,6 @@ fun MiniPlayer(
         PipContainer(
             modifier = Modifier.wrapContentSize()
         ) {
-            val coroutineScope = rememberCoroutineScope()
             val pipWidth = 200.dp
             // TODO
             var topBarAlpha by rememberSaveable { mutableFloatStateOf(1f) }
