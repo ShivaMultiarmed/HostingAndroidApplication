@@ -29,7 +29,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
-    @Assisted("player") private val player: Player,
+    @Assisted("player") val player: Player,
     private val _getVideoDetails: GetVideoDetails,
     private val _rateVideo: RateVideo,
     private val _subscribe: Subscribe,

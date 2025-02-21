@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
     private var playerService: PlayerService? = null
-
     @Inject
     lateinit var player: Player
     private var isBound: Boolean = false
@@ -57,11 +56,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 this.navController = navController
                 val backStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = backStackEntry?.destination?.route
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        if (backStackEntry != null && backStackEntry?.destination?.route !in
-                            listOf(
+                        if (backStackEntry != null && currentRoute !in listOf(
                                 Route.SignIn::class.qualifiedName, Route.SignUp::class.qualifiedName
                             )
                         ) {
@@ -95,9 +94,11 @@ class MainActivity : ComponentActivity() {
                             subscriptionsRoute(navController, userDetailsProvider)
                             videoEditRoute(navController, userDetailsProvider)
                         }
+                        val shouldPlay = Route.Video::class.qualifiedName!! !in currentRoute.toString()
+                                && currentRoute != null
                         MiniPlayer(
                             player = player,
-                            shouldPlay = Route.Video::class.qualifiedName!! !in backStackEntry?.destination?.route.toString(),
+                            shouldPlay = shouldPlay,
                             onOpenUp = {
                                 navController.navigate(Route.Video(it))
                             }

@@ -44,12 +44,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -92,8 +90,6 @@ fun VideoScreen(
             onView()
         }
     }
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     if (state.videoDetails != null) {
         var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
         val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -127,7 +123,8 @@ fun VideoScreen(
                                 Modifier.height(animatedHeight)
                             else
                                 Modifier.wrapContentHeight()
-                        ),
+                        )
+                    ,
                     player = player
                 )
             }
