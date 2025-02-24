@@ -1,13 +1,9 @@
 package mikhail.shell.video.hosting
 
 import android.app.Application
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.os.Build
-import android.provider.Settings
-import androidx.core.app.NotificationCompat
 import coil.Coil
 import coil.ImageLoader
 import dagger.hilt.android.HiltAndroidApp
@@ -34,6 +30,13 @@ class HostingApplication: Application() {
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             notificationManager.createNotificationChannel(videoUploadingChannel)
+
+            val videoDownloadingChannel = NotificationChannel(
+                "video_downloading",
+                "Скачивание видео",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(videoDownloadingChannel)
 
             val channelSubscriptionChannel = NotificationChannel(
                 "channel_subscriptions",

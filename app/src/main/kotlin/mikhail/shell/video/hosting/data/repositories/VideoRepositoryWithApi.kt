@@ -1,9 +1,9 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.webkit.MimeTypeMap
+import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
@@ -18,21 +18,16 @@ import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
-
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-
 import okio.BufferedSink
-
 import retrofit2.HttpException
-
 import java.io.File
-
 import javax.inject.Inject
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
@@ -207,7 +202,11 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun editVideo(video: Video, coverAction: EditAction, cover: File?): Result<Video, VideoEditingError> {
+    override suspend fun editVideo(
+        video: Video,
+        coverAction: EditAction,
+        cover: File?
+    ): Result<Video, VideoEditingError> {
         return try {
             val coverPart = cover?.toPart("cover")
             Result.Success(videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain())
@@ -216,6 +215,47 @@ class VideoRepositoryWithApi @Inject constructor(
         } catch (e: HttpException) {
             Result.Failure(VideoEditingError.UNEXPECTED)
         }
+    }
+
+    override suspend fun downloadVideo(
+        videoId: Long,
+        onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
+    ): Result<Boolean, VideoLoadingError> {
+        val range = 1024 * 1024 * 10
+        var start = 0
+        var end = start + range - 1
+        var size: Long? = null
+        var mime: String? = null
+        do {
+            var response = videoApi.downloadVideo(
+                    videoId,
+                    "bytes=$start-$end"
+                )
+            if (!response.isSuccessful) {
+                if (response.code() == 416) { // range not satisfiable - end of file is passed
+                    response = videoApi.downloadVideo(
+                        videoId,
+                        "bytes=$start-"
+                    )
+                    if (response.body() == null) {
+                        return Result.Failure(VideoLoadingError.UNEXPECTED)
+                    }
+                } else {
+                    return Result.Failure(VideoLoadingError.UNEXPECTED)
+                }
+            }
+            if (size == null) {
+                size = response.headers()[HttpHeaders.CONTENT_RANGE]!!.parseFileSize()
+            }
+            if (mime == null) {
+                mime = response.headers()[HttpHeaders.CONTENT_TYPE]
+            }
+            val bytes = response.body()!!.bytes()
+            onPartitionLoaded(mime!!, size, bytes.toTypedArray())
+            start = end + 1
+            end = start + range - 1
+        } while (start < size!!)
+        return Result.Success(true)
     }
 
     companion object {
@@ -234,13 +274,18 @@ fun File.toOctetStream(mimeType: String = "application/octet-stream"): RequestBo
 }
 
 fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
-    return RequestBody.create("application/octet-stream".toMediaTypeOrNull(), this, 0, nonNullBytesNumber)
+    return RequestBody.create(
+        "application/octet-stream".toMediaTypeOrNull(),
+        this,
+        0,
+        nonNullBytesNumber
+    )
 }
 
-class StreamedRequestBody (
+class StreamedRequestBody(
     val file: File,
     val mimeType: String = "application/octet-stream"
-): RequestBody() {
+) : RequestBody() {
 
     override fun contentType() = mimeType.toMediaTypeOrNull()
 
@@ -267,4 +312,8 @@ suspend fun File.proccess(
             curChunkNumber++
         }
     }
+}
+
+fun String.parseFileSize(): Long {
+    return this.substringAfter("/").toLong()
 }

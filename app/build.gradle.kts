@@ -21,7 +21,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
 
     buildTypes {
@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.androidx.monitor)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.androidx.rules)
+    implementation(libs.androidx.uiautomator)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -84,6 +86,8 @@ dependencies {
     kapt (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
     androidTestImplementation(libs.hilt.android.testing)
+    testImplementation(libs.hilt.android.testing)
+    testImplementation("org.robolectric:robolectric:4.9")
 
     implementation (libs.retrofit)
     implementation(libs.converter.gson)

@@ -1,21 +1,25 @@
 package mikhail.shell.video.hosting.data.api
 
-import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
+import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 interface VideoApi {
     @GET("videos/{videoId}")
@@ -89,4 +93,10 @@ interface VideoApi {
     suspend fun deleteVideo(
         @Path("videoId") videoId: Long
     ): Void
+    @GET("videos/{videoId}/play")
+    @Streaming
+    suspend fun downloadVideo(
+        @Path("videoId") videoId: Long,
+        @Header("Range") byteRange: String
+    ): Response<ResponseBody>
 }

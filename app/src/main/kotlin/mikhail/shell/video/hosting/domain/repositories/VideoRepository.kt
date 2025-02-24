@@ -1,16 +1,16 @@
 package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
 import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import java.io.File
@@ -63,4 +63,9 @@ interface VideoRepository {
         coverAction: EditAction,
         cover: File?
     ): Result<Video, VideoEditingError>
+
+    suspend fun downloadVideo(
+        videoId: Long,
+        onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
+    ): Result<Boolean, VideoLoadingError>
 }

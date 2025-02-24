@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
+import android.content.Intent
+import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -44,11 +46,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.LikingState.DISLIKED
@@ -57,6 +61,7 @@ import mikhail.shell.video.hosting.domain.models.LikingState.NONE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
+import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -72,6 +77,7 @@ import mikhail.shell.video.hosting.ui.theme.Black
 import java.time.Duration
 import java.time.LocalDateTime
 
+@OptIn(UnstableApi::class)
 @Composable
 fun VideoScreen(
     userId: Long,
@@ -90,6 +96,7 @@ fun VideoScreen(
             onView()
         }
     }
+    val context = LocalContext.current
     if (state.videoDetails != null) {
         var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
         val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -118,13 +125,13 @@ fun VideoScreen(
                         .fillMaxWidth()
                         .then(
                             if ((videoInfoExpanded && animatedHeight < idealMaxVideoHeight
-                                || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
-                                && (player.playerError != null || player.isLoading))
+                                        || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
+                                && (player.playerError != null || player.isLoading)
+                            )
                                 Modifier.height(animatedHeight)
                             else
                                 Modifier.wrapContentHeight()
-                        )
-                    ,
+                        ),
                     player = player
                 )
             }
@@ -335,7 +342,10 @@ fun VideoScreen(
                         icon = Icons.Outlined.Download,
                         text = "Скачать",
                         onClick = {
-
+                            Intent(context, VideoDownloadingService::class.java).also {
+                                it.putExtra("videoId", state.videoDetails.video.videoId!!)
+                                context.startService(it)
+                            }
                         }
                     )
                 }
@@ -371,25 +381,6 @@ fun VideoScreen(
                 }
             }
         }
-//        DisposableEffect(lifecycleOwner) {
-//            val eventObserver = LifecycleEventObserver { owner, event ->
-//                if (event == Lifecycle.Event.ON_PAUSE) {
-//                    (context as Activity).enterPictureInPictureMode(
-//                        PictureInPictureParams.Builder()
-//                            .setAspectRatio(Rational(16, 9))
-//                            .also {
-//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                                    it.setSeamlessResizeEnabled(true)
-//                                }
-//                            }.build()
-//                    )
-//                }
-//            }
-//            lifecycleOwner.lifecycle.addObserver(eventObserver)
-//            onDispose {
-//                lifecycleOwner.lifecycle.removeObserver(eventObserver)
-//            }
-//        }
     } else if (state.isLoading) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()

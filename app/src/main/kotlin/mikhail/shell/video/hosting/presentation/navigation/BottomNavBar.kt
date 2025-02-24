@@ -80,7 +80,6 @@ fun BottomNavBar(
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            //.height(60.dp)
             .background(MaterialTheme.colorScheme.surface)
             .borderTop(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f), strokeWidth = 3),
         contentColor = MaterialTheme.colorScheme.onSurface

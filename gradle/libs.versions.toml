@@ -18,6 +18,8 @@ converterGson = "2.9.0"
 monitor = "1.7.1"
 constraintlayout = "2.2.0"
 firebaseMessagingKtx = "24.1.0"
+rules = "1.6.1"
+uiautomator = "2.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -52,6 +54,8 @@ converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref
 androidx-monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
+androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
