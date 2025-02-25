@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
@@ -35,77 +34,63 @@ import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 @Composable
 fun MiniPlayer(
     player: Player,
-    shouldPlay: Boolean,
     onOpenUp: (videoId: Long) -> Unit
 ) {
-    var isPrepared by rememberSaveable { mutableStateOf(false) }
-    player.addListener(
-        object : Player.Listener {
-            override fun onMediaItemTransition(
-                mediaItem: MediaItem?,
-                reason: Int
-            ) {
-                val uri = mediaItem?.localConfiguration?.uri?.toString()
-                isPrepared = uri != null
-            }
-        }
-    )
     var pipWidth by remember { mutableStateOf(200.dp) }
-    if (isPrepared && shouldPlay) {
-        PipContainer(
+    PipContainer(
+        modifier = Modifier
+            .wrapContentSize()
+            .width(pipWidth)
+    ) {
+        // TODO
+        var topBarAlpha by rememberSaveable { mutableFloatStateOf(1f) }
+        val animatedTopBarAlpha by animateFloatAsState(
+            targetValue = topBarAlpha,
+            animationSpec = tween(200),
+            label = "pip container top bar animation"
+        )
+        Box(
             modifier = Modifier
                 .wrapContentSize()
-                .width(pipWidth)
         ) {
-            // TODO
-            var topBarAlpha by rememberSaveable { mutableFloatStateOf(1f) }
-            val animatedTopBarAlpha by animateFloatAsState(
-                targetValue = topBarAlpha,
-                animationSpec = tween(200),
-                label = "pip container top bar animation"
-            )
-            Box(
+            PlayerComponent(
                 modifier = Modifier
-                    .wrapContentSize()
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                player = player
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(7.dp)
+                    .alpha(animatedTopBarAlpha),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                PlayerComponent(
+                val videoId = player.currentMediaItem
+                    ?.localConfiguration?.uri?.toString()!!
+                    .split("/").dropLast(1).last().toLong()
+                Icon(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    player = player
+                        .size(27.dp)
+                        .clickable {
+                            onOpenUp(videoId)
+                        },
+                    imageVector = Icons.Rounded.OpenInFull,
+                    tint = Color.White,
+                    contentDescription = "Открыть полностью"
                 )
-                Row(
+                Icon(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(7.dp)
-                        .alpha(animatedTopBarAlpha),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    val videoId = player.currentMediaItem
-                        ?.localConfiguration?.uri?.toString()!!
-                        .split("/").dropLast(1).last().toLong()
-                    Icon(
-                        modifier = Modifier
-                            .size(27.dp)
-                            .clickable {
-                                onOpenUp(videoId)
-                            },
-                        imageVector = Icons.Rounded.OpenInFull,
-                        tint = Color.White,
-                        contentDescription = "Открыть полностью"
-                    )
-                    Icon(
-                        modifier = Modifier
-                            .size(27.dp)
-                            .clickable {
-                                player.clearMediaItems()
-                            },
-                        imageVector = Icons.Rounded.Close,
-                        tint = Color.White,
-                        contentDescription = "Закрыть видео"
-                    )
-                }
+                        .size(27.dp)
+                        .clickable {
+                            player.clearMediaItems()
+                        },
+                    imageVector = Icons.Rounded.Close,
+                    tint = Color.White,
+                    contentDescription = "Закрыть видео"
+                )
             }
         }
     }
+
 }

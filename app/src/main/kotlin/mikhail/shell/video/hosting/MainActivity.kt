@@ -1,28 +1,38 @@
 package mikhail.shell.video.hosting
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
+import android.provider.Settings
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.services.PlayerService
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.channelRoute
@@ -35,6 +45,7 @@ import mikhail.shell.video.hosting.presentation.navigation.subscriptionsRoute
 import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
+import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
@@ -44,13 +55,21 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
-    private var playerService: PlayerService? = null
+
     @Inject
     lateinit var player: Player
-    private var isBound: Boolean = false
     private lateinit var navController: NavController
+    private var isPrepared = false
+    private var shouldPlay = false
+    private lateinit var windowManager: WindowManager
+    private var pipRoot: View? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setPrimaryContent()
+        windowManager = getSystemService(WindowManager::class.java)
+    }
+
+    private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
                 val navController = rememberNavController()
@@ -94,11 +113,12 @@ class MainActivity : ComponentActivity() {
                             subscriptionsRoute(navController, userDetailsProvider)
                             videoEditRoute(navController, userDetailsProvider)
                         }
-                        val shouldPlay = Route.Video::class.qualifiedName!! !in currentRoute.toString()
-                                && currentRoute != null
+                    }
+                    shouldPlay = shouldPlay()
+                    isPrepared = isPlayerPrepared()
+                    if (shouldPlay && isPrepared) {
                         MiniPlayer(
                             player = player,
-                            shouldPlay = shouldPlay,
                             onOpenUp = {
                                 navController.navigate(Route.Video(it))
                             }
@@ -119,32 +139,84 @@ class MainActivity : ComponentActivity() {
         return Route.Search
     }
 
-    private val playerServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, serviceBinder: IBinder?) {
-            isBound = true
-            playerService = (serviceBinder as PlayerService.PlayerBinder).getService()
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            isBound = false
-            playerService = null
+    override fun onRestart() {
+        super.onRestart()
+        if (pipRoot != null) {
+            windowManager.removeView(pipRoot)
+            pipRoot = null
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        bindService(
-            Intent(this, PlayerService::class.java),
-            playerServiceConnection,
-            Context.BIND_AUTO_CREATE
-        )
+    @Composable
+    private fun shouldPlay(): Boolean {
+        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+        return Route.Video::class.qualifiedName!! !in currentRoute.toString()
+                && currentRoute != null
+    }
+
+    @Composable
+    private fun isPlayerPrepared(): Boolean {
+        var isPrepared by rememberSaveable { mutableStateOf(false) }
+        DisposableEffect(Unit) {
+            val playerListener = object : Player.Listener {
+                override fun onMediaItemTransition(
+                    mediaItem: MediaItem?,
+                    reason: Int
+                ) {
+                    val uri = mediaItem?.localConfiguration?.uri?.toString()
+                    isPrepared = uri != null
+                }
+            }
+            player.addListener(playerListener)
+            onDispose {
+                player.removeListener(playerListener)
+            }
+        }
+        return isPrepared
     }
 
     override fun onStop() {
-        if (isBound) {
-            isBound = false
-            unbindService(playerServiceConnection)
+        if (isPrepared && shouldPlay) {
+            val pipEnabled = Settings.canDrawOverlays(this)
+            if (pipEnabled) {
+                if (pipRoot == null) {
+                    pipRoot = createPipLayout(this)
+                    window.setFlags(
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    )
+                    windowManager.addView(
+                        pipRoot, WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                            } else {
+                                WindowManager.LayoutParams.TYPE_PHONE
+                            },
+                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                            PixelFormat.TRANSLUCENT
+                        ).also {
+                            it.gravity = Gravity.TOP or Gravity.START
+                            it.x = 100
+                            it.y = 100
+                        }
+                    )
+                }
+            }
         }
         super.onStop()
+    }
+
+    private fun createPipLayout(context: Context): View {
+        return ComposeView(context).apply {
+            setViewTreeSavedStateRegistryOwner(this@MainActivity)
+            setViewTreeLifecycleOwner(this@MainActivity)
+            setContent {
+                PlayerComponent(
+                    player = player
+                )
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation
 
-import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -16,7 +15,6 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.services.PlayerService
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 
@@ -28,7 +26,6 @@ fun NavGraphBuilder.videoRoute(
 ) {
     composable<Route.Video> {
         val context = LocalContext.current
-        context.startService(Intent(context, PlayerService::class.java))
         val videoRouteInfo = it.toRoute<Route.Video>()
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
