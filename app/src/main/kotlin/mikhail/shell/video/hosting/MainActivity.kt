@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -45,6 +47,7 @@ import mikhail.shell.video.hosting.presentation.navigation.subscriptionsRoute
 import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
+import mikhail.shell.video.hosting.presentation.utils.LifecycleOwnerHolder
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -96,6 +99,8 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding)
                     ) {
+                        shouldPlay = shouldPlay()
+                        isPrepared = isPlayerPrepared()
                         NavHost(
                             modifier = Modifier
                                 .fillMaxSize(),
@@ -114,8 +119,6 @@ class MainActivity : ComponentActivity() {
                             videoEditRoute(navController, userDetailsProvider)
                         }
                     }
-                    shouldPlay = shouldPlay()
-                    isPrepared = isPlayerPrepared()
                     if (shouldPlay && isPrepared) {
                         MiniPlayer(
                             player = player,
@@ -176,7 +179,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
-        if (isPrepared && shouldPlay) {
+        if (isPrepared) {
             val pipEnabled = Settings.canDrawOverlays(this)
             if (pipEnabled) {
                 if (pipRoot == null) {
@@ -209,14 +212,29 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createPipLayout(context: Context): View {
+        val lifecycleOwner = LifecycleOwnerHolder()
         return ComposeView(context).apply {
             setViewTreeSavedStateRegistryOwner(this@MainActivity)
-            setViewTreeLifecycleOwner(this@MainActivity)
+            setViewTreeLifecycleOwner(lifecycleOwner)
             setContent {
-                PlayerComponent(
-                    player = player
-                )
+//                CompositionLocalProvider(
+//                    LocalLifecycleOwner provides lifecycleOwner
+//                ) {
+                    PlayerComponent(
+                        player = player,
+                        useHostLifecycle = false
+                    )
+//                }
             }
+        }.also {
+            lifecycleOwner.updateState(Lifecycle.State.RESUMED)
         }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
 }

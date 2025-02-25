@@ -15,12 +15,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
@@ -29,7 +34,8 @@ import androidx.media3.ui.PlayerView
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    player: Player
+    player: Player,
+    useHostLifecycle: Boolean = true
 ) {
     var savedPlayState by rememberSaveable { mutableStateOf(false) }
     val pauseActions = {
@@ -41,26 +47,49 @@ fun PlayerComponent(
         player.play()
     }
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = if (useHostLifecycle) {
+        LocalLifecycleOwner.current
+    } else {
+        remember { LifecycleOwnerHolder() }.also {
+            it.updateState(Lifecycle.State.RESUMED)
+        }
+    }
+    val lifecycleEvent by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
     AndroidView(
         modifier = modifier
             .background(MaterialTheme.colorScheme.onBackground),
-        factory = {
-            PlayerView(it).also {
+        factory = { PlayerView(it) },
+        update = {
+            if (lifecycleEvent == Lifecycle.State.RESUMED) {
+                it.player = player
                 it.layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-                it.player = player
             }
         }
     )
+//    LaunchedEffect(lifecycleEvent) {
+//        if (lifecycleEvent == Lifecycle.State.RESUMED) {
+//            playerView.layoutParams = ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.WRAP_CONTENT
+//            )
+//            playerView.player = player
+//        }
+//    }
     DisposableEffect(lifecycleOwner) {
         val audioManager = context.getSystemService(AudioManager::class.java)
         val audioListener = AudioManager.OnAudioFocusChangeListener {
             if (it == AUDIOFOCUS_LOSS_TRANSIENT) {
                 pauseActions()
-            } else if (it in arrayOf(AUDIOFOCUS_GAIN, AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK, AUDIOFOCUS_GAIN_TRANSIENT, AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)) {
+            } else if (it in arrayOf(
+                    AUDIOFOCUS_GAIN,
+                    AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+                    AUDIOFOCUS_GAIN_TRANSIENT,
+                    AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
+                )
+            ) {
                 playActions()
             }
         }
@@ -70,5 +99,14 @@ fun PlayerComponent(
         onDispose {
             audioManager.abandonAudioFocusRequest(audioFocusRequest)
         }
+    }
+}
+
+class LifecycleOwnerHolder() : LifecycleOwner {
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    override val lifecycle: Lifecycle
+        get() = lifecycleRegistry
+    fun updateState(state: Lifecycle.State) {
+        lifecycleRegistry.currentState = state
     }
 }
