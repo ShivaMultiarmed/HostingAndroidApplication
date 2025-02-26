@@ -1,19 +1,24 @@
 package mikhail.shell.video.hosting
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Outline
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,8 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,6 +60,7 @@ import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.utils.LifecycleOwnerHolder
+import mikhail.shell.video.hosting.presentation.utils.PipRow
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -153,12 +162,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onRestart() {
         super.onRestart()
-        if (pipRoot != null) {
-            pipLifecycleOwner.updateState(Lifecycle.State.STARTED)
-            windowManager.removeView(pipRoot)
-            pipRoot = null
-        }
-        shouldPipPlay = false
+        onPipClose()
     }
 
     @Composable
@@ -170,7 +174,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun isPlayerPrepared(): Boolean {
-        var isPrepared by rememberSaveable { mutableStateOf(false) }
+        val initialValue = player.currentMediaItem != null
+        var isPrepared by rememberSaveable { mutableStateOf(initialValue) }
         DisposableEffect(Unit) {
             val playerListener = object : Player.Listener {
                 override fun onMediaItemTransition(
@@ -183,6 +188,7 @@ class MainActivity : ComponentActivity() {
             }
             player.addListener(playerListener)
             onDispose {
+                isPrepared = this@MainActivity.isPrepared
                 player.removeListener(playerListener)
             }
         }
@@ -205,21 +211,24 @@ class MainActivity : ComponentActivity() {
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     )
+                    val density = resources.displayMetrics.density
                     windowManager.addView(
-                        pipRoot, WindowManager.LayoutParams(
-                            WindowManager.LayoutParams.WRAP_CONTENT,
+                        pipRoot,
+                        WindowManager.LayoutParams(
+                            (200 * density).toInt(),
                             WindowManager.LayoutParams.WRAP_CONTENT,
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                             } else {
                                 WindowManager.LayoutParams.TYPE_PHONE
                             },
-                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                             PixelFormat.TRANSLUCENT
-                        ).also {
-                            it.gravity = Gravity.TOP or Gravity.START
-                            it.x = 100
-                            it.y = 100
+                        ).apply {
+                            gravity = Gravity.TOP or Gravity.START
+                            x = 100
+                            y = 100
                         }
                     )
                 }
@@ -233,16 +242,63 @@ class MainActivity : ComponentActivity() {
         return ComposeView(context).apply {
             setViewTreeSavedStateRegistryOwner(this@MainActivity)
             setViewTreeLifecycleOwner(pipLifecycleOwner)
+            background = getDrawable(R.drawable.rounder_shape)
+            clipChildren = true
+            clipToPadding = true
+            clipToOutline = true
+            val density = resources.displayMetrics.density
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, 10 * density)
+                }
+            }
             setContent {
                 CompositionLocalProvider(
                     LocalLifecycleOwner provides pipLifecycleOwner
                 ) {
-                    PlayerComponent(
-                        player = player
-                    )
+                    Box(
+                        modifier = Modifier
+                            .width(200.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        PlayerComponent(
+                            modifier = Modifier,
+                            player = player
+                        )
+                        PipRow(
+                            onOpenUp = {
+                                startActivity(
+                                    Intent(
+                                        this@MainActivity,
+                                        MainActivity::class.java
+                                    ).apply {
+                                        val videoId = player.currentMediaItem
+                                            ?.localConfiguration?.uri?.toString()!!
+                                            .split("/").dropLast(1).last().toLong()
+                                        putExtra("videoId", videoId)
+                                    }
+                                )
+                                onPipClose()
+                            },
+                            onClose = {
+                                player.pause()
+                                onPipClose()
+                            }
+                        )
+                    }
                 }
             }
         }
+    }
+
+    private fun onPipClose() {
+        if (pipRoot != null) {
+            pipLifecycleOwner.updateState(Lifecycle.State.STARTED)
+            windowManager.removeView(pipRoot)
+            pipRoot = null
+        }
+        shouldPipPlay = false
     }
 
     override fun onPictureInPictureModeChanged(

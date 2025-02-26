@@ -52,17 +52,22 @@ fun PlayerComponent(
     AndroidView(
         modifier = modifier
             .background(MaterialTheme.colorScheme.onBackground),
-        factory = { PlayerView(it) },
-        update = {
-            if (lastLifecycleEvent == Lifecycle.Event.ON_CREATE) {
-                it.layoutParams = ViewGroup.LayoutParams(
+        factory = {
+            PlayerView(it).apply {
+                layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-            } else if (lastLifecycleEvent == Lifecycle.Event.ON_RESUME) {
-                it.player = player
-            } else if (lastLifecycleEvent == Lifecycle.Event.ON_PAUSE) {
-                it.player = null
+            } },
+        update = {
+            when (lastLifecycleEvent) {
+                Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_START -> {
+                    it.player = player
+                }
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                    it.player = null
+                }
+                else -> Unit
             }
         }
     )
