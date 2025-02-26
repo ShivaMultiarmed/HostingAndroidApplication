@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -48,24 +47,22 @@ fun PlayerComponent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
-    key(lifecycleState) {
-        AndroidView(
-            modifier = modifier
-                .background(MaterialTheme.colorScheme.onBackground),
-            factory = { PlayerView(it) },
-            update = {
-                if (lifecycleState == Lifecycle.State.RESUMED) {
-                    it.player = player
-                    it.layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                } else if (lifecycleState == Lifecycle.State.DESTROYED) {
-                    it.player = null
-                }
+    AndroidView(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.onBackground),
+        factory = { PlayerView(it) },
+        update = {
+            if (lifecycleState == Lifecycle.State.RESUMED) {
+                it.layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                it.player = player
+            } else if (lifecycleState == Lifecycle.State.STARTED) {
+                it.player = null
             }
-        )
-    }
+        }
+    )
     DisposableEffect(lifecycleOwner) {
         val audioManager = context.getSystemService(AudioManager::class.java)
         val audioListener = AudioManager.OnAudioFocusChangeListener {
@@ -94,6 +91,7 @@ class LifecycleOwnerHolder() : LifecycleOwner {
     private val lifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
+
     fun updateState(state: Lifecycle.State) {
         lifecycleRegistry.currentState = state
     }

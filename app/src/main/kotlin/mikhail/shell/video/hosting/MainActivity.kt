@@ -154,7 +154,7 @@ class MainActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
         if (pipRoot != null) {
-            pipLifecycleOwner.updateState(Lifecycle.State.DESTROYED)
+            pipLifecycleOwner.updateState(Lifecycle.State.STARTED)
             windowManager.removeView(pipRoot)
             pipRoot = null
         }
