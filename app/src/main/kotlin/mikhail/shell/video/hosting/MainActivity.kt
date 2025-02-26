@@ -58,7 +58,6 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
-
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
@@ -66,10 +65,12 @@ class MainActivity : ComponentActivity() {
     private var shouldPlay = false
     private lateinit var windowManager: WindowManager
     private var pipRoot: View? = null
+    private lateinit var pipLifecycleOwner: LifecycleOwnerHolder
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setPrimaryContent()
         windowManager = getSystemService(WindowManager::class.java)
+        pipLifecycleOwner = LifecycleOwnerHolder().apply { updateState(Lifecycle.State.CREATED) }
     }
 
     private fun setPrimaryContent() {
@@ -142,9 +143,10 @@ class MainActivity : ComponentActivity() {
         return Route.Search
     }
 
-    override fun onRestart() {
-        super.onRestart()
+    override fun onResume() {
+        super.onResume()
         if (pipRoot != null) {
+            pipLifecycleOwner.updateState(Lifecycle.State.DESTROYED)
             windowManager.removeView(pipRoot)
             pipRoot = null
         }
@@ -183,6 +185,7 @@ class MainActivity : ComponentActivity() {
             val pipEnabled = Settings.canDrawOverlays(this)
             if (pipEnabled) {
                 if (pipRoot == null) {
+                    pipLifecycleOwner.updateState(Lifecycle.State.RESUMED)
                     pipRoot = createPipLayout(this)
                     window.setFlags(
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -212,22 +215,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createPipLayout(context: Context): View {
-        val lifecycleOwner = LifecycleOwnerHolder()
+
         return ComposeView(context).apply {
             setViewTreeSavedStateRegistryOwner(this@MainActivity)
-            setViewTreeLifecycleOwner(lifecycleOwner)
+            setViewTreeLifecycleOwner(pipLifecycleOwner)
             setContent {
 //                CompositionLocalProvider(
-//                    LocalLifecycleOwner provides lifecycleOwner
+//                    LocalLifecycleOwner provides pipLifecycleOwner
 //                ) {
                     PlayerComponent(
                         player = player,
-                        useHostLifecycle = false
+                        hostLifecycleOwner = pipLifecycleOwner
                     )
 //                }
             }
-        }.also {
-            lifecycleOwner.updateState(Lifecycle.State.RESUMED)
         }
     }
 
