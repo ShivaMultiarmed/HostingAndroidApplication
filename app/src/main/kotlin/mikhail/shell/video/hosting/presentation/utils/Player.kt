@@ -25,6 +25,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.eventFlow
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
@@ -46,19 +47,21 @@ fun PlayerComponent(
     }
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+    val lastLifecycleEvent by lifecycleOwner.lifecycle.eventFlow.collectAsStateWithLifecycle(null)
+
     AndroidView(
         modifier = modifier
             .background(MaterialTheme.colorScheme.onBackground),
         factory = { PlayerView(it) },
         update = {
-            if (lifecycleState == Lifecycle.State.RESUMED) {
+            if (lastLifecycleEvent == Lifecycle.Event.ON_CREATE) {
                 it.layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
+            } else if (lastLifecycleEvent == Lifecycle.Event.ON_RESUME) {
                 it.player = player
-            } else if (lifecycleState == Lifecycle.State.STARTED) {
+            } else if (lastLifecycleEvent == Lifecycle.Event.ON_PAUSE) {
                 it.player = null
             }
         }
