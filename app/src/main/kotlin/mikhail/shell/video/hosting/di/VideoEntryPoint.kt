@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.di
 
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -21,9 +20,9 @@ interface ChannelNotificationEntryPoint {
     fun getResubscribe(): Resubscribe
     fun getUserDetailsProvider(): UserDetailsProvider
 }
-//
-//@EntryPoint
-//@InstallIn(SingletonComponent::class)
-//interface VideoPlayerEntryPoint{
-//    fun getVideoPlayer(): Player
-//}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface AudioReceiverEntryPoint{
+    fun getPlayer(): Player
+}

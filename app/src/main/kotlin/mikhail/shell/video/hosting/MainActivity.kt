@@ -2,13 +2,14 @@ package mikhail.shell.video.hosting
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
+import android.content.IntentFilter
 import android.graphics.Outline
 import android.graphics.PixelFormat
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.WindowManager
@@ -47,6 +48,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.services.AudioBroadcastReceiver
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.channelRoute
@@ -81,11 +83,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var windowManager: WindowManager
     private var pipRoot: View? = null
     private lateinit var pipLifecycleOwner: LifecycleOwnerHolder
+    private lateinit var audioReceiver: AudioBroadcastReceiver
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setPrimaryContent()
         windowManager = getSystemService(WindowManager::class.java)
         pipLifecycleOwner = LifecycleOwnerHolder().apply { updateState(Lifecycle.State.CREATED) }
+        audioReceiver = AudioBroadcastReceiver()
+        registerReceiver(audioReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
     }
 
     private fun setPrimaryContent() {
@@ -211,30 +216,41 @@ class MainActivity : ComponentActivity() {
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     )
-                    val density = resources.displayMetrics.density
                     windowManager.addView(
                         pipRoot,
-                        WindowManager.LayoutParams(
-                            (200 * density).toInt(),
-                            WindowManager.LayoutParams.WRAP_CONTENT,
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                            } else {
-                                WindowManager.LayoutParams.TYPE_PHONE
-                            },
-                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                            PixelFormat.TRANSLUCENT
-                        ).apply {
-                            gravity = Gravity.TOP or Gravity.START
-                            x = 100
-                            y = 100
-                        }
+                        createPipLayoutParameters()
                     )
+                    pipRoot?.setOnTouchListener { view, event ->
+                        view.performClick()
+                        when(event.action) {
+                            MotionEvent.ACTION_MOVE -> {
+                                view.x += event.rawX
+                                view.y += event.rawY
+                                true
+                            }
+                            else -> false
+                        }
+                    }
                 }
             }
         }
         super.onStop()
+    }
+
+    private fun createPipLayoutParameters(): WindowManager.LayoutParams {
+        val density = resources.displayMetrics.density
+        return WindowManager.LayoutParams(
+            (200 * density).toInt(),
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                WindowManager.LayoutParams.TYPE_PHONE
+            },
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        )
     }
 
     private fun createPipLayout(context: Context): View {
@@ -301,10 +317,8 @@ class MainActivity : ComponentActivity() {
         shouldPipPlay = false
     }
 
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: Configuration
-    ) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+    override fun onDestroy() {
+        unregisterReceiver(audioReceiver)
+        super.onDestroy()
     }
 }
