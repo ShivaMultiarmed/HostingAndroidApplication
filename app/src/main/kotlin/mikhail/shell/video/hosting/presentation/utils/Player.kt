@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -33,8 +34,7 @@ import androidx.media3.ui.PlayerView
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    player: Player,
-    hostLifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    player: Player
 ) {
     var savedPlayState by rememberSaveable { mutableStateOf(false) }
     val pauseActions = {
@@ -46,23 +46,28 @@ fun PlayerComponent(
         player.play()
     }
     val context = LocalContext.current
-    val lifecycleState by hostLifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
-    AndroidView(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.onBackground),
-        factory = { PlayerView(it) },
-        update = {
-            if (lifecycleState == Lifecycle.State.RESUMED) {
-                println(hostLifecycleOwner)
-                it.player = player
-                it.layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+    key(lifecycleState) {
+        AndroidView(
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.onBackground),
+            factory = { PlayerView(it) },
+            update = {
+                println(lifecycleOwner)
+                if (lifecycleState == Lifecycle.State.RESUMED) {
+                    it.player = player
+                    it.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                } else if (lifecycleState == Lifecycle.State.DESTROYED) {
+                    it.player = null
+                }
             }
-        }
-    )
-    DisposableEffect(hostLifecycleOwner) {
+        )
+    }
+    DisposableEffect(lifecycleOwner) {
         val audioManager = context.getSystemService(AudioManager::class.java)
         val audioListener = AudioManager.OnAudioFocusChangeListener {
             if (it == AUDIOFOCUS_LOSS_TRANSIENT) {

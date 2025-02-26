@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -220,14 +222,13 @@ class MainActivity : ComponentActivity() {
             setViewTreeSavedStateRegistryOwner(this@MainActivity)
             setViewTreeLifecycleOwner(pipLifecycleOwner)
             setContent {
-//                CompositionLocalProvider(
-//                    LocalLifecycleOwner provides pipLifecycleOwner
-//                ) {
+                CompositionLocalProvider(
+                    LocalLifecycleOwner provides pipLifecycleOwner
+                ) {
                     PlayerComponent(
-                        player = player,
-                        hostLifecycleOwner = pipLifecycleOwner
+                        player = player
                     )
-//                }
+                }
             }
         }
     }
