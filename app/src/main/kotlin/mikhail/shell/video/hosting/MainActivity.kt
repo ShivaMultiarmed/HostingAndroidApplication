@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.eventFlow
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -60,11 +62,13 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
+
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
     private var isPrepared = false
-    private var shouldPlay = false
+    private var shouldMiniPlay = false
+    private var shouldPipPlay = false
     private lateinit var windowManager: WindowManager
     private var pipRoot: View? = null
     private lateinit var pipLifecycleOwner: LifecycleOwnerHolder
@@ -82,6 +86,8 @@ class MainActivity : ComponentActivity() {
                 this.navController = navController
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val lifecycleEvent by lifecycleOwner.lifecycle.eventFlow.collectAsStateWithLifecycle(Lifecycle.Event.ON_CREATE)
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -102,7 +108,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding)
                     ) {
-                        shouldPlay = shouldPlay()
+                        shouldMiniPlay = shouldMiniPlay()
                         isPrepared = isPlayerPrepared()
                         NavHost(
                             modifier = Modifier
@@ -122,7 +128,7 @@ class MainActivity : ComponentActivity() {
                             videoEditRoute(navController, userDetailsProvider)
                         }
                     }
-                    if (shouldPlay && isPrepared) {
+                    if (shouldMiniPlay && isPrepared) {
                         MiniPlayer(
                             player = player,
                             onOpenUp = {
@@ -145,17 +151,18 @@ class MainActivity : ComponentActivity() {
         return Route.Search
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onRestart() {
+        super.onRestart()
         if (pipRoot != null) {
             pipLifecycleOwner.updateState(Lifecycle.State.DESTROYED)
             windowManager.removeView(pipRoot)
             pipRoot = null
         }
+        shouldPipPlay = false
     }
 
     @Composable
-    private fun shouldPlay(): Boolean {
+    private fun shouldMiniPlay(): Boolean {
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         return Route.Video::class.qualifiedName!! !in currentRoute.toString()
                 && currentRoute != null
@@ -182,8 +189,13 @@ class MainActivity : ComponentActivity() {
         return isPrepared
     }
 
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        shouldPipPlay = true
+    }
+
     override fun onStop() {
-        if (isPrepared) {
+        if (isPrepared && shouldPipPlay) {
             val pipEnabled = Settings.canDrawOverlays(this)
             if (pipEnabled) {
                 if (pipRoot == null) {

@@ -54,7 +54,6 @@ fun PlayerComponent(
                 .background(MaterialTheme.colorScheme.onBackground),
             factory = { PlayerView(it) },
             update = {
-                println(lifecycleOwner)
                 if (lifecycleState == Lifecycle.State.RESUMED) {
                     it.player = player
                     it.layoutParams = ViewGroup.LayoutParams(

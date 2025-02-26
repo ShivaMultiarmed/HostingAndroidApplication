@@ -33,6 +33,8 @@ object ExoPlayerModule {
     ): Player {
         return ExoPlayer.Builder(context)
             .setMediaSourceFactory(mediaSourceFactory)
-            .build()
+            .build().apply {
+                playWhenReady = true
+            }
     }
 }
