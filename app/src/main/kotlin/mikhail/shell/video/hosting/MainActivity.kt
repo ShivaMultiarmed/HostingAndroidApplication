@@ -165,8 +165,8 @@ class MainActivity : ComponentActivity() {
         return Route.Search
     }
 
-    override fun onRestart() {
-        super.onRestart()
+    override fun onResume() {
+        super.onResume()
         onPipClose()
     }
 
