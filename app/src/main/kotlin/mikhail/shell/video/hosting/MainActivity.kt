@@ -54,8 +54,6 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
-    private var isPrepared = false
-    private var shouldMiniPlay = false
     private lateinit var audioReceiver: AudioBroadcastReceiver
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,8 +91,6 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding)
                     ) {
-                        shouldMiniPlay = shouldMiniPlay()
-                        isPrepared = isPlayerPrepared()
                         NavHost(
                             modifier = Modifier
                                 .fillMaxSize(),
@@ -113,7 +109,7 @@ class MainActivity : ComponentActivity() {
                             videoEditRoute(navController, userDetailsProvider)
                         }
                     }
-                    if (shouldMiniPlay && isPrepared) {
+                    if (shouldMiniPlay() && isPlayerPrepared()) {
                         MiniPlayer(
                             player = player,
                             onOpenUp = {
@@ -159,7 +155,7 @@ class MainActivity : ComponentActivity() {
             }
             player.addListener(playerListener)
             onDispose {
-                isPrepared = this@MainActivity.isPrepared
+                isPrepared = player.currentMediaItem != null
                 player.removeListener(playerListener)
             }
         }
