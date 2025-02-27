@@ -66,7 +66,6 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.uriToFile
 import java.io.File
 
 @Composable
@@ -91,7 +90,6 @@ fun UploadVideoScreen(
     val compoundError = state.error
     if (state.channels != null) {
         var title by rememberSaveable { mutableStateOf("") }
-        val contentResolver = context.contentResolver
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -104,22 +102,12 @@ fun UploadVideoScreen(
                     topBarTitle = "Выложить видео",
                     inProccess = state.isLoading,
                     onSubmit = {
-                        val sourceFile: File? = if (sourceUri == null)
-                            null
-                        else {
-                            context.uriToFile(sourceUri!!)
-                        }
-                        val coverFile: File? = if (coverUri == null)
-                            null
-                        else {
-                            context.uriToFile(coverUri!!)
-                        }
                         val input = UploadVideoInput(
                             channelId = channelId,
                             title = title,
                             description = description,
-                            source = sourceFile,
-                            cover = coverFile,
+                            source = sourceUri,
+                            cover = coverUri,
                         )
                         onSubmit(input)
                     }

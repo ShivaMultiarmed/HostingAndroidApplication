@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.net.Uri
 import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
@@ -21,6 +22,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -28,13 +30,15 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import retrofit2.HttpException
 import java.io.File
+import java.io.InputStream
 import javax.inject.Inject
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
-    private val gson: Gson
+    private val gson: Gson,
+    private val fileProvider: FileProvider
 ) : VideoRepository {
     override suspend fun fetchVideoInfo(videoId: Long): Result<Video, VideoError> {
         return try {
@@ -141,29 +145,37 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun uploadVideo(
         video: Video,
-        source: File,
-        cover: File?,
+        source: String,
+        cover: String?,
         onProgress: (Float) -> Unit
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
             val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
             var bytesTransfered = 0
-            source.proccess { bytesRead, buffer, chunkNumber ->
+            val sourceUri = Uri.parse(source)
+            val sourceMime = fileProvider.getFileMimeType(sourceUri)
+            val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
+            val sourceSize = fileProvider.getFileSize(sourceUri)!!
+            fileProvider.getFileAsInputStream(sourceUri).proccess { bytesRead, buffer, chunkNumber ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
                     chunkNumber,
-                    source.extension,
+                    sourceExtension!!,
                     buffer.toOctetStream(bytesRead)
                 )
                 bytesTransfered += bytesRead
-                val progress = bytesTransfered.toFloat() / source.length()
+                val progress = bytesTransfered.toFloat() / sourceSize
                 onProgress(progress)
             }
-            cover?.let {
+            cover?.let { notNullCover ->
+                val coverUri = Uri.parse(notNullCover)
+                val coverMime = fileProvider.getFileMimeType(coverUri)!!
+                val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
+                val coverContent = fileProvider.getFileAsInputStream(coverUri).readBytes().toOctetStream()
                 videoApi.uploadVideoCover(
                     videoResponse.videoId!!,
-                    cover.extension,
-                    it.toOctetStream()
+                    coverExtension,
+                    coverContent
                 )
             }
             videoApi.confirmVideoUpload(videoResponse.videoId!!)
@@ -300,10 +312,10 @@ class StreamedRequestBody(
     }
 }
 
-suspend fun File.proccess(
+suspend fun InputStream.proccess(
     onChunkRead: suspend (bytesRead: Int, buffer: ByteArray, chunkNumber: Int) -> Unit
 ) {
-    this.inputStream().use {
+    this.use {
         val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
         var curChunkNumber = 0
         var bytesRead: Int

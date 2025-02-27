@@ -7,9 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -53,9 +51,10 @@ fun NavGraphBuilder.uploadVideoRoute(
                             ).also {
                                 it.putExtra("channelId", input.channelId)
                                 it.putExtra("title", input.title)
-                                it.putExtra("source", input.source!!.absolutePath)
-                                it.putExtra("cover", input.cover?.absolutePath)
-                            })
+                                it.putExtra("source", input.source!!.toString())
+                                it.putExtra("cover", input.cover?.toString())
+                            }
+                        )
                         navController.navigate(Route.Channel(input.channelId!!))
                     }
                 }

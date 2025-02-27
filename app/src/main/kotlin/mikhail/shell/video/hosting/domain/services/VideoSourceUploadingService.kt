@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.os.Messenger
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
@@ -25,7 +24,6 @@ import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
-import java.io.File
 
 @AndroidEntryPoint
 class VideoSourceUploadingService : Service() {
@@ -39,7 +37,6 @@ class VideoSourceUploadingService : Service() {
         videoUploadingEntryPoint = EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
         _uploadVideo = videoUploadingEntryPoint.getUploadVideo()
     }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val input = intent?.extras
         input?.let {
@@ -54,8 +51,8 @@ class VideoSourceUploadingService : Service() {
                         channelId = it.getLong("channelId"),
                         title = it.getString("title")!!
                     ),
-                    source = File(it.getString("source")!!),
-                    cover = it.getString("cover")?.let { File(it) },
+                    source = it.getString("source")!!,
+                    cover = it.getString("cover"),
                 ) {
                     val progress = (it * 100).toInt()
                     updateProgressNotification(progress)
