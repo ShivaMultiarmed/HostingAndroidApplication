@@ -52,17 +52,15 @@ fun PlayerComponent(
     AndroidView(
         modifier = modifier
             .background(MaterialTheme.colorScheme.onBackground),
-        factory = {
-            PlayerView(it).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            } },
+        factory = { PlayerView(it)},
         update = {
             when (lastLifecycleEvent) {
                 Lifecycle.Event.ON_RESUME, Lifecycle.Event.ON_START -> {
                     it.player = player
+                    it.layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
                 }
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
                     it.player = null

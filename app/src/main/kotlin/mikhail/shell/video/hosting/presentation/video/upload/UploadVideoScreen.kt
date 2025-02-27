@@ -2,13 +2,9 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
 import android.app.Activity
-import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.webkit.MimeTypeMap
-import android.webkit.PermissionRequest
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -199,16 +196,39 @@ fun UploadVideoScreen(
                                 MenuItem(
                                     title = "Создать видео",
                                     onClick = {
-                                        val isCameraPermissionGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                                        val isCameraPermissionGranted =
+                                            ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.CAMERA
+                                            ) == PackageManager.PERMISSION_GRANTED
                                         if (isCameraPermissionGranted) {
-                                            val file = File(cacheDir, "tmp_file_${System.currentTimeMillis()}.mp4")
-                                            sourceUri = FileProvider.getUriForFile(context, "mikhail.shell.video.hosting.fileprovider",file)
+                                            val file = File(
+                                                cacheDir,
+                                                "tmp_file_${System.currentTimeMillis()}.mp4"
+                                            )
+                                            sourceUri = FileProvider.getUriForFile(
+                                                context,
+                                                "mikhail.shell.video.hosting.fileprovider",
+                                                file
+                                            )
                                             sourceCreator.launch(sourceUri!!)
                                         } else {
-                                            if (ActivityCompat.shouldShowRequestPermissionRationale(context as Activity,"android.permission.CAMERA")) {
-                                                Toast.makeText(context, "Разрешите приложению доступ к камере в настройках телефона.", Toast.LENGTH_LONG).show()
+                                            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                                                    context as Activity,
+                                                    "android.permission.CAMERA"
+                                                )
+                                            ) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Разрешите приложению доступ к камере в настройках телефона.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             } else {
-                                                ActivityCompat.requestPermissions(context as Activity, arrayOf("android.permission.CAMERA"), 0)
+                                                ActivityCompat.requestPermissions(
+                                                    context,
+                                                    arrayOf("android.permission.CAMERA"),
+                                                    0
+                                                )
                                             }
                                         }
                                     }
@@ -220,17 +240,20 @@ fun UploadVideoScreen(
                             )
                         )
                     }
-                    if (sourceUri != null)
-                        player.setMediaItem(MediaItem.fromUri(sourceUri!!))
-                    else
-                        player.clearMediaItems()
-                    if (sourceUri != null) {
-                        PlayerComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            player = player
-                        )
+                    LaunchedEffect(sourceUri) {
+                        if (sourceUri != null) {
+                            player.setMediaItem(MediaItem.fromUri(sourceUri!!))
+                            player.prepare()
+                        } else {
+                            player.clearMediaItems()
+                        }
                     }
-
+                    PlayerComponent(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        player = player
+                    )
                     val titleErrMsg =
                         if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
                             "Заполните название"
