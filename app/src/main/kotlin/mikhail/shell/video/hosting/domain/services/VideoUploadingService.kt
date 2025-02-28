@@ -26,7 +26,7 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 
 @AndroidEntryPoint
-class VideoSourceUploadingService : Service() {
+class VideoUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
     private lateinit var _uploadVideo: UploadVideo
     private var NOTIFICATION_COUNT = 0

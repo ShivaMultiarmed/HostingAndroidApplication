@@ -346,6 +346,7 @@ fun VideoScreen(
                         text = "Скачать",
                         onClick = {
                             Intent(context, VideoDownloadingService::class.java).also {
+                                it.action = "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
                                 it.putExtra("videoId", state.videoDetails.video.videoId!!)
                                 context.startService(it)
                             }

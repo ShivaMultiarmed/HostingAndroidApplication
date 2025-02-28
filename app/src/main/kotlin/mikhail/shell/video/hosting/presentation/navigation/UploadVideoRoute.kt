@@ -14,7 +14,7 @@ import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.services.VideoSourceUploadingService
+import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoScreen
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewModel
 
@@ -47,7 +47,7 @@ fun NavGraphBuilder.uploadVideoRoute(
                         context.startService(
                             Intent(
                                 context,
-                                VideoSourceUploadingService::class.java
+                                VideoUploadingService::class.java
                             ).also {
                                 it.putExtra("channelId", input.channelId)
                                 it.putExtra("title", input.title)

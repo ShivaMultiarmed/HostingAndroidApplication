@@ -42,7 +42,7 @@
         <service android:name=".domain.services.PipPlayerActivity"
             android:exported="false" />
         <service
-            android:name=".domain.services.VideoSourceUploadingService"
+            android:name=".domain.services.VideoUploadingService"
             android:foregroundServiceType="dataSync"
             />
         <service android:name=".domain.services.VideoDownloadingService"
