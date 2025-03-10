@@ -6,31 +6,33 @@ plugins {
     id ("kotlin-kapt")
     id ("dagger.hilt.android.plugin")
     alias(libs.plugins.compose.compiler)
-
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "mikhail.shell.video.hosting"
     compileSdk = 35
-
     defaultConfig {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
-
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -42,11 +44,11 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
@@ -63,6 +65,7 @@ dependencies {
     implementation(libs.androidx.rules)
     implementation(libs.androidx.uiautomator)
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -84,12 +87,13 @@ dependencies {
     implementation (libs.hilt.android)
     kapt (libs.hilt.android.compiler)
     kaptAndroidTest (libs.hilt.android.compiler)
-    //implementation (libs.androidx.hilt.lifecycle.viewmodel)
     kapt (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
+    testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.hilt.android.testing)
+
     androidTestImplementation(libs.hilt.android.testing)
     testImplementation(libs.hilt.android.testing)
-    testImplementation("org.robolectric:robolectric:4.9")
 
     implementation (libs.retrofit)
     implementation(libs.converter.gson)

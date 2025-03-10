@@ -19,10 +19,9 @@ class AndroidFileProvider(private val context: Context) : FileProvider {
     }
 
     override fun getFileSize(uri: Uri): Long? {
-        return context.contentResolver.query(uri, null, null, null, null)?.use {
+        return context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
             if (it.moveToFirst()) {
-                val sizeColumnIndex = it.getColumnIndex(OpenableColumns.SIZE)
-                it.getLong(if (sizeColumnIndex >=0) sizeColumnIndex else return null)
+                it.getLong(0)
             } else {
                 null
             }

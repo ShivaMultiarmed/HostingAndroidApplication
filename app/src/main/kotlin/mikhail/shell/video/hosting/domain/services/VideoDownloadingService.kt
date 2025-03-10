@@ -29,8 +29,8 @@ import kotlin.math.roundToInt
 class VideoDownloadingService : Service() {
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private companion object {
-        var NOTIFICATION_COUNT = 0
+    companion object {
+        private var NOTIFICATION_COUNT = 0
         val ROOT_PACKAGE = "mikhail.shell.video.hosting"
         val ACTION_LAUNCH_DOWNLOADING = "$ROOT_PACKAGE.ACTION_LAUNCH_DOWNLOADING"
         val ACTION_CANCEL_DOWNLOADING = "$ROOT_PACKAGE.ACTION_CANCEL_DOWNLOADING"

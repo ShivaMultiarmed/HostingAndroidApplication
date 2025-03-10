@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.data
+package mikhail.shell.video.hosting.data.player
 
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import okhttp3.Interceptor

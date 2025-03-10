@@ -11,7 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import mikhail.shell.video.hosting.data.DSWithTokenFactory
+import mikhail.shell.video.hosting.data.player.DSWithTokenFactory
 import javax.inject.Singleton
 
 @Module

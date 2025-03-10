@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.data
+package mikhail.shell.video.hosting.data.player
 
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
