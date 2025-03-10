@@ -1,7 +1,10 @@
 package mikhail.shell.video.hosting
 
+import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.media.session.MediaSession
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,10 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.eventFlow
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -29,7 +28,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.services.AudioBroadcastReceiver
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.channelRoute
@@ -43,6 +41,8 @@ import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
+import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
+import mikhail.shell.video.hosting.receivers.MediaHandler
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
 
@@ -54,14 +54,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
-    private lateinit var audioReceiver: AudioBroadcastReceiver
+    private lateinit var mediaReceiver: MediaBroadcastReceiver
+    @Inject
+    lateinit var mediaHandler: MediaHandler
+    private lateinit var mediaSession: MediaSession
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setPrimaryContent()
-        audioReceiver = AudioBroadcastReceiver()
-        registerReceiver(audioReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+        setMediaHandlers()
     }
-
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
@@ -69,8 +70,6 @@ class MainActivity : ComponentActivity() {
                 this.navController = navController
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
-                val lifecycleOwner = LocalLifecycleOwner.current
-                val lifecycleEvent by lifecycleOwner.lifecycle.eventFlow.collectAsStateWithLifecycle(Lifecycle.Event.ON_CREATE)
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -132,6 +131,25 @@ class MainActivity : ComponentActivity() {
         return Route.Search
     }
 
+    private fun setMediaHandlers() {
+        mediaSession = MediaSession(this, "PlayerMediaSession")
+        mediaSession.setCallback(mediaHandler)
+        mediaSession.isActive = true
+
+        mediaReceiver = MediaBroadcastReceiver()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(mediaReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            registerReceiver(mediaReceiver, IntentFilter(Intent.ACTION_MEDIA_BUTTON), RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(
+                mediaReceiver,
+                IntentFilter().apply {
+                    addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+                }
+            )
+        }
+    }
+
     @Composable
     private fun shouldMiniPlay(): Boolean {
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
@@ -170,7 +188,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        unregisterReceiver(audioReceiver)
+        unregisterReceiver(mediaReceiver)
+        mediaSession.release()
         super.onDestroy()
     }
 }
