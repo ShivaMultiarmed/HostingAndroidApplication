@@ -29,17 +29,17 @@ fun NavGraphBuilder.profileRoute(
             onGoToChannel = {
                 navController.navigate(Route.Channel(it))
             },
-            onRefresh = {
-//                if (state.user == null)
-//                    viewModel.loadProfile()
-                if (state.channels == null)
-                    viewModel.loadChannels()
-            },
             onPublishVideo = {
                 navController.navigate(Route.UploadVideo)
             },
             onCreateChannel = {
                 navController.navigate(Route.CreateChannel)
+            },
+            onRefresh = {
+//                if (state.user == null)
+//                    viewModel.loadProfile()
+                if (state.channels == null)
+                    viewModel.loadChannels()
             },
             onLogOut = {
                 sharedPref.edit {
@@ -47,6 +47,9 @@ fun NavGraphBuilder.profileRoute(
                     commit()
                 }
                 navController.navigate(Route.SignIn)
+            },
+            onInvite = {
+                navController.navigate(Route.Invite)
             }
         )
     }

@@ -24,4 +24,6 @@ sealed class Route {
     data class Channel(val channelId: Long): Route()
     @Serializable
     data class Video(val videoId: Long): Route()
+    @Serializable
+    data object Invite: Route()
 }

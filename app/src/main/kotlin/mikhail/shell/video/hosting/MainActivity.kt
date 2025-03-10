@@ -30,6 +30,7 @@ import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.channelRoute
 import mikhail.shell.video.hosting.presentation.navigation.createChannelRoute
+import mikhail.shell.video.hosting.presentation.navigation.inviteUserRoute
 import mikhail.shell.video.hosting.presentation.navigation.profileRoute
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
 import mikhail.shell.video.hosting.presentation.navigation.signInRoute
@@ -49,12 +50,10 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
-
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
     private lateinit var mediaReceiver: MediaBroadcastReceiver
-
     @Inject
     lateinit var mediaHandler: MediaHandler
     private lateinit var mediaSession: MediaSession
@@ -107,6 +106,7 @@ class MainActivity : ComponentActivity() {
                             profileRoute(navController, userDetailsProvider)
                             subscriptionsRoute(navController, userDetailsProvider)
                             videoEditRoute(navController, userDetailsProvider)
+                            inviteUserRoute(navController)
                         }
                     }
                     if (shouldMiniPlay() && isPlayerPrepared()) {

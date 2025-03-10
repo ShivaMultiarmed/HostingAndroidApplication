@@ -11,12 +11,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.BuildConfig
-import mikhail.shell.video.hosting.data.player.LocalDateTimeDeserializer
-import mikhail.shell.video.hosting.data.player.TokenInterceptor
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.domain.providers.AndroidFileProvider
+import mikhail.shell.video.hosting.data.player.LocalDateTimeDeserializer
+import mikhail.shell.video.hosting.data.player.TokenInterceptor
+import mikhail.shell.video.hosting.data.providers.AndroidContactsProvider
+import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
+import mikhail.shell.video.hosting.domain.providers.ContactsProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,6 +36,12 @@ object ApiModule {
     fun provideAndroidFileProvider(
         @ApplicationContext appContext: Context
     ): FileProvider = AndroidFileProvider(appContext)
+
+    @Provides
+    @Singleton
+    fun provideAndroidContactsProvider(
+        @ApplicationContext appContext: Context
+    ): ContactsProvider = AndroidContactsProvider(appContext)
 
     @Provides
     @Singleton

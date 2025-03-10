@@ -1,8 +1,9 @@
-package mikhail.shell.video.hosting.domain.providers
+package mikhail.shell.video.hosting.data.providers
 
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import mikhail.shell.video.hosting.domain.providers.FileProvider
 import java.io.InputStream
 
 class AndroidFileProvider(private val context: Context) : FileProvider {

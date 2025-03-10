@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ModeNight
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +56,8 @@ fun ProfileScreen(
     onPublishVideo: () -> Unit,
     onCreateChannel: () -> Unit,
     onRefresh: () -> Unit,
-    onLogOut: () -> Unit
+    onLogOut: () -> Unit,
+    onInvite: () -> Unit
 ) {
     val context = LocalContext.current
     if (state.channels != null) {
@@ -102,6 +104,15 @@ fun ProfileScreen(
                     }
                 )
             }
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = onInvite
+                ) {
+                    Text("Пригласить друзей")
+                }
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -135,10 +146,11 @@ fun ProfileScreenPreviewDay() {
         ProfileScreen(
             state = ProfileScreenState(),
             onGoToChannel = {},
-            onRefresh = {},
             onPublishVideo = {},
             onCreateChannel = {},
-            onLogOut = {}
+            onRefresh = {},
+            onLogOut = {},
+            onInvite = {}
         )
     }
 }
@@ -149,10 +161,11 @@ fun ProfileScreenPreviewNight() {
         ProfileScreen(
             state = ProfileScreenState(),
             onGoToChannel = {},
-            onRefresh = {},
             onPublishVideo = {},
             onCreateChannel = {},
-            onLogOut = {}
+            onRefresh = {},
+            onLogOut = {},
+            onInvite = {}
         )
     }
 }
