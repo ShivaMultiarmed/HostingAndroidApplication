@@ -1,10 +1,8 @@
 package mikhail.shell.video.hosting
 
-import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.media.session.MediaSession
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -51,10 +49,12 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
+
     @Inject
     lateinit var player: Player
     private lateinit var navController: NavController
     private lateinit var mediaReceiver: MediaBroadcastReceiver
+
     @Inject
     lateinit var mediaHandler: MediaHandler
     private lateinit var mediaSession: MediaSession
@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
         setPrimaryContent()
         setMediaHandlers()
     }
+
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
@@ -137,17 +138,7 @@ class MainActivity : ComponentActivity() {
         mediaSession.isActive = true
 
         mediaReceiver = MediaBroadcastReceiver()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(mediaReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
-            registerReceiver(mediaReceiver, IntentFilter(Intent.ACTION_MEDIA_BUTTON), RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(
-                mediaReceiver,
-                IntentFilter().apply {
-                    addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-                }
-            )
-        }
+        registerReceiver(mediaReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
     }
 
     @Composable
