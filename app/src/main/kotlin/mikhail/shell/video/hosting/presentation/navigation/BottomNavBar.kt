@@ -50,7 +50,7 @@ sealed class BottomNavItem(
     )
 
     data object Profile : BottomNavItem(
-        Route.Profile,
+        Route.User,
         "Профиль",
         Icons.Outlined.Person,
         Icons.Rounded.Person

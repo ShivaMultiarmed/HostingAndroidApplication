@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting
+package mikhail.shell.video.hosting.presentation.activities
 
 import android.content.IntentFilter
 import android.media.AudioManager
@@ -28,15 +28,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
 import mikhail.shell.video.hosting.presentation.navigation.channelRoute
-import mikhail.shell.video.hosting.presentation.navigation.createChannelRoute
 import mikhail.shell.video.hosting.presentation.navigation.inviteUserRoute
-import mikhail.shell.video.hosting.presentation.navigation.profileRoute
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
-import mikhail.shell.video.hosting.presentation.navigation.signInRoute
-import mikhail.shell.video.hosting.presentation.navigation.signUpRoute
 import mikhail.shell.video.hosting.presentation.navigation.subscriptionsRoute
-import mikhail.shell.video.hosting.presentation.navigation.uploadVideoRoute
+import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.videoEditRoute
 import mikhail.shell.video.hosting.presentation.navigation.videoRoute
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
@@ -74,7 +71,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
                         if (backStackEntry != null && currentRoute !in listOf(
-                                Route.SignIn::class.qualifiedName, Route.SignUp::class.qualifiedName
+                                Route.Authentication.SignIn::class.qualifiedName,
+                                Route.Authentication.SignUp::class.qualifiedName
                             )
                         ) {
                             BottomNavBar(
@@ -94,16 +92,13 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize(),
                             navController = navController,
-                            startDestination = if (userDetailsProvider.getUserId() == 0L) Route.SignIn else getHomeDestination()
+                            startDestination = if (userDetailsProvider.getUserId() == 0L) Route.Authentication else getHomeDestination()
                         ) {
-                            signUpRoute(navController)
-                            signInRoute(navController)
+                            authenticationGraph(navController)
+                            userGraph(navController, userDetailsProvider)
                             channelRoute(navController, userDetailsProvider)
                             videoRoute(navController, player, userDetailsProvider)
                             searchRoute(navController)
-                            createChannelRoute(navController, userDetailsProvider)
-                            uploadVideoRoute(navController, userDetailsProvider)
-                            profileRoute(navController, userDetailsProvider)
                             subscriptionsRoute(navController, userDetailsProvider)
                             videoEditRoute(navController, userDetailsProvider)
                             inviteUserRoute(navController)

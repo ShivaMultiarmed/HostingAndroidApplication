@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.user
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -11,12 +11,13 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelViewModel
+import mikhail.shell.video.hosting.presentation.navigation.Route
 
 fun NavGraphBuilder.createChannelRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.CreateChannel> {
+    composable<Route.User.CreateChannel> {
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<CreateChannelViewModel, CreateChannelViewModel.Factory> {
             it.create(userId)

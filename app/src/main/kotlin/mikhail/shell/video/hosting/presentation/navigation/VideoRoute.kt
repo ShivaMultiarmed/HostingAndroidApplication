@@ -58,7 +58,7 @@ fun NavGraphBuilder.videoRoute(
                 videoScreenViewModel.deleteVideo()
                 coroutineScope.launch {
                     delay(1000)
-                    navController.navigate(Route.Profile)
+                    navController.navigate(Route.User)
                 }
             },
             onUpdate = {

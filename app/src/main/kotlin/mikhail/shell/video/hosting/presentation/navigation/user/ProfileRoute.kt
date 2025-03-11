@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.profile.ProfileScreen
 import mikhail.shell.video.hosting.presentation.profile.ProfileViewModel
 
@@ -17,7 +18,7 @@ fun NavGraphBuilder.profileRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.Profile> {
+    composable<Route.User.Profile> {
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> {
             it.create(userId)
@@ -30,10 +31,10 @@ fun NavGraphBuilder.profileRoute(
                 navController.navigate(Route.Channel(it))
             },
             onPublishVideo = {
-                navController.navigate(Route.UploadVideo)
+                navController.navigate(Route.User.UploadVideo)
             },
             onCreateChannel = {
-                navController.navigate(Route.CreateChannel)
+                navController.navigate(Route.User.CreateChannel)
             },
             onRefresh = {
 //                if (state.user == null)
@@ -46,7 +47,7 @@ fun NavGraphBuilder.profileRoute(
                     clear()
                     commit()
                 }
-                navController.navigate(Route.SignIn)
+                navController.navigate(Route.Authentication)
             },
             onInvite = {
                 navController.navigate(Route.Invite)

@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Intent
 import android.widget.Toast
@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
+import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoScreen
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewModel
 
@@ -22,7 +23,7 @@ fun NavGraphBuilder.uploadVideoRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.UploadVideo> {
+    composable<Route.User.UploadVideo> {
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
         val player = ExoPlayer.Builder(context).build()

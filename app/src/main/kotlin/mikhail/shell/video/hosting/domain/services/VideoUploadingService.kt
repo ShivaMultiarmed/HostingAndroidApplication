@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.MainActivity
+import mikhail.shell.video.hosting.presentation.activities.MainActivity
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.CompoundError

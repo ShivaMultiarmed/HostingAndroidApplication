@@ -6,7 +6,6 @@ import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -15,7 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.MainActivity
+import mikhail.shell.video.hosting.presentation.activities.MainActivity
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.ChannelNotificationEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider

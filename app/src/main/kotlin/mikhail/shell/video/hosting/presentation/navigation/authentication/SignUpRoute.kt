@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.authentication
 
 import android.app.Activity.MODE_PRIVATE
 import androidx.compose.runtime.getValue
@@ -11,13 +11,14 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpWithPasswordViewModel
 
 fun NavGraphBuilder.signUpRoute(
     navController: NavController
 ) {
-    composable<Route.SignUp> {
+    composable<Route.Authentication.SignUp> {
         val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref =
