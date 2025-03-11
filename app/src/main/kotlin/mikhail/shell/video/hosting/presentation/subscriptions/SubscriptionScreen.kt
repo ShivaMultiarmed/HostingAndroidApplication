@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.presentation.subscriptions
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import mikhail.shell.video.hosting.presentation.profile.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @Composable
 fun SubscriptionsScreen(
@@ -18,9 +19,10 @@ fun SubscriptionsScreen(
     onChannelClick: (Long) -> Unit
 ) {
     if (state.channels != null) {
-        Box(
+        Column(
             modifier = modifier.fillMaxSize()
         ) {
+            TopBar("Подписки")
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
