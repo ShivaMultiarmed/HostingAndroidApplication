@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ModeNight
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.WbSunny
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,6 +85,10 @@ fun ProfileScreen(
                     text = "Выйти",
                     onClick = onLogOut
                 )
+                ActionButton(
+                    text = "Пригласить",
+                    onClick = onInvite
+                )
             }
             var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
             Box (
@@ -103,15 +106,6 @@ fun ProfileScreen(
                         selectedTheme = it
                     }
                 )
-            }
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = onInvite
-                ) {
-                    Text("Пригласить друзей")
-                }
             }
             LazyColumn(
                 modifier = Modifier

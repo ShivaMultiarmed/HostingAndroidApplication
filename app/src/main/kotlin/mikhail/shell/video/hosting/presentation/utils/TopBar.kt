@@ -18,27 +18,52 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun TopBar(
-    topBarTitle: String,
-    onPopup: () -> Unit,
-    canPopUp: Boolean = true,
-    buttonTitle: String? = null,
-    onSubmit: (() -> Unit)? = null,
-    inProccess: Boolean = false
+    onPopup: (() -> Unit)? = null,
+    content: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .borderBottom(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f), strokeWidth = 3)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        if (canPopUp) {
+        if (onPopup != null) {
             Icon(
                 imageVector = Icons.Rounded.ArrowBackIosNew,
                 contentDescription = "Вернуться назад",
                 modifier = Modifier.clickable(onClick = onPopup)
             )
         }
+        content()
+    }
+}
+
+@Composable
+fun TopBar(
+    title: String,
+    onPopup: (() -> Unit)? = null
+) {
+    TopBar(
+        onPopup = onPopup
+    ) {
+        Title(
+            text = title
+        )
+    }
+}
+
+@Composable
+fun TopBar(
+    topBarTitle: String,
+    onPopup: (() -> Unit)? = null,
+    buttonTitle: String? = null,
+    onSubmit: (() -> Unit)? = null,
+    inProccess: Boolean = false
+) {
+    TopBar(
+        onPopup = onPopup
+    ) {
         Title(
             text = topBarTitle,
         )
