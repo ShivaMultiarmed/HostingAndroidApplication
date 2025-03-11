@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.channel.create
 
 import android.net.Uri
-import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
@@ -26,18 +25,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toFile
 import androidx.media3.common.util.UnstableApi
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
-import java.io.File
 
 @OptIn(UnstableApi::class)
 @Composable

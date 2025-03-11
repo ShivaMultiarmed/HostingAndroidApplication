@@ -59,7 +59,6 @@ class MainActivity : ComponentActivity() {
         setPrimaryContent()
         setMediaHandlers()
     }
-
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
@@ -72,7 +71,8 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         if (backStackEntry != null && currentRoute !in listOf(
                                 Route.Authentication.SignIn::class.qualifiedName,
-                                Route.Authentication.SignUp::class.qualifiedName
+                                Route.Authentication.SignUp::class.qualifiedName,
+                                Route.Video::class.qualifiedName
                             )
                         ) {
                             BottomNavBar(

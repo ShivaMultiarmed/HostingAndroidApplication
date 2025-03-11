@@ -10,9 +10,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun Title(text: String) {
+fun Title(
+    modifier: Modifier = Modifier,
+    text: String
+) {
     Text(
-        modifier = Modifier.height(22.dp),
+        modifier = modifier.height(22.dp),
         text = text,
         color = MaterialTheme.colorScheme.onSurface,
         fontSize = 16.sp,
