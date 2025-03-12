@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Contacts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -37,15 +35,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.models.Contact
-import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.SearchTopBar
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
 fun InvitationScreen(
     state: InvitationScreenState,
     onContactClick: (String) -> Unit,
-    onQueryChange: (String) -> Unit,
+    onSubmit: (String) -> Unit,
     onPopup: () -> Unit
 ) {
     val context = LocalContext.current
@@ -65,20 +62,12 @@ fun InvitationScreen(
         val coroutineScope = rememberCoroutineScope()
         Scaffold(
             topBar = {
-                TopBar(
-                    onPopup = onPopup
-                ) {
-                    InputField(
-                        icon = Icons.Rounded.Contacts,
-                        modifier = Modifier.fillMaxWidth(),
-                        value = query,
-                        placeholder = "Введите имя контакта",
-                        onValueChange = {
-                            query = it
-                            onQueryChange(query)
-                        }
-                    )
-                }
+                SearchTopBar(
+                    value = query,
+                    onPopup = onPopup,
+                    onValueChange = { query = it },
+                    onSubmit = onSubmit
+                )
             },
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)

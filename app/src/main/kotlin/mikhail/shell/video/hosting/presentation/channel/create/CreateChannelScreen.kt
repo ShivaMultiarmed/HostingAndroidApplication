@@ -57,9 +57,9 @@ fun CreateChannelScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopBar(
-                topBarTitle = "Создать канал",
+                title = "Создать канал",
                 onPopup = onPopup,
-                buttonTitle = "Создать",
+                inProgress = state.isLoading,
                 onSubmit = {
                     val coverFile = coverUri?.let { context.uriToFile(it) }
                     val avatarFile = avatarUri?.let { context.uriToFile(it) }

@@ -16,16 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ModeNight
-import androidx.compose.material.icons.rounded.Timelapse
-import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,12 +36,9 @@ import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.Toggle
+import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
-import mikhail.shell.video.hosting.ui.theme.Theme
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import mikhail.shell.video.hosting.ui.theme.getThemeSelected
-import mikhail.shell.video.hosting.ui.theme.setTheme
 
 @Composable
 fun ProfileScreen(
@@ -56,57 +49,57 @@ fun ProfileScreen(
     onCreateChannel: () -> Unit,
     onRefresh: () -> Unit,
     onLogOut: () -> Unit,
-    onInvite: () -> Unit
+    onInvite: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val context = LocalContext.current
-    if (state.channels != null) {
-        Column (
-            modifier = modifier
-                .fillMaxSize()
-                .padding(top = 10.dp)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = 10.dp)
 
-        ) {
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ActionButton(
-                    text = "Загрузить видео",
-                    onClick = onPublishVideo
-                )
-                ActionButton(
-                    text = "Создать канал",
-                    onClick = onCreateChannel
-                )
-                ActionButton(
-                    text = "Выйти",
-                    onClick = onLogOut
-                )
-                ActionButton(
-                    text = "Пригласить",
-                    onClick = onInvite
-                )
-            }
-            var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
-            Box (
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Toggle(
-                    key = selectedTheme,
-                    values = mapOf(
-                        Theme.LIGHT to Icons.Rounded.WbSunny,
-                        Theme.BY_TIME to Icons.Rounded.Timelapse,
-                        Theme.DARK to Icons.Rounded.ModeNight
-                    ),
-                    onValueChanged = {
-                        context.setTheme(it)
-                        selectedTheme = it
+    ) {
+        TopBar(
+            title = "Профиль",
+            actions = listOf(
+                {
+                    IconButton(
+                        onClick = onOpenSettings
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            contentDescription = "Открыть настройки"
+                        )
                     }
-                )
-            }
+                }
+            )
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ActionButton(
+                text = "Загрузить видео",
+                onClick = onPublishVideo
+            )
+            ActionButton(
+                text = "Создать канал",
+                onClick = onCreateChannel
+            )
+            ActionButton(
+                text = "Пригласить",
+                onClick = onInvite
+            )
+            ActionButton(
+                text = "Выйти",
+                onClick = onLogOut
+            )
+        }
+        if (state.channels != null) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -120,17 +113,18 @@ fun ProfileScreen(
                     )
                 }
             }
+        } else if (state.channelError != null || state.userError != null) {
+            ErrorComponent(
+                modifier = modifier.fillMaxSize(),
+                onRetry = onRefresh
+            )
+        } else {
+            LoadingComponent(
+                modifier = modifier.fillMaxSize()
+            )
         }
-    } else if (state.channelError != null || state.userError != null) {
-        ErrorComponent(
-            modifier = modifier.fillMaxSize(),
-            onRetry = onRefresh
-        )
-    } else {
-        LoadingComponent(
-            modifier = modifier.fillMaxSize()
-        )
     }
+
 }
 
 @Composable
@@ -144,10 +138,12 @@ fun ProfileScreenPreviewDay() {
             onCreateChannel = {},
             onRefresh = {},
             onLogOut = {},
-            onInvite = {}
+            onInvite = {},
+            onOpenSettings = {}
         )
     }
 }
+
 @Composable
 @Preview
 fun ProfileScreenPreviewNight() {
@@ -159,7 +155,8 @@ fun ProfileScreenPreviewNight() {
             onCreateChannel = {},
             onRefresh = {},
             onLogOut = {},
-            onInvite = {}
+            onInvite = {},
+            onOpenSettings = {}
         )
     }
 }

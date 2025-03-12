@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,18 +66,16 @@ fun VideoEditScreen(
         val video = state.initialVideo
         val compoundError = state.error
         var coverUri by remember { mutableStateOf<Uri?>(null) }
-        var title by remember { mutableStateOf(video.title) }
+        var title by rememberSaveable { mutableStateOf(video.title) }
         var coverAction by remember { mutableStateOf(KEEP) }
-        var description by remember { mutableStateOf("") }
+        var description by rememberSaveable { mutableStateOf("") }
         Scaffold (
             modifier = modifier.fillMaxSize(),
             topBar = {
                 TopBar(
-                    topBarTitle = if (state.updatedVideo == null) "Обновить видео" else "Готово",
-                    onPopup = {
-                        onCancel(state.initialVideo.videoId!!)
-                    },
-                    buttonTitle = "Сохранить",
+                    title = if (state.updatedVideo == null) "Обновить видео" else "Готово",
+                    onPopup = { onCancel(state.initialVideo.videoId!!) },
+                    inProgress = state.isLoading,
                     onSubmit = {
                         val coverFile = coverUri?.let { context.uriToFile(it) }
                         onSubmit(

@@ -6,14 +6,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
-fun <K> Toggle(
+fun <K, V> Toggle(
     key: K,
-    values: Map<K, ImageVector>,
+    values: Map<K, V>,
     onValueChanged: (K) -> Unit
 ) {
     Row(
@@ -27,18 +28,24 @@ fun <K> Toggle(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = when (key == k) {
                         true -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.tertiaryContainer
                     },
                     contentColor = when (key == k) {
                         true -> MaterialTheme.colorScheme.onPrimary
-                        else -> MaterialTheme.colorScheme.onTertiary
+                        else -> MaterialTheme.colorScheme.onTertiaryContainer
                     },
                 )
             ) {
-                Icon(
-                    imageVector = v,
-                    contentDescription = null
-                )
+                if (v is ImageVector) {
+                    Icon(
+                        imageVector = v,
+                        contentDescription = null
+                    )
+                } else if (v is String) {
+                    Text(
+                        text = v
+                    )
+                }
             }
         }
     }

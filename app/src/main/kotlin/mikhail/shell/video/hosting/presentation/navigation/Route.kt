@@ -19,6 +19,8 @@ sealed class Route {
         data object CreateChannel: Route()
         @Serializable
         data object UploadVideo: Route()
+        @Serializable
+        data object Settings: Route()
     }
     @Serializable
     data object Subscriptions: Route()

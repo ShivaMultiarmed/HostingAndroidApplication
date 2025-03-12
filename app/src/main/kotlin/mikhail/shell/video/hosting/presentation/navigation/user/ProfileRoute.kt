@@ -51,6 +51,9 @@ fun NavGraphBuilder.profileRoute(
             },
             onInvite = {
                 navController.navigate(Route.Invite)
+            },
+            onOpenSettings = {
+                navController.navigate(Route.User.Settings)
             }
         )
     }

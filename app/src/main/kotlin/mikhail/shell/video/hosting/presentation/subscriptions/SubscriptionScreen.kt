@@ -22,7 +22,9 @@ fun SubscriptionsScreen(
         Column(
             modifier = modifier.fillMaxSize()
         ) {
-            TopBar("Подписки")
+            TopBar(
+                title = "Подписки"
+            )
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {

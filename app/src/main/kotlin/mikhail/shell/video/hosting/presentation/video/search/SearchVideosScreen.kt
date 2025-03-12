@@ -48,6 +48,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.SearchTopBar
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -66,6 +67,13 @@ fun SearchVideosScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
+            SearchTopBar(
+                value = query,
+                onValueChange = {
+                    query = it
+                },
+                onSubmit = onSubmit
+            )
             ConstraintLayout(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -74,7 +82,7 @@ fun SearchVideosScreen(
                         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
                     )
             ) {
-                val (input, button) = createRefs()
+                val button = createRef()
                 var errorMsg by rememberSaveable { mutableStateOf<String?>(null) }
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
@@ -162,8 +170,7 @@ fun SearchVideosScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Введите запрос\n" +
-                                "Чтобы найти все видео введите пробел",
+                        text = "Введите запрос, чтобы найти видео",
                         textAlign = TextAlign.Center
                     )
                 }

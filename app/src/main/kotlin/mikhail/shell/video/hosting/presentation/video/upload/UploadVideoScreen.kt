@@ -98,9 +98,8 @@ fun UploadVideoScreen(
             topBar = {
                 TopBar(
                     onPopup = onPopup,
-                    buttonTitle = "Выложить",
-                    topBarTitle = "Выложить видео",
-                    inProccess = state.isLoading,
+                    title = if (state.video == null) "Выложить видео" else "Видео опубликовано",
+                    inProgress = state.isLoading,
                     onSubmit = {
                         val input = UploadVideoInput(
                             channelId = channelId,
