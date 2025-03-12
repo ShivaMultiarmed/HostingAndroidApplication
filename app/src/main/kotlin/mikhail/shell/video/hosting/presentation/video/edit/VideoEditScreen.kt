@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -61,13 +60,12 @@ fun VideoEditScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    val contentResolver = context.contentResolver
     if (state.initialVideo != null) {
         val video = state.initialVideo
         val compoundError = state.error
-        var coverUri by remember { mutableStateOf<Uri?>(null) }
+        var coverUri by rememberSaveable{ mutableStateOf<Uri?>(null) }
         var title by rememberSaveable { mutableStateOf(video.title) }
-        var coverAction by remember { mutableStateOf(KEEP) }
+        var coverAction by rememberSaveable { mutableStateOf(KEEP) }
         var description by rememberSaveable { mutableStateOf("") }
         Scaffold (
             modifier = modifier.fillMaxSize(),
@@ -142,7 +140,7 @@ fun VideoEditScreen(
                         coverAction = UPDATE
                     }
                 }
-                var coverExists by remember { mutableStateOf<Boolean?>(null) }
+                var coverExists by rememberSaveable { mutableStateOf<Boolean?>(null) }
                 Column {
                     StandardEditField(
                         firstTime = false,
