@@ -17,10 +17,14 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -46,13 +50,13 @@ fun CreateChannelScreen(
     onPopup: () -> Unit
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     var title by rememberSaveable { mutableStateOf("") }
     var alias by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
     var description by rememberSaveable { mutableStateOf("") }
     var avatarUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    val contentResolver = context.contentResolver
     Scaffold (
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -67,6 +71,9 @@ fun CreateChannelScreen(
                     onSubmit(input)
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
         }
     ) {
         Column(
@@ -77,6 +84,7 @@ fun CreateChannelScreen(
         ) {
             LaunchedEffect(state.channel) {
                 if (state.channel != null) {
+                    snackbarHostState.showSnackbar(message = "Канал был успешно создан", duration = SnackbarDuration.Long)
                     onSuccess(state.channel)
                 }
             }

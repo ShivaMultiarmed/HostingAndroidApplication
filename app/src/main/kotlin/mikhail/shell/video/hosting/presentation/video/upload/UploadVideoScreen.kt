@@ -30,10 +30,14 @@ import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -89,6 +93,7 @@ fun UploadVideoScreen(
     val scrollState = rememberScrollState()
     val compoundError = state.error
     if (state.channels != null) {
+        val snackbarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -98,7 +103,7 @@ fun UploadVideoScreen(
             topBar = {
                 TopBar(
                     onPopup = onPopup,
-                    title = if (state.video == null) "Выложить видео" else "Видео опубликовано",
+                    title = "Выложить видео",
                     inProgress = state.isLoading,
                     onSubmit = {
                         val input = UploadVideoInput(
@@ -111,6 +116,9 @@ fun UploadVideoScreen(
                         onSubmit(input)
                     }
                 )
+            },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState)
             },
             modifier = modifier
                 .fillMaxSize()
@@ -361,6 +369,10 @@ fun UploadVideoScreen(
         }
         LaunchedEffect(state.video) {
             if (state.video != null) {
+                snackbarHostState.showSnackbar(
+                    message = "Вы можете отслеживать прогресс загрузки в уведомлениях.",
+                    duration = SnackbarDuration.Long
+                )
                 onSuccess(state.video)
             }
         }

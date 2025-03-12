@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.utils
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Search
@@ -82,11 +83,14 @@ fun TopBar(
                         if (!inProgress) {
                             Icon(
                                 imageVector = Icons.Rounded.Send,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 contentDescription = null
                             )
                         } else {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
                 }

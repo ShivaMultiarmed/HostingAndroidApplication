@@ -19,11 +19,15 @@ import androidx.compose.material.icons.rounded.DensitySmall
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -61,6 +65,7 @@ fun VideoEditScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     if (state.initialVideo != null) {
+        val snackbarHostState = remember { SnackbarHostState() }
         val video = state.initialVideo
         val compoundError = state.error
         var coverUri by rememberSaveable{ mutableStateOf<Uri?>(null) }
@@ -71,7 +76,7 @@ fun VideoEditScreen(
             modifier = modifier.fillMaxSize(),
             topBar = {
                 TopBar(
-                    title = if (state.updatedVideo == null) "Обновить видео" else "Готово",
+                    title = "Обновить видео",
                     onPopup = { onCancel(state.initialVideo.videoId!!) },
                     inProgress = state.isLoading,
                     onSubmit = {
@@ -85,6 +90,9 @@ fun VideoEditScreen(
                         )
                     }
                 )
+            },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState)
             }
         ) {
             Column(
@@ -105,9 +113,7 @@ fun VideoEditScreen(
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
                         value = title,
-                        onValueChange = {
-                            title = it
-                        },
+                        onValueChange = { title = it },
                         errorMsg = titleErrMsg,
                         placeholder = "Название",
                         icon = Icons.Rounded.Title
@@ -177,12 +183,8 @@ fun VideoEditScreen(
                                 contentScale = ContentScale.Crop,
                                 model = video.coverUrl,
                                 contentDescription = video.title,
-                                onSuccess = {
-                                    coverExists = true
-                                },
-                                onError = {
-                                    coverExists = false
-                                }
+                                onSuccess = { coverExists = true },
+                                onError = { coverExists = false }
                             )
                         }
                         if (coverUri != null) {
@@ -210,6 +212,10 @@ fun VideoEditScreen(
         }
         LaunchedEffect(state.updatedVideo) {
             if (state.updatedVideo != null) {
+                snackbarHostState.showSnackbar(
+                    message = "Видео успешно отредактировано.",
+                    duration = SnackbarDuration.Long
+                )
                 onSuccess(state.updatedVideo)
             }
         }
