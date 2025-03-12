@@ -18,9 +18,6 @@ class InvitationViewModel @Inject constructor(
 ): ViewModel() {
     private val _state = MutableStateFlow(InvitationScreenState())
     val state = _state.asStateFlow()
-    init {
-        searchContacts()
-    }
     fun searchContacts(query: String = "") {
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {

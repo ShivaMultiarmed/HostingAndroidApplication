@@ -2,10 +2,8 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
 import android.app.Activity
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -38,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,12 +46,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
@@ -72,6 +74,7 @@ import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import java.io.File
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun UploadVideoScreen(
     modifier: Modifier = Modifier,
@@ -83,6 +86,7 @@ fun UploadVideoScreen(
     onPopup: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ActivityCompat.requestPermissions(
             context as Activity,
@@ -182,6 +186,7 @@ fun UploadVideoScreen(
                             )
                         }
                         val cacheDir = context.cacheDir.absolutePath
+                        val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
                             onDismiss = {
@@ -191,11 +196,7 @@ fun UploadVideoScreen(
                                 MenuItem(
                                     title = "Создать видео",
                                     onClick = {
-                                        val isCameraPermissionGranted =
-                                            ContextCompat.checkSelfPermission(
-                                                context,
-                                                Manifest.permission.CAMERA
-                                            ) == PackageManager.PERMISSION_GRANTED
+                                        val isCameraPermissionGranted = cameraPermission.status.isGranted
                                         if (isCameraPermissionGranted) {
                                             val file = File(
                                                 cacheDir,
@@ -213,11 +214,12 @@ fun UploadVideoScreen(
                                                     "android.permission.CAMERA"
                                                 )
                                             ) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Разрешите приложению доступ к камере в настройках телефона.",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        message = "Разрешите доступ к камере в настройках Вашего устройства.",
+                                                        duration = SnackbarDuration.Long
+                                                    )
+                                                }
                                             } else {
                                                 ActivityCompat.requestPermissions(
                                                     context,
