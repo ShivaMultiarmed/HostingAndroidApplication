@@ -65,7 +65,9 @@ fun SearchVideosScreen(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
         topBar = {
             SearchTopBar(
                 value = query,

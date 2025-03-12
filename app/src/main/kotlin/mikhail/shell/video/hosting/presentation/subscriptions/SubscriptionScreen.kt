@@ -1,9 +1,11 @@
 package mikhail.shell.video.hosting.presentation.subscriptions
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mikhail.shell.video.hosting.presentation.profile.ChannelSnippet
@@ -20,7 +22,9 @@ fun SubscriptionsScreen(
 ) {
     if (state.channels != null) {
         Column(
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             TopBar(
                 title = "Подписки"
@@ -38,11 +42,15 @@ fun SubscriptionsScreen(
         }
     } else if (state.isLoading) {
         LoadingComponent(
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         )
     } else if (state.error != null) {
         ErrorComponent(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
             onRetry = onRefresh
         )
     }

@@ -126,7 +126,7 @@ fun UploadVideoScreen(
             },
             modifier = modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             Box(
                 modifier = Modifier
@@ -380,14 +380,19 @@ fun UploadVideoScreen(
         }
     } else if (state.error.equivalentTo(ChannelLoadingError.UNEXPECTED)) {
         ErrorComponent(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
             onRetry = {
                 onRefresh()
             }
         )
     } else if (state.isLoading) {
         LoadingComponent(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+
         )
     }
 }
