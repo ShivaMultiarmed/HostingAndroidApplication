@@ -29,7 +29,9 @@ import mikhail.shell.video.hosting.ui.theme.getThemeSelected
 import mikhail.shell.video.hosting.ui.theme.setTheme
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    onPopup: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     Column(
@@ -39,7 +41,8 @@ fun SettingsScreen() {
             .verticalScroll(scrollState)
     ) {
         TopBar(
-            title = "Настройки"
+            title = "Настройки",
+            onPopup = onPopup
         )
         Text(
             text = "Язык"

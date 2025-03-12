@@ -16,5 +16,6 @@ fun NavGraphBuilder.userGraph(
         profileRoute(navController, userDetailsProvider)
         createChannelRoute(navController, userDetailsProvider)
         uploadVideoRoute(navController, userDetailsProvider)
+        settingsRoute(navController)
     }
 }
