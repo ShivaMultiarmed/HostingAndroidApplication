@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -40,11 +39,7 @@ fun NavGraphBuilder.uploadVideoRoute(
                 if (viewModel.validateVideoInput(input) == null) {
                     coroutineScope.launch {
                         delay(1000)
-                        Toast.makeText(
-                            context,
-                            "Когда видео загрузится, вы увидите уведомление.",
-                            Toast.LENGTH_LONG
-                        ).show()
+
                         context.startService(
                             Intent(
                                 context,
