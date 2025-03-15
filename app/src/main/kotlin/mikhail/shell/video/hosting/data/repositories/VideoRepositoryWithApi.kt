@@ -275,6 +275,21 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 }
 
+fun FileProvider.uriToPart(uriStr: String, partName: String): MultipartBody.Part {
+    val uri = Uri.parse(uriStr)
+    val mimeType = getFileMimeType(uri)
+    val extension = MimeTypeMap
+        .getSingleton()
+        .getExtensionFromMimeType(mimeType)
+    val bytes = getFileAsInputStream(uri).readBytes()
+    val fileName = "$partName.$extension"
+    val requestBody = RequestBody.create(
+        mimeType?.toMediaTypeOrNull(),
+        bytes
+    )
+    return MultipartBody.Part.createFormData(partName, fileName, requestBody)
+}
+
 fun File.toPart(partName: String): MultipartBody.Part {
     val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(this.extension)!!
     val requestBody = StreamedRequestBody(this, mimeType)

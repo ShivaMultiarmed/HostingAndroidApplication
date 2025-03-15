@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 
 data class EditChannelInputState(
     val title: String? = null,
-    val alias: String? = "",
+    val alias: String? = null,
     val description: String? = "",
     val cover: String? = null,
     val editCoverAction: EditAction = EditAction.KEEP,

@@ -2,9 +2,9 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.ChannelDto
 import mikhail.shell.video.hosting.data.dto.ChannelWithUserDto
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import okhttp3.MultipartBody
-import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -25,6 +25,14 @@ interface ChannelApi {
         @Part("channel") channelDto: ChannelDto,
         @Part avatar: MultipartBody.Part?,
         @Part cover: MultipartBody.Part?
+    ): ChannelDto
+    @PATCH("channels/edit")
+    suspend fun editChannel(
+        @Part("channel") channelDto: ChannelDto,
+        @Part avatar: MultipartBody.Part?,
+        @Part cover: MultipartBody.Part?,
+        @Query("editCoverAction") editCoverAction: EditAction,
+        @Query("editAvatarAction") editAvatarAction: EditAction
     ): ChannelDto
     @GET("channels/owner/{userId}")
     suspend fun getChannelsByOwner(

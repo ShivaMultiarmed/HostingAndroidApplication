@@ -40,4 +40,9 @@ fun Error?.isNull(): Boolean {
         this == null
 }
 
+fun Error.toCompound(): CompoundError<Error> {
+    val error = this
+    return CompoundError<Error>().apply { add(error) }
+}
+
 fun Error?.isNotNull(): Boolean = !this.isNull()

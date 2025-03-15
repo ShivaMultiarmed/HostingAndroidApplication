@@ -12,11 +12,16 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.RESUBSCRIBING_FAILED
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.toCompound
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
+import mikhail.shell.video.hosting.presentation.channel.edit.EditChannelError
 import retrofit2.HttpException
 import java.io.File
 import javax.inject.Inject
@@ -24,7 +29,8 @@ import javax.inject.Inject
 class ChannelRepositoryWithApi @Inject constructor(
     private val _channelApi: ChannelApi,
     private val gson: Gson,
-    private val fcm: FirebaseMessaging
+    private val fcm: FirebaseMessaging,
+    private val fileProvider: FileProvider
 ) : ChannelRepository {
     override suspend fun fetchChannelForUser(
         channelId: Long,
@@ -44,7 +50,11 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun createChannel(channel: Channel, avatar: File?, cover: File?): Result<Channel, CompoundError<ChannelCreationError>> {
+    override suspend fun createChannel(
+        channel: Channel,
+        avatar: File?,
+        cover: File?
+    ): Result<Channel, CompoundError<ChannelCreationError>> {
         return try {
             val avatarPart = avatar?.toPart("avatar")
             val coverPart = cover?.toPart("cover")
@@ -102,7 +112,9 @@ class ChannelRepositoryWithApi @Inject constructor(
     ): Result<ChannelWithUser, ChannelLoadingError> {
         return try {
             val token = fcm.token.await()
-            Result.Success(_channelApi.subscribe(channelId, userId, token, subscriptionState).toDomain())
+            Result.Success(
+                _channelApi.subscribe(channelId, userId, token, subscriptionState).toDomain()
+            )
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 403 -> ChannelLoadingError.USER_NOT_SPECIFIED
@@ -114,6 +126,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
+
     override suspend fun resubscribe(
         userId: Long
     ): Result<Void, ChannelSubscriptionError> {
@@ -124,6 +137,37 @@ class ChannelRepositoryWithApi @Inject constructor(
             Result.Failure(RESUBSCRIBING_FAILED)
         } catch (e: Exception) {
             Result.Failure(RESUBSCRIBING_FAILED)
+        }
+    }
+
+    override suspend fun editChannel(
+        channel: Channel,
+        editCoverAction: EditAction,
+        editAvatarAction: EditAction
+    ): Result<Channel, CompoundError<Error>> {
+        val coverPart = channel.coverUrl?.let {
+            if (editCoverAction == EditAction.UPDATE) {
+                fileProvider.uriToPart("cover", it)
+            } else null
+        }
+        val avatarPart = channel.avatarUrl?.let {
+            if (editAvatarAction == EditAction.UPDATE) {
+                fileProvider.uriToPart("avatar", it)
+            } else null
+        }
+        return try {
+            val editedChannel = _channelApi.editChannel(
+                channel.toDto(),
+                coverPart,
+                avatarPart,
+                editCoverAction,
+                editAvatarAction
+            ).toDomain()
+            Result.Success(editedChannel)
+        } catch (e: HttpException) {
+            Result.Failure(EditChannelError.UNEXPECTED.toCompound())
+        } catch (e: Exception) {
+            Result.Failure(EditChannelError.UNEXPECTED.toCompound())
         }
     }
 }
