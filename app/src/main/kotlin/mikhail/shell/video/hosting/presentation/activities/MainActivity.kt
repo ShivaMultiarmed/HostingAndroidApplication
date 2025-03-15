@@ -21,6 +21,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -77,7 +78,16 @@ class MainActivity : ComponentActivity() {
                         ) {
                             BottomNavBar(
                                 onClick = {
-                                    navController.navigate(it.route)
+                                    navController.navigate(it.route) {
+                                        val destinationToPopUpTo = navController.currentDestination?.id
+                                            ?: navController.graph.findStartDestination().id
+                                        popUpTo(destinationToPopUpTo) {
+                                            saveState = true
+                                            inclusive = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             )
                         }

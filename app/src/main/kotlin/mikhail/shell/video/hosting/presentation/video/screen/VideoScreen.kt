@@ -1,8 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -53,7 +51,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
-import androidx.core.app.ActivityCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
@@ -385,25 +382,18 @@ fun VideoScreen(
                 }
             }
         }
-        LaunchedEffect(Unit) {
-            if (ActivityCompat.checkSelfPermission(context, "android.permission.SYSTEM_ALERT_WINDOW") == PackageManager.PERMISSION_DENIED) {
-                ActivityCompat.requestPermissions(
-                    context as Activity,
-                    arrayOf("android.permission.SYSTEM_ALERT_WINDOW"),
-                    0
-                )
-            }
-        }
     } else if (state.isLoading) {
         LoadingComponent(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         )
     } else {
         ErrorComponent(
-            modifier = Modifier.fillMaxSize(),
-            onRetry = {
-                onRefresh()
-            }
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+            onRetry = onRefresh
         )
     }
 }

@@ -24,8 +24,13 @@ android {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
+        }
+        create("staging") {
+            isDebuggable = true
+            isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
-            //buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isDebuggable = true
@@ -108,8 +113,8 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.0.0-beta02")
     implementation ("androidx.media3:media3-ui:1.0.0-beta02")
 
-    implementation("io.coil-kt:coil:2.4.0")
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
 
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
 

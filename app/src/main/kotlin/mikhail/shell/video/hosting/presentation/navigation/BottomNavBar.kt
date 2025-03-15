@@ -81,23 +81,22 @@ fun BottomNavBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .borderTop(color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f), strokeWidth = 3),
+            .borderTop(
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f),
+                strokeWidth = 3
+            ),
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-//        Row(
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-            navItems.forEachIndexed { i, it ->
-                BottomNavBarItem(
-                    selected = selectedItemNumber == i,
-                    navItem = it,
-                    onClick = {
-                        selectedItemNumber = i
-                        onClick(navItems[selectedItemNumber])
-                    }
-                )
-            }
-        //}
+        navItems.forEachIndexed { i, it ->
+            BottomNavBarItem(
+                selected = selectedItemNumber == i,
+                navItem = it,
+                onClick = {
+                    selectedItemNumber = i
+                    onClick(navItems[selectedItemNumber])
+                }
+            )
+        }
     }
 }
 

@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +51,9 @@ fun ProfileScreen(
     onInvite: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 10.dp)
-
     ) {
         TopBar(
             title = "Профиль",
@@ -78,6 +74,7 @@ fun ProfileScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = 10.dp)
                 .padding(horizontal = 10.dp)
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(10.dp)

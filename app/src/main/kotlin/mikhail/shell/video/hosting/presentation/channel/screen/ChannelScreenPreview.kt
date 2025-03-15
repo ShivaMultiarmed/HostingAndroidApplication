@@ -66,8 +66,7 @@ fun ChannelScreenPreview() {
                 ),
                 videos = videosSamples
             ),
-            onChannelRefresh = {},
-            onVideosRefresh = {},
+            onRefresh = {},
             onSubscription = {},
             onVideoClick = {},
             onScrollToBottom = {}
@@ -94,8 +93,7 @@ fun ChannelCoverShrinkedPreview() {
                 ),
                 videos = videosSamples
             ),
-            onChannelRefresh = {},
-            onVideosRefresh = {},
+            onRefresh = {},
             onSubscription = {},
             onVideoClick = {},
             onScrollToBottom = {}

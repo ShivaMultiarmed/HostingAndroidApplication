@@ -1,11 +1,12 @@
 package mikhail.shell.video.hosting.presentation.subscriptions
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mikhail.shell.video.hosting.presentation.profile.ChannelSnippet
@@ -20,17 +21,21 @@ fun SubscriptionsScreen(
     onRefresh: () -> Unit,
     onChannelClick: (Long) -> Unit
 ) {
-    if (state.channels != null) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        topBar = {
             TopBar(
                 title = "Подписки"
             )
+        }
+    ) { padding ->
+        if (state.channels != null) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
                 items(state.channels) {
                     ChannelSnippet(
@@ -39,19 +44,20 @@ fun SubscriptionsScreen(
                     )
                 }
             }
+
+        } else if (state.isLoading) {
+            LoadingComponent(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+        } else if (state.error != null) {
+            ErrorComponent(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+                onRetry = onRefresh
+            )
         }
-    } else if (state.isLoading) {
-        LoadingComponent(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        )
-    } else if (state.error != null) {
-        ErrorComponent(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            onRetry = onRefresh
-        )
     }
 }

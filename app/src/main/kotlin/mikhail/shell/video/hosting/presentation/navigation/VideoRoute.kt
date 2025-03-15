@@ -39,21 +39,13 @@ fun NavGraphBuilder.videoRoute(
             userId = userId,
             state = state,
             player = player,
-            onRefresh = {
-                videoScreenViewModel.loadVideo()
-            },
-            onRate = {
-                videoScreenViewModel.rate(it)
-            },
-            onSubscribe = {
-                videoScreenViewModel.subscribe(it)
-            },
+            onRefresh = videoScreenViewModel::loadVideo,
+            onRate = videoScreenViewModel::rate,
+            onSubscribe = videoScreenViewModel::subscribe,
             onChannelLinkClick = {
                 navController.navigate(Route.Channel(it))
             },
-            onView = {
-                videoScreenViewModel.incrementViews()
-            },
+            onView = videoScreenViewModel::incrementViews,
             onDelete = {
                 videoScreenViewModel.deleteVideo()
                 coroutineScope.launch {

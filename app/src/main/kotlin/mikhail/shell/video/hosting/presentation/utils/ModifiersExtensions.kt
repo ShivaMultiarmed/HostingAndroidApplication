@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 import mikhail.shell.video.hosting.ui.theme.Black
 
 fun Modifier.borderBottom(
-    strokeWidth: Int = 1,
+    strokeWidth: Int = 3,
     color: Color = Black
 ): Modifier {
     return this.drawBehind {
@@ -22,7 +22,7 @@ fun Modifier.borderBottom(
 }
 
 fun Modifier.borderTop(
-    strokeWidth: Int = 1,
+    strokeWidth: Int = 3,
     color: Color
 ): Modifier {
     return this.drawBehind {

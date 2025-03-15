@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,13 +49,13 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
-import mikhail.shell.video.hosting.presentation.utils.SearchTopBar
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchVideosScreen(
     modifier: Modifier = Modifier,
@@ -69,13 +70,6 @@ fun SearchVideosScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
-            SearchTopBar(
-                value = query,
-                onValueChange = {
-                    query = it
-                },
-                onSubmit = onSubmit
-            )
             ConstraintLayout(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,12 +105,13 @@ fun SearchVideosScreen(
                     )
                 }
             }
+
         }
-    ) {
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(padding)
         ) {
             if (state.videos != null) {
                 if (state.videos.isNotEmpty()) {
@@ -149,7 +144,7 @@ fun SearchVideosScreen(
                 } else {
                     EmptyResultComponent(
                         modifier = modifier
-                            .padding(it)
+                            .padding(padding)
                             .fillMaxSize(),
                         message = "Ничего не найдено"
                     )

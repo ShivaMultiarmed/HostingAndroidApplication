@@ -18,7 +18,7 @@ fun NavGraphBuilder.inviteUserRoute(
         InvitationScreen(
             state = state,
             onContactClick = viewModel::invite,
-            onIvitationPermited = { viewModel.searchContacts() },
+            onInvitationPermitted = { viewModel.searchContacts() },
             onSubmit = viewModel::searchContacts,
             onPopup = navController::popBackStack
         )

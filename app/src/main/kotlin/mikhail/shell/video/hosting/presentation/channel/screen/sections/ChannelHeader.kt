@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,68 +28,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.AsyncImagePainter.State.Success
+import coil.request.ImageRequest
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
-import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ColumnScope.ChannelHeader(
-    channel: ChannelWithUser?,
-    loading: Boolean,
-    onSubscription: (SubscriptionState) -> Unit,
-    onChannelRefresh: () -> Unit
+    channel: ChannelWithUser,
+    onSubscription: (SubscriptionState) -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
-    if (channel != null) {
-        var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
-            ChannelHeaderShrinked(
-                hasCover,
-                { hasCover = it },
-                channel,
-                onSubscription
-            )
-        } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
-            ChannelHeaderWide(
-                channel,
-                onSubscription
-            )
-        } else {
-            ChannelHeaderExpanded(
-                hasCover,
-                { hasCover = it },
-                channel,
-                onSubscription
-            )
-        }
-    } else if (loading) {
-        LoadingComponent(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+    var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+        ChannelHeaderShrinked(
+            hasCover,
+            { hasCover = it },
+            channel,
+            onSubscription
+        )
+    } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
+        ChannelHeaderWide(
+            channel,
+            onSubscription
         )
     } else {
-        ErrorComponent(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            onRetry = onChannelRefresh
+        ChannelHeaderExpanded(
+            hasCover,
+            { hasCover = it },
+            channel,
+            onSubscription
         )
     }
+
 }
 
 @Composable
@@ -186,7 +173,8 @@ fun ColumnScope.ChannelHeaderExpanded(
         ChannelCover(
             modifier = Modifier.then(
                 if (hasCover == true) {
-                    Modifier.fillMaxWidth()
+                    Modifier
+                        .fillMaxWidth()
                         .constrainAs(coverRef) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
@@ -202,7 +190,7 @@ fun ColumnScope.ChannelHeaderExpanded(
         ChannelAvatar(
             modifier = Modifier.constrainAs(avatarRef) {
                 if (hasCover == true) {
-                    top.linkTo(coverRef.bottom, -65.dp)
+                    top.linkTo(coverRef.bottom, (-65).dp)
                 } else {
                     top.linkTo(parent.top)
                 }
@@ -212,7 +200,7 @@ fun ColumnScope.ChannelHeaderExpanded(
             avatarUrl = channel.avatarUrl
         )
         val annotationRef = createRef()
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .constrainAs(annotationRef) {
@@ -222,7 +210,7 @@ fun ColumnScope.ChannelHeaderExpanded(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ChannelTitle(title = channel.title)
-            Row (
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -245,6 +233,10 @@ fun ChannelCover(
     coverUrlAssignment: (Boolean) -> Unit,
     coverUrl: String?
 ) {
+    val context = LocalContext.current
+    val widthDp = LocalConfiguration.current.screenWidthDp
+    val widthPx = with(LocalDensity.current) { widthDp.dp.toPx().roundToInt() }
+    val heightPx = with(LocalDensity.current) { 100.dp.toPx().roundToInt() }
     Box(
         modifier = modifier
             .then(
@@ -254,22 +246,26 @@ fun ChannelCover(
                         .height(100.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
+
                 } else {
-                    Modifier.size(0.dp)
+                    Modifier
                 }
             )
-
     ) {
         AsyncImage(
-            model = coverUrl,
+            model = ImageRequest.Builder(context)
+                .data(coverUrl)
+                .size(widthPx, heightPx)
+                .build(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            onSuccess = {
-                coverUrlAssignment(true)
-            },
-            onError = {
-                coverUrlAssignment(false)
+            modifier = Modifier.matchParentSize(),
+            onState = {
+                when(it) {
+                    is Success -> coverUrlAssignment(true)
+                    is AsyncImagePainter.State.Error -> coverUrlAssignment(false)
+                    else -> Unit
+                }
             }
         )
     }

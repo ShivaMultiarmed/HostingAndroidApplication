@@ -46,7 +46,7 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 @Composable
 fun InvitationScreen(
     state: InvitationScreenState,
-    onIvitationPermited: () -> Unit,
+    onInvitationPermitted: () -> Unit,
     onContactClick: (String) -> Unit,
     onSubmit: (String) -> Unit,
     onPopup: () -> Unit
@@ -64,7 +64,7 @@ fun InvitationScreen(
     val canSendSms = rememberPermissionState(Manifest.permission.SEND_SMS).status.isGranted
     if (canReadContacts && canSendSms) {
         LaunchedEffect(Unit) {
-            onIvitationPermited()
+            onInvitationPermitted()
         }
         var query by rememberSaveable { mutableStateOf("") }
         val snackbarHostState = remember { SnackbarHostState() }

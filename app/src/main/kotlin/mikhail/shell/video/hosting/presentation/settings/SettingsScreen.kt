@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.rounded.ModeNight
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.presentation.utils.Toggle
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.ui.theme.Theme
@@ -34,54 +37,62 @@ fun SettingsScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    Column(
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .verticalScroll(scrollState)
-    ) {
-        TopBar(
-            title = "Настройки",
-            onPopup = onPopup
-        )
-        Text(
-            text = "Язык"
-        )
-        var selectedLanguage by remember { mutableStateOf(Language.RUSSIAN) }
-        val languages = mapOf(
-            Language.RUSSIAN to "Русский",
-            Language.ENGLISH to "English"
-        )
-        Box (
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Toggle(
-                key = selectedLanguage,
-                values = languages,
-                onValueChanged = {
-                    selectedLanguage = it
-                }
+            .background(MaterialTheme.colorScheme.surface),
+        topBar = {
+            TopBar(
+                title = "Настройки",
+                onPopup = onPopup
             )
         }
-        Text(
-            text = "Тема"
-        )
-        var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
-        Box (
-            modifier = Modifier.fillMaxWidth()
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(padding)
+                .padding(10.dp)
+                .verticalScroll(scrollState)
         ) {
-            Toggle(
-                key = selectedTheme,
-                values = mapOf(
-                    Theme.LIGHT to Icons.Rounded.WbSunny,
-                    Theme.BY_TIME to Icons.Rounded.Timelapse,
-                    Theme.DARK to Icons.Rounded.ModeNight
-                ),
-                onValueChanged = {
-                    context.setTheme(it)
-                    selectedTheme = it
-                }
+            Text(
+                text = "Язык"
             )
+            var selectedLanguage by remember { mutableStateOf(Language.RUSSIAN) }
+            val languages = mapOf(
+                Language.RUSSIAN to "Русский",
+                Language.ENGLISH to "English"
+            )
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Toggle(
+                    key = selectedLanguage,
+                    values = languages,
+                    onValueChanged = {
+                        selectedLanguage = it
+                    }
+                )
+            }
+            Text(
+                text = "Тема"
+            )
+            var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Toggle(
+                    key = selectedTheme,
+                    values = mapOf(
+                        Theme.LIGHT to Icons.Rounded.WbSunny,
+                        Theme.BY_TIME to Icons.Rounded.Timelapse,
+                        Theme.DARK to Icons.Rounded.ModeNight
+                    ),
+                    onValueChanged = {
+                        context.setTheme(it)
+                        selectedTheme = it
+                    }
+                )
+            }
         }
     }
 }
