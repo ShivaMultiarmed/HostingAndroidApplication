@@ -14,8 +14,8 @@ fun NavGraphBuilder.userGraph(
         startDestination = Route.User.Profile
     ) {
         profileRoute(navController, userDetailsProvider)
-        createChannelRoute(navController, userDetailsProvider)
-        uploadVideoRoute(navController, userDetailsProvider)
+        subscriptionsRoute(navController, userDetailsProvider)
         settingsRoute(navController)
+        inviteUserRoute(navController)
     }
 }

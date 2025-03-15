@@ -77,7 +77,6 @@ fun ColumnScope.ChannelHeader(
             onSubscription
         )
     }
-
 }
 
 @Composable

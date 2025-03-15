@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.video
 
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
@@ -15,6 +15,7 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 
@@ -24,9 +25,9 @@ fun NavGraphBuilder.videoRoute(
     player: Player,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.Video> {
+    composable<Route.Video.View> {
         val context = LocalContext.current
-        val videoRouteInfo = it.toRoute<Route.Video>()
+        val videoRouteInfo = it.toRoute<Route.Video.View>()
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
@@ -43,7 +44,7 @@ fun NavGraphBuilder.videoRoute(
             onRate = videoScreenViewModel::rate,
             onSubscribe = videoScreenViewModel::subscribe,
             onChannelLinkClick = {
-                navController.navigate(Route.Channel(it))
+                navController.navigate(Route.Channel.View(it))
             },
             onView = videoScreenViewModel::incrementViews,
             onDelete = {
@@ -56,7 +57,7 @@ fun NavGraphBuilder.videoRoute(
             onUpdate = {
                 coroutineScope.launch {
                     delay(1000)
-                    navController.navigate(Route.EditVideo(it))
+                    navController.navigate(Route.Video.Edit(it))
                 }
             }
         )

@@ -16,22 +16,30 @@ sealed class Route {
         @Serializable
         data object Profile: Route()
         @Serializable
-        data object CreateChannel: Route()
-        @Serializable
-        data object UploadVideo: Route()
+        data object Subscriptions: Route()
         @Serializable
         data object Settings: Route()
+        @Serializable
+        data object Invite: Route()
     }
-    @Serializable
-    data object Subscriptions: Route()
     @Serializable
     data object Search: Route()
     @Serializable
-    data class Video(val videoId: Long): Route()
+    data object Video: Route() {
+        @Serializable
+        data class View(val videoId: Long): Route()
+        @Serializable
+        data class Edit(val videoId: Long): Route()
+        @Serializable
+        data object Upload: Route()
+    }
     @Serializable
-    data class EditVideo(val videoId: Long): Route()
-    @Serializable
-    data class Channel(val channelId: Long): Route()
-    @Serializable
-    data object Invite: Route()
+    data object Channel: Route() {
+        @Serializable
+        data class View(val channelId: Long): Route()
+        @Serializable
+        data class Edit(val channelId: Long): Route()
+        @Serializable
+        data object Create: Route()
+    }
 }

@@ -36,7 +36,7 @@ sealed class BottomNavItem(
     val selectedIcon: ImageVector
 ) {
     data object Subscriptions : BottomNavItem(
-        Route.Subscriptions,
+        Route.User.Subscriptions,
         "Подписки",
         Icons.Outlined.Subscriptions,
         Icons.Rounded.Subscriptions
@@ -50,7 +50,7 @@ sealed class BottomNavItem(
     )
 
     data object Profile : BottomNavItem(
-        Route.User,
+        Route.User.Profile,
         "Профиль",
         Icons.Outlined.Person,
         Icons.Rounded.Person

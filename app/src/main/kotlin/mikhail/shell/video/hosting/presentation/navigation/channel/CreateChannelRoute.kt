@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation.user
+package mikhail.shell.video.hosting.presentation.navigation.channel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -17,7 +17,7 @@ fun NavGraphBuilder.createChannelRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.User.CreateChannel> {
+    composable<Route.Channel.Create> {
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<CreateChannelViewModel, CreateChannelViewModel.Factory> {
             it.create(userId)
@@ -31,7 +31,7 @@ fun NavGraphBuilder.createChannelRoute(
             },
             onSuccess = {
                 coroutineScope.launch {
-                    navController.navigate(Route.Channel(it.channelId!!))
+                    navController.navigate(Route.Channel.View(it.channelId!!))
                 }
             },
             onPopup = {

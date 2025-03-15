@@ -13,8 +13,6 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.File
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.utils.isBlank
 
@@ -26,7 +24,7 @@ class CreateChannelViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(CreateChannelScreenState())
     val state = _state.asStateFlow()
 
-    fun createChannel(input: ChannelInputState) {
+    fun createChannel(input: CreateChannelInputState) {
         _state.update {
             it.copy(
                 isLoading = true
@@ -68,7 +66,7 @@ class CreateChannelViewModel @AssistedInject constructor(
             }
         }
     }
-    private fun validateChannelInput(input: ChannelInputState): CompoundError<ChannelCreationError>? {
+    private fun validateChannelInput(input: CreateChannelInputState): CompoundError<ChannelCreationError>? {
         val error = CompoundError<ChannelCreationError>()
         if (input.title.isBlank())
             error.add(ChannelCreationError.TITLE_EMPTY)

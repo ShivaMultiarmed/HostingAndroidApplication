@@ -24,7 +24,7 @@ fun NavGraphBuilder.searchRoute(navController: NavController) {
                 }
             },
             onVideoClick = {
-                navController.navigate(Route.Video(it))
+                navController.navigate(Route.Video.View(it))
             }
         )
     }

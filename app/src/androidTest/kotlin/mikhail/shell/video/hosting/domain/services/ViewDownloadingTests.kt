@@ -49,7 +49,7 @@ import org.junit.Test
 //}
 
 @HiltAndroidTest
-class VideoDownloadingTests {
+class ViewDownloadingTests {
     private lateinit var uiDevice: UiDevice
     @get:Rule
     var hiltRule = HiltAndroidRule(this)

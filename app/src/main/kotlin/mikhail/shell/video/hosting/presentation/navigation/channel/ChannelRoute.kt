@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation
+package mikhail.shell.video.hosting.presentation.navigation.channel
 
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -10,13 +10,14 @@ import androidx.navigation.toRoute
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
+import mikhail.shell.video.hosting.presentation.navigation.Route
 
 fun NavGraphBuilder.channelRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.Channel> {
-        val channelRouteInfo = it.toRoute<Route.Channel>()
+    composable<Route.Channel.View> {
+        val channelRouteInfo = it.toRoute<Route.Channel.View>()
         val userId = userDetailsProvider.getUserId()
         val channelId = channelRouteInfo.channelId
         val viewModel =
@@ -34,7 +35,7 @@ fun NavGraphBuilder.channelRoute(
                 viewModel.subscribe(it)
             },
             onVideoClick = {
-                navController.navigate(Route.Video(it))
+                navController.navigate(Route.Video.View(it))
             },
             onScrollToBottom = {
                 if (!viewModel.areAllVideosLoaded()) {

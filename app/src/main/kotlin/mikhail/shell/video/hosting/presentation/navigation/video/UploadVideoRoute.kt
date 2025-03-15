@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation.user
+package mikhail.shell.video.hosting.presentation.navigation.video
 
 import android.content.Intent
 import androidx.compose.runtime.getValue
@@ -22,7 +22,7 @@ fun NavGraphBuilder.uploadVideoRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.User.UploadVideo> {
+    composable<Route.Video.Upload> {
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
         val player = ExoPlayer.Builder(context).build()
@@ -51,14 +51,14 @@ fun NavGraphBuilder.uploadVideoRoute(
                                 it.putExtra("cover", input.cover?.toString())
                             }
                         )
-                        navController.navigate(Route.Channel(input.channelId!!))
+                        navController.navigate(Route.Channel.View(input.channelId!!))
                     }
                 }
             },
             onSuccess = {
                 coroutineScope.launch {
                     delay(1000)
-                    navController.navigate(Route.Video(it.videoId!!))
+                    navController.navigate(Route.Video.View(it.videoId!!))
                 }
             },
             onRefresh = {
