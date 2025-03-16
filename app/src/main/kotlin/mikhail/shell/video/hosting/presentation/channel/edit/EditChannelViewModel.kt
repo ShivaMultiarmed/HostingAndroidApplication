@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.EditChannelError
 import mikhail.shell.video.hosting.domain.usecases.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.utils.isBlank
@@ -51,8 +51,8 @@ class EditChannelViewModel @AssistedInject constructor(
             }
         }
     }
-    private fun validateEditedChannel(inputState: EditChannelInputState): CompoundError<Error>? {
-        val compoundError = CompoundError<Error>()
+    private fun validateEditedChannel(inputState: EditChannelInputState): CompoundError<EditChannelError>? {
+        val compoundError = CompoundError<EditChannelError>()
         if (inputState.title.isBlank()) {
             compoundError.add(EditChannelError.TITLE_EMPTY)
         }
@@ -86,7 +86,9 @@ class EditChannelViewModel @AssistedInject constructor(
                 _editChannel(
                     channel,
                     inputState.editCoverAction,
-                    inputState.editAvatarAction
+                    inputState.cover,
+                    inputState.editAvatarAction,
+                    inputState.avatar
                 ).onSuccess { editedChannel ->
                     _state.update {
                         it.copy(

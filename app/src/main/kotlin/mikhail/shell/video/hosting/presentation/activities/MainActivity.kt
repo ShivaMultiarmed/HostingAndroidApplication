@@ -30,13 +30,10 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
-import mikhail.shell.video.hosting.presentation.navigation.channel.channelRoute
-import mikhail.shell.video.hosting.presentation.navigation.user.inviteUserRoute
+import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
-import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsRoute
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
-import mikhail.shell.video.hosting.presentation.navigation.video.videoEditRoute
-import mikhail.shell.video.hosting.presentation.navigation.video.videoRoute
+import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -105,20 +102,17 @@ class MainActivity : ComponentActivity() {
                             startDestination = if (userDetailsProvider.getUserId() == 0L) Route.Authentication else getHomeDestination()
                         ) {
                             authenticationGraph(navController)
-                            userGraph(navController, userDetailsProvider)
-                            channelRoute(navController, userDetailsProvider)
-                            videoRoute(navController, player, userDetailsProvider)
+                            videoGraph(navController, player, userDetailsProvider)
+                            channelGraph(navController, userDetailsProvider)
+                            userGraph(navController,userDetailsProvider)
                             searchRoute(navController)
-                            subscriptionsRoute(navController, userDetailsProvider)
-                            videoEditRoute(navController, userDetailsProvider)
-                            inviteUserRoute(navController)
                         }
                     }
                     if (shouldMiniPlay() && isPlayerPrepared()) {
                         MiniPlayer(
                             player = player,
                             onOpenUp = {
-                                navController.navigate(Route.Video(it))
+                                navController.navigate(Route.Video.View(it))
                             }
                         )
                     }
@@ -130,7 +124,7 @@ class MainActivity : ComponentActivity() {
     private fun getHomeDestination(): Route {
         intent.extras?.let {
             if (it.getLong("videoId") != 0L) {
-                return Route.Video(it.getLong("videoId"))
+                return Route.Video.View(it.getLong("videoId"))
             }
             it.clear()
         }

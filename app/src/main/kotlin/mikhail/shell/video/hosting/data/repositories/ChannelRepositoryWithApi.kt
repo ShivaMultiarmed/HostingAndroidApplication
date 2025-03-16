@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.net.Uri
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -12,8 +13,7 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.RESUBSCRIBING_FAILED
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.toCompound
+import mikhail.shell.video.hosting.domain.errors.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -21,7 +21,6 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
-import mikhail.shell.video.hosting.presentation.channel.edit.EditChannelError
 import retrofit2.HttpException
 import java.io.File
 import javax.inject.Inject
@@ -32,6 +31,9 @@ class ChannelRepositoryWithApi @Inject constructor(
     private val fcm: FirebaseMessaging,
     private val fileProvider: FileProvider
 ) : ChannelRepository {
+
+    private val BUFFER_SIZE = 10 * 1024 * 1024
+
     override suspend fun fetchChannelForUser(
         channelId: Long,
         userId: Long
@@ -143,31 +145,65 @@ class ChannelRepositoryWithApi @Inject constructor(
     override suspend fun editChannel(
         channel: Channel,
         editCoverAction: EditAction,
-        editAvatarAction: EditAction
-    ): Result<Channel, CompoundError<Error>> {
-        val coverPart = channel.coverUrl?.let {
-            if (editCoverAction == EditAction.UPDATE) {
+        cover: String?,
+        editAvatarAction: EditAction,
+        avatar: String?
+    ): Result<Channel, CompoundError<EditChannelError>> {
+        val localError = CompoundError<EditChannelError>()
+        val coverPart = cover?.let {
+            val isCoverTooLarge = (fileProvider.getFileSize(Uri.parse(it)) ?: 0) > BUFFER_SIZE
+            if (editCoverAction == EditAction.UPDATE && !isCoverTooLarge) {
                 fileProvider.uriToPart("cover", it)
-            } else null
+            } else {
+                if (isCoverTooLarge) {
+                    localError.add(EditChannelError.COVER_TOO_LARGE)
+                }
+                null
+            }
         }
-        val avatarPart = channel.avatarUrl?.let {
-            if (editAvatarAction == EditAction.UPDATE) {
+        val avatarPart = avatar?.let {
+            val isAvatarTooLarge = (fileProvider.getFileSize(Uri.parse(it)) ?: 0) > BUFFER_SIZE
+            if (editAvatarAction == EditAction.UPDATE && !isAvatarTooLarge) {
                 fileProvider.uriToPart("avatar", it)
-            } else null
+            } else {
+                if (isAvatarTooLarge) {
+                    localError.add(EditChannelError.AVATAR_TOO_LARGE)
+                }
+                null
+            }
         }
+        if (localError.isNotNull()) {
+            return Result.Failure(localError)
+        } else {
+            return try {
+                val editedChannel = _channelApi.editChannel(
+                    channel.toDto(),
+                    coverPart,
+                    avatarPart,
+                    editCoverAction,
+                    editAvatarAction
+                ).toDomain()
+                Result.Success(editedChannel)
+            } catch (e: HttpException) {
+                val error = CompoundError<EditChannelError>()
+                error.add(EditChannelError.UNEXPECTED)
+                Result.Failure(error)
+            } catch (e: Exception) {
+                val error = CompoundError<EditChannelError>()
+                error.add(EditChannelError.UNEXPECTED)
+                Result.Failure(error)
+            }
+        }
+    }
+
+    override suspend fun fetchChannel(channelId: Long): Result<Channel, ChannelLoadingError> {
         return try {
-            val editedChannel = _channelApi.editChannel(
-                channel.toDto(),
-                coverPart,
-                avatarPart,
-                editCoverAction,
-                editAvatarAction
-            ).toDomain()
-            Result.Success(editedChannel)
+            val fetchedChannel = _channelApi.fetchChannel(channelId).toDomain()
+            Result.Success(fetchedChannel)
         } catch (e: HttpException) {
-            Result.Failure(EditChannelError.UNEXPECTED.toCompound())
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
         } catch (e: Exception) {
-            Result.Failure(EditChannelError.UNEXPECTED.toCompound())
+            Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
 }

@@ -54,4 +54,8 @@ interface ChannelApi {
         @Query("userId") userId: Long,
         @Query("token") token: String
     ): Void
+    @GET("channels/{channelId}")
+    fun fetchChannel(
+        @Path("channelId") channelId: Long
+    ): ChannelDto
 }

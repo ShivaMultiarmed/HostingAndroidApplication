@@ -30,22 +30,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_EMPTY
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelInputState
+import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.RevertingItem
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.uriToFile
 
 @Composable
 fun EditChannelScreen(
     modifier: Modifier = Modifier,
     state: EditChannelScreenState,
-    onSubmit: (CreateChannelInputState) -> Unit,
+    onSubmit: (EditChannelInputState) -> Unit,
     onSuccess: (Channel) -> Unit,
     onPopup: () -> Unit
 ) {
@@ -58,7 +60,9 @@ fun EditChannelScreen(
         val scrollState = rememberScrollState()
         var description by rememberSaveable { mutableStateOf(initialChannel.description ?: "") }
         var avatarUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+        var avatarAction by rememberSaveable { mutableStateOf(EditAction.KEEP) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+        var coverAction by rememberSaveable { mutableStateOf(EditAction.KEEP) }
         Scaffold(
             modifier = modifier
                 .fillMaxSize()
@@ -69,14 +73,14 @@ fun EditChannelScreen(
                     onPopup = onPopup,
                     inProgress = state.isLoading,
                     onSubmit = {
-                        val coverFile = coverUri?.let { context.uriToFile(it) }
-                        val avatarFile = avatarUri?.let { context.uriToFile(it) }
-                        val input = CreateChannelInputState(
+                        val input = EditChannelInputState(
                             title,
                             alias,
                             description,
-                            coverFile,
-                            avatarFile
+                            coverUri.toString(),
+                            coverAction,
+                            avatarUri.toString(),
+                            avatarAction
                         )
                         onSubmit(input)
                     }
@@ -103,15 +107,30 @@ fun EditChannelScreen(
                 }
                 val titleErrMsg = if (state.error.equivalentTo(TITLE_EMPTY)) {
                     "Заполните название"
+                } else if (state.error.equivalentTo(TITLE_TOO_LARGE)) {
+                    "Название слишком большое"
                 } else null
-                EditField(
-                    actionItems = if (title.isNotEmpty()) listOf(
+                val titleActions = mutableListOf<ActionItem>()
+                if (title != initialChannel.title) {
+                    titleActions.add(
+                        RevertingItem(
+                            reverting = {
+                                title = initialChannel.title
+                            }
+                        )
+                    )
+                }
+                if (title.isNotEmpty()) {
+                    titleActions.add(
                         DeletingItem(
                             deleting = {
                                 title = ""
                             }
                         )
-                    ) else emptyList()
+                    )
+                }
+                EditField(
+                    actionItems = titleActions
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
@@ -163,17 +182,35 @@ fun EditChannelScreen(
                         maxLines = 50,
                     )
                 }
-                val avatarPicker =
-                    rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                        if (it != null)
-                            avatarUri = it
+                val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+                    if (it != null) {
+                        avatarUri = it
+                        avatarAction = EditAction.UPDATE
                     }
-                EditField(
-                    actionItems = if (avatarUri != null) listOf(
-                        DeletingItem(
-                            deleting = { avatarUri = null }
+                }
+                val avatarActions = mutableListOf<ActionItem>()
+                if (avatarAction != EditAction.KEEP) {
+                    avatarActions.add(
+                        RevertingItem(
+                            reverting = {
+                                avatarAction = EditAction.KEEP
+                                avatarUri = null
+                            }
                         )
-                    ) else emptyList()
+                    )
+                }
+                if (avatarUri != null) {
+                    avatarActions.add(
+                        DeletingItem(
+                            deleting = {
+                                avatarUri = null
+                                avatarAction = EditAction.REMOVE
+                            }
+                        )
+                    )
+                }
+                EditField(
+                    actionItems = avatarActions
                 ) {
                     FileInputField(
                         modifier = Modifier.fillMaxWidth(),
@@ -184,18 +221,35 @@ fun EditChannelScreen(
                         }
                     )
                 }
-                val coverPicker =
-                    rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                        if (it != null)
-                            coverUri = it
+                val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+                    if (it != null) {
+                        coverUri = it
+                        coverAction = EditAction.UPDATE
                     }
-
-                EditField(
-                    actionItems = if (coverUri != null) listOf(
-                        DeletingItem(
-                            deleting = { coverUri = null }
+                }
+                val coverActions = mutableListOf<ActionItem>()
+                if (coverAction != EditAction.KEEP) {
+                    coverActions.add(
+                        RevertingItem(
+                            reverting = {
+                                coverAction = EditAction.KEEP
+                                coverUri = null
+                            }
                         )
-                    ) else emptyList()
+                    )
+                }
+                if (coverUri != null) {
+                    coverActions.add(
+                        DeletingItem(
+                            deleting = {
+                                coverUri = null
+                                coverAction = EditAction.REMOVE
+                            }
+                        )
+                    )
+                }
+                EditField(
+                    actionItems = coverActions
                 ) {
                     FileInputField(
                         modifier = Modifier.fillMaxWidth(),

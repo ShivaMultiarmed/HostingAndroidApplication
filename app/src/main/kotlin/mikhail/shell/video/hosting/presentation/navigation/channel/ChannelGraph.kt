@@ -14,7 +14,7 @@ fun NavGraphBuilder.channelGraph(
         startDestination = Route.Channel.Create
     ) {
         channelRoute(navController, userDetailsProvider)
-        channelRoute(navController, userDetailsProvider)
+        createChannelRoute(navController, userDetailsProvider)
         editChannelRoute(navController)
     }
 }

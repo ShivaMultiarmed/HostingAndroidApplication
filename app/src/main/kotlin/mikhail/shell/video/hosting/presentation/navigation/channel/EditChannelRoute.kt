@@ -22,12 +22,10 @@ fun NavGraphBuilder.editChannelRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         EditChannelScreen(
             state = state,
-            onPopup = { navController.popBackStack() },
-            onSubmit = {
-
-            },
+            onPopup = navController::popBackStack,
+            onSubmit = viewModel::editChannel,
             onSuccess = {
-
+                navController.navigate(Route.Channel.View(it.channelId!!))
             }
         )
     }

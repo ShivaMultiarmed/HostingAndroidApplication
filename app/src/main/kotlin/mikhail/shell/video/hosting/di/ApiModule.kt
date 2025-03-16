@@ -25,8 +25,14 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import java.time.LocalDateTime
 import javax.inject.Singleton
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -53,8 +59,31 @@ object ApiModule {
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
-        )
+        ).apply {
+            if (BuildConfig.DEBUG) {
+                val trustManager = object : X509TrustManager {
+                    override fun checkClientTrusted(
+                        chain: Array<X509Certificate>,
+                        authType: String
+                    ) {}
+
+                    override fun checkServerTrusted(
+                        chain: Array<X509Certificate>,
+                        authType: String
+                    ) {}
+
+                    override fun getAcceptedIssuers(): Array<X509Certificate> {
+                        return arrayOf()
+                    }
+                }
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, arrayOf<TrustManager>(trustManager), SecureRandom())
+                this.sslSocketFactory(sslContext.socketFactory, trustManager)
+                this.hostnameVerifier { hostname, session -> true }
+            }
+        }
         .build()
+
     @Provides
     @Singleton
     fun provideGson() = GsonBuilder()

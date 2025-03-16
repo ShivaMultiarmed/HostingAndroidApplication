@@ -156,7 +156,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceMime = fileProvider.getFileMimeType(sourceUri)
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
-            fileProvider.getFileAsInputStream(sourceUri).proccess { bytesRead, buffer, chunkNumber ->
+            fileProvider.getFileAsInputStream(sourceUri)?.proccess { bytesRead, buffer, chunkNumber ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
                     chunkNumber,
@@ -171,7 +171,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 val coverUri = Uri.parse(notNullCover)
                 val coverMime = fileProvider.getFileMimeType(coverUri)!!
                 val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
-                val coverContent = fileProvider.getFileAsInputStream(coverUri).readBytes().toOctetStream()
+                val coverContent = fileProvider.getFileAsInputStream(coverUri)?.readBytes()?.toOctetStream()!!
                 videoApi.uploadVideoCover(
                     videoResponse.videoId!!,
                     coverExtension,
@@ -281,7 +281,7 @@ fun FileProvider.uriToPart(uriStr: String, partName: String): MultipartBody.Part
     val extension = MimeTypeMap
         .getSingleton()
         .getExtensionFromMimeType(mimeType)
-    val bytes = getFileAsInputStream(uri).readBytes()
+    val bytes = getFileAsInputStream(uri)!!.readBytes()
     val fileName = "$partName.$extension"
     val requestBody = RequestBody.create(
         mimeType?.toMediaTypeOrNull(),

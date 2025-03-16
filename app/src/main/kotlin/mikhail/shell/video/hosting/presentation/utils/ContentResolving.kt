@@ -10,6 +10,8 @@ import java.io.FileOutputStream
 
 const val IO_BUFFER_SIZE = 100 * 1024
 
+const val FILE_MAX_SIZE = 10 * 1024 * 1024
+
 fun ContentResolver.getFileBytes(uri: Uri): ByteArray? {
     val inputStream = this.openInputStream(uri) ?: return null
     return inputStream.use { input ->

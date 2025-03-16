@@ -25,17 +25,20 @@ android {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
+            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "true")
         }
         create("staging") {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
+            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
+            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
