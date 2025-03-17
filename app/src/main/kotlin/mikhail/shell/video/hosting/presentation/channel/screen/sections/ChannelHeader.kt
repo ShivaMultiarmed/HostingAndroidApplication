@@ -49,6 +49,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
+import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
@@ -423,6 +424,7 @@ fun ChannelActionsButton(
     onRemove: (channelId: Long) -> Unit
 ) {
     var actionDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var removeDialogVisible by rememberSaveable { mutableStateOf(false) }
     Box {
         IconButton(
             onClick = {
@@ -446,13 +448,23 @@ fun ChannelActionsButton(
                 MenuItem(
                     title = "Удалить",
                     onClick = {
-                        onRemove(channelId)
+                        removeDialogVisible = true
                     }
                 )
             ),
             onDismiss = {
                 actionDialogVisible = false
             }
+        )
+        Dialog(
+            onSubmit = {
+                onRemove(channelId)
+            },
+            onDismiss = {
+                removeDialogVisible = false
+            },
+            dialogTitle = "Удаление канала",
+            dialogDescription = "Вы действительно хотите удалить канал?"
         )
     }
 }

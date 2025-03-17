@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.DeleteChannelError
 import mikhail.shell.video.hosting.domain.errors.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -52,4 +53,6 @@ interface ChannelRepository {
     suspend fun fetchChannel(
         channelId: Long
     ): Result<Channel, ChannelLoadingError>
+
+    suspend fun removeChannel(channelId: Long): Result<Unit, DeleteChannelError>
 }

@@ -12,6 +12,7 @@ import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.RESUBSCRIBING_FAILED
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.DeleteChannelError
 import mikhail.shell.video.hosting.domain.errors.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -191,6 +192,16 @@ class ChannelRepositoryWithApi @Inject constructor(
             Result.Failure(ChannelLoadingError.UNEXPECTED)
         } catch (e: Exception) {
             Result.Failure(ChannelLoadingError.UNEXPECTED)
+        }
+    }
+
+    override suspend fun removeChannel(channelId: Long): Result<Unit, DeleteChannelError> {
+        return try {
+            Result.Success(_channelApi.removeChannel(channelId))
+        } catch (e: HttpException) {
+            Result.Failure(DeleteChannelError.UNEXPECTED)
+        } catch (e: Exception) {
+            Result.Failure(DeleteChannelError.UNEXPECTED)
         }
     }
 }

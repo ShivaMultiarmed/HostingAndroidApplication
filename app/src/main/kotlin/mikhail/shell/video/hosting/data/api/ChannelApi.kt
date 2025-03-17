@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.data.dto.ChannelWithUserDto
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import okhttp3.MultipartBody
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -59,4 +60,8 @@ interface ChannelApi {
     suspend fun fetchChannel(
         @Path("channelId") channelId: Long
     ): ChannelDto
+    @DELETE("channels/{channelId}")
+    suspend fun removeChannel(
+        @Path("channelId") channelId: Long
+    )
 }
