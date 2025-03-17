@@ -456,15 +456,17 @@ fun ChannelActionsButton(
                 actionDialogVisible = false
             }
         )
-        Dialog(
-            onSubmit = {
-                onRemove(channelId)
-            },
-            onDismiss = {
-                removeDialogVisible = false
-            },
-            dialogTitle = "Удаление канала",
-            dialogDescription = "Вы действительно хотите удалить канал?"
-        )
+        if (removeDialogVisible) {
+            Dialog(
+                onSubmit = {
+                    onRemove(channelId)
+                },
+                onDismiss = {
+                    removeDialogVisible = false
+                },
+                dialogTitle = "Удаление канала",
+                dialogDescription = "Вы действительно хотите удалить канал?"
+            )
+        }
     }
 }
