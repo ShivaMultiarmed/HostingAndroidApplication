@@ -41,7 +41,14 @@ fun NavGraphBuilder.channelRoute(
                 if (!viewModel.areAllVideosLoaded()) {
                     viewModel.loadVideosPart()
                 }
-            }
+            },
+            onEdit = {
+                navController.navigate(Route.Channel.Edit(it))
+            },
+            onRemove = {
+
+            },
+            owns = userId == state.channel?.ownerId
         )
     }
 }

@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -44,6 +48,8 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
+import mikhail.shell.video.hosting.presentation.utils.ContextMenu
+import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import kotlin.math.roundToInt
@@ -52,7 +58,10 @@ import kotlin.math.roundToInt
 @Composable
 fun ColumnScope.ChannelHeader(
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit
+    onSubscription: (SubscriptionState) -> Unit,
+    onEdit: (channelId: Long) -> Unit = {},
+    onRemove: (channelId: Long) -> Unit = {},
+    owns: Boolean = false
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
@@ -62,19 +71,28 @@ fun ColumnScope.ChannelHeader(
             hasCover,
             { hasCover = it },
             channel,
-            onSubscription
+            onSubscription,
+            onEdit,
+            onRemove,
+            owns
         )
     } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
         ChannelHeaderWide(
             channel,
-            onSubscription
+            onSubscription,
+            onEdit,
+            onRemove,
+            owns
         )
     } else {
         ChannelHeaderExpanded(
             hasCover,
             { hasCover = it },
             channel,
-            onSubscription
+            onSubscription,
+            onEdit,
+            onRemove,
+            owns
         )
     }
 }
@@ -84,7 +102,10 @@ fun ColumnScope.ChannelHeaderShrinked(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit
+    onSubscription: (SubscriptionState) -> Unit,
+    onEdit: (channelId: Long) -> Unit = {},
+    onRemove: (channelId: Long) -> Unit = {},
+    owns: Boolean = false
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -109,7 +130,18 @@ fun ColumnScope.ChannelHeaderShrinked(
             ) {
                 ChannelTitle(title = channel.title)
                 ChannelAlias(alias = channel.alias)
-                SubscriberNumberText(subscribers = channel.subscribers)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SubscriberNumberText(subscribers = channel.subscribers)
+                    if (owns) {
+                        ChannelActionsButton(
+                            channelId = channel.channelId!!,
+                            onEdit = onEdit,
+                            onRemove = onRemove
+                        )
+                    }
+                }
             }
         }
         SubscriptionButton(state = channel.subscription, onSubscription = onSubscription)
@@ -119,7 +151,10 @@ fun ColumnScope.ChannelHeaderShrinked(
 @Composable
 fun ColumnScope.ChannelHeaderWide(
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit
+    onSubscription: (SubscriptionState) -> Unit,
+    onEdit: (channelId: Long) -> Unit = {},
+    onRemove: (channelId: Long) -> Unit = {},
+    owns: Boolean = false
 ) {
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth()
@@ -143,7 +178,16 @@ fun ColumnScope.ChannelHeaderWide(
         ) {
             ChannelTitle(title = channel.title)
             ChannelAlias(alias = channel.alias)
-            SubscriberNumberText(subscribers = channel.subscribers)
+            Row {
+                SubscriberNumberText(subscribers = channel.subscribers)
+                if (owns) {
+                    ChannelActionsButton(
+                        channelId = channel.channelId!!,
+                        onEdit = onEdit,
+                        onRemove = onRemove
+                    )
+                }
+            }
         }
         val subButton = createRef()
         SubscriptionButton(
@@ -163,7 +207,10 @@ fun ColumnScope.ChannelHeaderExpanded(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit
+    onSubscription: (SubscriptionState) -> Unit,
+    onEdit: (channelId: Long) -> Unit = {},
+    onRemove: (channelId: Long) -> Unit = {},
+    owns: Boolean = false
 ) {
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth()
@@ -219,7 +266,16 @@ fun ColumnScope.ChannelHeaderExpanded(
                     state = channel.subscription,
                     onSubscription = onSubscription
                 )
-                SubscriberNumberText(subscribers = channel.subscribers)
+                Row {
+                    SubscriberNumberText(subscribers = channel.subscribers)
+                    if (owns) {
+                        ChannelActionsButton(
+                            channelId = channel.channelId!!,
+                            onEdit = onEdit,
+                            onRemove = onRemove
+                        )
+                    }
+                }
             }
         }
     }
@@ -356,6 +412,47 @@ fun ChannelAlias(
             fontSize = 13.sp,
             modifier = modifier.padding(top = 10.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun ChannelActionsButton(
+    channelId: Long,
+    onEdit: (channelId: Long) -> Unit,
+    onRemove: (channelId: Long) -> Unit
+) {
+    var actionDialogVisible by rememberSaveable { mutableStateOf(false) }
+    Box {
+        IconButton(
+            onClick = {
+                actionDialogVisible = true
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.MoreVert,
+                contentDescription = "Действия с каналом."
+            )
+        }
+        ContextMenu(
+            isExpanded = actionDialogVisible,
+            menuItems = listOf(
+                MenuItem(
+                    title = "Редактировать",
+                     onClick = {
+                        onEdit(channelId)
+                     }
+                ),
+                MenuItem(
+                    title = "Удалить",
+                    onClick = {
+                        onRemove(channelId)
+                    }
+                )
+            ),
+            onDismiss = {
+                actionDialogVisible = false
+            }
         )
     }
 }

@@ -26,13 +26,14 @@ interface ChannelApi {
         @Part avatar: MultipartBody.Part?,
         @Part cover: MultipartBody.Part?
     ): ChannelDto
+    @Multipart
     @PATCH("channels/edit")
     suspend fun editChannel(
         @Part("channel") channelDto: ChannelDto,
         @Part avatar: MultipartBody.Part?,
         @Part cover: MultipartBody.Part?,
-        @Query("editCoverAction") editCoverAction: EditAction,
-        @Query("editAvatarAction") editAvatarAction: EditAction
+        @Part("editCoverAction") editCoverAction: EditAction,
+        @Part("editAvatarAction") editAvatarAction: EditAction
     ): ChannelDto
     @GET("channels/owner/{userId}")
     suspend fun getChannelsByOwner(
@@ -55,7 +56,7 @@ interface ChannelApi {
         @Query("token") token: String
     ): Void
     @GET("channels/{channelId}")
-    fun fetchChannel(
+    suspend fun fetchChannel(
         @Path("channelId") channelId: Long
     ): ChannelDto
 }

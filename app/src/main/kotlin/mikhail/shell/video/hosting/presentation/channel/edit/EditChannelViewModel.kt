@@ -56,11 +56,7 @@ class EditChannelViewModel @AssistedInject constructor(
         if (inputState.title.isBlank()) {
             compoundError.add(EditChannelError.TITLE_EMPTY)
         }
-        return if (compoundError.isNotNull()) {
-            compoundError
-        } else {
-            null
-        }
+        return if (compoundError.isNotNull()) compoundError else null
     }
     fun editChannel(inputState: EditChannelInputState) {
         _state.update {
@@ -77,18 +73,18 @@ class EditChannelViewModel @AssistedInject constructor(
         } else {
             viewModelScope.launch {
                 val channel = _state.value.initialChannel!!.copy(
-                    title = inputState.title!!,
-                    alias = inputState.alias,
-                    description = inputState.description,
+                    title = inputState.title,
+                    alias = inputState.alias.ifEmpty { null },
+                    description = inputState.description.ifEmpty { null },
                     coverUrl = inputState.cover,
                     avatarUrl = inputState.avatar
                 )
                 _editChannel(
                     channel,
                     inputState.editCoverAction,
-                    inputState.cover,
+                    inputState.cover.takeIf { it != "null" },
                     inputState.editAvatarAction,
-                    inputState.avatar
+                    inputState.avatar.takeIf { it != "null" }
                 ).onSuccess { editedChannel ->
                     _state.update {
                         it.copy(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,37 +22,51 @@ fun ChannelScreen(
     onRefresh: () -> Unit,
     onSubscription: (SubscriptionState) -> Unit,
     onVideoClick: (Long) -> Unit,
-    onScrollToBottom: () -> Unit
+    onScrollToBottom: () -> Unit,
+    onEdit: (channelId: Long) -> Unit = {},
+    onRemove: (channelId: Long) -> Unit = {},
+    owns: Boolean = false
 ) {
-    Column(
+    Scaffold (
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-    ) {
-        if (state.channel != null && state.videos != null) {
-            ChannelHeader(
-                channel = state.channel,
-                onSubscription = onSubscription
-            )
-            VideoGridSection(
-                videos = state.videos,
-                onVideoClick = onVideoClick,
-                onScrollToBottom = onScrollToBottom
-            )
-        } else if (state.isChannelLoading && state.areVideosLoading) {
-            LoadingComponent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
-            )
-        } else {
-            ErrorComponent(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
-                onRetry = onRefresh
-            )
+            .padding(16.dp),
+        floatingActionButton = {
+            // TODO: move to create channel screen
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(padding)
+        ) {
+            if (state.channel != null && state.videos != null) {
+                ChannelHeader(
+                    channel = state.channel,
+                    onSubscription = onSubscription,
+                    onEdit = onEdit,
+                    onRemove = onRemove,
+                    owns = owns
+                )
+                VideoGridSection(
+                    videos = state.videos,
+                    onVideoClick = onVideoClick,
+                    onScrollToBottom = onScrollToBottom
+                )
+            } else if (state.isChannelLoading && state.areVideosLoading) {
+                LoadingComponent(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                )
+            } else {
+                ErrorComponent(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface),
+                    onRetry = onRefresh
+                )
+            }
         }
     }
 }
