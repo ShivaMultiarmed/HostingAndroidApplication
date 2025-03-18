@@ -171,11 +171,13 @@ class VideoRepositoryWithApi @Inject constructor(
                 val coverUri = Uri.parse(notNullCover)
                 val coverMime = fileProvider.getFileMimeType(coverUri)!!
                 val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
-                val coverContent = fileProvider.getFileAsInputStream(coverUri)?.readBytes()?.toOctetStream()!!
+                val coverContent = fileProvider.getFileAsInputStream(coverUri)?.use{
+                    it.readBytes().toOctetStream()
+                }
                 videoApi.uploadVideoCover(
                     videoResponse.videoId!!,
                     coverExtension,
-                    coverContent
+                    coverContent!!
                 )
             }
             videoApi.confirmVideoUpload(videoResponse.videoId!!)
@@ -281,7 +283,9 @@ fun FileProvider.uriToPart(uriStr: String, partName: String): MultipartBody.Part
     val extension = MimeTypeMap
         .getSingleton()
         .getExtensionFromMimeType(mimeType)
-    val bytes = getFileAsInputStream(uri)!!.readBytes()
+    val bytes = getFileAsInputStream(uri)!!.use {
+        it.readBytes()
+    }
     val fileName = "$partName.$extension"
     val requestBody = RequestBody.create(
         mimeType?.toMediaTypeOrNull(),
@@ -319,10 +323,11 @@ class StreamedRequestBody(
     override fun writeTo(sink: BufferedSink) {
         val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
         var bytesRead: Int
-        val input = file.inputStream().buffered(TRANSFER_BUFFER_SIZE)
-        while (input.read(buffer).also { bytesRead = it } != -1) {
-            sink.outputStream().write(buffer)
-            sink.flush()
+        file.inputStream().buffered(TRANSFER_BUFFER_SIZE).use { input ->
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                sink.outputStream().write(buffer)
+                sink.flush()
+            }
         }
     }
 }
