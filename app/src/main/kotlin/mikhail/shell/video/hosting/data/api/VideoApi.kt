@@ -95,6 +95,12 @@ interface VideoApi {
     ): Void
     @GET("videos/{videoId}/play")
     @Streaming
+    suspend fun playVideo(
+        @Path("videoId") videoId: Long,
+        @Header("Range") byteRange: String
+    ): Response<ResponseBody>
+    @GET("videos/{videoId}/download")
+    @Streaming
     suspend fun downloadVideo(
         @Path("videoId") videoId: Long,
         @Header("Range") byteRange: String

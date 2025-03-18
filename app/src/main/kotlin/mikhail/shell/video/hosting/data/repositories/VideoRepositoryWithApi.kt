@@ -241,7 +241,7 @@ class VideoRepositoryWithApi @Inject constructor(
         var size: Long? = null
         var mime: String? = null
         do {
-            var response = videoApi.downloadVideo(
+            var response = videoApi.playVideo(
                     videoId,
                     "bytes=$start-$end"
                 )
