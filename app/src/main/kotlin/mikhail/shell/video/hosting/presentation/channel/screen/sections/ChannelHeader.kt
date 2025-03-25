@@ -366,12 +366,12 @@ fun SubscriptionButton(
     PrimaryButton(
         modifier = modifier,
         text = if (state == SUBSCRIBED) "Отписаться" else "Подписаться",
+        isActivated = state == SUBSCRIBED,
         onClick = {
             val subscriptionState =
                 if (state == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
             onSubscription(subscriptionState)
-        },
-        isActivated = state == SUBSCRIBED
+        }
     )
 }
 

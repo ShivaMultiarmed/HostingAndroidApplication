@@ -13,6 +13,7 @@ import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.BuildConfig
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
+import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.player.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.player.TokenInterceptor
@@ -122,6 +123,13 @@ object ApiModule {
     fun provideAuthApi(
         retrofit: Retrofit
     ) = retrofit.create<AuthApi>()
+
+    @Provides
+    @Singleton
+    fun provideCommentApi(
+        retrofit: Retrofit
+    ) = retrofit.create<CommentApi>()
+
 
     @Provides
     @Singleton

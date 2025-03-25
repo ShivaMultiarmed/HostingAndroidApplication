@@ -2,8 +2,6 @@ package mikhail.shell.video.hosting.presentation.utils
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -20,25 +18,30 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
     text: String? = null,
     icon: ImageVector? = null,
-    onClick: () -> Unit,
-    isActivated: Boolean = false
+    isActivated: Boolean = false,
+    onClick: () -> Unit
 ) {
     Button(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 10.dp),
+        contentPadding = contentPadding,
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (!isActivated) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = if (!isActivated) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onTertiaryContainer,
+            containerColor = when {
+                !isActivated -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.tertiaryContainer
+            },
+            contentColor = when {
+                !isActivated -> MaterialTheme.colorScheme.onPrimary
+                else -> MaterialTheme.colorScheme.onTertiaryContainer
+            },
         )
     ) {
         if (icon != null) {
             Icon(
-                imageVector = Icons.Rounded.Search,
+                imageVector = icon,
                 tint = Color.White,
                 contentDescription = "Поиск"
             )
@@ -54,13 +57,14 @@ fun PrimaryButton(
 @Composable
 fun PrimaryButton(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
     onClick: () -> Unit,
     isActivated: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 10.dp),
+        contentPadding = contentPadding,
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (!isActivated) MaterialTheme.colorScheme.primary
@@ -78,8 +82,8 @@ fun PrimaryButtonPreview() {
     VideoHostingTheme {
         PrimaryButton(
             text = "Кнопка",
-            onClick = {},
-            isActivated = false
+            isActivated = false,
+            onClick = {}
         )
     }
 }

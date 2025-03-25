@@ -17,13 +17,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
+import mikhail.shell.video.hosting.domain.usecases.comments.CreateComment
+import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
+import mikhail.shell.video.hosting.presentation.models.CommentModel
+import java.time.LocalDateTime
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
@@ -34,7 +39,9 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _rateVideo: RateVideo,
     private val _subscribe: Subscribe,
     private val _incrementViews: IncrementViews,
-    private val _deleteVideo: DeleteVideo
+    private val _deleteVideo: DeleteVideo,
+    private val _createComment: CreateComment,
+    private val _getComments: GetComments
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
@@ -103,8 +110,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                         )
                     )
                 }
-            }.onFailure {
-
             }
         }
     }
@@ -156,8 +161,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                         )
                     )
                 }
-            }.onFailure {
-
             }
         }
     }
@@ -185,6 +188,56 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
+
+    fun createComment(text: String) {
+        if (text.isNotEmpty()) {
+            val comment = Comment(
+                commentId = null,
+                videoId = videoId,
+                userId = userId,
+                dateTime = null,
+                text = text
+            )
+            _state.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
+            viewModelScope.launch {
+                _createComment(comment)
+            }
+        }
+    }
+
+    fun getComments(before: LocalDateTime) {
+        _state.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            _getComments(
+                before,
+                videoId
+            ).onSuccess { commentsWithUsers ->
+                val commentModels = commentsWithUsers.map { commentWithUser ->
+                    CommentModel(
+                        userId = commentWithUser.user.userId!!,
+                        commentId = commentWithUser.comment.commentId!!,
+                        name = commentWithUser.user.name,
+                        text = commentWithUser.comment.text
+                    )
+                }
+                _state.update {
+                    it.copy(
+                        comments = (it.comments?: listOf()) + commentModels
+                    )
+                }
+            }
+        }
+    }
+
+
     @AssistedFactory
     interface Factory {
         fun create(

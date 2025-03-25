@@ -59,7 +59,9 @@ fun NavGraphBuilder.videoRoute(
                     delay(1000)
                     navController.navigate(Route.Video.Edit(it))
                 }
-            }
+            },
+            onComment = videoScreenViewModel::createComment,
+            onScrollComments = videoScreenViewModel::getComments
         )
 
     }
