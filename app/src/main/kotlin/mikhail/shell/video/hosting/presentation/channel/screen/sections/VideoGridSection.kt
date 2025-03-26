@@ -36,9 +36,7 @@ fun ColumnScope.VideoGridSection(
         items(videos) {
             VideoSnippet(
                 video = it,
-                onClick = {
-                    onVideoClick(it)
-                }
+                onClick = onVideoClick
             )
         }
     }

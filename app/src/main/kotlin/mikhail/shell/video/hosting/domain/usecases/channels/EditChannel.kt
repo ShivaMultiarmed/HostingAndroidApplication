@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain.usecases
+package mikhail.shell.video.hosting.domain.usecases.channels
 
 import android.net.Uri
 import mikhail.shell.video.hosting.domain.errors.CompoundError

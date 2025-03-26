@@ -16,19 +16,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import mikhail.shell.video.hosting.domain.Action
+import mikhail.shell.video.hosting.domain.ActionModel
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Comment
+import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.comments.CreateComment
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
+import mikhail.shell.video.hosting.domain.usecases.comments.ObserveComments
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
-import mikhail.shell.video.hosting.presentation.models.CommentModel
-import java.time.LocalDateTime
+import mikhail.shell.video.hosting.presentation.models.toModel
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
@@ -41,7 +46,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _incrementViews: IncrementViews,
     private val _deleteVideo: DeleteVideo,
     private val _createComment: CreateComment,
-    private val _getComments: GetComments
+    private val _getComments: GetComments,
+    private val _observeComments: ObserveComments
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
@@ -203,13 +209,14 @@ class VideoScreenViewModel @AssistedInject constructor(
                     isLoading = true
                 )
             }
+            val now = Clock.System.now()
             viewModelScope.launch {
-                _createComment(comment)
+                _createComment(comment.copy(dateTime = now))
             }
         }
     }
 
-    fun getComments(before: LocalDateTime) {
+    fun getComments(before: Instant) {
         _state.update {
             it.copy(
                 isLoading = true
@@ -220,14 +227,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 before,
                 videoId
             ).onSuccess { commentsWithUsers ->
-                val commentModels = commentsWithUsers.map { commentWithUser ->
-                    CommentModel(
-                        userId = commentWithUser.user.userId!!,
-                        commentId = commentWithUser.comment.commentId!!,
-                        name = commentWithUser.user.name,
-                        text = commentWithUser.comment.text
-                    )
-                }
+                val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
                         comments = (it.comments?: listOf()) + commentModels
@@ -236,7 +236,39 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
+    fun observeComments() {
+        viewModelScope.launch {
+            _observeComments(videoId).collect(::handleCommentAction)
+        }
+    }
 
+    private fun handleCommentAction(actionModel: ActionModel<CommentWithUser>) {
+        val commentModel = actionModel.model.toModel()
+        when(actionModel.action) {
+            Action.ADD -> {
+                _state.update {
+                    it.copy(
+                        comments = listOf(commentModel) + (it.comments?: listOf())
+                    )
+                }
+            }
+            Action.REMOVE -> {
+                _state.update {
+                    it.copy(
+                        comments = it.comments?.filter { it.commentId != commentModel.commentId }
+                    )
+                }
+            }
+            Action.UPDATE -> {
+                _state.update {
+                    val currentPosition = it.comments?.indexOfFirst { it.commentId == commentModel.commentId }
+                    it.copy(
+                        comments = it.comments?.toMutableList().also { it?.set(currentPosition!!, commentModel) }?.toList()
+                    )
+                }
+            }
+        }
+    }
 
     @AssistedFactory
     interface Factory {

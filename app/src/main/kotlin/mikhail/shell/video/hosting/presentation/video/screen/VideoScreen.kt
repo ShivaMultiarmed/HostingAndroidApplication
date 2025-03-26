@@ -18,14 +18,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,7 +50,9 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +75,11 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -82,6 +91,8 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
+import mikhail.shell.video.hosting.presentation.models.CommentModel
+import mikhail.shell.video.hosting.presentation.models.toModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -91,6 +102,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
@@ -112,7 +124,9 @@ fun VideoScreen(
     onDelete: () -> Unit,
     onUpdate: (Long) -> Unit,
     onComment: (String) -> Unit = {},
-    onScrollComments: (before: LocalDateTime) -> Unit = {}
+    onLoadComments: (before: Instant) -> Unit = {},
+    onObserve: () -> Unit = {},
+    onUnobserve: () -> Unit = {}
 ) {
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
@@ -149,15 +163,15 @@ fun VideoScreen(
                     PlayerComponent(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .then(
-                                if ((videoInfoExpanded && animatedHeight < idealMaxVideoHeight
-                                            || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
-                                    && (player.playerError != null || player.isLoading)
-                                )
-                                    Modifier.height(animatedHeight)
-                                else
-                                    Modifier.wrapContentHeight()
-                            ),
+                            .aspectRatio(16f / 9),
+//                            .then(
+//                                when {
+//                                    (videoInfoExpanded && animatedHeight < idealMaxVideoHeight
+//                                            || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
+//                                            && (player.playerError != null || player.isLoading) -> Modifier.height(animatedHeight)
+//                                    else -> Modifier.wrapContentHeight()
+//                                }
+//                            )
                         player = player
                     )
                 }
@@ -401,29 +415,42 @@ fun VideoScreen(
                                     .padding(vertical = 3.dp, horizontal = 10.dp)
                                     .clickable {
                                         coroutineScope.launch {
-                                            sheetState.hide()
+                                            sheetState.show()
                                         }.invokeOnCompletion {
-                                            if (!sheetState.isVisible) {
-                                                commentsVisible = false
+                                            if (sheetState.isVisible) {
+                                                commentsVisible = true
                                             }
                                         }
                                     }
                             ) {
                                 Text(
-                                    text = "Введите комментарий",
+                                    text = "Оставьте комментарий",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-//                        if (commentsVisible) {
-//                            CommentsBottomSheet(
-//                                state = sheetState,
-//                                onDismiss = {
-//                                    commentsVisible = false
-//                                }
-//                            )
-//                        }
+                        if (commentsVisible) {
+                            LaunchedEffect(Unit) {
+                                val now = Clock.System.now()
+                                onLoadComments(now)
+                            }
+                            if (state.comments != null) {
+                                CommentsBottomSheet(
+                                    state = sheetState,
+                                    onDismiss = {
+                                        commentsVisible = false
+                                    },
+                                    userId = userId,
+                                    comments = state.comments,
+                                    onSubmit = onComment,
+                                    onObserve = onObserve,
+                                    onUnobserve = onUnobserve,
+                                    onLoad = onLoadComments
+                                )
+                            }
+                        }
+
                     }
                 }
             }
@@ -450,27 +477,56 @@ fun VideoScreen(
 fun CommentsBottomSheet(
     userId: Long,
     state: SheetState,
-    comments: List<CommentWithUser>,
+    comments: List<CommentModel>,
     onSubmit: (String) -> Unit,
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
+    onObserve: () -> Unit = {},
+    onUnobserve: () -> Unit = {},
+    onLoad: (Instant) -> Unit
 ) {
     ModalBottomSheet(
         sheetState = state,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column (
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .fillMaxHeight(0.4f)
+                .padding(10.dp),
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
-            ) {
-                items(comments) {commentWithUser ->
-                    CommentBox(
-                        modifier = Modifier.fillMaxWidth(),
-                        commentWithUser = commentWithUser,
+            if (comments.isNotEmpty()) {
+                val lazyListState = rememberLazyListState()
+                val reachedBottom by remember { derivedStateOf { lazyListState.reachedBottom(4) } }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    state = lazyListState
+                ) {
+                    items(comments) {comment ->
+                        CommentBox(
+                            modifier = Modifier.fillMaxWidth(),
+                            own = comment.userId == userId,
+                            comment = comment,
+                        )
+                    }
+                }
+                LaunchedEffect(reachedBottom) {
+                    if (reachedBottom) {
+                        val earliestCommentDateTime = comments.lastOrNull()?.dateTime?: Clock.System.now()
+                        onLoad(earliestCommentDateTime)
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .weight(1f)
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Здесь ещё нет комментариев."
                     )
                 }
             }
@@ -479,12 +535,20 @@ fun CommentsBottomSheet(
             )
         }
     }
+
+    DisposableEffect(Unit) {
+        onObserve()
+        onDispose {
+            onUnobserve()
+        }
+    }
 }
 
 @Composable
 fun CommentBox(
     modifier: Modifier = Modifier,
-    commentWithUser: CommentWithUser
+    own: Boolean = false,
+    comment: CommentModel
 ) {
     Column(
         modifier = modifier
@@ -505,16 +569,16 @@ fun CommentBox(
             Column {
                 Row {
                     Text(
-                        text = commentWithUser.user.name,
+                        text = comment.name,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = " - " + commentWithUser.comment.dateTime?.toPresentation(),
+                        text = " - " + comment.dateTime.toPresentation(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
-                    text = commentWithUser.comment.text,
+                    text = comment.text,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -530,7 +594,8 @@ fun CommentPreview() {
         val comment = Comment(
             1,
             100500,
-            LocalDateTime.now(),
+            userId = 100500,
+            Clock.System.now(),
             "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."
         )
         val user = User(
@@ -538,9 +603,10 @@ fun CommentPreview() {
             "Иван Васильевич"
         )
         val commentWithUser = CommentWithUser(comment, user)
+        val commentModel = commentWithUser.toModel()
         CommentBox(
             modifier = Modifier.fillMaxWidth(),
-            commentWithUser = commentWithUser
+            comment = commentModel
         )
     }
 }
@@ -600,7 +666,7 @@ fun CommentForm(
             contentPadding = PaddingValues(0.dp),
             icon = Icons.Rounded.Send,
             onClick = {
-
+                onSubmit(text)
             }
         )
     }
@@ -652,6 +718,11 @@ fun CommentFormPreview() {
 //        onSubscribe = {}
 //    )
 //}
+
+fun Instant.toPresentation(): String {
+    val dateTime = this.toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()
+    return dateTime.toPresentation()
+}
 
 fun LocalDateTime.toPresentation(): String {
     val now = LocalDateTime.now()

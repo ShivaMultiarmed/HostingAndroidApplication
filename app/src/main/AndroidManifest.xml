@@ -48,7 +48,7 @@
         <service android:name=".domain.services.VideoDownloadingService"
             android:foregroundServiceType="dataSync"/>
         <service
-            android:name=".domain.services.SubsriptionNotificationService"
+            android:name=".domain.services.NotificationService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

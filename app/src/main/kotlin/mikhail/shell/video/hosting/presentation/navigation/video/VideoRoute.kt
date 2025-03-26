@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -26,7 +25,6 @@ fun NavGraphBuilder.videoRoute(
     userDetailsProvider: UserDetailsProvider
 ) {
     composable<Route.Video.View> {
-        val context = LocalContext.current
         val videoRouteInfo = it.toRoute<Route.Video.View>()
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
@@ -61,7 +59,13 @@ fun NavGraphBuilder.videoRoute(
                 }
             },
             onComment = videoScreenViewModel::createComment,
-            onScrollComments = videoScreenViewModel::getComments
+            onLoadComments = videoScreenViewModel::getComments,
+            onObserve = {
+
+            },
+            onUnobserve = {
+
+            }
         )
 
     }

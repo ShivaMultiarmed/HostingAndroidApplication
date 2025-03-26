@@ -1,14 +1,14 @@
 package mikhail.shell.video.hosting.data.dto
 
+import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
-import java.time.LocalDateTime
 
 data class CommentDto(
     val commentId: Long? = null,
     val videoId: Long,
     val userId: Long,
-    val dateTime: LocalDateTime? = null,
+    val dateTime: Instant? = null,
     val text: String,
 )
 

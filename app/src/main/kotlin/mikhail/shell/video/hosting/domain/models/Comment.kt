@@ -1,12 +1,12 @@
 package mikhail.shell.video.hosting.domain.models
 
-import java.time.LocalDateTime
+import kotlinx.datetime.Instant
 
 data class Comment(
     val commentId: Long? = null,
     val videoId: Long,
     val userId: Long,
-    val dateTime: LocalDateTime? = null,
+    val dateTime: Instant? = null,
     val text: String
 )
 

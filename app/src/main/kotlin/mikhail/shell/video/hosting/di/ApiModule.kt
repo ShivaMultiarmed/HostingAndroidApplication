@@ -10,12 +10,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.BuildConfig
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.data.player.LocalDateTimeDeserializer
+import mikhail.shell.video.hosting.data.converters.InstantConverter
+import mikhail.shell.video.hosting.data.converters.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.player.TokenInterceptor
 import mikhail.shell.video.hosting.data.providers.AndroidContactsProvider
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
@@ -89,6 +91,7 @@ object ApiModule {
     @Singleton
     fun provideGson() = GsonBuilder()
         .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
+        .registerTypeAdapter(Instant::class.java, InstantConverter())
         .create()
 
     @Provides

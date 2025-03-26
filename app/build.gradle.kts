@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.rules)
     implementation(libs.androidx.uiautomator)
     testImplementation(libs.junit)
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
     //androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.androidx.junit)
@@ -84,6 +85,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation("androidx.test:core:1.6.1")
+
 
     implementation(libs.androidx.compose.foundation)
     debugImplementation(libs.androidx.ui.tooling)
@@ -120,6 +122,7 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx:23.0.0")
 
     implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
 }
