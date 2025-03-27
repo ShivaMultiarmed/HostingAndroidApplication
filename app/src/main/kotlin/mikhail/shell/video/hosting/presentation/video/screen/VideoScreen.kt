@@ -44,10 +44,15 @@ import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -82,6 +87,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
+import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.isNull
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -127,7 +133,8 @@ fun VideoScreen(
     onView: () -> Unit,
     onDelete: () -> Unit,
     onUpdate: (Long) -> Unit,
-    onComment: (String) -> Unit = {},
+    onComment: (commentId: Long?, text: String) -> Unit = { _, _ -> },
+    onRemoveComment: (commentId: Long) -> Unit = {},
     onLoadComments: (before: Instant) -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {}
@@ -152,7 +159,26 @@ fun VideoScreen(
         )
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
-        Scaffold { padding ->
+        val snackbarHostState = remember { SnackbarHostState() }
+        LaunchedEffect(state.commentError) {
+            if (state.commentError != null) {
+                val message = when(state.commentError) {
+                    CommentError.TEXT_TOO_LARGE -> "Комментарий не должен превышать 200 символов"
+                    else -> "Непредвиденная ошибка"
+                }
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState
+                )
+            }
+        ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -240,8 +266,8 @@ fun VideoScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         if (channel.ownerId == userId) {
-                            var isDeletingDialogOpen by remember { mutableStateOf(false) }
-                            var isAdvancedDialogOpen by remember { mutableStateOf(false) }
+                            var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
+                            var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
                             Box {
                                 EditButton(
                                     modifier = Modifier.size(22.dp),
@@ -324,16 +350,18 @@ fun VideoScreen(
                             fontSize = 13.sp,
                             modifier = Modifier.padding(end = 5.dp)
                         )
-                        val subscriptionText = if (channel.subscription == SUBSCRIBED)
-                            "Отписаться"
-                        else "Подписаться"
+                        val subscriptionText = when (channel.subscription) {
+                            SUBSCRIBED -> "Отписаться"
+                            else -> "Подписаться"
+                        }
                         PrimaryButton(
                             text = subscriptionText,
                             isActivated = channel.subscription == SUBSCRIBED,
                             onClick = {
-                                val subscriptionState = if (channel.subscription == SUBSCRIBED)
-                                    NOT_SUBSCRIBED
-                                else SUBSCRIBED
+                                val subscriptionState = when (channel.subscription) {
+                                    SUBSCRIBED -> NOT_SUBSCRIBED
+                                    else -> SUBSCRIBED
+                                }
                                 onSubscribe(subscriptionState)
                             }
                         )
@@ -451,6 +479,7 @@ fun VideoScreen(
                                     userId = userId,
                                     comments = state.comments,
                                     onSubmit = onComment,
+                                    onRemoveComment = onRemoveComment,
                                     onObserve = onObserve,
                                     onUnobserve = onUnobserve,
                                     onLoad = onLoadComments,
@@ -487,7 +516,8 @@ fun CommentsBottomSheet(
     state: SheetState,
     comments: List<CommentModel>,
     commentError: Error? = null,
-    onSubmit: (String) -> Unit,
+    onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
+    onRemoveComment: (commentId: Long) -> Unit = {},
     onDismiss: () -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
@@ -505,6 +535,7 @@ fun CommentsBottomSheet(
                 .fillMaxHeight(0.4f)
                 .padding(10.dp),
         ) {
+            var initialCommentModel by remember { mutableStateOf(null as CommentModel?) }
             if (comments.isNotEmpty()) {
                 val lazyListState = rememberLazyListState()
                 val reachedBottom by remember { derivedStateOf { lazyListState.reachedBottom(4) } }
@@ -521,8 +552,15 @@ fun CommentsBottomSheet(
                                 .padding(top = 10.dp),
                             own = comment.userId == userId,
                             comment = comment,
+                            onEdit = { _, _ ->
+                                initialCommentModel = comment
+                            },
+                            onRemove = onRemoveComment
                         )
                     }
+                }
+                LaunchedEffect(comments) {
+                    initialCommentModel = null
                 }
                 LaunchedEffect(reachedBottom) {
                     if (reachedBottom) {
@@ -545,6 +583,7 @@ fun CommentsBottomSheet(
                 }
             }
             CommentForm(
+                initialCommentModel = initialCommentModel,
                 onSubmit = onSubmit,
                 commentError = commentError
             )
@@ -563,12 +602,37 @@ fun CommentsBottomSheet(
 fun CommentBox(
     modifier: Modifier = Modifier,
     own: Boolean = false,
-    comment: CommentModel
+    comment: CommentModel,
+    onEdit: (commentId: Long, text: String) -> Unit = { _, _ -> },
+    onRemove: (commentId: Long) -> Unit = {}
 ) {
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
     ) {
+        var isMenuVisible by rememberSaveable { mutableStateOf(false) }
+        if (isMenuVisible) {
+            ContextMenu(
+                isExpanded = isMenuVisible,
+                menuItems = listOf(
+                    MenuItem(
+                        title = "Редактировать",
+                        onClick = {
+                            onEdit(comment.commentId, comment.text)
+                        }
+                    ),
+                    MenuItem(
+                        title = "Удалить",
+                        onClick = {
+                            onRemove(comment.commentId)
+                        }
+                    )
+                ),
+                onDismiss = {
+                    isMenuVisible = false
+                }
+            )
+        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -591,6 +655,18 @@ fun CommentBox(
                         text = " - " + comment.dateTime.toPresentation(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (own) {
+                        IconButton(
+                            onClick = {
+                                isMenuVisible = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 }
                 Text(
                     text = comment.text,
@@ -626,13 +702,20 @@ fun CommentPreview() {
     }
 }
 
+enum class Mode {
+    ADD, EDIT
+}
 
 @Composable
 fun CommentForm(
-    onSubmit: (String) -> Unit = {},
+    initialCommentModel: CommentModel? = null,
+    onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
     commentError: Error? = null
 ) {
     var text by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(initialCommentModel) {
+        initialCommentModel?.let { text = it.text }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -692,7 +775,7 @@ fun CommentForm(
             isEnabled = text.isNotEmpty(),
             icon = Icons.Rounded.Send,
             onClick = {
-                onSubmit(text)
+                onSubmit(initialCommentModel?.commentId, text)
             }
         )
         LaunchedEffect(commentError) {

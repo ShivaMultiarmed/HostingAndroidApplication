@@ -27,9 +27,10 @@ import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
-import mikhail.shell.video.hosting.domain.usecases.comments.CreateComment
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.ObserveComments
+import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
+import mikhail.shell.video.hosting.domain.usecases.comments.SaveComment
 import mikhail.shell.video.hosting.domain.usecases.comments.UnobserveComments
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
@@ -47,7 +48,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _subscribe: Subscribe,
     private val _incrementViews: IncrementViews,
     private val _deleteVideo: DeleteVideo,
-    private val _createComment: CreateComment,
+    private val _saveComment: SaveComment,
+    private val _removeComment: RemoveComment,
     private val _getComments: GetComments,
     private val _observeComments: ObserveComments,
     private val _unobserveComments: UnobserveComments
@@ -199,10 +201,10 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun createComment(text: String) {
+    fun saveComment(commentId: Long?, text: String) {
         if (text.isNotEmpty()) {
             val comment = Comment(
-                commentId = null,
+                commentId = commentId,
                 videoId = videoId,
                 userId = userId,
                 dateTime = null,
@@ -215,7 +217,7 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
             val now = Clock.System.now()
             viewModelScope.launch {
-                _createComment(
+                _saveComment(
                     comment.copy(dateTime = now)
                 ).onSuccess {
                     _state.update {
@@ -231,6 +233,12 @@ class VideoScreenViewModel @AssistedInject constructor(
                     }
                 }
             }
+        }
+    }
+
+    fun removeComment(commentId: Long) {
+        viewModelScope.launch {
+            _removeComment(commentId)
         }
     }
 

@@ -58,10 +58,11 @@ fun NavGraphBuilder.videoRoute(
                     navController.navigate(Route.Video.Edit(it))
                 }
             },
-            onComment = videoScreenViewModel::createComment,
+            onComment = videoScreenViewModel::saveComment,
             onLoadComments = videoScreenViewModel::getComments,
             onObserve = videoScreenViewModel::observeComments,
-            onUnobserve = videoScreenViewModel::unobserveComments
+            onUnobserve = videoScreenViewModel::unobserveComments,
+            onRemoveComment = videoScreenViewModel::removeComment
         )
 
     }
