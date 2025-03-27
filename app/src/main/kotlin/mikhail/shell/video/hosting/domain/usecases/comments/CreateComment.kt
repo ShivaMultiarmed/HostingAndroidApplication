@@ -12,7 +12,7 @@ class CreateComment @Inject constructor(
 ) {
     suspend operator fun invoke(comment: Comment): Result<Unit, CompoundError<CreateCommentError>> {
         val compoundError = CompoundError<CreateCommentError>()
-        if (comment.text.length > 5000) {
+        if (comment.text.length > 200) {
             compoundError.add(CreateCommentError.TEXT_TOO_LARGE)
         }
         return if (compoundError.isNotNull()) {

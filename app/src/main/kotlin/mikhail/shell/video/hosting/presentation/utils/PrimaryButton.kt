@@ -22,9 +22,11 @@ fun PrimaryButton(
     text: String? = null,
     icon: ImageVector? = null,
     isActivated: Boolean = false,
+    isEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Button(
+        enabled = isEnabled,
         modifier = modifier,
         contentPadding = contentPadding,
         onClick = onClick,
@@ -60,9 +62,11 @@ fun PrimaryButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
     onClick: () -> Unit,
     isActivated: Boolean = false,
+    isEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
+        enabled = isEnabled,
         modifier = modifier,
         contentPadding = contentPadding,
         onClick = onClick,

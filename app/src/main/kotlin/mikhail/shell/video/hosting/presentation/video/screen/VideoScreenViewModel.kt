@@ -215,7 +215,21 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
             val now = Clock.System.now()
             viewModelScope.launch {
-                _createComment(comment.copy(dateTime = now))
+                _createComment(
+                    comment.copy(dateTime = now)
+                ).onSuccess {
+                    _state.update {
+                        it.copy(
+                            commentError = null
+                        )
+                    }
+                }.onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            commentError = error
+                        )
+                    }
+                }
             }
         }
     }

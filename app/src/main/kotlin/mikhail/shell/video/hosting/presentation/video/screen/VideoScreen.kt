@@ -8,6 +8,7 @@ import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -62,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +82,8 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.isNull
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -383,7 +387,8 @@ fun VideoScreen(
                             text = "Скачать",
                             onClick = {
                                 Intent(context, VideoDownloadingService::class.java).also {
-                                    it.action = "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
+                                    it.action =
+                                        "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
                                     it.putExtra("videoId", state.videoDetails.video.videoId!!)
                                     context.startService(it)
                                 }
@@ -414,13 +419,15 @@ fun VideoScreen(
                                     .background(MaterialTheme.colorScheme.secondaryContainer)
                                     .padding(vertical = 3.dp, horizontal = 10.dp)
                                     .clickable {
-                                        coroutineScope.launch {
-                                            sheetState.show()
-                                        }.invokeOnCompletion {
-                                            if (sheetState.isVisible) {
-                                                commentsVisible = true
+                                        coroutineScope
+                                            .launch {
+                                                sheetState.show()
                                             }
-                                        }
+                                            .invokeOnCompletion {
+                                                if (sheetState.isVisible) {
+                                                    commentsVisible = true
+                                                }
+                                            }
                                     }
                             ) {
                                 Text(
@@ -446,7 +453,8 @@ fun VideoScreen(
                                     onSubmit = onComment,
                                     onObserve = onObserve,
                                     onUnobserve = onUnobserve,
-                                    onLoad = onLoadComments
+                                    onLoad = onLoadComments,
+                                    commentError = state.commentError
                                 )
                             }
                         }
@@ -478,6 +486,7 @@ fun CommentsBottomSheet(
     userId: Long,
     state: SheetState,
     comments: List<CommentModel>,
+    commentError: Error? = null,
     onSubmit: (String) -> Unit,
     onDismiss: () -> Unit = {},
     onObserve: () -> Unit = {},
@@ -490,7 +499,7 @@ fun CommentsBottomSheet(
         modifier = Modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.background
     ) {
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.4f)
@@ -505,9 +514,10 @@ fun CommentsBottomSheet(
                         .weight(1f),
                     state = lazyListState
                 ) {
-                    items(comments) {comment ->
+                    items(comments) { comment ->
                         CommentBox(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(top = 10.dp),
                             own = comment.userId == userId,
                             comment = comment,
@@ -516,13 +526,15 @@ fun CommentsBottomSheet(
                 }
                 LaunchedEffect(reachedBottom) {
                     if (reachedBottom) {
-                        val earliestCommentDateTime = comments.lastOrNull()?.dateTime?: Clock.System.now()
+                        val earliestCommentDateTime =
+                            comments.lastOrNull()?.dateTime ?: Clock.System.now()
                         onLoad(earliestCommentDateTime)
                     }
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .weight(1f)
                         .background(MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center
@@ -533,7 +545,8 @@ fun CommentsBottomSheet(
                 }
             }
             CommentForm(
-                onSubmit = onSubmit
+                onSubmit = onSubmit,
+                commentError = commentError
             )
         }
     }
@@ -616,10 +629,11 @@ fun CommentPreview() {
 
 @Composable
 fun CommentForm(
-    onSubmit: (String) -> Unit = {}
+    onSubmit: (String) -> Unit = {},
+    commentError: Error? = null
 ) {
     var text by rememberSaveable { mutableStateOf("") }
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
@@ -639,6 +653,14 @@ fun CommentForm(
         BasicTextField(
             modifier = Modifier
                 .clip(RoundedCornerShape(5.dp))
+                .border(
+                    width = 1.dp,
+                    color = when (commentError) {
+                        null -> Color.Transparent
+                        else -> MaterialTheme.colorScheme.error
+                    },
+                    shape = RoundedCornerShape(5.dp)
+                )
                 .background(MaterialTheme.colorScheme.tertiaryContainer)
                 .weight(1f),
             value = text,
@@ -647,16 +669,17 @@ fun CommentForm(
                 text = it
             },
             textStyle = TextStyle(
-                fontSize = 14.sp
+                fontSize = 16.sp
             ),
             decorationBox = { innerText ->
                 Box(
                     modifier = Modifier.padding(5.dp)
-                )  {
+                ) {
                     if (text.isNotEmpty()) {
                         innerText()
                     } else {
                         Text(
+                            fontSize = 16.sp,
                             text = "Оставьте комментарий"
                         )
                     }
@@ -666,12 +689,17 @@ fun CommentForm(
         PrimaryButton(
             modifier = Modifier.height(25.dp),
             contentPadding = PaddingValues(0.dp),
+            isEnabled = text.isNotEmpty(),
             icon = Icons.Rounded.Send,
             onClick = {
                 onSubmit(text)
-                text = ""
             }
         )
+        LaunchedEffect(commentError) {
+            if (commentError.isNull()) {
+                text = ""
+            }
+        }
     }
 }
 
