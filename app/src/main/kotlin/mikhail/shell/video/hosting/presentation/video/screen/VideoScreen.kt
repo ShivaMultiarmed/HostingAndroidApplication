@@ -411,7 +411,7 @@ fun VideoScreen(
                                     .weight(1f)
                                     .padding(top = 10.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
                                     .padding(vertical = 3.dp, horizontal = 10.dp)
                                     .clickable {
                                         coroutineScope.launch {
@@ -487,7 +487,8 @@ fun CommentsBottomSheet(
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = MaterialTheme.colorScheme.background
     ) {
         Column (
             modifier = Modifier
@@ -506,7 +507,8 @@ fun CommentsBottomSheet(
                 ) {
                     items(comments) {comment ->
                         CommentBox(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
+                                .padding(top = 10.dp),
                             own = comment.userId == userId,
                             comment = comment,
                         )
@@ -623,7 +625,7 @@ fun CommentForm(
             .background(MaterialTheme.colorScheme.background)
             .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
             model = null, // TODO

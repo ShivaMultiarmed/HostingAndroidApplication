@@ -12,6 +12,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -53,6 +54,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
+    private var _collectCommentsJob: Job? = null
     init {
         player.addListener(
             object : Player.Listener {
@@ -239,7 +241,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
     fun observeComments() {
-        viewModelScope.launch {
+        _collectCommentsJob = viewModelScope.launch {
             _observeComments(videoId).collect(::handleCommentAction)
         }
     }
@@ -249,6 +251,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 comments = null
             )
         }
+        _collectCommentsJob?.cancel()
         _unobserveComments(videoId)
     }
 
