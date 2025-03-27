@@ -29,6 +29,7 @@ import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.comments.CreateComment
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.ObserveComments
+import mikhail.shell.video.hosting.domain.usecases.comments.UnobserveComments
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
@@ -47,7 +48,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _deleteVideo: DeleteVideo,
     private val _createComment: CreateComment,
     private val _getComments: GetComments,
-    private val _observeComments: ObserveComments
+    private val _observeComments: ObserveComments,
+    private val _unobserveComments: UnobserveComments
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
@@ -230,7 +232,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
-                        comments = (it.comments?: listOf()) + commentModels
+                        comments = ((it.comments?: listOf()) + commentModels).distinct()
                     )
                 }
             }
@@ -240,6 +242,14 @@ class VideoScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _observeComments(videoId).collect(::handleCommentAction)
         }
+    }
+    fun unobserveComments() {
+        _state.update {
+            it.copy(
+                comments = null
+            )
+        }
+        _unobserveComments(videoId)
     }
 
     private fun handleCommentAction(actionModel: ActionModel<CommentWithUser>) {

@@ -667,6 +667,7 @@ fun CommentForm(
             icon = Icons.Rounded.Send,
             onClick = {
                 onSubmit(text)
+                text = ""
             }
         )
     }

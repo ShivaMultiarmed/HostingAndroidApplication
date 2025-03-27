@@ -106,6 +106,6 @@ class NotificationService: FirebaseMessagingService() {
     private companion object {
         const val CHANNEL_TOPIC_PREFIX = "channels"
         const val COMMENTS_TOPIC_TEMPLATE = "videos.{video_id}.comments"
-        val COMMENTS_TOPIC_REGEX = "^videos\\..+\\.comments$".toRegex()
+        val COMMENTS_TOPIC_REGEX = "^/topics/videos\\..+\\.comments$".toRegex()
     }
 }

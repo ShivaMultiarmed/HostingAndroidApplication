@@ -60,12 +60,8 @@ fun NavGraphBuilder.videoRoute(
             },
             onComment = videoScreenViewModel::createComment,
             onLoadComments = videoScreenViewModel::getComments,
-            onObserve = {
-
-            },
-            onUnobserve = {
-
-            }
+            onObserve = videoScreenViewModel::observeComments,
+            onUnobserve = videoScreenViewModel::unobserveComments
         )
 
     }
