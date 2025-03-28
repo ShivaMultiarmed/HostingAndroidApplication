@@ -858,8 +858,8 @@ fun CommentFormPreview() {
 //    )
 //}
 
-fun Instant.toPresentation(): String {
-    val dateTime = this.toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()
+fun Instant.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
+    val dateTime = this.toLocalDateTime(timeZone).toJavaLocalDateTime()
     return dateTime.toPresentation()
 }
 
