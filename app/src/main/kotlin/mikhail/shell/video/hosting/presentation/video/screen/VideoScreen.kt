@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -87,9 +88,11 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
+import mikhail.shell.video.hosting.domain.Action
+import mikhail.shell.video.hosting.domain.ActionModel
 import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.isNull
+import mikhail.shell.video.hosting.domain.errors.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -159,26 +162,7 @@ fun VideoScreen(
         )
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
-        val snackbarHostState = remember { SnackbarHostState() }
-        LaunchedEffect(state.commentError) {
-            if (state.commentError != null) {
-                val message = when(state.commentError) {
-                    CommentError.TEXT_TOO_LARGE -> "Комментарий не должен превышать 200 символов"
-                    else -> "Непредвиденная ошибка"
-                }
-                snackbarHostState.showSnackbar(
-                    message = message,
-                    duration = SnackbarDuration.Short
-                )
-            }
-        }
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState
-                )
-            }
-        ) { padding ->
+        Scaffold { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -428,23 +412,30 @@ fun VideoScreen(
                             .fillMaxWidth()
                             .padding(top = 16.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer)
                             .padding(10.dp)
                     ) {
                         var commentsVisible by rememberSaveable { mutableStateOf(false) }
                         val sheetState = rememberModalBottomSheetState()
                         Text(
-                            text = "Комментарии"
+                            text = "Комментарии",
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+                            val leaveCommentBg = tertiaryContainer.copy(
+                                red = tertiaryContainer.red - 10f / 255,
+                                green = tertiaryContainer.green - 10f / 255,
+                                blue = tertiaryContainer.blue - 10f / 255
+                            )
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(top = 10.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    .background(leaveCommentBg)
                                     .padding(vertical = 3.dp, horizontal = 10.dp)
                                     .clickable {
                                         coroutineScope
@@ -461,7 +452,7 @@ fun VideoScreen(
                                 Text(
                                     text = "Оставьте комментарий",
                                     fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
                             }
                         }
@@ -483,7 +474,8 @@ fun VideoScreen(
                                     onObserve = onObserve,
                                     onUnobserve = onUnobserve,
                                     onLoad = onLoadComments,
-                                    commentError = state.commentError
+                                    commentError = state.commentError,
+                                    actionComment = state.actionComment
                                 )
                             }
                         }
@@ -516,6 +508,7 @@ fun CommentsBottomSheet(
     state: SheetState,
     comments: List<CommentModel>,
     commentError: Error? = null,
+    actionComment: ActionModel<CommentModel>? = null,
     onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
     onRemoveComment: (commentId: Long) -> Unit = {},
     onDismiss: () -> Unit = {},
@@ -582,10 +575,42 @@ fun CommentsBottomSheet(
                     )
                 }
             }
+            val snackbarHostState = remember { SnackbarHostState() }
+            SnackbarHost(snackbarHostState)
+            LaunchedEffect(commentError) {
+                commentError?.let {
+                    val message = when(it) {
+                        CommentError.TEXT_TOO_LARGE -> "Комментарий не должен превышать 200 символов"
+                        CommentError.NOT_FOUND -> "Комментарий не найден"
+                        CommentError.TEXT_EMPTY -> "Комментарий пустой"
+                        GetCommentsError.VIDEO_NOT_FOUND -> "Комментарии к видео не найдены"
+                        GetCommentsError.USER_NOT_FOUND -> "Пользователь не указан"
+                        else -> "Непредвиденная ошибка"
+                    }
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+            LaunchedEffect(actionComment) {
+                actionComment?.let {
+                    val message = when(it.action) {
+                        Action.ADD -> "Комментарий добавлен"
+                        Action.REMOVE -> "Комментарий удалён"
+                        Action.UPDATE -> "Комментарий изменён"
+                    }
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
             CommentForm(
                 initialCommentModel = initialCommentModel,
                 onSubmit = onSubmit,
-                commentError = commentError
+                commentError = commentError,
+                actionComment = actionComment
             )
         }
     }
@@ -646,17 +671,18 @@ fun CommentBox(
                 contentScale = ContentScale.Crop
             )
             Column {
-                Row {
+                Row(
+                    modifier = Modifier.fillMaxWidth(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = comment.name,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = " - " + comment.dateTime.toPresentation(),
+                        text = comment.name + " - " + comment.dateTime.toPresentation(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (own) {
                         IconButton(
+                            modifier = Modifier.size(20.dp),
                             onClick = {
                                 isMenuVisible = true
                             }
@@ -697,19 +723,17 @@ fun CommentPreview() {
         val commentModel = commentWithUser.toModel()
         CommentBox(
             modifier = Modifier.fillMaxWidth(),
-            comment = commentModel
+            comment = commentModel,
+            own = true
         )
     }
-}
-
-enum class Mode {
-    ADD, EDIT
 }
 
 @Composable
 fun CommentForm(
     initialCommentModel: CommentModel? = null,
     onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
+    actionComment: ActionModel<CommentModel>? = null,
     commentError: Error? = null
 ) {
     var text by rememberSaveable { mutableStateOf("") }
@@ -770,7 +794,8 @@ fun CommentForm(
             }
         )
         PrimaryButton(
-            modifier = Modifier.height(25.dp),
+            modifier = Modifier.height(25.dp)
+                .width(35.dp),
             contentPadding = PaddingValues(0.dp),
             isEnabled = text.isNotEmpty(),
             icon = Icons.Rounded.Send,
@@ -778,8 +803,8 @@ fun CommentForm(
                 onSubmit(initialCommentModel?.commentId, text)
             }
         )
-        LaunchedEffect(commentError) {
-            if (commentError.isNull()) {
+        LaunchedEffect(actionComment) {
+            if (actionComment?.action != Action.REMOVE) {
                 text = ""
             }
         }

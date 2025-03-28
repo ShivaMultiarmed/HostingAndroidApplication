@@ -21,6 +21,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.domain.Action
 import mikhail.shell.video.hosting.domain.ActionModel
+import mikhail.shell.video.hosting.domain.errors.GetCommentsError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
@@ -256,7 +257,14 @@ class VideoScreenViewModel @AssistedInject constructor(
                 val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
+                        commentError = if (it.commentError is GetCommentsError) null else it.commentError,
                         comments = ((it.comments?: listOf()) + commentModels).distinct()
+                    )
+                }
+            }.onFailure { err ->
+                _state.update {
+                    it.copy(
+                        commentError = err
                     )
                 }
             }
@@ -278,7 +286,15 @@ class VideoScreenViewModel @AssistedInject constructor(
     }
 
     private fun handleCommentAction(actionModel: ActionModel<CommentWithUser>) {
+        val action = actionModel.action
         val commentModel = actionModel.model.toModel()
+        if (commentModel.userId == userId) {
+            _state.update {
+                it.copy(
+                    actionComment = ActionModel(action, commentModel)
+                )
+            }
+        }
         when(actionModel.action) {
             Action.ADD -> {
                 _state.update {
