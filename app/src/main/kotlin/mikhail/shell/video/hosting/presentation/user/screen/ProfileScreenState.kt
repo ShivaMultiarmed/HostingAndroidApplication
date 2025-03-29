@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.profile.screen
+package mikhail.shell.video.hosting.presentation.user.screen
 
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.models.Channel

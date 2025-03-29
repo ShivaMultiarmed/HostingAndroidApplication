@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.profile.edit
+package mikhail.shell.video.hosting.presentation.user.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -100,9 +100,8 @@ class EditUserViewModel @AssistedInject constructor(
         nick = input.nick,
         name = input.name.takeIf { it.isNotEmpty() },
         avatar = input.avatar,
-        age = input.age.takeIf { it.isNotEmpty() }?.toByte(),
         bio = input.bio.takeIf { it.isNotEmpty() },
-        tel = input.tel.takeIf { it.isNotEmpty() }?.toInt(),
+        tel = input.tel.takeIf { it.isNotEmpty() }?.substring(1)?.toInt(),
         email = input.email.takeIf { it.isNotEmpty() }
     )
 
@@ -110,9 +109,6 @@ class EditUserViewModel @AssistedInject constructor(
         val compoundError = CompoundError<EditUserError>()
         if (input.nick.isEmpty()) {
             compoundError.add(EditUserError.NICK_EMPTY)
-        }
-        if (input.age.toInt() !in 0..127) {
-            compoundError.add(EditUserError.AGE_MALFORMED)
         }
         val telRegex = Regex("^\\+\\d{11,15}$")
         if (!telRegex.matches(input.tel) && input.tel.isNotEmpty()) {

@@ -53,7 +53,7 @@ fun NavGraphBuilder.channelRoute(
                 coroutineScope.launch {
                     viewModel.removeChannel(it)
                     delay(1000)
-                    navController.navigate(Route.User.Profile)
+                    navController.navigate(Route.User.Profile(userId))
                 }
             },
             owns = userId == state.channel?.ownerId

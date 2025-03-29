@@ -14,7 +14,9 @@ sealed class Route {
     @Serializable
     data object User: Route() {
         @Serializable
-        data object Profile: Route()
+        data class Profile(val userId: Long): Route()
+        @Serializable
+        data object Edit: Route()
         @Serializable
         data object Subscriptions: Route()
         @Serializable

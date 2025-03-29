@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.profile.edit
+package mikhail.shell.video.hosting.presentation.user.edit
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.EditUserError

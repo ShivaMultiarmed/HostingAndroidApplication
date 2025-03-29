@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.Delete
@@ -31,6 +32,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,7 +52,8 @@ fun InputField(
     maxLines: Int = 1,
     readOnly: Boolean = false,
     icon: ImageVector? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
@@ -60,6 +63,7 @@ fun InputField(
             modifier = modifier.onFocusChanged {
                 focused = it.isFocused
             },
+            keyboardOptions = if (secure) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
             value = value,
             onValueChange = onValueChange,
             label = {
@@ -161,7 +165,7 @@ fun EditField(
         val actionsBlock = createRef()
         field()
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .constrainAs(actionsBlock) {
                     end.linkTo(parent.end, margin = 10.dp)
                     top.linkTo(parent.top, margin = 10.dp)

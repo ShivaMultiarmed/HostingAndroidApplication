@@ -9,20 +9,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.Route
-import mikhail.shell.video.hosting.presentation.profile.screen.ProfileScreen
-import mikhail.shell.video.hosting.presentation.profile.screen.ProfileViewModel
+import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
+import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
     composable<Route.User.Profile> {
-        val userId = userDetailsProvider.getUserId()
-        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> {
-            it.create(userId)
-        }
+        val bundle = it.toRoute<Route.User.Profile>()
+        val userId = bundle.userId
+        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         ProfileScreen(
@@ -46,14 +46,17 @@ fun NavGraphBuilder.profileRoute(
                     clear()
                     commit()
                 }
-                navController.navigate(Route.Authentication)
+                navController.navigate(Route.Authentication) {
+                    // TODO clear backstack
+                }
             },
             onInvite = {
                 navController.navigate(Route.User.Invite)
             },
             onOpenSettings = {
                 navController.navigate(Route.User.Settings)
-            }
+            },
+            isOwner = userId == userDetailsProvider.getUserId()
         )
     }
 }

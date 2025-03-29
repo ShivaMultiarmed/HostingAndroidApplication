@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.profile.screen
+package mikhail.shell.video.hosting.presentation.user.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +43,7 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     state: ProfileScreenState,
+    isOwner: Boolean = false,
     onGoToChannel: (Long) -> Unit,
     onPublishVideo: () -> Unit,
     onCreateChannel: () -> Unit,

@@ -10,12 +10,14 @@ fun NavGraphBuilder.userGraph(
     navController: NavController,
     userDetailsProvider: UserDetailsProvider
 ) {
+    val userId = userDetailsProvider.getUserId()
     navigation<Route.User>(
-        startDestination = Route.User.Profile
+        startDestination = Route.User.Profile(userId)
     ) {
         profileRoute(navController, userDetailsProvider)
         subscriptionsRoute(navController, userDetailsProvider)
         settingsRoute(navController)
         inviteUserRoute(navController)
+        editUserRoute(navController, userDetailsProvider)
     }
 }
