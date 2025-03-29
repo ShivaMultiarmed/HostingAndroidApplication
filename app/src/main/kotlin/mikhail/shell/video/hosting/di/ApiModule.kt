@@ -15,6 +15,7 @@ import mikhail.shell.video.hosting.BuildConfig
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.CommentApi
+import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.converters.InstantConverter
 import mikhail.shell.video.hosting.data.converters.LocalDateTimeDeserializer
@@ -133,6 +134,11 @@ object ApiModule {
         retrofit: Retrofit
     ) = retrofit.create<CommentApi>()
 
+    @Provides
+    @Singleton
+    fun provideUserApi(
+        retrofit: Retrofit
+    ) = retrofit.create<UserApi>()
 
     @Provides
     @Singleton

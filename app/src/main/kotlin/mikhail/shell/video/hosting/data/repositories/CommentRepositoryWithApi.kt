@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.data
+package mikhail.shell.video.hosting.data.repositories
 
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging

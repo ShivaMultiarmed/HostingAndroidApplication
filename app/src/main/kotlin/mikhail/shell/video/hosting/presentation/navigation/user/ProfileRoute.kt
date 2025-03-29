@@ -11,8 +11,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.Route
-import mikhail.shell.video.hosting.presentation.profile.ProfileScreen
-import mikhail.shell.video.hosting.presentation.profile.ProfileViewModel
+import mikhail.shell.video.hosting.presentation.profile.screen.ProfileScreen
+import mikhail.shell.video.hosting.presentation.profile.screen.ProfileViewModel
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,

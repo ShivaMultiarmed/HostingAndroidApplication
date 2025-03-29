@@ -7,11 +7,3 @@ data class SignUpDto(
     val password: String,
     val userDto: UserDto
 )
-
-data class UserDto(
-    val userId: Long?,
-    val name: String
-)
-
-fun User.toDto() = UserDto(userId, name)
-fun UserDto.toDomain() = User(userId, name)
