@@ -62,12 +62,13 @@ class UserRepositoryWithApi @Inject constructor(
             Result.Success(editedUser)
         } catch (e: HttpException) {
             val error = when(e.code()) {
-                404 -> CompoundError(EditUserError.USER_NOT_FOUND)
-                403 -> {
+                400 -> {
                     val type = object : TypeToken<CompoundError<EditUserError>>() {}.type
                     val json = e.response()?.errorBody()?.string()
                     gson.fromJson(json, type)
                 }
+                401, 403 -> CompoundError(EditUserError.FORBIDDEN)
+                404 -> CompoundError(EditUserError.USER_NOT_FOUND)
                 else -> CompoundError(EditUserError.UNEXPECTED)
             }
             Result.Failure(error)
@@ -83,6 +84,7 @@ class UserRepositoryWithApi @Inject constructor(
             Result.Success(Unit)
         } catch (e: HttpException) {
             val error = when(e.code()) {
+                401, 403 -> RemoveUserError.FORBIDDEN
                 404 -> RemoveUserError.NOT_FOUND
                 else -> RemoveUserError.UNEXPECTED
             }
