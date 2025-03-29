@@ -10,5 +10,7 @@ enum class EditUserError: Error {
     TEL_MALFORMED,
     EMAIL_MALFORMED,
     EMAIL_TOO_LARGE,
+    AVATAR_TOO_LARGE,
+    AVATAR_MIME_NOT_SUPPORTED,
     UNEXPECTED
 }

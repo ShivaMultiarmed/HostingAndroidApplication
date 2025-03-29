@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
                                 Route.Video::class.qualifiedName
                             )
                         ) {
+                            val userId = userDetailsProvider.getUserId()
                             BottomNavBar(
                                 onClick = {
                                     navController.navigate(it.route) {
@@ -85,7 +86,8 @@ class MainActivity : ComponentActivity() {
                                         launchSingleTop = true
                                         restoreState = true
                                     }
-                                }
+                                },
+                                userId = userId
                             )
                         }
                     }

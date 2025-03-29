@@ -4,7 +4,6 @@ package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Intent
 import android.content.res.Configuration
-import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -80,7 +79,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -123,7 +121,7 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import java.time.Duration
 import java.time.LocalDateTime
 
-@OptIn(UnstableApi::class)
+
 @Composable
 fun VideoScreen(
     userId: Long,
@@ -677,7 +675,7 @@ fun CommentBox(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = comment.name + " - " + comment.dateTime.toPresentation(),
+                        text = comment.nick + " - " + comment.dateTime.toPresentation(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (own) {
@@ -717,7 +715,7 @@ fun CommentPreview() {
         )
         val user = User(
             100500,
-            "Иван Васильевич"
+            nick = "Иван Васильевич"
         )
         val commentWithUser = CommentWithUser(comment, user)
         val commentModel = commentWithUser.toModel()

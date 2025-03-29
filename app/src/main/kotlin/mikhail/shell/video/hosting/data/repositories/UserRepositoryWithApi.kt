@@ -26,6 +26,8 @@ class UserRepositoryWithApi @Inject constructor(
     private val fileProvider: FileProvider,
     private val gson: Gson
 ): UserRepository {
+    private val MAX_FILE_SIZE = 10 * 1024 * 1024
+
     override suspend fun get(userId: Long): Result<User, GetUserError> {
         return try {
             val userDto = userApi.get(userId)
@@ -47,19 +49,32 @@ class UserRepositoryWithApi @Inject constructor(
         avatar: String?,
         avatarAction: EditAction
     ): Result<User, CompoundError<EditUserError>> {
+        val compoundError = CompoundError<EditUserError>()
         return try {
             val userDto = user.toDto()
             val avatarPart = avatar?.let {
                 val uri = Uri.parse(it)
+                if (fileProvider.getFileMimeType(uri)!!.substringBefore("/") != "image") {
+                    compoundError.add(EditUserError.AVATAR_MIME_NOT_SUPPORTED)
+                    return@let null
+                }
+                if (fileProvider.getFileSize(uri)!! > MAX_FILE_SIZE) {
+                    compoundError.add(EditUserError.AVATAR_TOO_LARGE)
+                    return@let null
+                }
                 val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
                 val mimeType = fileProvider.getFileMimeType(uri)
                 val mediaType = mimeType?.toMediaTypeOrNull()
                 val requestBody = bytes?.toRequestBody(contentType = mediaType)
                 requestBody?.let(MultipartBody.Part::create)
             }
-            val editedUserDto = userApi.edit(userDto, avatarAction, avatarPart)
-            val editedUser = editedUserDto.toDomain()
-            Result.Success(editedUser)
+            if (compoundError.isNotNull()) {
+                return Result.Failure(compoundError)
+            } else {
+                val editedUserDto = userApi.edit(userDto, avatarAction, avatarPart)
+                val editedUser = editedUserDto.toDomain()
+                Result.Success(editedUser)
+            }
         } catch (e: HttpException) {
             val error = when(e.code()) {
                 400 -> {

@@ -24,10 +24,12 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.domain.errors.EditUserError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -50,6 +53,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
@@ -306,9 +310,38 @@ fun EditUserScreen(
                             bio = it
                         },
                         placeholder = "Описание",
+                        errorMsg = bioError,
                         maxLines = 50,
                     )
                 }
+                PrimaryButton(
+                    needsCaution = true,
+                    text = "Удалить аккаунт",
+                    isActivated = state.isRemoving || state.isRemovalConfirmed == true,
+                    onClick = onRemove
+                )
+            }
+        }
+        LaunchedEffect(state.editedUser) {
+            state.editedUser?.let {
+                delay(1000)
+                snackbarHostState.showSnackbar(
+                    message = "Профиль успешно отредактирован",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short
+                )
+                onEditSuccess(it.userId!!)
+            }
+        }
+        LaunchedEffect(state.isRemovalConfirmed) {
+            if (state.isRemovalConfirmed == true) {
+                delay(1000)
+                snackbarHostState.showSnackbar(
+                    message = "Вы удалили свой аккаунт",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Long
+                )
+                onRemoveSuccess()
             }
         }
     } else if (state.isInitializing) {

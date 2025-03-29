@@ -13,7 +13,6 @@ import mikhail.shell.video.hosting.domain.errors.SignUpError.EMAIL_EMPTY
 import mikhail.shell.video.hosting.domain.errors.SignUpError.EMAIL_INVALID
 import mikhail.shell.video.hosting.domain.errors.SignUpError.NAME_EMPTY
 import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORD_EMPTY
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
@@ -52,7 +51,7 @@ class SignUpWithPasswordViewModel @Inject constructor(
         val compoundError = validateSignUpInput(signUpInputState)
         if (compoundError == null) {
             val user = User(
-                name = signUpInputState.name
+                nick = signUpInputState.name
             )
             viewModelScope.launch {
                 _signUpWithPassword(

@@ -7,7 +7,7 @@ import mikhail.shell.video.hosting.domain.models.CommentWithUser
 data class CommentModel(
     val userId: Long,
     val commentId: Long,
-    val name: String,
+    val nick: String,
     val text: String,
     val dateTime: Instant
 )
@@ -15,7 +15,7 @@ data class CommentModel(
 fun CommentWithUser.toModel() = CommentModel(
     userId = user.userId!!,
     commentId = comment.commentId!!,
-    name = user.name,
+    nick = user.nick,
     text = comment.text,
     dateTime = comment.dateTime?: Clock.System.now()
 )

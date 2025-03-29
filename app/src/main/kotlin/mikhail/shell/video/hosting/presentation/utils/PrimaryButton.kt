@@ -23,6 +23,7 @@ fun PrimaryButton(
     icon: ImageVector? = null,
     isActivated: Boolean = false,
     isEnabled: Boolean = true,
+    needsCaution: Boolean = false,
     onClick: () -> Unit
 ) {
     Button(
@@ -32,7 +33,8 @@ fun PrimaryButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = when {
-                !isActivated -> MaterialTheme.colorScheme.primary
+                !isActivated && !needsCaution -> MaterialTheme.colorScheme.primary
+                !isActivated && needsCaution -> MaterialTheme.colorScheme.error
                 else -> MaterialTheme.colorScheme.tertiaryContainer
             },
             contentColor = when {
@@ -63,6 +65,7 @@ fun PrimaryButton(
     onClick: () -> Unit,
     isActivated: Boolean = false,
     isEnabled: Boolean = true,
+    needsCaution: Boolean = false,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
@@ -71,10 +74,15 @@ fun PrimaryButton(
         contentPadding = contentPadding,
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (!isActivated) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = if (!isActivated) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onTertiaryContainer,
+            containerColor = when {
+                !isActivated && !needsCaution -> MaterialTheme.colorScheme.primary
+                !isActivated && needsCaution -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.tertiaryContainer
+            },
+            contentColor = when {
+                !isActivated -> MaterialTheme.colorScheme.onPrimary
+                else -> MaterialTheme.colorScheme.onTertiaryContainer
+            },
         ),
         content = content
     )

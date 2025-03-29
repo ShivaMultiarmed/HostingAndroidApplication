@@ -11,8 +11,9 @@ fun NavGraphBuilder.settingsRoute(
 ) {
     composable<Route.User.Settings> {
         SettingsScreen(
-            onPopup = {
-                navController.popBackStack()
+            onPopup = navController::popBackStack,
+            onEdit = {
+                navController.navigate(Route.User.Edit)
             }
         )
     }

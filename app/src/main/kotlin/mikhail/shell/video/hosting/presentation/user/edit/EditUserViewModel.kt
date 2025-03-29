@@ -97,11 +97,12 @@ class EditUserViewModel @AssistedInject constructor(
     }
 
     private fun getUserFromInput(input: EditUserInputState) = User(
+        userId = userId,
         nick = input.nick,
         name = input.name.takeIf { it.isNotEmpty() },
         avatar = input.avatar,
         bio = input.bio.takeIf { it.isNotEmpty() },
-        tel = input.tel.takeIf { it.isNotEmpty() }?.substring(1)?.toInt(),
+        tel = input.tel.takeIf { it.isNotEmpty() }?.substring(1),
         email = input.email.takeIf { it.isNotEmpty() }
     )
 
@@ -114,7 +115,7 @@ class EditUserViewModel @AssistedInject constructor(
         if (!telRegex.matches(input.tel) && input.tel.isNotEmpty()) {
             compoundError.add(EditUserError.TEL_MALFORMED)
         }
-        val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}\$")
+        val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
         if (!emailRegex.matches(input.email) && input.email.isNotEmpty()) {
             compoundError.add(EditUserError.EMAIL_MALFORMED)
         }

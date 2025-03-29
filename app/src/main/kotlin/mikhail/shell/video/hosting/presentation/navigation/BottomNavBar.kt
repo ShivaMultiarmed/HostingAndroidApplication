@@ -49,8 +49,8 @@ sealed class BottomNavItem(
         Icons.Rounded.Search
     )
 
-    data object Profile : BottomNavItem(
-        Route.User.Profile,
+    data class Profile(val userId: Long) : BottomNavItem(
+        Route.User.Profile(userId),
         "Профиль",
         Icons.Outlined.Person,
         Icons.Rounded.Person
@@ -59,13 +59,14 @@ sealed class BottomNavItem(
 
 @Composable
 fun BottomNavBar(
-    onClick: (BottomNavItem) -> Unit
+    onClick: (BottomNavItem) -> Unit,
+    userId: Long
 ) {
     BottomNavBar(
         navItems = listOf(
             BottomNavItem.Subscriptions,
             BottomNavItem.Search,
-            BottomNavItem.Profile
+            BottomNavItem.Profile(userId)
         ),
         onClick = onClick,
     )

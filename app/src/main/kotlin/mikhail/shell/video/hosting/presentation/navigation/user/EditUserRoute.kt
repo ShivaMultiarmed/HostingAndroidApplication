@@ -25,6 +25,7 @@ fun NavGraphBuilder.editUserRoute(
         val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         EditUserScreen(
             state = state,
+            onInitialize = viewModel::loadUser,
             onEdit = viewModel::editUser,
             onEditSuccess = {
                 navController.navigate(Route.User.Profile(userId))
@@ -38,7 +39,8 @@ fun NavGraphBuilder.editUserRoute(
                 navController.navigate(Route.Authentication) {
                     // TODO clear backstack
                 }
-            }
+            },
+            onPopup = navController::popBackStack
         )
     }
 }

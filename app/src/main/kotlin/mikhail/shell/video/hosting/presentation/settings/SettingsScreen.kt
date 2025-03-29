@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BorderColor
 import androidx.compose.material.icons.rounded.ModeNight
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,7 +36,8 @@ import mikhail.shell.video.hosting.ui.theme.setTheme
 
 @Composable
 fun SettingsScreen(
-    onPopup: () -> Unit = {}
+    onPopup: () -> Unit = {},
+    onEdit: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -44,12 +48,26 @@ fun SettingsScreen(
         topBar = {
             TopBar(
                 title = "Настройки",
-                onPopup = onPopup
+                onPopup = onPopup,
+                actions = listOf(
+                    {
+                        IconButton(
+                            onClick = onEdit
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.BorderColor,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                contentDescription = "Вернуться назад"
+                            )
+                        }
+                    }
+                )
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
                 .padding(10.dp)
                 .verticalScroll(scrollState)
