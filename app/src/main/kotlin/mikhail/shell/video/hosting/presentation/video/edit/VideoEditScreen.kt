@@ -9,14 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.DensitySmall
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.MaterialTheme
@@ -73,7 +71,6 @@ fun VideoEditScreen(
         var coverUri by rememberSaveable{ mutableStateOf<Uri?>(null) }
         var title by rememberSaveable { mutableStateOf(video.title) }
         var coverAction by rememberSaveable { mutableStateOf(KEEP) }
-        var description by rememberSaveable { mutableStateOf("") }
         Scaffold (
             modifier = modifier
                 .fillMaxSize()
@@ -121,25 +118,6 @@ fun VideoEditScreen(
                         errorMsg = titleErrMsg,
                         placeholder = "Название",
                         icon = Icons.Rounded.Title
-                    )
-                }
-                StandardEditField(
-                    firstTime = false,
-                    updated = description != "", // TODO state.initialVideo.description
-                    empty = description.isEmpty(),
-                    onRevert = { description = "" },
-                    onDelete = { description = "" }
-                ) {
-                    InputField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        value = description,
-                        onValueChange = {
-                            description = it
-                        },
-                        placeholder = "Описание",
-                        icon = Icons.Rounded.DensitySmall
                     )
                 }
                 val coverPicker = rememberLauncherForActivityResult(

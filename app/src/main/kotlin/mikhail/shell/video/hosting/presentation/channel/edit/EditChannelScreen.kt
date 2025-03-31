@@ -120,7 +120,7 @@ fun EditChannelScreen(
                     "Название слишком большое"
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = title != (initialChannel.title),
                     empty = title.isEmpty(),
@@ -143,7 +143,7 @@ fun EditChannelScreen(
                     )
                 }
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = alias != (initialChannel.alias?: ""),
                     empty = alias.isEmpty(),
@@ -165,7 +165,7 @@ fun EditChannelScreen(
                     )
                 }
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = description != (initialChannel.description?: ""),
                     empty = description.isEmpty(),
@@ -196,7 +196,7 @@ fun EditChannelScreen(
                     }
                 Column {
                     StandardEditField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier,
                         firstTime = false,
                         updated = avatarAction == UPDATE || avatarAction == REMOVE && avatarExists == true,
                         empty = !(avatarUri != null || avatarExists == true && avatarAction != REMOVE),
@@ -271,7 +271,7 @@ fun EditChannelScreen(
                     }
                 Column {
                     StandardEditField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier,
                         firstTime = false,
                         updated = coverAction == UPDATE || coverAction == REMOVE && coverExists == true,
                         empty = !(coverUri != null || coverExists == true && coverAction != REMOVE),

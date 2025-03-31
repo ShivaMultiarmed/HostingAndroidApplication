@@ -195,17 +195,11 @@ fun StandardEditField(
 ) {
     val actionList = mutableListOf<ActionItem>()
     if (!firstTime && updated) {
-        actionList.add(
-            RevertingItem(
-                reverting = onRevert
-            )
-        )
+        actionList.add(RevertingItem(reverting = onRevert))
     }
-    if (!empty) actionList.add(
-        DeletingItem(
-            deleting = onDelete
-        )
-    )
+    if (!empty) {
+        actionList.add(DeletingItem(deleting = onDelete))
+    }
     EditField(
         modifier = modifier,
         actionItems = actionList,

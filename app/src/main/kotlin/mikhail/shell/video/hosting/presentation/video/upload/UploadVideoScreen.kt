@@ -102,7 +102,6 @@ fun UploadVideoScreen(
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
-        var description by rememberSaveable { mutableStateOf("") }
         Scaffold(
             topBar = {
                 TopBar(
@@ -113,7 +112,6 @@ fun UploadVideoScreen(
                         val input = UploadVideoInput(
                             channelId = channelId,
                             title = title,
-                            description = description,
                             source = sourceUri,
                             cover = coverUri,
                         )
@@ -340,30 +338,6 @@ fun UploadVideoScreen(
                             contentScale = ContentScale.Crop,
                             painter = rememberAsyncImagePainter(coverUri),
                             contentDescription = "Обложка для видео"
-                        )
-                    }
-
-
-                    EditField(
-                        actionItems = if (description.isEmpty()) emptyList() else listOf(
-                            ActionItem(
-                                icon = Icons.Rounded.Delete,
-                                action = {
-                                    description = ""
-                                }
-                            )
-                        )
-                    ) {
-                        InputField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp),
-                            value = description,
-                            onValueChange = {
-                                description = it
-                            },
-                            placeholder = "Описание",
-                            icon = Icons.Rounded.DensityMedium
                         )
                     }
                 }

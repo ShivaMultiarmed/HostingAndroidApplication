@@ -109,7 +109,7 @@ fun EditUserScreen(
                     "Никнейм больше 255 символов"
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = nick != state.initialUser.nick,
                     empty = nick.isEmpty(),
@@ -135,7 +135,7 @@ fun EditUserScreen(
                     "Имя больше 255 символов"
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = name != (state.initialUser.name ?: ""),
                     empty = name.isEmpty(),
@@ -167,7 +167,7 @@ fun EditUserScreen(
                 var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
                 Column {
                     StandardEditField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier,
                         firstTime = false,
                         updated = avatarAction == UPDATE || avatarAction == REMOVE && avatarExists == true,
                         empty = !(avatarUri != null || avatarExists == true && avatarAction != REMOVE),
@@ -236,7 +236,7 @@ fun EditUserScreen(
                     "Введите корректный номер телефона"
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = tel != (state.initialUser.tel?: ""),
                     empty = tel.isEmpty(),
@@ -265,7 +265,7 @@ fun EditUserScreen(
                     "Email больше чем 255 символов"
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = email != (state.initialUser.email?: ""),
                     empty = email.isEmpty(),
@@ -292,7 +292,7 @@ fun EditUserScreen(
                     "Описание больше 5000 символов."
                 } else null
                 StandardEditField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     firstTime = false,
                     updated = bio != (state.initialUser.bio?: ""),
                     empty = bio.isEmpty(),

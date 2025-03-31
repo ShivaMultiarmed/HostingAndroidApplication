@@ -26,10 +26,7 @@ fun NavGraphBuilder.uploadVideoRoute(
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
         val player = ExoPlayer.Builder(context).build()
-        val viewModel =
-            hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory> {
-                it.create(userId, player)
-            }
+        val viewModel = hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         UploadVideoScreen(
