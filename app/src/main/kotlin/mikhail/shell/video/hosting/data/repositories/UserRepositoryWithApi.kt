@@ -1,6 +1,8 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.net.Uri
+import android.util.Log
+import android.webkit.MimeTypeMap
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.UserApi
@@ -65,8 +67,9 @@ class UserRepositoryWithApi @Inject constructor(
                 val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
                 val mimeType = fileProvider.getFileMimeType(uri)
                 val mediaType = mimeType?.toMediaTypeOrNull()
+                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
                 val requestBody = bytes?.toRequestBody(contentType = mediaType)
-                requestBody?.let(MultipartBody.Part::create)
+                requestBody?.let { MultipartBody.Part.createFormData("avatar", "avatar.$extension", it) }
             }
             if (compoundError.isNotNull()) {
                 return Result.Failure(compoundError)
@@ -88,7 +91,8 @@ class UserRepositoryWithApi @Inject constructor(
             }
             Result.Failure(error)
         } catch (e: Exception) {
-            val error = CompoundError(EditUserError.USER_NOT_FOUND)
+            Log.e("UserRepositoryWithApi", e.stackTraceToString())
+            val error = CompoundError(EditUserError.UNEXPECTED)
             Result.Failure(error)
         }
     }

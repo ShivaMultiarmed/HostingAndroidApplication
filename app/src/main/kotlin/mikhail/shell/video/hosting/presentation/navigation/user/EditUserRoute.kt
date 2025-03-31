@@ -24,6 +24,7 @@ fun NavGraphBuilder.editUserRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         EditUserScreen(
+            userId = userId,
             state = state,
             onInitialize = viewModel::loadUser,
             onEdit = viewModel::editUser,
@@ -37,7 +38,9 @@ fun NavGraphBuilder.editUserRoute(
                     commit()
                 }
                 navController.navigate(Route.Authentication) {
-                    // TODO clear backstack
+                    popUpTo<Route.Authentication.SignIn> {
+                        inclusive = true
+                    }
                 }
             },
             onPopup = navController::popBackStack

@@ -60,6 +60,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 @Composable
 fun EditUserScreen(
     state: EditUserScreenState,
+    userId: Long,
     onInitialize: () -> Unit = {},
     onEdit: (EditUserInputState) -> Unit = {},
     onEditSuccess: (userId: Long) -> Unit = {},
@@ -88,7 +89,7 @@ fun EditUserScreen(
                     title = "Редактировать профиль",
                     onPopup = onPopup,
                     onSubmit = {
-                        val input = EditUserInputState(nick, name, avatarUri?.path, avatarAction, bio, tel, email)
+                        val input = EditUserInputState(nick, name, avatarUri?.toString(), avatarAction, bio, tel, email)
                         onEdit(input)
                     },
                     inProgress = state.isEditing || state.isRemoving
@@ -330,7 +331,7 @@ fun EditUserScreen(
                     withDismissAction = true,
                     duration = SnackbarDuration.Short
                 )
-                onEditSuccess(it.userId!!)
+                onEditSuccess(userId)
             }
         }
         LaunchedEffect(state.isRemovalConfirmed) {

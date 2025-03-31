@@ -62,7 +62,10 @@ fun NavGraphBuilder.videoRoute(
             onLoadComments = videoScreenViewModel::getComments,
             onObserve = videoScreenViewModel::observeComments,
             onUnobserve = videoScreenViewModel::unobserveComments,
-            onRemoveComment = videoScreenViewModel::removeComment
+            onRemoveComment = videoScreenViewModel::removeComment,
+            onGoToProfile = {
+                navController.navigate(Route.User.Profile(it))
+            }
         )
 
     }

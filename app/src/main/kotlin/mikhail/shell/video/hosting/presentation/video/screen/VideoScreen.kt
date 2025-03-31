@@ -138,7 +138,8 @@ fun VideoScreen(
     onRemoveComment: (commentId: Long) -> Unit = {},
     onLoadComments: (before: Instant) -> Unit = {},
     onObserve: () -> Unit = {},
-    onUnobserve: () -> Unit = {}
+    onUnobserve: () -> Unit = {},
+    onGoToProfile: (userId: Long) -> Unit = {}
 ) {
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
@@ -473,7 +474,8 @@ fun VideoScreen(
                                     onUnobserve = onUnobserve,
                                     onLoad = onLoadComments,
                                     commentError = state.commentError,
-                                    actionComment = state.actionComment
+                                    actionComment = state.actionComment,
+                                    onGoToProfile = onGoToProfile
                                 )
                             }
                         }
@@ -512,7 +514,8 @@ fun CommentsBottomSheet(
     onDismiss: () -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
-    onLoad: (Instant) -> Unit
+    onLoad: (Instant) -> Unit = {},
+    onGoToProfile: (userId: Long) -> Unit = {}
 ) {
     ModalBottomSheet(
         sheetState = state,
@@ -546,7 +549,8 @@ fun CommentsBottomSheet(
                             onEdit = { _, _ ->
                                 initialCommentModel = comment
                             },
-                            onRemove = onRemoveComment
+                            onRemove = onRemoveComment,
+                            onGoToProfile = onGoToProfile
                         )
                     }
                 }
@@ -627,7 +631,8 @@ fun CommentBox(
     own: Boolean = false,
     comment: CommentModel,
     onEdit: (commentId: Long, text: String) -> Unit = { _, _ -> },
-    onRemove: (commentId: Long) -> Unit = {}
+    onRemove: (commentId: Long) -> Unit = {},
+    onGoToProfile: (userId: Long) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -642,12 +647,14 @@ fun CommentBox(
                         title = "Редактировать",
                         onClick = {
                             onEdit(comment.commentId, comment.text)
+                            isMenuVisible = false
                         }
                     ),
                     MenuItem(
                         title = "Удалить",
                         onClick = {
                             onRemove(comment.commentId)
+                            isMenuVisible = false
                         }
                     )
                 ),
@@ -663,7 +670,10 @@ fun CommentBox(
                 modifier = Modifier
                     .size(25.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
+                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                    .clickable {
+                        onGoToProfile(comment.userId)
+                    },
                 model = null, // TODO
                 contentDescription = null,
                 contentScale = ContentScale.Crop

@@ -11,18 +11,45 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
+import mikhail.shell.video.hosting.domain.usecases.user.GetUser
+import mikhail.shell.video.hosting.presentation.user.toModel
 
 @HiltViewModel(assistedFactory = ProfileViewModel.Factory::class)
 class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
+    private val _getUser: GetUser,
     private val _getChannelsByOwner: GetChannelsByOwner
 ): ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
     val state = _state.asStateFlow()
     init {
+        loadProfile()
         loadChannels()
     }
-    fun loadProfile() {}
+    fun loadProfile() {
+        _state.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch {
+            _getUser(userId).onSuccess {  user ->
+                val userModel = user.toModel()
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        user = userModel,
+                        userError = null
+                    )
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        userError = error
+                    )
+                }
+            }
+        }
+    }
     fun loadChannels() {
         _state.update {
             it.copy(isLoading = true)
