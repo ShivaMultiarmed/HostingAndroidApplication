@@ -19,5 +19,5 @@ interface CommentApi {
         @Query("before") before: Instant
     ): List<CommentWithUserDto>
     @DELETE("comments/remove")
-    suspend fun remove(@Query("videoId") videoId: Long)
+    suspend fun remove(@Query("commentId") commentId: Long)
 }

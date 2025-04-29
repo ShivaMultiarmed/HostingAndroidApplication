@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PipRow
-import mikhail.shell.video.hosting.presentation.utils.PlayerComponent
+import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 
 @Composable
 fun MiniPlayer(
