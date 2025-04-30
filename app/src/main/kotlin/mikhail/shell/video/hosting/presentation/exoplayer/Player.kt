@@ -16,8 +16,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -30,11 +32,13 @@ import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
+import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -58,9 +62,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.Player
@@ -341,59 +345,84 @@ fun PlayerControls(
                 contentDescription = "Вперёд"
             )
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-
-                .constrainAs(seekBar) {
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val density = LocalDensity.current
-            BoxWithConstraints(
+        if (duration >= 0) {
+            Column(
                 modifier = Modifier
-                    .height(50.dp)
-                    .padding(10.dp)
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .constrainAs(seekBar) {
+                        bottom.linkTo(parent.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
             ) {
-                val width = constraints.maxWidth
-                val height = constraints.maxHeight
-                val primaryColor = MaterialTheme.colorScheme.primary
-                val progress = position.toFloat() / duration
-                Canvas(
+                Row(
                     modifier = Modifier
-                        .matchParentSize()
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, _ ->
-                                val newProgress = (change.position.x / size.width).coerceIn(0f..1f)
-                                val newPosition = (newProgress * duration).toLong()
-                                coroutineScope.launch {
-                                    onSeek(newPosition)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    val currentPositionString = millisToDurationString(position)
+                    val overallDurationString = millisToDurationString(duration)
+                    Text(
+                        text = "$currentPositionString / $overallDurationString",
+                        color = Color.White,
+                        fontSize = 11.sp
+                    )
+                    IconButton(
+                        onClick = {
+                            // TODO: enter fullscreen/part mode
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Fullscreen, // TODO: change to fullscreen/part mode
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                }
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(35.dp)
+                        .padding(horizontal = 15.dp)
+                ) {
+                    val width = constraints.maxWidth
+                    val height = constraints.maxHeight
+                    val primaryColor = MaterialTheme.colorScheme.primary
+                    val progress = position.toFloat() / duration
+                    Canvas(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, _ ->
+                                    val newProgress = (change.position.x / size.width).coerceIn(0f..1f)
+                                    val newPosition = (newProgress * duration).toLong()
+                                    coroutineScope.launch {
+                                        onSeek(newPosition)
+                                    }
                                 }
                             }
-                        }
-                ) {
-                    val barHeight = 12f
-                    drawRoundRect(
-                        color = Color(200f, 200f, 200f, 0.7f),
-                        topLeft = Offset(0f, height / 2f),
-                        size = Size(width.toFloat(), barHeight),
-                        cornerRadius = CornerRadius(barHeight)
-                    )
-                    drawRoundRect(
-                        color = primaryColor,
-                        topLeft = Offset(0f, height / 2f),
-                        size = Size(width * progress, barHeight),
-                        cornerRadius = CornerRadius(barHeight)
-                    )
-                    drawCircle(
-                        color = primaryColor,
-                        radius = 1.3f * barHeight,
-                        center = Offset(width * progress, height / 2f + barHeight / 2)
-                    )
+                    ) {
+                        val barHeight = 12f
+                        drawRoundRect(
+                            color = Color(200f, 200f, 200f, 0.7f),
+                            topLeft = Offset(0f, height / 2f - barHeight * 3f),
+                            size = Size(width.toFloat(), barHeight),
+                            cornerRadius = CornerRadius(barHeight)
+                        )
+                        drawRoundRect(
+                            color = primaryColor,
+                            topLeft = Offset(0f, height / 2f - barHeight * 3f),
+                            size = Size(width * progress, barHeight),
+                            cornerRadius = CornerRadius(barHeight)
+                        )
+                        drawCircle(
+                            color = primaryColor,
+                            radius = 1.3f * barHeight,
+                            center = Offset(width * progress, height / 2f - barHeight * 3f + barHeight / 2)
+                        )
+                    }
                 }
             }
         }
@@ -443,6 +472,27 @@ fun createStadiumShape(direction: ShapeDirection): Shape {
         close()
     }
 }
+
+fun millisToDurationString(millis: Long): String {
+    val totalSecs = millis / 1000
+    val stringBuilder = StringBuilder()
+    val secs = totalSecs % 60
+    stringBuilder.insert(0, secs)
+    if (secs < 10) {
+        stringBuilder.insert(0, "0")
+    }
+    val mins = totalSecs / 60 % 60
+    stringBuilder.insert(0, "$mins:")
+    val hours = totalSecs / 60 / 60
+    if (hours > 0) {
+        if (mins < 10) {
+            stringBuilder.insert(0, "0")
+        }
+        stringBuilder.insert(0, "$hours:")
+    }
+    return stringBuilder.toString()
+}
+
 
 @Composable
 @Preview
