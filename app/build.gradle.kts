@@ -105,10 +105,7 @@ dependencies {
     kapt (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
     testImplementation(libs.hilt.android.testing)
-    testImplementation(libs.hilt.android.testing)
-
     androidTestImplementation(libs.hilt.android.testing)
-    testImplementation(libs.hilt.android.testing)
 
     implementation (libs.retrofit)
     implementation(libs.converter.gson)

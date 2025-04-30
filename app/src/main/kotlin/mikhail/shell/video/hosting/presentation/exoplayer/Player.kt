@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -23,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -58,6 +59,8 @@ fun PlayerComponent(
     modifier: Modifier = Modifier,
     player: Player
 ) {
+    var isPlaying by rememberSaveable { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16 / 9f) }
@@ -66,6 +69,9 @@ fun PlayerComponent(
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 aspectRatio = videoSize.pixelWidthHeightRatio
             }
+            override fun onIsPlayingChanged(newIsPlaying: Boolean) {
+                isPlaying = newIsPlaying
+            }
         }
     }
     Box(
@@ -73,8 +79,23 @@ fun PlayerComponent(
             .aspectRatio(if (aspectRatio > 1f) aspectRatio else 16f / 9)
             .background(MaterialTheme.colorScheme.onBackground),
     ) {
+        var showControls by rememberSaveable { mutableFloatStateOf(0f) }
+        val animatedShowControls by animateFloatAsState(
+            targetValue = showControls,
+            animationSpec = tween(
+                durationMillis = 100
+            )
+        )
         AndroidView(
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier
+                .matchParentSize()
+                .clickable {
+                    coroutineScope.launch {
+                        showControls = 1f
+                        delay(3 * 1000)
+                        showControls = 0f
+                    }
+                },
             factory = {
                 PlayerView(it).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -90,10 +111,27 @@ fun PlayerComponent(
                 it.player!!.removeListener(playerListener)
             }
         )
-        PlayerControls(
-            modifier = Modifier.matchParentSize(),
-            player = player
-        )
+
+        if (animatedShowControls > 0f) {
+            PlayerControls(
+                modifier = Modifier
+                    .matchParentSize()
+                    .alpha(animatedShowControls),
+                isPlaying = isPlaying,
+                onPlay = player::play,
+                onPause = player::pause,
+                onSeekBack = {
+                    val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
+                    player.seekTo(newPosition)
+                    delay(500)
+                },
+                onSeekForward = {
+                    val newPosition = (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
+                    player.seekTo(newPosition)
+                    delay(1500)
+                },
+            )
+        }
     }
     DisposableEffect(Unit) {
         val audioManager = context.getSystemService(AudioManager::class.java)
@@ -125,29 +163,18 @@ fun PlayerComponent(
     }
 }
 
-@kotlin.OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlayerControls(
     modifier: Modifier = Modifier,
-    player: Player
+    isPlaying: Boolean,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onSeekBack: suspend () -> Unit,
+    onSeekForward: suspend () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var showControls by rememberSaveable { mutableFloatStateOf(0f) }
-    val animatedShowControls by animateFloatAsState(
-        targetValue = showControls,
-        animationSpec = tween(
-            durationMillis = 100
-        )
-    )
     ConstraintLayout(
         modifier = modifier
-            .clickable {
-                coroutineScope.launch {
-                    showControls = 1f
-                    delay(3 * 1000)
-                    showControls = 0f
-                }
-            }
     ) {
         val (playBtn, seekBack, seekForward, seekBar) = createRefs()
         IconButton(
@@ -162,15 +189,18 @@ fun PlayerControls(
                     end.linkTo(parent.end)
                 },
             onClick = {
-                if (player.isPlaying) {
-                    player.pause()
+                if (isPlaying) {
+                    onPause()
                 } else {
-                    player.play()
+                    onPlay()
                 }
             }
         ) {
             Icon(
-                imageVector = Icons.Rounded.PlayArrow,
+                imageVector = when(isPlaying) {
+                    true -> Icons.Rounded.Pause
+                    false -> Icons.Rounded.PlayArrow
+                },
                 tint = Color.Black,
                 modifier = Modifier.size(28.dp),
                 contentDescription = "Кнопка проигрывания"
@@ -201,12 +231,9 @@ fun PlayerControls(
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekBackProgress = 1f
-                            val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
-                            player.seekTo(newPosition)
-                            delay(1000)
+                            onSeekBack()
                             seekBackProgress = 0f
                         }
-
                     }
                 )
         )
@@ -235,9 +262,7 @@ fun PlayerControls(
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekForwardProgress = 1f
-                            val newPosition = (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
-                            player.seekTo(newPosition)
-                            delay(1500)
+                            onSeekForward()
                             seekForwardProgress = 0f
                         }
                     }
