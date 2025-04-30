@@ -11,13 +11,19 @@ import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
@@ -31,8 +37,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,10 +50,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -54,6 +67,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -64,21 +78,33 @@ fun PlayerComponent(
     modifier: Modifier = Modifier,
     player: Player
 ) {
-    var isPlaying by rememberSaveable { mutableStateOf(true) }
+    var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
+    var position by rememberSaveable { mutableLongStateOf(0L) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16 / 9f) }
+    var progressUpdatingJob: Job? = null
     val playerListener = remember {
         object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 aspectRatio = videoSize.pixelWidthHeightRatio
             }
+
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 isPlaying = newIsPlaying
             }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                position = newPosition.positionMs
+            }
         }
     }
+
     Box(
         modifier = modifier
             .aspectRatio(if (aspectRatio > 1f) aspectRatio else 16f / 9)
@@ -122,6 +148,8 @@ fun PlayerComponent(
                 modifier = Modifier
                     .matchParentSize()
                     .alpha(animatedShowControls),
+                position = position,
+                duration = player.duration,
                 isPlaying = isPlaying,
                 onPlay = player::play,
                 onPause = player::pause,
@@ -131,11 +159,24 @@ fun PlayerComponent(
                     delay(500)
                 },
                 onSeekForward = {
-                    val newPosition = (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
+                    val newPosition =
+                        (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
                     player.seekTo(newPosition)
                     delay(1500)
                 },
+                onSeek = {
+                    player.seekTo(it)
+                    delay(300)
+                },
             )
+        }
+    }
+    LaunchedEffect(Unit) {
+         progressUpdatingJob = coroutineScope.launch {
+            while(true) {
+                position = player.currentPosition
+                delay(1000)
+            }
         }
     }
     DisposableEffect(Unit) {
@@ -172,8 +213,11 @@ fun PlayerComponent(
 fun PlayerControls(
     modifier: Modifier = Modifier,
     isPlaying: Boolean,
+    position: Long,
+    duration: Long,
     onPlay: () -> Unit,
     onPause: () -> Unit,
+    onSeek: suspend (Long) -> Unit,
     onSeekBack: suspend () -> Unit,
     onSeekForward: suspend () -> Unit
 ) {
@@ -202,7 +246,7 @@ fun PlayerControls(
             }
         ) {
             Icon(
-                imageVector = when(isPlaying) {
+                imageVector = when (isPlaying) {
                     true -> Icons.Rounded.Pause
                     false -> Icons.Rounded.PlayArrow
                 },
@@ -297,6 +341,62 @@ fun PlayerControls(
                 contentDescription = "Вперёд"
             )
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+
+                .constrainAs(seekBar) {
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val density = LocalDensity.current
+            BoxWithConstraints(
+                modifier = Modifier
+                    .height(50.dp)
+                    .padding(10.dp)
+                    .weight(1f)
+            ) {
+                val width = constraints.maxWidth
+                val height = constraints.maxHeight
+                val primaryColor = MaterialTheme.colorScheme.primary
+                val progress = position.toFloat() / duration
+                Canvas(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, _ ->
+                                val newProgress = (change.position.x / size.width).coerceIn(0f..1f)
+                                val newPosition = (newProgress * duration).toLong()
+                                coroutineScope.launch {
+                                    onSeek(newPosition)
+                                }
+                            }
+                        }
+                ) {
+                    val barHeight = 12f
+                    drawRoundRect(
+                        color = Color(200f, 200f, 200f, 0.7f),
+                        topLeft = Offset(0f, height / 2f),
+                        size = Size(width.toFloat(), barHeight),
+                        cornerRadius = CornerRadius(barHeight)
+                    )
+                    drawRoundRect(
+                        color = primaryColor,
+                        topLeft = Offset(0f, height / 2f),
+                        size = Size(width * progress, barHeight),
+                        cornerRadius = CornerRadius(barHeight)
+                    )
+                    drawCircle(
+                        color = primaryColor,
+                        radius = 1.3f * barHeight,
+                        center = Offset(width * progress, height / 2f + barHeight / 2)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -353,7 +453,10 @@ fun PlayerControlsPreview() {
             onPlay = {},
             onPause = {},
             onSeekForward = {},
-            onSeekBack = {}
+            onSeekBack = {},
+            position = 0,
+            duration = 100500,
+            onSeek = {}
         )
     }
 }
