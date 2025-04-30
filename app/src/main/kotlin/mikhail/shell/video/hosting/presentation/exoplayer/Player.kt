@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.FastForward
+import androidx.compose.material.icons.rounded.FastRewind
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -43,6 +46,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -52,6 +56,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -83,7 +88,7 @@ fun PlayerComponent(
         val animatedShowControls by animateFloatAsState(
             targetValue = showControls,
             animationSpec = tween(
-                durationMillis = 100
+                durationMillis = 150
             )
         )
         AndroidView(
@@ -181,7 +186,7 @@ fun PlayerControls(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(Color(255f, 255f, 255f, 0.7f))
                 .constrainAs(playBtn) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
@@ -201,7 +206,7 @@ fun PlayerControls(
                     true -> Icons.Rounded.Pause
                     false -> Icons.Rounded.PlayArrow
                 },
-                tint = Color.Black,
+                tint = Color(0f, 0f, 0f, 0.8f),
                 modifier = Modifier.size(28.dp),
                 contentDescription = "Кнопка проигрывания"
             )
@@ -223,20 +228,32 @@ fun PlayerControls(
                     start.linkTo(parent.start)
                 }
                 .clip(createStadiumShape(ShapeDirection.Ltr))
+                .alpha(animatedSeekBackProgress)
                 .background(
-                    Color(255f, 255f, 255f, 0.3f * animatedSeekBackProgress)
+                    Color(255f, 255f, 255f, 0.3f)
                 )
                 .combinedClickable(
                     onClick = {},
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekBackProgress = 1f
-                            onSeekBack()
+                            launch {
+                                onSeekBack()
+                            }
+                            delay(150)
                             seekBackProgress = 0f
                         }
                     }
-                )
-        )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(25.dp),
+                tint = Color(0f, 0f, 0f, 0.6f),
+                imageVector = Icons.Rounded.FastRewind,
+                contentDescription = "Назад"
+            )
+        }
         var seekForwardProgress by rememberSaveable { mutableFloatStateOf(0f) }
         val animatedSeekForwardProgress by animateFloatAsState(
             targetValue = seekForwardProgress,
@@ -254,20 +271,32 @@ fun PlayerControls(
                     end.linkTo(parent.end)
                 }
                 .clip(createStadiumShape(ShapeDirection.Rtl))
+                .alpha(animatedSeekForwardProgress)
                 .background(
-                    Color(255f, 255f, 255f, 0.3f * animatedSeekForwardProgress)
+                    Color(255f, 255f, 255f, 0.3f)
                 )
                 .combinedClickable(
                     onClick = {},
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekForwardProgress = 1f
-                            onSeekForward()
+                            launch {
+                                onSeekForward()
+                            }
+                            delay(150)
                             seekForwardProgress = 0f
                         }
                     }
-                )
-        )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(25.dp),
+                tint = Color(0f, 0f, 0f, 0.6f),
+                imageVector = Icons.Rounded.FastForward,
+                contentDescription = "Вперёд"
+            )
+        }
     }
 }
 
@@ -277,16 +306,16 @@ enum class ShapeDirection {
 
 fun createStadiumShape(direction: ShapeDirection): Shape {
     return GenericShape { size, _ ->
-        val radius = size.height / 1.5f
+        val diameter = size.height / 1.5f
         if (direction == ShapeDirection.Ltr) {
             moveTo(0f, 0f)
-            lineTo(size.width - radius / 1.2f, 0f)
+            lineTo(size.width - diameter / 1.2f, 0f)
             arcTo(
                 rect = Rect(
-                    size.width - 2 * radius,
-                    0f,
+                    size.width - diameter,
+                    -0.2f * size.height,
                     size.width,
-                    size.height
+                    1.2f * size.height
                 ),
                 startAngleDegrees = 270f,
                 sweepAngleDegrees = 180f,
@@ -296,13 +325,13 @@ fun createStadiumShape(direction: ShapeDirection): Shape {
             lineTo(0f, 0f)
         } else {
             moveTo(size.width, 0f)
-            lineTo(radius / 1.2f, 0f)
+            lineTo(diameter / 1.2f, 0f)
             arcTo(
                 rect = Rect(
                     0f,
-                    0f,
-                    2 * radius,
-                    size.height
+                    -0.2f * size.height,
+                    diameter,
+                    1.2f * size.height
                 ),
                 startAngleDegrees = 270f,
                 sweepAngleDegrees = -180f,
@@ -312,5 +341,19 @@ fun createStadiumShape(direction: ShapeDirection): Shape {
             lineTo(size.width, 0f)
         }
         close()
+    }
+}
+
+@Composable
+@Preview
+fun PlayerControlsPreview() {
+    VideoHostingTheme {
+        PlayerControls(
+            isPlaying = false,
+            onPlay = {},
+            onPause = {},
+            onSeekForward = {},
+            onSeekBack = {}
+        )
     }
 }
