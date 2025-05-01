@@ -4,6 +4,7 @@ package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -60,6 +61,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -102,6 +104,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
+import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.models.CommentModel
 import mikhail.shell.video.hosting.presentation.models.toModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
@@ -111,7 +114,6 @@ import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
@@ -139,8 +141,10 @@ fun VideoScreen(
     onLoadComments: (before: Instant) -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
-    onGoToProfile: (userId: Long) -> Unit = {}
+    onGoToProfile: (userId: Long) -> Unit = {},
+    onFullScreen: (Boolean) -> Unit = {}
 ) {
+    val activity = LocalActivity.current
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
             onView()
@@ -149,6 +153,8 @@ fun VideoScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     if (state.videoDetails != null) {
+        var isFullScreen by rememberSaveable { mutableStateOf(false) }
+        var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
         val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
         val idealMinVideoHeight = 9f / 16 * idealVideoWidth
@@ -161,6 +167,7 @@ fun VideoScreen(
         )
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
+        val orientation = LocalConfiguration.current.orientation
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -171,315 +178,331 @@ fun VideoScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.onSurface)
+                        .then(
+                            if (!isFullScreen) {
+                                Modifier
+                            } else {
+                                Modifier.fillMaxHeight()
+                            }
+                        )
+                        .background(MaterialTheme.colorScheme.onSurface),
+                    contentAlignment = Alignment.Center
                 ) {
                     PlayerComponent(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9),
-//                            .then(
-//                                when {
-//                                    (videoInfoExpanded && animatedHeight < idealMaxVideoHeight
-//                                            || !videoInfoExpanded && animatedHeight >= idealMinVideoHeight)
-//                                            && (player.playerError != null || player.isLoading) -> Modifier.height(animatedHeight)
-//                                    else -> Modifier.wrapContentHeight()
-//                                }
-//                            )
-                        player = player
+                            .then(
+                                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                    Modifier.fillMaxHeight()
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                }
+                            )
+                            .aspectRatio(aspectRatio),
+                        player = player,
+                        onRatioObtained = {
+                            aspectRatio = it
+                        },
+                        isFullScreen = isFullScreen,
+                        onFullscreen = {
+                            isFullScreen = it
+                            onFullScreen(isFullScreen)
+                        }
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Black)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 10.dp,
-                                topEnd = 10.dp
-                            )
-                        )
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(12.dp)
-                        .verticalScroll(scrollState)
-                        .draggable(
-                            orientation = Orientation.Vertical,
-                            state = rememberDraggableState {
-                                if (it < -50f) {
-                                    videoInfoExpanded = true
-                                } else if (it > 50f) {
-                                    videoInfoExpanded = false
-                                }
-                            }
-                        )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = video.title,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 20.sp,
-                            maxLines = 2,
-                            lineHeight = 22.sp
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
-                            .padding(vertical = 7.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = video.views.toViews(),
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = video.dateTime.toPresentation(),
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 16.sp
-                        )
-                        Text(
-                            text = "Ещё",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        if (channel.ownerId == userId) {
-                            var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
-                            var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
-                            Box {
-                                EditButton(
-                                    modifier = Modifier.size(22.dp),
-                                    imageVector = Icons.Rounded.MoreVert,
-                                    onClick = {
-                                        isAdvancedDialogOpen = true
-                                    }
-                                )
-                                if (isAdvancedDialogOpen) {
-                                    ContextMenu(
-                                        modifier = Modifier,
-                                        isExpanded = true,
-                                        menuItems = listOf(
-                                            MenuItem(
-                                                title = "Редактировать",
-                                                onClick = {
-                                                    onUpdate(video.videoId!!)
-                                                }
-                                            ),
-                                            MenuItem(
-                                                title = "Удалить",
-                                                onClick = {
-                                                    isDeletingDialogOpen = true
-                                                }
-                                            )
-                                        ),
-                                        onDismiss = {
-                                            isAdvancedDialogOpen = false
-                                        }
-                                    )
-                                }
-                            }
-                            if (isDeletingDialogOpen) {
-                                Dialog(
-                                    onSubmit = onDelete,
-                                    onDismiss = {
-                                        isDeletingDialogOpen = false
-                                    },
-                                    dialogTitle = "Удалить видео",
-                                    dialogDescription = "Вы уверены, что хотите продолжить?"
-                                )
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .clickable { onChannelLinkClick(channel.channelId!!) }
-                                .weight(1f),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AsyncImage(
-                                model = channel.avatarUrl,
-                                contentDescription = "Ссылка на канал",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                            )
-                            Text(
-                                text = channel.title,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 13.dp),
-                                fontSize = 15.sp,
-                                lineHeight = 17.sp,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1
-                            )
-                        }
-                        Text(
-                            text = channel.subscribers.toSubscribers() + " \uD83D\uDC64",
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(end = 5.dp)
-                        )
-                        val subscriptionText = when (channel.subscription) {
-                            SUBSCRIBED -> "Отписаться"
-                            else -> "Подписаться"
-                        }
-                        PrimaryButton(
-                            text = subscriptionText,
-                            isActivated = channel.subscription == SUBSCRIBED,
-                            onClick = {
-                                val subscriptionState = when (channel.subscription) {
-                                    SUBSCRIBED -> NOT_SUBSCRIBED
-                                    else -> SUBSCRIBED
-                                }
-                                onSubscribe(subscriptionState)
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        val likeVector =
-                            when (video.liking) {
-                                LIKED -> Icons.Rounded.ThumbUp
-                                else -> Icons.Outlined.ThumbUp
-                            }
-
-                        ActionButton(
-                            icon = likeVector,
-                            text = video.likes.toString(),
-                            onClick = {
-                                if (video.liking != LIKED)
-                                    onRate(LIKED)
-                                else
-                                    onRate(NONE)
-                            }
-                        )
-                        val dislikeVector =
-                            when (video.liking) {
-                                DISLIKED -> Icons.Rounded.ThumbDown
-                                else -> Icons.Outlined.ThumbDown
-                            }
-                        ActionButton(
-                            icon = dislikeVector,
-                            text = video.dislikes.toString(),
-                            onClick = {
-                                if (video.liking != DISLIKED)
-                                    onRate(DISLIKED)
-                                else
-                                    onRate(NONE)
-                            }
-                        )
-                        ActionButton(
-                            icon = Icons.Outlined.Repeat,
-                            text = "Поделиться",
-                            onClick = {
-
-                            }
-                        )
-                        ActionButton(
-                            icon = Icons.Outlined.Download,
-                            text = "Скачать",
-                            onClick = {
-                                Intent(context, VideoDownloadingService::class.java).also {
-                                    it.action =
-                                        "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
-                                    it.putExtra("videoId", state.videoDetails.video.videoId!!)
-                                    context.startService(it)
-                                }
-                            }
-                        )
-                    }
+                if (!isFullScreen) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.tertiaryContainer)
-                            .padding(10.dp)
-                    ) {
-                        var commentsVisible by rememberSaveable { mutableStateOf(false) }
-                        val sheetState = rememberModalBottomSheetState()
-                        Text(
-                            text = "Комментарии",
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
-                            val leaveCommentBg = tertiaryContainer.copy(
-                                red = tertiaryContainer.red - 10f / 255,
-                                green = tertiaryContainer.green - 10f / 255,
-                                blue = tertiaryContainer.blue - 10f / 255
+                            .background(Black)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 10.dp,
+                                    topEnd = 10.dp
+                                )
                             )
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(top = 10.dp)
-                                    .clip(CircleShape)
-                                    .background(leaveCommentBg)
-                                    .padding(vertical = 3.dp, horizontal = 10.dp)
-                                    .clickable {
-                                        coroutineScope
-                                            .launch {
-                                                sheetState.show()
-                                            }
-                                            .invokeOnCompletion {
-                                                if (sheetState.isVisible) {
-                                                    commentsVisible = true
-                                                }
-                                            }
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(12.dp)
+                            .verticalScroll(scrollState)
+                            .draggable(
+                                orientation = Orientation.Vertical,
+                                state = rememberDraggableState {
+                                    if (it < -50f) {
+                                        videoInfoExpanded = true
+                                    } else if (it > 50f) {
+                                        videoInfoExpanded = false
                                     }
+                                }
+                            )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = video.title,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 20.sp,
+                                maxLines = 2,
+                                lineHeight = 22.sp
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(vertical = 7.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = video.views.toViews(),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = video.dateTime.toPresentation(),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 16.sp
+                            )
+                            Text(
+                                text = "Ещё",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (channel.ownerId == userId) {
+                                var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
+                                var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
+                                Box {
+                                    EditButton(
+                                        modifier = Modifier.size(22.dp),
+                                        imageVector = Icons.Rounded.MoreVert,
+                                        onClick = {
+                                            isAdvancedDialogOpen = true
+                                        }
+                                    )
+                                    if (isAdvancedDialogOpen) {
+                                        ContextMenu(
+                                            modifier = Modifier,
+                                            isExpanded = true,
+                                            menuItems = listOf(
+                                                MenuItem(
+                                                    title = "Редактировать",
+                                                    onClick = {
+                                                        onUpdate(video.videoId!!)
+                                                    }
+                                                ),
+                                                MenuItem(
+                                                    title = "Удалить",
+                                                    onClick = {
+                                                        isDeletingDialogOpen = true
+                                                    }
+                                                )
+                                            ),
+                                            onDismiss = {
+                                                isAdvancedDialogOpen = false
+                                            }
+                                        )
+                                    }
+                                }
+                                if (isDeletingDialogOpen) {
+                                    Dialog(
+                                        onSubmit = onDelete,
+                                        onDismiss = {
+                                            isDeletingDialogOpen = false
+                                        },
+                                        dialogTitle = "Удалить видео",
+                                        dialogDescription = "Вы уверены, что хотите продолжить?"
+                                    )
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .clickable { onChannelLinkClick(channel.channelId!!) }
+                                    .weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                AsyncImage(
+                                    model = channel.avatarUrl,
+                                    contentDescription = "Ссылка на канал",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                )
                                 Text(
-                                    text = "Оставьте комментарий",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    text = channel.title,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 13.dp),
+                                    fontSize = 15.sp,
+                                    lineHeight = 17.sp,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1
                                 )
                             }
-                        }
-                        if (commentsVisible) {
-                            LaunchedEffect(Unit) {
-                                val now = Clock.System.now()
-                                onLoadComments(now)
+                            Text(
+                                text = channel.subscribers.toSubscribers() + " \uD83D\uDC64",
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(end = 5.dp)
+                            )
+                            val subscriptionText = when (channel.subscription) {
+                                SUBSCRIBED -> "Отписаться"
+                                else -> "Подписаться"
                             }
-                            if (state.comments != null) {
-                                CommentsBottomSheet(
-                                    state = sheetState,
-                                    onDismiss = {
-                                        commentsVisible = false
-                                    },
-                                    userId = userId,
-                                    comments = state.comments,
-                                    onSubmit = onComment,
-                                    onRemoveComment = onRemoveComment,
-                                    onObserve = onObserve,
-                                    onUnobserve = onUnobserve,
-                                    onLoad = onLoadComments,
-                                    commentError = state.commentError,
-                                    actionComment = state.actionComment,
-                                    onGoToProfile = onGoToProfile
-                                )
-                            }
+                            PrimaryButton(
+                                text = subscriptionText,
+                                isActivated = channel.subscription == SUBSCRIBED,
+                                onClick = {
+                                    val subscriptionState = when (channel.subscription) {
+                                        SUBSCRIBED -> NOT_SUBSCRIBED
+                                        else -> SUBSCRIBED
+                                    }
+                                    onSubscribe(subscriptionState)
+                                }
+                            )
                         }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            val likeVector =
+                                when (video.liking) {
+                                    LIKED -> Icons.Rounded.ThumbUp
+                                    else -> Icons.Outlined.ThumbUp
+                                }
 
+                            ActionButton(
+                                icon = likeVector,
+                                text = video.likes.toString(),
+                                onClick = {
+                                    if (video.liking != LIKED)
+                                        onRate(LIKED)
+                                    else
+                                        onRate(NONE)
+                                }
+                            )
+                            val dislikeVector =
+                                when (video.liking) {
+                                    DISLIKED -> Icons.Rounded.ThumbDown
+                                    else -> Icons.Outlined.ThumbDown
+                                }
+                            ActionButton(
+                                icon = dislikeVector,
+                                text = video.dislikes.toString(),
+                                onClick = {
+                                    if (video.liking != DISLIKED)
+                                        onRate(DISLIKED)
+                                    else
+                                        onRate(NONE)
+                                }
+                            )
+                            ActionButton(
+                                icon = Icons.Outlined.Repeat,
+                                text = "Поделиться",
+                                onClick = {
+
+                                }
+                            )
+                            ActionButton(
+                                icon = Icons.Outlined.Download,
+                                text = "Скачать",
+                                onClick = {
+                                    Intent(context, VideoDownloadingService::class.java).also {
+                                        it.action =
+                                            "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
+                                        it.putExtra("videoId", state.videoDetails.video.videoId!!)
+                                        context.startService(it)
+                                    }
+                                }
+                            )
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                .padding(10.dp)
+                        ) {
+                            var commentsVisible by rememberSaveable { mutableStateOf(false) }
+                            val sheetState = rememberModalBottomSheetState()
+                            Text(
+                                text = "Комментарии",
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+                                val leaveCommentBg = tertiaryContainer.copy(
+                                    red = tertiaryContainer.red - 10f / 255,
+                                    green = tertiaryContainer.green - 10f / 255,
+                                    blue = tertiaryContainer.blue - 10f / 255
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(top = 10.dp)
+                                        .clip(CircleShape)
+                                        .background(leaveCommentBg)
+                                        .padding(vertical = 3.dp, horizontal = 10.dp)
+                                        .clickable {
+                                            coroutineScope
+                                                .launch {
+                                                    sheetState.show()
+                                                }
+                                                .invokeOnCompletion {
+                                                    if (sheetState.isVisible) {
+                                                        commentsVisible = true
+                                                    }
+                                                }
+                                        }
+                                ) {
+                                    Text(
+                                        text = "Оставьте комментарий",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                            if (commentsVisible) {
+                                LaunchedEffect(Unit) {
+                                    val now = Clock.System.now()
+                                    onLoadComments(now)
+                                }
+                                if (state.comments != null) {
+                                    CommentsBottomSheet(
+                                        state = sheetState,
+                                        onDismiss = {
+                                            commentsVisible = false
+                                        },
+                                        userId = userId,
+                                        comments = state.comments,
+                                        onSubmit = onComment,
+                                        onRemoveComment = onRemoveComment,
+                                        onObserve = onObserve,
+                                        onUnobserve = onUnobserve,
+                                        onLoad = onLoadComments,
+                                        commentError = state.commentError,
+                                        actionComment = state.actionComment,
+                                        onGoToProfile = onGoToProfile
+                                    )
+                                }
+                            }
+
+                        }
                     }
                 }
             }

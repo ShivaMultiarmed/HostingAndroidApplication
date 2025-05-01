@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
                 this.navController = navController
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
+                var isVideoFullScreened by rememberSaveable { mutableStateOf(false) }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -71,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                 Route.Authentication.SignIn::class.qualifiedName,
                                 Route.Authentication.SignUp::class.qualifiedName,
                                 Route.Video::class.qualifiedName
-                            )
+                            ) && !isVideoFullScreened
                         ) {
                             val userId = userDetailsProvider.getUserId()
                             BottomNavBar(
@@ -104,7 +105,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = if (userDetailsProvider.getUserId() == 0L) Route.Authentication else getHomeDestination()
                         ) {
                             authenticationGraph(navController)
-                            videoGraph(navController, player, userDetailsProvider)
+                            videoGraph(navController, player, userDetailsProvider, { isVideoFullScreened = it })
                             channelGraph(navController, userDetailsProvider)
                             userGraph(navController,userDetailsProvider)
                             searchRoute(navController)
@@ -113,7 +114,7 @@ class MainActivity : ComponentActivity() {
                     if (shouldMiniPlay() && isPlayerPrepared()) {
                         MiniPlayer(
                             player = player,
-                            onOpenUp = {
+                            onFullScreen = {
                                 navController.navigate(Route.Video.View(it))
                             }
                         )

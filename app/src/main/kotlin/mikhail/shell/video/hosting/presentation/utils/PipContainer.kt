@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,8 +65,7 @@ fun PipContainer(
 }
 
 @Composable
-fun PipRow(
-    onOpenUp: () -> Unit,
+fun PipTopBar(
     onClose: () -> Unit
 ) {
     Row(
@@ -75,17 +73,8 @@ fun PipRow(
             .fillMaxWidth()
             .padding(7.dp),
             //.alpha(animatedTopBarAlpha),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.End
     ) {
-
-        Icon(
-            modifier = Modifier
-                .size(27.dp)
-                .clickable(onClick = onOpenUp),
-            imageVector = Icons.Rounded.OpenInFull,
-            tint = Color.White,
-            contentDescription = "Открыть полностью"
-        )
         Icon(
             modifier = Modifier
                 .size(27.dp)

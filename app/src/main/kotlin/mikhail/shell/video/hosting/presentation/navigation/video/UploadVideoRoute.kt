@@ -20,7 +20,8 @@ import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewMode
 
 fun NavGraphBuilder.uploadVideoRoute(
     navController: NavController,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    onFullScreen: (Boolean) -> Unit
 ) {
     composable<Route.Video.Upload> {
         val userId = userDetailsProvider.getUserId()
@@ -63,7 +64,8 @@ fun NavGraphBuilder.uploadVideoRoute(
             },
             onPopup = {
                 navController.popBackStack()
-            }
+            },
+            onFullScreen = onFullScreen
         )
 
     }

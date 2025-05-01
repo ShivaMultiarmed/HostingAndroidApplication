@@ -10,13 +10,23 @@ import mikhail.shell.video.hosting.presentation.navigation.Route
 fun NavGraphBuilder.videoGraph(
     navController: NavController,
     player: Player,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    onFullScreen: (Boolean) -> Unit = {}
 ) {
     navigation<Route.Video>(
         startDestination = Route.Video.Upload
     ) {
-        videoRoute(navController, player, userDetailsProvider)
+        videoRoute(
+            navController = navController,
+            player = player,
+            userDetailsProvider = userDetailsProvider,
+            onFullScreen = onFullScreen
+        )
         videoEditRoute(navController)
-        uploadVideoRoute(navController, userDetailsProvider)
+        uploadVideoRoute(
+            navController = navController,
+            userDetailsProvider = userDetailsProvider,
+            onFullScreen = onFullScreen
+        )
     }
 }

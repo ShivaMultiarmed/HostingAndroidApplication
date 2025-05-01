@@ -17,14 +17,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
-import mikhail.shell.video.hosting.presentation.utils.PipContainer
-import mikhail.shell.video.hosting.presentation.utils.PipRow
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
+import mikhail.shell.video.hosting.presentation.utils.PipContainer
+import mikhail.shell.video.hosting.presentation.utils.PipTopBar
 
 @Composable
 fun MiniPlayer(
     player: Player,
-    onOpenUp: (videoId: Long) -> Unit
+    isFullScreen: Boolean = false,
+    onFullScreen: (videoId: Long) -> Unit
 ) {
     var pipWidth by remember { mutableStateOf(200.dp) }
     PipContainer(
@@ -47,15 +48,16 @@ fun MiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                player = player
-            )
-            PipRow(
-                onOpenUp = {
+                player = player,
+                isFullScreen = isFullScreen,
+                onFullscreen = {
                     val videoId = player.currentMediaItem
                         ?.localConfiguration?.uri?.toString()!!
                         .split("/").dropLast(1).last().toLong()
-                    onOpenUp(videoId)
-                },
+                    onFullScreen(videoId)
+                }
+            )
+            PipTopBar(
                 onClose = {
                     player.clearMediaItems()
                 }

@@ -22,7 +22,8 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewMode
 fun NavGraphBuilder.videoRoute(
     navController: NavController,
     player: Player,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    onFullScreen: (Boolean) -> Unit = {}
 ) {
     composable<Route.Video.View> {
         val videoRouteInfo = it.toRoute<Route.Video.View>()
@@ -65,7 +66,8 @@ fun NavGraphBuilder.videoRoute(
             onRemoveComment = videoScreenViewModel::removeComment,
             onGoToProfile = {
                 navController.navigate(Route.User.Profile(it))
-            }
+            },
+            onFullScreen = onFullScreen
         )
 
     }

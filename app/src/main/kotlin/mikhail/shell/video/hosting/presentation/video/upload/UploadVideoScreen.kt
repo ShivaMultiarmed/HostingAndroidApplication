@@ -57,6 +57,7 @@ import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
@@ -67,7 +68,6 @@ import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import java.io.File
 
@@ -80,7 +80,8 @@ fun UploadVideoScreen(
     onSubmit: (UploadVideoInput) -> Unit,
     onRefresh: () -> Unit,
     onSuccess: (Video) -> Unit,
-    onPopup: () -> Unit = {}
+    onPopup: () -> Unit = {},
+    onFullScreen: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -244,7 +245,8 @@ fun UploadVideoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(),
-                        player = player
+                        player = player,
+                        onFullscreen = {}
                     )
                     val titleErrMsg =
                         if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
@@ -389,7 +391,9 @@ fun UploadVideoScreenPreview() {
         player = player,
         onSubmit = {},
         onRefresh = {},
-        onSuccess = {}
+        onSuccess = {},
+        onPopup = {},
+        onFullScreen = {},
     )
 
 }

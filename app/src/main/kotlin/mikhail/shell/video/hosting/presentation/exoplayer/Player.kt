@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
 import androidx.compose.material.icons.rounded.Fullscreen
+import androidx.compose.material.icons.rounded.FullscreenExit
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
@@ -80,7 +81,10 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    player: Player
+    player: Player,
+    isFullScreen: Boolean = false,
+    onFullscreen: (Boolean) -> Unit,
+    onRatioObtained: (ratio: Float) -> Unit = {}
 ) {
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
     var position by rememberSaveable { mutableLongStateOf(0L) }
@@ -92,13 +96,11 @@ fun PlayerComponent(
     val playerListener = remember {
         object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-                aspectRatio = videoSize.pixelWidthHeightRatio
+                onRatioObtained(aspectRatio)
             }
-
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 isPlaying = newIsPlaying
             }
-
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -108,7 +110,6 @@ fun PlayerComponent(
             }
         }
     }
-
     Box(
         modifier = modifier
             .aspectRatio(if (aspectRatio > 1f) aspectRatio else 16f / 9)
@@ -172,6 +173,8 @@ fun PlayerComponent(
                     player.seekTo(it)
                     delay(300)
                 },
+                isFullScreen = isFullScreen,
+                onFullscreen = onFullscreen
             )
         }
     }
@@ -223,7 +226,9 @@ fun PlayerControls(
     onPause: () -> Unit,
     onSeek: suspend (Long) -> Unit,
     onSeekBack: suspend () -> Unit,
-    onSeekForward: suspend () -> Unit
+    onSeekForward: suspend () -> Unit,
+    isFullScreen: Boolean = false,
+    onFullscreen: (Boolean) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     ConstraintLayout(
@@ -371,11 +376,14 @@ fun PlayerControls(
                     )
                     IconButton(
                         onClick = {
-                            // TODO: enter fullscreen/part mode
+                            onFullscreen(!isFullScreen)
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Fullscreen, // TODO: change to fullscreen/part mode
+                            imageVector = when(isFullScreen) {
+                                true -> Icons.Rounded.FullscreenExit
+                                false -> Icons.Rounded.Fullscreen
+                            },
                             contentDescription = "",
                             tint = Color.White
                         )
@@ -506,7 +514,8 @@ fun PlayerControlsPreview() {
             onSeekBack = {},
             position = 0,
             duration = 100500,
-            onSeek = {}
+            onSeek = {},
+            onFullscreen = {}
         )
     }
 }
