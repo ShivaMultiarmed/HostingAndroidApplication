@@ -5,8 +5,6 @@ package mikhail.shell.video.hosting.presentation.video.screen
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -79,7 +77,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.times
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -156,15 +153,7 @@ fun VideoScreen(
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
-        val idealVideoWidth = LocalConfiguration.current.screenWidthDp.dp
-        val idealMinVideoHeight = 9f / 16 * idealVideoWidth
-        val idealMaxVideoHeight = 16f / 9 * idealVideoWidth
         val scrollState = rememberScrollState()
-        val animatedHeight by animateDpAsState(
-            targetValue = if (videoInfoExpanded) idealMinVideoHeight else 0.dp,
-            animationSpec = tween(durationMillis = 250),
-            label = "videoAnimation"
-        )
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation

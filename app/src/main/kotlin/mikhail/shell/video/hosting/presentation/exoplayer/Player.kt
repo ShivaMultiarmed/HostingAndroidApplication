@@ -91,11 +91,12 @@ fun PlayerComponent(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
-    var aspectRatio by rememberSaveable { mutableFloatStateOf(16 / 9f) }
+    var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
     var progressUpdatingJob: Job? = null
     val playerListener = remember {
         object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
+                aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained(aspectRatio)
             }
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
@@ -112,8 +113,8 @@ fun PlayerComponent(
     }
     Box(
         modifier = modifier
-            .aspectRatio(if (aspectRatio > 1f) aspectRatio else 16f / 9)
-            .background(MaterialTheme.colorScheme.onBackground),
+            .aspectRatio(aspectRatio)
+            .background(MaterialTheme.colorScheme.onBackground)
     ) {
         var showControls by rememberSaveable { mutableFloatStateOf(0f) }
         val animatedShowControls by animateFloatAsState(
@@ -136,7 +137,7 @@ fun PlayerComponent(
                 PlayerView(it).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
+                        ViewGroup.LayoutParams.MATCH_PARENT
                     )
                     useController = false
                     this.player = player
