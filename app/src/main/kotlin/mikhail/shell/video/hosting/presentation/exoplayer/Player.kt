@@ -7,6 +7,7 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -137,10 +138,6 @@ fun PlayerComponent(
             modifier = Modifier,
             factory = {
                 PlayerView(it).apply {
-//                    layoutParams = ViewGroup.LayoutParams(
-//                        ViewGroup.LayoutParams.MATCH_PARENT,
-//                        ViewGroup.LayoutParams.MATCH_PARENT
-//                    )
                     useController = false
                     this.player = player
                     this.player!!.addListener(playerListener)
@@ -216,6 +213,9 @@ fun PlayerComponent(
         onDispose {
             audioManager.abandonAudioFocusRequest(audioFocusRequest)
         }
+    }
+    BackHandler(enabled = isFullScreen) {
+        onFullscreen(false)
     }
 }
 

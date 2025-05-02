@@ -72,7 +72,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.rememberOrientation
+import mikhail.shell.video.hosting.presentation.utils.rememberOrientationState
 import java.io.File
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -101,7 +101,7 @@ fun UploadVideoScreen(
     if (state.channels != null) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        val orientation = rememberOrientation()
+        val orientation by rememberOrientationState()
         val snackbarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }

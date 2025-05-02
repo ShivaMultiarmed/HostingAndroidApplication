@@ -112,7 +112,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
-import mikhail.shell.video.hosting.presentation.utils.rememberOrientation
+import mikhail.shell.video.hosting.presentation.utils.rememberOrientationState
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
@@ -156,7 +156,7 @@ fun VideoScreen(
         val scrollState = rememberScrollState()
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
-        val orientation = rememberOrientation()
+        val orientation by rememberOrientationState()
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -164,7 +164,7 @@ fun VideoScreen(
                     .padding(padding)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                Box(
+                Box (
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
@@ -179,18 +179,16 @@ fun VideoScreen(
                 ) {
                     PlayerComponent(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .then(
-                                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                if (!isFullScreen) {
+                                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                                        Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                    } else {
+                                        Modifier.fillMaxHeight()
+                                    }
+                                } else {
                                     Modifier.fillMaxHeight()
-                                } else {
-                                    Modifier.fillMaxWidth()
-                                }
-                            )
-                            .then(
-                                if (isFullScreen) {
-                                    Modifier.fillMaxSize()
-                                } else {
-                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
                                 }
                             ),
                         player = player,
@@ -204,7 +202,7 @@ fun VideoScreen(
                         }
                     )
                 }
-                if (!isFullScreen) {
+                if (!isFullScreen && orientation == Configuration.ORIENTATION_PORTRAIT) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

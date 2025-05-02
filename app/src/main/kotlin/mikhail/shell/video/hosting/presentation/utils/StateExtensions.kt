@@ -7,10 +7,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.util.Consumer
 
@@ -26,12 +25,12 @@ fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
     return lastVisibleItemIndex >= lastItemIndexInBuffer
 }
 @Composable
-fun rememberOrientation(): Int {
+fun rememberOrientationState(): State<Int> {
     val activity = LocalActivity.current as ComponentActivity
     val initialOrientation = LocalConfiguration.current.orientation
-    var state by rememberSaveable { mutableIntStateOf(initialOrientation) }
+    val state = rememberSaveable { mutableIntStateOf(initialOrientation) }
     DisposableEffect(Unit) {
-        val listener = Consumer<Configuration> { conf -> state = conf.orientation }
+        val listener = Consumer<Configuration> { conf -> state.intValue = conf.orientation }
         activity.addOnConfigurationChangedListener(listener)
         onDispose {
             activity.removeOnConfigurationChangedListener(listener)

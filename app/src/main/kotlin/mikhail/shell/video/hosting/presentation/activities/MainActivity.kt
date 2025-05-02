@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.activities
 
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.media.AudioManager
 import android.media.session.MediaSession
 import android.os.Bundle
@@ -34,6 +35,7 @@ import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
+import mikhail.shell.video.hosting.presentation.utils.rememberOrientationState
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -65,6 +67,7 @@ class MainActivity : ComponentActivity() {
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
                 var isVideoFullScreened by rememberSaveable { mutableStateOf(false) }
+                val orientation = rememberOrientationState()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -72,7 +75,9 @@ class MainActivity : ComponentActivity() {
                                 Route.Authentication.SignIn::class.qualifiedName,
                                 Route.Authentication.SignUp::class.qualifiedName,
                                 Route.Video::class.qualifiedName
-                            ) && !isVideoFullScreened
+                            ) && !(orientation == Configuration.ORIENTATION_LANDSCAPE
+                                    && Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } == true
+                                    || isVideoFullScreened)
                         ) {
                             val userId = userDetailsProvider.getUserId()
                             BottomNavBar(
