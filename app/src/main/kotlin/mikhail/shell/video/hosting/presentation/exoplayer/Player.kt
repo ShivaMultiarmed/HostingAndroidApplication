@@ -113,14 +113,23 @@ fun PlayerComponent(
             }
         }
     }
-    var showControls by rememberSaveable { mutableFloatStateOf(0f) }
-    val animatedShowControls by animateFloatAsState(
-        targetValue = showControls,
+    var shouldShowControls by rememberSaveable { mutableStateOf(false) }
+    var controlsAlpha by rememberSaveable { mutableFloatStateOf(0f) }
+    val animatedControlsAlpha by animateFloatAsState(
+        targetValue = controlsAlpha,
         animationSpec = tween(
-            durationMillis = 150
+            durationMillis = 250
         )
     )
     val interactionSource = remember { MutableInteractionSource() }
+    LaunchedEffect(shouldShowControls) {
+        if (shouldShowControls) {
+            controlsAlpha = 1f
+            delay(3000)
+            controlsAlpha = 0f
+            shouldShowControls = false
+        }
+    }
     Box(
         modifier = modifier
             .background(Color.Black)
@@ -128,11 +137,7 @@ fun PlayerComponent(
                 indication = null,
                 interactionSource = interactionSource
             ) {
-                coroutineScope.launch {
-                    showControls = 1f
-                    delay(3 * 1000)
-                    showControls = 0f
-                }
+                shouldShowControls = true
             },
         contentAlignment = Alignment.Center
     ) {
@@ -150,11 +155,11 @@ fun PlayerComponent(
             }
         )
 
-        if (animatedShowControls > 0f) {
+        if (animatedControlsAlpha > 0f) {
             PlayerControls(
                 modifier = Modifier
                     .matchParentSize()
-                    .alpha(animatedShowControls),
+                    .alpha(animatedControlsAlpha),
                 position = position,
                 duration = player.duration,
                 isPlaying = isPlaying,
