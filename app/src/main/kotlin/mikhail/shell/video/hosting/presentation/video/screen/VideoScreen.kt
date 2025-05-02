@@ -3,6 +3,7 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
@@ -79,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -157,6 +159,7 @@ fun VideoScreen(
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation
+        val activity = LocalActivity.current
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -164,7 +167,7 @@ fun VideoScreen(
                     .padding(padding)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                Box (
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
@@ -196,13 +199,22 @@ fun VideoScreen(
                             aspectRatio = it
                         },
                         isFullScreen = isFullScreen,
-                        onFullscreen =
-                        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                            {
-                                isFullScreen = it
-                                onFullScreen(isFullScreen)
+                        onFullscreen = {
+                            isFullScreen = it
+                            onFullScreen(isFullScreen)
+                            coroutineScope.launch {
+                                if (isFullScreen && aspectRatio > 1f) {
+                                    activity?.requestedOrientation =
+                                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                } else {
+                                    activity?.requestedOrientation =
+                                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                }
+                                delay(3000)
+                                activity?.requestedOrientation =
+                                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                             }
-                        } else null
+                        }
                     )
                 }
                 if (!isFullScreen && orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -600,7 +612,7 @@ fun CommentsBottomSheet(
             SnackbarHost(snackbarHostState)
             LaunchedEffect(commentError) {
                 commentError?.let {
-                    val message = when(it) {
+                    val message = when (it) {
                         CommentError.TEXT_TOO_LARGE -> "Комментарий не должен превышать 200 символов"
                         CommentError.NOT_FOUND -> "Комментарий не найден"
                         CommentError.TEXT_EMPTY -> "Комментарий пустой"
@@ -616,7 +628,7 @@ fun CommentsBottomSheet(
             }
             LaunchedEffect(actionComment) {
                 actionComment?.let {
-                    val message = when(it.action) {
+                    val message = when (it.action) {
                         Action.ADD -> "Комментарий добавлен"
                         Action.REMOVE -> "Комментарий удалён"
                         Action.UPDATE -> "Комментарий изменён"
@@ -821,7 +833,8 @@ fun CommentForm(
             }
         )
         PrimaryButton(
-            modifier = Modifier.height(25.dp)
+            modifier = Modifier
+                .height(25.dp)
                 .width(35.dp),
             contentPadding = PaddingValues(0.dp),
             isEnabled = text.isNotEmpty(),
