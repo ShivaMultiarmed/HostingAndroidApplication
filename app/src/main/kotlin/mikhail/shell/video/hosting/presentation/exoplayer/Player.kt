@@ -16,7 +16,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,6 +44,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,7 +62,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -73,8 +72,8 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -87,23 +86,26 @@ fun PlayerComponent(
     onFullscreen: ((Boolean) -> Unit)? = null,
     onRatioObtained: (ratio: Float) -> Unit = {}
 ) {
+    var playerState by rememberSaveable { mutableIntStateOf(Player.STATE_BUFFERING) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
     var position by rememberSaveable { mutableLongStateOf(0L) }
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-    val orientation = LocalConfiguration.current.orientation
-    var progressUpdatingJob: Job? = null
     val playerListener = remember {
         object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained(aspectRatio)
             }
-
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
-                isPlaying = newIsPlaying
+                if (playerState != Player.STATE_BUFFERING) {
+                    isPlaying = newIsPlaying
+                }
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                playerState = playbackState
             }
 
             override fun onPositionDiscontinuity(
@@ -115,32 +117,9 @@ fun PlayerComponent(
             }
         }
     }
-    var shouldShowControls by rememberSaveable { mutableStateOf(false) }
-    var controlsAlpha by rememberSaveable { mutableFloatStateOf(0f) }
-    val animatedControlsAlpha by animateFloatAsState(
-        targetValue = controlsAlpha,
-        animationSpec = tween(
-            durationMillis = 250
-        )
-    )
-    val interactionSource = remember { MutableInteractionSource() }
-    LaunchedEffect(shouldShowControls) {
-        if (shouldShowControls) {
-            controlsAlpha = 1f
-            delay(3000)
-            controlsAlpha = 0f
-            shouldShowControls = false
-        }
-    }
     Box(
         modifier = modifier
-            .background(Color.Black)
-            .clickable(
-                indication = null,
-                interactionSource = interactionSource
-            ) {
-                shouldShowControls = true
-            },
+            .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
@@ -183,12 +162,10 @@ fun PlayerComponent(
             onFullscreen = onFullscreen
         )
     }
-    LaunchedEffect(Unit) {
-        progressUpdatingJob = coroutineScope.launch {
-            while (true) {
-                position = player.currentPosition
-                delay(1000)
-            }
+    LaunchedEffect(isPlaying) {
+        while (isActive && isPlaying) {
+            position = player.currentPosition
+            delay(1000)
         }
     }
     DisposableEffect(Unit) {
