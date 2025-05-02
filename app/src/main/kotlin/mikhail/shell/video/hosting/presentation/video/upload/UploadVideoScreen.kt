@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
 import android.app.Activity
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,10 +13,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
@@ -95,6 +98,9 @@ fun UploadVideoScreen(
     val scrollState = rememberScrollState()
     val compoundError = state.error
     if (state.channels != null) {
+        var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+        var isFullScreen by rememberSaveable { mutableStateOf(false) }
+        val orientation = LocalConfiguration.current.orientation
         val snackbarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -148,8 +154,9 @@ fun UploadVideoScreen(
                     val sourcePicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
                     ) {
-                        if (it != null)
+                        if (it != null) {
                             sourceUri = it
+                        }
                     }
                     val sourceErrMsg =
                         if (compoundError.equivalentTo(UploadVideoError.SOURCE_EMPTY)) {
@@ -243,10 +250,23 @@ fun UploadVideoScreen(
                     }
                     PlayerComponent(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
+                            .then(
+                                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                    Modifier.fillMaxHeight()
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                }
+                            )
+                            .aspectRatio(if (!(!isFullScreen && aspectRatio < 0)) aspectRatio else 16f / 9),
                         player = player,
-                        onFullscreen = {}
+                        onRatioObtained = {
+                            aspectRatio = it
+                        },
+                        isFullScreen = isFullScreen,
+                        onFullscreen = {
+                            isFullScreen = it
+                            onFullScreen(isFullScreen)
+                        }
                     )
                     val titleErrMsg =
                         if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {

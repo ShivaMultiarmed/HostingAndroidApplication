@@ -7,7 +7,6 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
-import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -16,12 +15,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -111,34 +110,37 @@ fun PlayerComponent(
             }
         }
     }
+    var showControls by rememberSaveable { mutableFloatStateOf(0f) }
+    val animatedShowControls by animateFloatAsState(
+        targetValue = showControls,
+        animationSpec = tween(
+            durationMillis = 150
+        )
+    )
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
-            .aspectRatio(aspectRatio)
-            .background(MaterialTheme.colorScheme.onBackground)
+            .background(Color.Black)
+            .clickable (
+                indication = null,
+                interactionSource = interactionSource
+            ) {
+                coroutineScope.launch {
+                    showControls = 1f
+                    delay(3 * 1000)
+                    showControls = 0f
+                }
+            },
+        contentAlignment = Alignment.Center
     ) {
-        var showControls by rememberSaveable { mutableFloatStateOf(0f) }
-        val animatedShowControls by animateFloatAsState(
-            targetValue = showControls,
-            animationSpec = tween(
-                durationMillis = 150
-            )
-        )
         AndroidView(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable {
-                    coroutineScope.launch {
-                        showControls = 1f
-                        delay(3 * 1000)
-                        showControls = 0f
-                    }
-                },
+            modifier = Modifier,
             factory = {
                 PlayerView(it).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
+//                    layoutParams = ViewGroup.LayoutParams(
+//                        ViewGroup.LayoutParams.MATCH_PARENT,
+//                        ViewGroup.LayoutParams.MATCH_PARENT
+//                    )
                     useController = false
                     this.player = player
                     this.player!!.addListener(playerListener)

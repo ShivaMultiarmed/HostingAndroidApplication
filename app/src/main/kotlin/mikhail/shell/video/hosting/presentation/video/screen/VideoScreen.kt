@@ -4,6 +4,7 @@ package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -174,9 +175,11 @@ fun VideoScreen(
                                 Modifier.fillMaxHeight()
                             }
                         )
-                        .background(MaterialTheme.colorScheme.onSurface),
+                        .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
+                    val result = if (!isFullScreen && aspectRatio < 1f) 16f / 9 else aspectRatio
+                    Log.i("VideoScreen", "isFullScreen = $isFullScreen, aspectRatio = $aspectRatio, resultRatio = $result.")
                     PlayerComponent(
                         modifier = Modifier
                             .then(
@@ -186,7 +189,7 @@ fun VideoScreen(
                                     Modifier.fillMaxWidth()
                                 }
                             )
-                            .aspectRatio(aspectRatio),
+                            .aspectRatio(if (!isFullScreen && aspectRatio < 1f) 16f / 9 else aspectRatio),
                         player = player,
                         onRatioObtained = {
                             aspectRatio = it

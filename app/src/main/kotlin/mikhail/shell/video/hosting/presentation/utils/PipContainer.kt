@@ -4,10 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,7 +30,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PipContainer(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable BoxScope.() -> Unit
 ) {
     var xOffset by remember { mutableIntStateOf(0) }
     var yOffset by remember { mutableIntStateOf(0) }
@@ -59,20 +58,17 @@ fun PipContainer(
                     parentHeight = it
                 }
             }.clip(RoundedCornerShape(10.dp)),
-    ) {
-        content()
-    }
+        content = content
+    )
 }
 
 @Composable
 fun PipTopBar(
+    modifier: Modifier = Modifier,
     onClose: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(7.dp),
-            //.alpha(animatedTopBarAlpha),
+        modifier = modifier,
         horizontalArrangement = Arrangement.End
     ) {
         Icon(

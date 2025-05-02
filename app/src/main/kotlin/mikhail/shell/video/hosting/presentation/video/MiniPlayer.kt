@@ -2,16 +2,13 @@ package mikhail.shell.video.hosting.presentation.video
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -27,42 +24,46 @@ fun MiniPlayer(
     isFullScreen: Boolean = false,
     onFullScreen: (videoId: Long) -> Unit
 ) {
-    var pipWidth by remember { mutableStateOf(200.dp) }
+    var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+    val maxDimension = 250.dp
     PipContainer(
         modifier = Modifier
-            .wrapContentSize()
-            .width(pipWidth)
+            .then(
+                if (aspectRatio < 1f) {
+                    Modifier.height(maxDimension)
+                } else {
+                    Modifier.width(maxDimension)
+                }
+            )
+            .aspectRatio(aspectRatio)
     ) {
-        // TODO
         var topBarAlpha by rememberSaveable { mutableFloatStateOf(1f) }
         val animatedTopBarAlpha by animateFloatAsState(
             targetValue = topBarAlpha,
             animationSpec = tween(200),
             label = "pip container top bar animation"
         )
-        Box(
+        PlayerComponent(
+            modifier = Modifier.matchParentSize(),
+            player = player,
+            isFullScreen = isFullScreen,
+            onFullscreen = {
+                val videoId = player.currentMediaItem
+                    ?.localConfiguration?.uri?.toString()!!
+                    .split("/").dropLast(1).last().toLong()
+                onFullScreen(videoId)
+            },
+            onRatioObtained = {
+                aspectRatio = it
+            }
+        )
+        PipTopBar(
             modifier = Modifier
-                .wrapContentSize()
-        ) {
-            PlayerComponent(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                player = player,
-                isFullScreen = isFullScreen,
-                onFullscreen = {
-                    val videoId = player.currentMediaItem
-                        ?.localConfiguration?.uri?.toString()!!
-                        .split("/").dropLast(1).last().toLong()
-                    onFullScreen(videoId)
-                }
-            )
-            PipTopBar(
-                onClose = {
-                    player.clearMediaItems()
-                }
-            )
-        }
+                .width(maxDimension * aspectRatio.coerceAtMost(1f))
+                .padding(7.dp),
+            onClose = {
+                player.clearMediaItems()
+            }
+        )
     }
-
 }
