@@ -78,9 +78,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -144,6 +146,8 @@ fun VideoScreen(
     onFullScreen: (Boolean) -> Unit = {}
 ) {
     val activity = LocalActivity.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isScreenActive by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.isViewed) {
         if (state.isViewed) {
             onView()
@@ -159,7 +163,13 @@ fun VideoScreen(
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation
-        val activity = LocalActivity.current
+        val targetOrientation = rememberSaveable(isFullScreen) {
+            if (isFullScreen && aspectRatio >= 1f) {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -202,22 +212,29 @@ fun VideoScreen(
                         onFullscreen = {
                             isFullScreen = it
                             onFullScreen(isFullScreen)
-                            coroutineScope.launch {
-                                if (isFullScreen && aspectRatio > 1f) {
-                                    activity?.requestedOrientation =
-                                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                                } else {
-                                    activity?.requestedOrientation =
-                                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                }
-                                delay(3000)
-                                activity?.requestedOrientation =
-                                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                            }
                         }
                     )
                 }
-                if (!isFullScreen && orientation == Configuration.ORIENTATION_PORTRAIT) {
+                LaunchedEffect(targetOrientation) {
+                    if (activity?.requestedOrientation != targetOrientation) {
+                        activity?.requestedOrientation = targetOrientation
+                    }
+                }
+                DisposableEffect(Unit) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_STOP) {
+                            isScreenActive = false
+                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        } else if (event == Lifecycle.Event.ON_START) {
+                            isScreenActive = true
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+                if (!isFullScreen && orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
