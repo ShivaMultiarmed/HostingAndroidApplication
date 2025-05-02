@@ -4,7 +4,6 @@ package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,7 +70,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -114,6 +112,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
+import mikhail.shell.video.hosting.presentation.utils.rememberOrientation
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
@@ -157,7 +156,7 @@ fun VideoScreen(
         val scrollState = rememberScrollState()
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
-        val orientation = LocalConfiguration.current.orientation
+        val orientation = rememberOrientation()
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -178,8 +177,6 @@ fun VideoScreen(
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    val result = if (!isFullScreen && aspectRatio < 1f) 16f / 9 else aspectRatio
-                    Log.i("VideoScreen", "isFullScreen = $isFullScreen, aspectRatio = $aspectRatio, resultRatio = $result.")
                     PlayerComponent(
                         modifier = Modifier
                             .then(
@@ -189,7 +186,13 @@ fun VideoScreen(
                                     Modifier.fillMaxWidth()
                                 }
                             )
-                            .aspectRatio(if (!isFullScreen && aspectRatio < 1f) 16f / 9 else aspectRatio),
+                            .then(
+                                if (isFullScreen) {
+                                    Modifier.fillMaxSize()
+                                } else {
+                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                }
+                            ),
                         player = player,
                         onRatioObtained = {
                             aspectRatio = it

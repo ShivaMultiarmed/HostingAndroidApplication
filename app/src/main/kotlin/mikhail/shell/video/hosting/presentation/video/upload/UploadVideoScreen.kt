@@ -41,8 +41,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
@@ -72,6 +72,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.rememberOrientation
 import java.io.File
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -100,7 +101,7 @@ fun UploadVideoScreen(
     if (state.channels != null) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        val orientation = LocalConfiguration.current.orientation
+        val orientation = rememberOrientation()
         val snackbarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -108,20 +109,22 @@ fun UploadVideoScreen(
         var channelId by rememberSaveable { mutableStateOf<Long?>(null) }
         Scaffold(
             topBar = {
-                TopBar(
-                    onPopup = onPopup,
-                    title = "Выложить видео",
-                    inProgress = state.isLoading,
-                    onSubmit = {
-                        val input = UploadVideoInput(
-                            channelId = channelId,
-                            title = title,
-                            source = sourceUri,
-                            cover = coverUri,
-                        )
-                        onSubmit(input)
-                    }
-                )
+                if (!isFullScreen) {
+                    TopBar(
+                        onPopup = onPopup,
+                        title = "Выложить видео",
+                        inProgress = state.isLoading,
+                        onSubmit = {
+                            val input = UploadVideoInput(
+                                channelId = channelId,
+                                title = title,
+                                source = sourceUri,
+                                cover = coverUri,
+                            )
+                            onSubmit(input)
+                        }
+                    )
+                }
             },
             snackbarHost = {
                 SnackbarHost(snackbarHostState)
@@ -129,20 +132,21 @@ fun UploadVideoScreen(
             modifier = modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Box(
+        ) { padding ->
+            Column(
                 modifier = Modifier
-                    .padding(it)
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.background)
+                    .then(
+                        if (isFullScreen) {
+                            Modifier
+                        } else {
+                            Modifier.verticalScroll(scrollState)
+                        }
+                    )
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .verticalScroll(scrollState)
-                ) {
+                if (!isFullScreen) {
                     val sourceCreator = rememberLauncherForActivityResult(
                         ActivityResultContracts.CaptureVideo()
                     ) {
@@ -189,7 +193,8 @@ fun UploadVideoScreen(
                             )
                         }
                         val cacheDir = context.cacheDir.absolutePath
-                        val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+                        val cameraPermission =
+                            rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
                             onDismiss = {
@@ -199,7 +204,8 @@ fun UploadVideoScreen(
                                 MenuItem(
                                     title = "Создать видео",
                                     onClick = {
-                                        val isCameraPermissionGranted = cameraPermission.status.isGranted
+                                        val isCameraPermissionGranted =
+                                            cameraPermission.status.isGranted
                                         if (isCameraPermissionGranted) {
                                             val file = File(
                                                 cacheDir,
@@ -240,34 +246,58 @@ fun UploadVideoScreen(
                             )
                         )
                     }
-                    LaunchedEffect(sourceUri) {
-                        if (sourceUri != null) {
-                            player.setMediaItem(MediaItem.fromUri(sourceUri!!))
-                            player.prepare()
-                        } else {
-                            player.clearMediaItems()
-                        }
+                }
+                LaunchedEffect(sourceUri) {
+                    if (sourceUri != null) {
+                        player.setMediaItem(MediaItem.fromUri(sourceUri!!))
+                        player.prepare()
+                    } else {
+                        player.clearMediaItems()
                     }
-                    PlayerComponent(
+                }
+                if (sourceUri != null) {
+                    Box(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .then(
-                                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                    Modifier.fillMaxHeight()
+                                if (!isFullScreen) {
+                                    Modifier
                                 } else {
-                                    Modifier.fillMaxWidth()
+                                    Modifier.fillMaxHeight()
                                 }
                             )
-                            .aspectRatio(if (!(!isFullScreen && aspectRatio < 0)) aspectRatio else 16f / 9),
-                        player = player,
-                        onRatioObtained = {
-                            aspectRatio = it
-                        },
-                        isFullScreen = isFullScreen,
-                        onFullscreen = {
-                            isFullScreen = it
-                            onFullScreen(isFullScreen)
-                        }
-                    )
+                            .background(Color.Black),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PlayerComponent(
+                            modifier = Modifier
+                                .then(
+                                    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                                        Modifier.fillMaxHeight()
+                                    } else {
+                                        Modifier.fillMaxWidth()
+                                    }
+                                )
+                                .then(
+                                    if (isFullScreen) {
+                                        Modifier.fillMaxSize()
+                                    } else {
+                                        Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                    }
+                                ),
+                            player = player,
+                            onRatioObtained = {
+                                aspectRatio = it
+                            },
+                            isFullScreen = isFullScreen,
+                            onFullscreen = {
+                                isFullScreen = it
+                                onFullScreen(isFullScreen)
+                            }
+                        )
+                    }
+                }
+                if (!isFullScreen) {
                     val titleErrMsg =
                         if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
                             "Заполните название"
@@ -385,7 +415,6 @@ fun UploadVideoScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
-
         )
     }
 }
