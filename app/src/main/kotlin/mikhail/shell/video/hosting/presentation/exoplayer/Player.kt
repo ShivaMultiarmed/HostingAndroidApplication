@@ -101,9 +101,11 @@ fun PlayerComponent(
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained(aspectRatio)
             }
+
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 isPlaying = newIsPlaying
             }
+
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -133,7 +135,7 @@ fun PlayerComponent(
     Box(
         modifier = modifier
             .background(Color.Black)
-            .clickable (
+            .clickable(
                 indication = null,
                 interactionSource = interactionSource
             ) {
@@ -154,40 +156,36 @@ fun PlayerComponent(
                 it.player!!.removeListener(playerListener)
             }
         )
-
-        if (animatedControlsAlpha > 0f) {
-            PlayerControls(
-                modifier = Modifier
-                    .matchParentSize()
-                    .alpha(animatedControlsAlpha),
-                position = position,
-                duration = player.duration,
-                isPlaying = isPlaying,
-                onPlay = player::play,
-                onPause = player::pause,
-                onSeekBack = {
-                    val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
-                    player.seekTo(newPosition)
-                    delay(500)
-                },
-                onSeekForward = {
-                    val newPosition =
-                        (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
-                    player.seekTo(newPosition)
-                    delay(1500)
-                },
-                onSeek = {
-                    player.seekTo(it)
-                    delay(300)
-                },
-                isFullScreen = isFullScreen,
-                onFullscreen = onFullscreen
-            )
-        }
+        PlayerControls(
+            modifier = Modifier
+                .matchParentSize(),
+            position = position,
+            duration = player.duration,
+            isPlaying = isPlaying,
+            onPlay = player::play,
+            onPause = player::pause,
+            onSeekBack = {
+                val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
+                player.seekTo(newPosition)
+                delay(500)
+            },
+            onSeekForward = {
+                val newPosition =
+                    (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
+                player.seekTo(newPosition)
+                delay(1500)
+            },
+            onSeek = {
+                player.seekTo(it)
+                delay(300)
+            },
+            isFullScreen = isFullScreen,
+            onFullscreen = onFullscreen
+        )
     }
     LaunchedEffect(Unit) {
-         progressUpdatingJob = coroutineScope.launch {
-            while(true) {
+        progressUpdatingJob = coroutineScope.launch {
+            while (true) {
                 position = player.currentPosition
                 delay(1000)
             }
@@ -241,39 +239,29 @@ fun PlayerControls(
     onFullscreen: ((Boolean) -> Unit)? = null,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    var shouldShowControls by rememberSaveable { mutableStateOf(false) }
+    var controlsAlpha by rememberSaveable { mutableFloatStateOf(0f) }
+    val animatedControlsAlpha by animateFloatAsState(
+        targetValue = controlsAlpha,
+        animationSpec = tween(
+            durationMillis = 250
+        )
+    )
+    LaunchedEffect(shouldShowControls) {
+        if (shouldShowControls) {
+            controlsAlpha = 1f
+            delay(3000)
+            controlsAlpha = 0f
+            shouldShowControls = false
+        }
+    }
     ConstraintLayout(
         modifier = modifier
+            .clickable {
+                shouldShowControls = true
+            }
     ) {
         val (playBtn, seekBack, seekForward, seekBar) = createRefs()
-        IconButton(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Color(255f, 255f, 255f, 0.7f))
-                .constrainAs(playBtn) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                },
-            onClick = {
-                if (isPlaying) {
-                    onPause()
-                } else {
-                    onPlay()
-                }
-            }
-        ) {
-            Icon(
-                imageVector = when (isPlaying) {
-                    true -> Icons.Rounded.Pause
-                    false -> Icons.Rounded.PlayArrow
-                },
-                tint = Color(0f, 0f, 0f, 0.8f),
-                modifier = Modifier.size(28.dp),
-                contentDescription = "Кнопка проигрывания"
-            )
-        }
         var seekBackProgress by rememberSaveable { mutableFloatStateOf(0f) }
         val animatedSeekBackProgress by animateFloatAsState(
             targetValue = seekBackProgress,
@@ -296,7 +284,9 @@ fun PlayerControls(
                     Color(255f, 255f, 255f, 0.3f)
                 )
                 .combinedClickable(
-                    onClick = {},
+                    onClick = {
+                        shouldShowControls = true
+                    },
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekBackProgress = 1f
@@ -339,7 +329,9 @@ fun PlayerControls(
                     Color(255f, 255f, 255f, 0.3f)
                 )
                 .combinedClickable(
-                    onClick = {},
+                    onClick = {
+                        shouldShowControls = true
+                    },
                     onDoubleClick = {
                         coroutineScope.launch {
                             seekForwardProgress = 1f
@@ -360,88 +352,123 @@ fun PlayerControls(
                 contentDescription = "Вперёд"
             )
         }
-        if (duration >= 0) {
-            Column(
+        if (animatedControlsAlpha > 0f) {
+            IconButton(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(seekBar) {
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(255f, 255f, 255f, 0.7f))
+                    .constrainAs(playBtn) {
+                        top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    val currentPositionString = millisToDurationString(position)
-                    val overallDurationString = millisToDurationString(duration)
-                    Text(
-                        text = "$currentPositionString / $overallDurationString",
-                        color = Color.White,
-                        fontSize = 11.sp
-                    )
-                    if (onFullscreen != null) {
-                        IconButton(
-                            onClick = {
-                                onFullscreen(!isFullScreen)
-                            }
-                        ) {
-                            Icon(
-                                imageVector = when(isFullScreen) {
-                                    true -> Icons.Rounded.FullscreenExit
-                                    false -> Icons.Rounded.Fullscreen
-                                },
-                                contentDescription = "",
-                                tint = Color.White
-                            )
-                        }
+                    },
+                onClick = {
+                    if (isPlaying) {
+                        onPause()
+                    } else {
+                        onPlay()
                     }
                 }
-                BoxWithConstraints(
+            ) {
+                Icon(
+                    imageVector = when (isPlaying) {
+                        true -> Icons.Rounded.Pause
+                        false -> Icons.Rounded.PlayArrow
+                    },
+                    tint = Color(0f, 0f, 0f, 0.8f),
+                    modifier = Modifier.size(28.dp),
+                    contentDescription = "Кнопка проигрывания"
+                )
+            }
+            if (duration >= 0) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(35.dp)
-                        .padding(horizontal = 15.dp)
+                        .constrainAs(seekBar) {
+                            bottom.linkTo(parent.bottom)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
                 ) {
-                    val width = constraints.maxWidth
-                    val height = constraints.maxHeight
-                    val primaryColor = MaterialTheme.colorScheme.primary
-                    val progress = position.toFloat() / duration
-                    Canvas(
+                    Row(
                         modifier = Modifier
-                            .matchParentSize()
-                            .pointerInput(Unit) {
-                                detectDragGestures { change, _ ->
-                                    val newProgress = (change.position.x / size.width).coerceIn(0f..1f)
-                                    val newPosition = (newProgress * duration).toLong()
-                                    coroutineScope.launch {
-                                        onSeek(newPosition)
+                            .fillMaxWidth()
+                            .padding(start = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val currentPositionString = millisToDurationString(position)
+                        val overallDurationString = millisToDurationString(duration)
+                        Text(
+                            text = "$currentPositionString / $overallDurationString",
+                            color = Color.White,
+                            fontSize = 11.sp
+                        )
+                        if (onFullscreen != null) {
+                            IconButton(
+                                onClick = {
+                                    onFullscreen(!isFullScreen)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = when (isFullScreen) {
+                                        true -> Icons.Rounded.FullscreenExit
+                                        false -> Icons.Rounded.Fullscreen
+                                    },
+                                    contentDescription = "",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    }
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(35.dp)
+                            .padding(horizontal = 15.dp)
+                    ) {
+                        val width = constraints.maxWidth
+                        val height = constraints.maxHeight
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        val progress = position.toFloat() / duration
+                        Canvas(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .pointerInput(Unit) {
+                                    detectDragGestures { change, _ ->
+                                        val newProgress =
+                                            (change.position.x / size.width).coerceIn(0f..1f)
+                                        val newPosition = (newProgress * duration).toLong()
+                                        coroutineScope.launch {
+                                            onSeek(newPosition)
+                                        }
                                     }
                                 }
-                            }
-                    ) {
-                        val barHeight = 12f
-                        drawRoundRect(
-                            color = Color(200f, 200f, 200f, 0.7f),
-                            topLeft = Offset(0f, height / 2f - barHeight * 3f),
-                            size = Size(width.toFloat(), barHeight),
-                            cornerRadius = CornerRadius(barHeight)
-                        )
-                        drawRoundRect(
-                            color = primaryColor,
-                            topLeft = Offset(0f, height / 2f - barHeight * 3f),
-                            size = Size(width * progress, barHeight),
-                            cornerRadius = CornerRadius(barHeight)
-                        )
-                        drawCircle(
-                            color = primaryColor,
-                            radius = 1.3f * barHeight,
-                            center = Offset(width * progress, height / 2f - barHeight * 3f + barHeight / 2)
-                        )
+                        ) {
+                            val barHeight = 12f
+                            drawRoundRect(
+                                color = Color(200f, 200f, 200f, 0.7f),
+                                topLeft = Offset(0f, height / 2f - barHeight * 3f),
+                                size = Size(width.toFloat(), barHeight),
+                                cornerRadius = CornerRadius(barHeight)
+                            )
+                            drawRoundRect(
+                                color = primaryColor,
+                                topLeft = Offset(0f, height / 2f - barHeight * 3f),
+                                size = Size(width * progress, barHeight),
+                                cornerRadius = CornerRadius(barHeight)
+                            )
+                            drawCircle(
+                                color = primaryColor,
+                                radius = 1.3f * barHeight,
+                                center = Offset(
+                                    width * progress,
+                                    height / 2f - barHeight * 3f + barHeight / 2
+                                )
+                            )
+                        }
                     }
                 }
             }
