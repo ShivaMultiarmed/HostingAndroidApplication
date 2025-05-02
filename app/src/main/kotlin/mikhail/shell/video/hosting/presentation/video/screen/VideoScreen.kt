@@ -170,6 +170,13 @@ fun VideoScreen(
                 ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
         }
+        val isFullScreenReached = rememberSaveable (isFullScreen, orientation, targetOrientation) {
+            isFullScreen && targetOrientation == when (orientation) {
+                Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -181,10 +188,10 @@ fun VideoScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (!isFullScreen) {
-                                Modifier
-                            } else {
+                            if (isFullScreenReached) {
                                 Modifier.fillMaxHeight()
+                            } else {
+                                Modifier
                             }
                         )
                         .background(Color.Black),
@@ -194,14 +201,10 @@ fun VideoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .then(
-                                if (!isFullScreen) {
-                                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                                        Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                    } else {
-                                        Modifier.fillMaxHeight()
-                                    }
-                                } else {
+                                if (isFullScreenReached) {
                                     Modifier.fillMaxHeight()
+                                } else {
+                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
                                 }
                             ),
                         player = player,
@@ -211,9 +214,11 @@ fun VideoScreen(
                         isFullScreen = isFullScreen,
                         onFullscreen = {
                             isFullScreen = it
-                            onFullScreen(isFullScreen)
                         }
                     )
+                }
+                LaunchedEffect(isFullScreenReached) {
+                    onFullScreen(isFullScreenReached)
                 }
                 LaunchedEffect(targetOrientation) {
                     if (activity?.requestedOrientation != targetOrientation) {
@@ -224,7 +229,8 @@ fun VideoScreen(
                     val observer = LifecycleEventObserver { _, event ->
                         if (event == Lifecycle.Event.ON_STOP) {
                             isScreenActive = false
-                            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            activity?.requestedOrientation =
+                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else if (event == Lifecycle.Event.ON_START) {
                             isScreenActive = true
                         }
@@ -234,7 +240,7 @@ fun VideoScreen(
                         lifecycleOwner.lifecycle.removeObserver(observer)
                     }
                 }
-                if (!isFullScreen && orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                if (!isFullScreenReached) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
