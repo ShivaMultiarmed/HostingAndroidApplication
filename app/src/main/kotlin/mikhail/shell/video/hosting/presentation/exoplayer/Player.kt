@@ -62,6 +62,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -83,7 +84,7 @@ fun PlayerComponent(
     modifier: Modifier = Modifier,
     player: Player,
     isFullScreen: Boolean = false,
-    onFullscreen: (Boolean) -> Unit,
+    onFullscreen: ((Boolean) -> Unit)? = null,
     onRatioObtained: (ratio: Float) -> Unit = {}
 ) {
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
@@ -92,6 +93,7 @@ fun PlayerComponent(
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+    val orientation = LocalConfiguration.current.orientation
     var progressUpdatingJob: Job? = null
     val playerListener = remember {
         object : Player.Listener {
@@ -215,7 +217,7 @@ fun PlayerComponent(
         }
     }
     BackHandler(enabled = isFullScreen) {
-        onFullscreen(false)
+        onFullscreen?.invoke(false)
     }
 }
 
@@ -231,7 +233,7 @@ fun PlayerControls(
     onSeekBack: suspend () -> Unit,
     onSeekForward: suspend () -> Unit,
     isFullScreen: Boolean = false,
-    onFullscreen: (Boolean) -> Unit,
+    onFullscreen: ((Boolean) -> Unit)? = null,
 ) {
     val coroutineScope = rememberCoroutineScope()
     ConstraintLayout(
@@ -377,19 +379,21 @@ fun PlayerControls(
                         color = Color.White,
                         fontSize = 11.sp
                     )
-                    IconButton(
-                        onClick = {
-                            onFullscreen(!isFullScreen)
+                    if (onFullscreen != null) {
+                        IconButton(
+                            onClick = {
+                                onFullscreen(!isFullScreen)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = when(isFullScreen) {
+                                    true -> Icons.Rounded.FullscreenExit
+                                    false -> Icons.Rounded.Fullscreen
+                                },
+                                contentDescription = "",
+                                tint = Color.White
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = when(isFullScreen) {
-                                true -> Icons.Rounded.FullscreenExit
-                                false -> Icons.Rounded.Fullscreen
-                            },
-                            contentDescription = "",
-                            tint = Color.White
-                        )
                     }
                 }
                 BoxWithConstraints(

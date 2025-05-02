@@ -70,6 +70,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -112,7 +113,6 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
-import mikhail.shell.video.hosting.presentation.utils.rememberOrientationState
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
@@ -156,7 +156,7 @@ fun VideoScreen(
         val scrollState = rememberScrollState()
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
-        val orientation by rememberOrientationState()
+        val orientation = LocalConfiguration.current.orientation
         Scaffold { padding ->
             Column(
                 modifier = Modifier
@@ -196,10 +196,13 @@ fun VideoScreen(
                             aspectRatio = it
                         },
                         isFullScreen = isFullScreen,
-                        onFullscreen = {
-                            isFullScreen = it
-                            onFullScreen(isFullScreen)
-                        }
+                        onFullscreen =
+                        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                            {
+                                isFullScreen = it
+                                onFullScreen(isFullScreen)
+                            }
+                        } else null
                     )
                 }
                 if (!isFullScreen && orientation == Configuration.ORIENTATION_PORTRAIT) {

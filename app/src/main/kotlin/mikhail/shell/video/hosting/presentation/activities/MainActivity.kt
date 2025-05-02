@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -35,7 +36,6 @@ import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.searchRoute
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
-import mikhail.shell.video.hosting.presentation.utils.rememberOrientationState
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = backStackEntry?.destination?.route
                 var isVideoFullScreened by rememberSaveable { mutableStateOf(false) }
-                val orientation = rememberOrientationState()
+                val orientation = LocalConfiguration.current.orientation
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                                 Route.Authentication.SignUp::class.qualifiedName,
                                 Route.Video::class.qualifiedName
                             ) && !(orientation == Configuration.ORIENTATION_LANDSCAPE
-                                    && Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } == true
+                                    && Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } != false
                                     || isVideoFullScreened)
                         ) {
                             val userId = userDetailsProvider.getUserId()
