@@ -170,7 +170,7 @@ fun VideoScreen(
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation
         val isSmallWindow = rememberIsSmallWindow()
-        val targetOrientation = rememberSaveable(isFullScreen, isSmallWindow) {
+        val targetOrientation = remember(isFullScreen, isSmallWindow) {
             if (isSmallWindow) {
                 if (isFullScreen && aspectRatio >= 1f) {
                     ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -181,12 +181,12 @@ fun VideoScreen(
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
-        val isFullScreenReached = rememberSaveable (isFullScreen, orientation, targetOrientation, isSmallWindow) {
+        val isFullScreenReached = remember (isFullScreen, orientation, targetOrientation, isSmallWindow) {
             if (isSmallWindow) {
                 isFullScreen && targetOrientation == when (orientation) {
                     Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                     Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 }
             } else {
                 isFullScreen
