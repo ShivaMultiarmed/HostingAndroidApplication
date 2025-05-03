@@ -222,7 +222,7 @@ fun VideoScreen(
                                     if (isSmallWindow) {
                                         Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
                                     } else {
-                                        Modifier.fillMaxHeight(0.4f)
+                                        Modifier.fillMaxHeight(0.7f)
                                     }
                                 }
                             ),
