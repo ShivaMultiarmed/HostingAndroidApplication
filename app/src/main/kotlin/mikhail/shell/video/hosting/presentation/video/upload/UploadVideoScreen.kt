@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
 import android.app.Activity
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -260,10 +259,10 @@ fun UploadVideoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .then(
-                                if (!isFullScreen) {
-                                    Modifier
-                                } else {
+                                if (isFullScreen) {
                                     Modifier.fillMaxHeight()
+                                } else {
+                                    Modifier
                                 }
                             )
                             .background(Color.Black),
@@ -271,13 +270,7 @@ fun UploadVideoScreen(
                     ) {
                         PlayerComponent(
                             modifier = Modifier
-                                .then(
-                                    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                        Modifier.fillMaxHeight()
-                                    } else {
-                                        Modifier.fillMaxWidth()
-                                    }
-                                )
+                                .fillMaxWidth()
                                 .then(
                                     if (isFullScreen) {
                                         Modifier.fillMaxSize()

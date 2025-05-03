@@ -124,7 +124,8 @@ fun PlayerComponent(
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
-            modifier = Modifier,
+            modifier = Modifier
+                .matchParentSize(),
             factory = {
                 PlayerView(it).apply {
                     useController = false
