@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.rules)
     implementation(libs.androidx.uiautomator)
+    implementation(libs.androidx.window)
     testImplementation(libs.junit)
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 

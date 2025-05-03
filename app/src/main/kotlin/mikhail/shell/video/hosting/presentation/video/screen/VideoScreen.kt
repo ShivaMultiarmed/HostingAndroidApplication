@@ -5,6 +5,7 @@ package mikhail.shell.video.hosting.presentation.video.screen
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,6 +56,10 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +87,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
+import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -145,7 +151,7 @@ fun VideoScreen(
     onGoToProfile: (userId: Long) -> Unit = {},
     onFullScreen: (Boolean) -> Unit = {}
 ) {
-    val activity = LocalActivity.current
+    val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
     var isScreenActive by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.isViewed) {
@@ -163,18 +169,27 @@ fun VideoScreen(
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation
-        val targetOrientation = rememberSaveable(isFullScreen) {
-            if (isFullScreen && aspectRatio >= 1f) {
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        val isSmallWindow = rememberIsSmallWindow()
+        val targetOrientation = rememberSaveable(isFullScreen, orientation, isSmallWindow) {
+            if (isSmallWindow) {
+                if (isFullScreen && aspectRatio >= 1f) {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
             } else {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
-        val isFullScreenReached = rememberSaveable (isFullScreen, orientation, targetOrientation) {
-            isFullScreen && targetOrientation == when (orientation) {
-                Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        val isFullScreenReached = rememberSaveable (isFullScreen, orientation, targetOrientation, isSmallWindow) {
+            if (isSmallWindow) {
+                isFullScreen && targetOrientation == when (orientation) {
+                    Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+            } else {
+                isFullScreen
             }
         }
         Scaffold { padding ->
@@ -966,5 +981,35 @@ fun LocalDateTime.toPresentation(): String {
             in 2..4 -> "$diff года назад"
             else -> "$diff лет назад"
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun rememberIsSmallWindow(): Boolean {
+    val activity = LocalActivity.current!!
+    val windowSizeClass = calculateWindowSizeClass(activity)
+    val configuration = LocalConfiguration.current
+
+    return remember(windowSizeClass, configuration) {
+        // Check if either dimension is Compact (handles multi-window/split-screen)
+        val hasCompactDimension = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact ||
+                windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
+
+        // Check physical screen characteristics
+        val isPhysicallySmall = configuration.smallestScreenWidthDp < 600 ||
+                configuration.screenWidthDp < 600 ||
+                configuration.screenHeightDp < 600
+
+        // Special handling for foldables
+        val isFolded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = WindowMetricsCalculator.getOrCreate()
+                .computeCurrentWindowMetrics(activity)
+            val bounds = metrics.bounds
+            val density = activity.resources.displayMetrics.density
+            bounds.width() / density < 600 || bounds.height() / density < 600
+        } else true
+
+        hasCompactDimension && (isPhysicallySmall || isFolded)
     }
 }
