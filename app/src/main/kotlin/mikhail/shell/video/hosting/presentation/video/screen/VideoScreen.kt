@@ -170,7 +170,7 @@ fun VideoScreen(
         val channel = state.videoDetails.channel
         val orientation = LocalConfiguration.current.orientation
         val isSmallWindow = rememberIsSmallWindow()
-        val targetOrientation = rememberSaveable(isFullScreen, orientation, isSmallWindow) {
+        val targetOrientation = rememberSaveable(isFullScreen, isSmallWindow) {
             if (isSmallWindow) {
                 if (isFullScreen && aspectRatio >= 1f) {
                     ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -219,7 +219,11 @@ fun VideoScreen(
                                 if (isFullScreenReached) {
                                     Modifier.fillMaxHeight()
                                 } else {
-                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                    if (isSmallWindow) {
+                                        Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                    } else {
+                                        Modifier.fillMaxHeight(0.4f)
+                                    }
                                 }
                             ),
                         player = player,
