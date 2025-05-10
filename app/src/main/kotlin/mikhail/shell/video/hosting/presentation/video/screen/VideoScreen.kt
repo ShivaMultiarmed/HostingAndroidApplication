@@ -478,16 +478,28 @@ fun VideoScreen(
                                 }
                             )
                         }
+                        var commentsVisible by rememberSaveable { mutableStateOf(false) }
+                        val sheetState = rememberModalBottomSheetState()
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                .clickable {
+                                    coroutineScope
+                                        .launch {
+                                            sheetState.show()
+                                        }
+                                        .invokeOnCompletion {
+                                            if (sheetState.isVisible) {
+                                                commentsVisible = true
+                                            }
+                                        }
+                                }
                                 .padding(10.dp)
                         ) {
-                            var commentsVisible by rememberSaveable { mutableStateOf(false) }
-                            val sheetState = rememberModalBottomSheetState()
+
                             Text(
                                 text = "Комментарии",
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -508,17 +520,6 @@ fun VideoScreen(
                                         .clip(CircleShape)
                                         .background(leaveCommentBg)
                                         .padding(vertical = 3.dp, horizontal = 10.dp)
-                                        .clickable {
-                                            coroutineScope
-                                                .launch {
-                                                    sheetState.show()
-                                                }
-                                                .invokeOnCompletion {
-                                                    if (sheetState.isVisible) {
-                                                        commentsVisible = true
-                                                    }
-                                                }
-                                        }
                                 ) {
                                     Text(
                                         text = "Оставьте комментарий",

@@ -285,7 +285,8 @@ fun UserTextDetails(
                 modifier = Modifier.size(18.dp), imageVector = when (showMore) {
                     false -> Icons.Rounded.KeyboardArrowDown
                     true -> Icons.Rounded.KeyboardArrowUp
-                }, contentDescription = "Ещё информация"
+                },
+                contentDescription = "Ещё информация"
             )
         }
     }
@@ -293,15 +294,14 @@ fun UserTextDetails(
         modifier = modifier
             .fillMaxWidth()
             .padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = if (isWidthCompact) Alignment.CenterHorizontally else Alignment.Start
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier,
                 horizontalAlignment = if (isWidthCompact) Alignment.CenterHorizontally else Alignment.Start
             ) {
                 Text(

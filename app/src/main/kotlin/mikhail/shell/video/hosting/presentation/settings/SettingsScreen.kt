@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,9 +71,11 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(10.dp)
-                .verticalScroll(scrollState)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
+                modifier = Modifier.padding(10.dp),
                 text = "Язык"
             )
             var selectedLanguage by remember { mutableStateOf(Language.RUSSIAN) }
@@ -81,9 +84,11 @@ fun SettingsScreen(
                 Language.ENGLISH to "English"
             )
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
                 Toggle(
+                    modifier = Modifier.fillMaxWidth(),
                     key = selectedLanguage,
                     values = languages,
                     onValueChanged = {
@@ -92,13 +97,16 @@ fun SettingsScreen(
                 )
             }
             Text(
+                modifier = Modifier.padding(10.dp),
                 text = "Тема"
             )
             var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
                 Toggle(
+                    modifier = Modifier.fillMaxWidth(),
                     key = selectedTheme,
                     values = mapOf(
                         Theme.LIGHT to Icons.Rounded.WbSunny,

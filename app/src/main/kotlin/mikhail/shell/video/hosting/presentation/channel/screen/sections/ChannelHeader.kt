@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,7 +56,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ColumnScope.ChannelHeader(
+fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelWithUser,
     onSubscription: (SubscriptionState) -> Unit,
@@ -69,7 +68,7 @@ fun ColumnScope.ChannelHeader(
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
     var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
     if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
-        ChannelHeaderShrinked(
+        ChannelHeaderCompact(
             modifier = modifier,
             hasCover = hasCover,
             coverUrlAssignment = { hasCover = it },
@@ -80,7 +79,7 @@ fun ColumnScope.ChannelHeader(
             owns = owns
         )
     } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
-        ChannelHeaderWide(
+        ChannelHeaderMedium(
             modifier = modifier,
             channel = channel,
             onSubscription = onSubscription,
@@ -103,7 +102,7 @@ fun ColumnScope.ChannelHeader(
 }
 
 @Composable
-fun ColumnScope.ChannelHeaderShrinked(
+fun ChannelHeaderCompact(
     modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
@@ -114,8 +113,10 @@ fun ColumnScope.ChannelHeaderShrinked(
     owns: Boolean = false
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Top
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalArrangement = Arrangement.Top,
     ) {
         ChannelCover(
             hasCover = hasCover,
@@ -131,22 +132,24 @@ fun ColumnScope.ChannelHeaderShrinked(
                 modifier = Modifier,
                 avatarUrl = channel.avatarUrl
             )
-            Column(
-                modifier = Modifier.padding(start = 10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ChannelTitle(title = channel.title)
-                ChannelAlias(alias = channel.alias)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Column(
+                    modifier = Modifier.padding(start = 10.dp)
                 ) {
+                    ChannelTitle(title = channel.title)
+                    ChannelAlias(alias = channel.alias)
                     SubscriberNumberText(subscribers = channel.subscribers)
-                    if (owns) {
-                        ChannelActionsButton(
-                            channelId = channel.channelId!!,
-                            onEdit = onEdit,
-                            onRemove = onRemove
-                        )
-                    }
+                }
+                if (owns) {
+                    ChannelActionsButton(
+                        channelId = channel.channelId!!,
+                        onEdit = onEdit,
+                        onRemove = onRemove
+                    )
                 }
             }
         }
@@ -155,7 +158,7 @@ fun ColumnScope.ChannelHeaderShrinked(
 }
 
 @Composable
-fun ColumnScope.ChannelHeaderWide(
+fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelWithUser,
     onSubscription: (SubscriptionState) -> Unit,
@@ -210,7 +213,7 @@ fun ColumnScope.ChannelHeaderWide(
 }
 
 @Composable
-fun ColumnScope.ChannelHeaderExpanded(
+fun ChannelHeaderExpanded(
     modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
