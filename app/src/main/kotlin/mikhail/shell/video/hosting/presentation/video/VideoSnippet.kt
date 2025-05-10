@@ -34,7 +34,7 @@ fun VideoSnippet(
             .clickable {
                 onClick(video.videoId!!)
             }
-            .padding(vertical = 10.dp)
+            .padding(10.dp)
     ) {
         AsyncImage(
             model = video.coverUrl,

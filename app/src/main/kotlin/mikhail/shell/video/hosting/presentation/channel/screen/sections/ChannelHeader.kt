@@ -58,6 +58,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ColumnScope.ChannelHeader(
+    modifier: Modifier = Modifier,
     channel: ChannelWithUser,
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
@@ -69,24 +70,27 @@ fun ColumnScope.ChannelHeader(
     var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
     if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
         ChannelHeaderShrinked(
-            hasCover,
-            { hasCover = it },
-            channel,
-            onSubscription,
-            onEdit,
-            onRemove,
-            owns
+            modifier = modifier,
+            hasCover = hasCover,
+            coverUrlAssignment = { hasCover = it },
+            channel = channel,
+            onSubscription = onSubscription,
+            onEdit = onEdit,
+            onRemove = onRemove,
+            owns = owns
         )
     } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
         ChannelHeaderWide(
-            channel,
-            onSubscription,
-            onEdit,
-            onRemove,
-            owns
+            modifier = modifier,
+            channel = channel,
+            onSubscription = onSubscription,
+            onEdit = onEdit,
+            onRemove = onRemove,
+            owns = owns
         )
     } else {
         ChannelHeaderExpanded(
+            modifier = modifier,
             hasCover,
             { hasCover = it },
             channel,
@@ -100,6 +104,7 @@ fun ColumnScope.ChannelHeader(
 
 @Composable
 fun ColumnScope.ChannelHeaderShrinked(
+    modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
@@ -109,7 +114,7 @@ fun ColumnScope.ChannelHeaderShrinked(
     owns: Boolean = false
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Top
     ) {
         ChannelCover(
@@ -151,6 +156,7 @@ fun ColumnScope.ChannelHeaderShrinked(
 
 @Composable
 fun ColumnScope.ChannelHeaderWide(
+    modifier: Modifier = Modifier,
     channel: ChannelWithUser,
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
@@ -158,7 +164,7 @@ fun ColumnScope.ChannelHeaderWide(
     owns: Boolean = false
 ) {
     ConstraintLayout(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         val avatarRef = createRef()
         ChannelAvatar(
@@ -205,6 +211,7 @@ fun ColumnScope.ChannelHeaderWide(
 
 @Composable
 fun ColumnScope.ChannelHeaderExpanded(
+    modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
@@ -214,7 +221,7 @@ fun ColumnScope.ChannelHeaderExpanded(
     owns: Boolean = false
 ) {
     ConstraintLayout(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         val coverRef = createRef()
         ChannelCover(

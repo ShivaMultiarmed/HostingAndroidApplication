@@ -30,8 +30,7 @@ fun ChannelScreen(
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
+            .background(MaterialTheme.colorScheme.background),
         floatingActionButton = {
             // TODO: move to create channel screen
         }
@@ -42,6 +41,7 @@ fun ChannelScreen(
         ) {
             if (state.channel != null && state.videos != null) {
                 ChannelHeader(
+                    modifier = Modifier.padding(10.dp),
                     channel = state.channel,
                     onSubscription = onSubscription,
                     onEdit = onEdit,
@@ -49,6 +49,7 @@ fun ChannelScreen(
                     owns = owns
                 )
                 VideoGridSection(
+                    modifier = Modifier,
                     videos = state.videos,
                     onVideoClick = onVideoClick,
                     onScrollToBottom = onScrollToBottom

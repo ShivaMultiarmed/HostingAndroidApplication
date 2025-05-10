@@ -1,21 +1,26 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
 import android.content.res.Configuration
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -23,10 +28,15 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +58,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
@@ -61,91 +72,161 @@ fun ProfileScreen(
     onInvite: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-        TopBar(
-            title = "Профиль",
-            actions = if (isOwner) listOf(
-                {
-                    IconButton(
-                        onClick = onOpenSettings
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            contentDescription = "Открыть настройки"
-                        )
-                    }
-                }
-            ) else null
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val content: @Composable () -> Unit = {
+        ProfileScreenContent(
+            modifier = modifier,
+            state = state,
+            isOwner = isOwner,
+            onGoToChannel = onGoToChannel,
+            onPublishVideo = onPublishVideo,
+            onCreateChannel = onCreateChannel,
+            onRefresh = onRefresh,
+            onLogOut = onLogOut,
+            onInvite = onInvite
         )
+    }
+    Scaffold(
+        modifier = modifier.fillMaxSize(), topBar = {
+            TopBar(
+                title = "Профиль", actions = if (isOwner) listOf(
+                    {
+                        IconButton(
+                            onClick = onOpenSettings
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                contentDescription = "Открыть настройки"
+                            )
+                        }
+                    }) else null
+            )
+        }) { padding ->
+        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                content()
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                content()
+            }
+        }
+    }
+}
 
-        if (state.user != null && state.channels != null) {
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ProfileScreenContent(
+    modifier: Modifier = Modifier,
+    state: ProfileScreenState,
+    isOwner: Boolean = false,
+    onGoToChannel: (Long) -> Unit,
+    onPublishVideo: () -> Unit,
+    onCreateChannel: () -> Unit,
+    onRefresh: () -> Unit,
+    onLogOut: () -> Unit,
+    onInvite: () -> Unit
+) {
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+
+    if (state.user != null && state.channels != null) {
+        Column(
+            modifier = Modifier.then(
+                if (isWidthCompact) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.5f)
+                }
+            )
+        ) {
             UserDetailsSection(
-                user = state.user
+                modifier = Modifier, user = state.user
             )
             if (isOwner) {
                 UserActions(
+                    modifier = Modifier,
                     onPublishVideo = onPublishVideo.takeIf { state.channels.isNotEmpty() },
                     onCreateChannel = onCreateChannel,
                     onLogOut = onLogOut,
                     onInvite = onInvite
                 )
             }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 10.dp)
+        ) {
             if (state.channels.isNotEmpty()) {
                 Title(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Каналы пользователя"
+                    modifier = Modifier.fillMaxWidth(), text = "Каналы пользователя"
                 )
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
+                LazyVerticalGrid(
+                    modifier = Modifier.then(
+                        if (isWidthCompact) {
+                            Modifier
+                        } else {
+                            Modifier.padding(10.dp)
+                        }
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
+                    columns = GridCells.Adaptive(300.dp)
                 ) {
                     items(state.channels) { channel ->
                         ChannelSnippet(
-                            channel = channel,
-                            onClick = {
+                            modifier = Modifier.then(
+                                if (isWidthCompact) {
+                                    Modifier
+                                } else {
+                                    Modifier.clip(RoundedCornerShape(15.dp))
+                                }
+                            ), channel = channel, onClick = {
                                 onGoToChannel(channel.channelId!!)
-                            }
-                        )
+                            })
                     }
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier, contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Здесь пока нет каналов"
                     )
                 }
             }
-        } else if (state.channelError != null || state.userError != null) {
-            ErrorComponent(
-                modifier = modifier.fillMaxSize(),
-                onRetry = onRefresh
-            )
-        } else {
-            LoadingComponent(
-                modifier = modifier.fillMaxSize()
-            )
         }
+    } else if (state.channelError != null || state.userError != null) {
+        ErrorComponent(
+            modifier = modifier.fillMaxSize(), onRetry = onRefresh
+        )
+    } else {
+        LoadingComponent(
+            modifier = modifier.fillMaxSize()
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun UserDetailsSection(
-    user: UserModel
+    modifier: Modifier = Modifier, user: UserModel
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val isCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    val avatar: @Composable () -> Unit = {
         AsyncImage(
             model = user.avatar,
             contentScale = ContentScale.Crop,
@@ -155,35 +236,98 @@ fun UserDetailsSection(
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         )
-        Text(
-            modifier = Modifier.padding(top = 5.dp),
-            text = user.nick,
-            fontSize = 16.sp
+    }
+    val userTextDetails: @Composable () -> Unit = {
+        UserTextDetails(
+            modifier = Modifier, user = user
         )
-        user.name?.let { UserDetail("($it)") }
-        var showMore by rememberSaveable { mutableStateOf(false) }
+    }
+    if (isCompact) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            avatar()
+            userTextDetails()
+        }
+    } else {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            avatar()
+            userTextDetails()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun UserTextDetails(
+    modifier: Modifier = Modifier,
+    user: UserModel,
+) {
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    var showMore by rememberSaveable { mutableStateOf(false) }
+    val showMoreButton: @Composable () -> Unit = {
         IconButton(
             onClick = {
                 showMore = !showMore
             },
-            modifier = Modifier
-                .size(18.dp)
+            modifier = Modifier.size(18.dp)
         ) {
             Icon(
-                modifier = Modifier.size(18.dp),
-                imageVector = when(showMore) {
+                modifier = Modifier.size(18.dp), imageVector = when (showMore) {
                     false -> Icons.Rounded.KeyboardArrowDown
                     true -> Icons.Rounded.KeyboardArrowUp
-                },
-                contentDescription = "Ещё информация"
+                }, contentDescription = "Ещё информация"
             )
         }
-        val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
-        if (showMore) {
-            UserDetail(contacts)
-            user.bio?.let {
-                UserDetail(user.bio)
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = if (isWidthCompact) Alignment.CenterHorizontally else Alignment.Start
+            ) {
+                Text(
+                    modifier = Modifier.padding(top = 5.dp),
+                    text = user.nick,
+                    fontSize = 16.sp
+                )
+                user.name?.let {
+                    UserDetail(
+                        text = it
+                    )
+                }
+                val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
+                if (showMore) {
+                    UserDetail(contacts)
+                    user.bio?.let {
+                        UserDetail(user.bio)
+                    }
+                }
             }
+            if (!isWidthCompact) {
+                showMoreButton()
+            }
+        }
+        if (isWidthCompact) {
+            showMoreButton()
         }
     }
 }
@@ -191,21 +335,20 @@ fun UserDetailsSection(
 @Composable
 fun UserDetail(text: String) {
     Text(
-        modifier = Modifier.padding(top = 5.dp),
-        text = text,
-        fontSize = 12.sp
+        modifier = Modifier.padding(top = 5.dp), text = text, fontSize = 12.sp
     )
 }
 
 @Composable
-fun UserActions (
+fun UserActions(
+    modifier: Modifier = Modifier,
     onPublishVideo: (() -> Unit)? = null,
     onCreateChannel: () -> Unit,
     onLogOut: () -> Unit,
     onInvite: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(10.dp)
             .padding(bottom = 10.dp)
@@ -214,21 +357,17 @@ fun UserActions (
     ) {
         if (onPublishVideo != null) {
             ActionButton(
-                text = "Загрузить видео",
-                onClick = onPublishVideo
+                text = "Загрузить видео", onClick = onPublishVideo
             )
         }
         ActionButton(
-            text = "Создать канал",
-            onClick = onCreateChannel
+            text = "Создать канал", onClick = onCreateChannel
         )
         ActionButton(
-            text = "Пригласить",
-            onClick = onInvite
+            text = "Пригласить", onClick = onInvite
         )
         ActionButton(
-            text = "Выйти",
-            onClick = onLogOut
+            text = "Выйти", onClick = onLogOut
         )
     }
 }
@@ -247,8 +386,7 @@ fun ProfileScreenPreviewDay() {
                     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
                     "+79131234567",
                     "some@email.com"
-                ),
-                channels = listOf()
+                ), channels = listOf()
             ),
             isOwner = true,
             onGoToChannel = {},
@@ -257,26 +395,26 @@ fun ProfileScreenPreviewDay() {
             onRefresh = {},
             onLogOut = {},
             onInvite = {},
-            onOpenSettings = {}
-        )
+            onOpenSettings = {})
     }
 }
 
 @Composable
 fun ChannelSnippet(
-    modifier: Modifier = Modifier,
-    channel: Channel,
-    onClick: (Long) -> Unit
+    modifier: Modifier = Modifier, channel: Channel, onClick: (Long) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .clickable {
+            .clickable(
+//                interactionSource = interactionSource,
+//                indication = null
+            ) {
                 onClick(channel.channelId!!)
             }
-            .padding(10.dp)
-    ) {
+            .padding(10.dp)) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically

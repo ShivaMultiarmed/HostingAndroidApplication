@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.presentation.video.search
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Send
@@ -23,6 +26,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -55,7 +61,7 @@ import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SearchVideosScreen(
     modifier: Modifier = Modifier,
@@ -64,6 +70,8 @@ fun SearchVideosScreen(
     onScrollToBottom: () -> Unit,
     onVideoClick: (Long) -> Unit
 ) {
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     var query by rememberSaveable { mutableStateOf("") }
     Scaffold(
         modifier = modifier
@@ -125,12 +133,33 @@ fun SearchVideosScreen(
                         }
                     }
                     LazyVerticalGrid(
-                        modifier = Modifier.weight(1f),
-                        columns = GridCells.Fixed(1),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(
+                                if (isWidthCompact) {
+                                    Modifier
+                                } else {
+                                    Modifier
+                                        .padding(horizontal = 10.dp)
+                                        .padding(top = 10.dp)
+                                }
+                            ),
+                        columns = GridCells.Adaptive(300.dp),
+                        horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                         state = lazyGridState
                     ) {
                         items(state.videos) {
                             VideoWithChannelSnippet(
+                                modifier = modifier
+                                    .then(
+                                        if (isWidthCompact) {
+                                            Modifier
+                                        } else {
+                                            Modifier
+                                                .clip(RoundedCornerShape(15.dp))
+                                        }
+                                    ),
                                 videoWithChannel = it,
                                 onClick = onVideoClick
                             )
@@ -176,26 +205,43 @@ fun SearchVideosScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoWithChannelSnippet(
+    modifier: Modifier = Modifier,
     videoWithChannel: VideoWithChannel,
     onClick: (Long) -> Unit
 ) {
+    val windowSizeClass = calculateWindowSizeClass(LocalActivity.current!!)
+    val isWidthCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
     val video = videoWithChannel.video
     val channel = videoWithChannel.channel
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
                 onClick(video.videoId!!)
             }
-            .padding(top = 10.dp)
+            .then(
+                if (isWidthCompact) {
+                    Modifier
+                } else {
+                    Modifier.padding(10.dp)
+                }
+            )
     ) {
         AsyncImage(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9)
+                .then(
+                    if (isWidthCompact)
+                        Modifier
+                    else
+                        Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
             model = video.coverUrl,
             contentDescription = video.title,
