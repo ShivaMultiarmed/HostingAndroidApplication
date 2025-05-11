@@ -51,6 +51,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.user.UserModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
+import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -357,18 +358,37 @@ fun UserActions(
     ) {
         if (onPublishVideo != null) {
             ActionButton(
-                text = "Загрузить видео", onClick = onPublishVideo
+                text = "Загрузить видео",
+                onClick = onPublishVideo
             )
         }
         ActionButton(
-            text = "Создать канал", onClick = onCreateChannel
+            text = "Создать канал",
+            onClick = onCreateChannel
         )
         ActionButton(
-            text = "Пригласить", onClick = onInvite
+            text = "Пригласить",
+            onClick = onInvite
         )
-        ActionButton(
-            text = "Выйти", onClick = onLogOut
-        )
+        Box {
+            var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
+            ActionButton(
+                text = "Выйти",
+                onClick = {
+                    isLogoutDialogVisible = true
+                }
+            )
+            if (isLogoutDialogVisible) {
+                Dialog(
+                    onSubmit = onLogOut,
+                    onDismiss = {
+                        isLogoutDialogVisible = false
+                    },
+                    dialogTitle = "Выход",
+                    dialogDescription = "Вы уверены, что хотите выйти?"
+                )
+            }
+        }
     }
 }
 
