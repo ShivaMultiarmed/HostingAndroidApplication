@@ -49,6 +49,7 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
+import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -315,11 +316,24 @@ fun EditUserScreen(
                         maxLines = 50,
                     )
                 }
+                var isRemoveAccountDialogVisible by rememberSaveable { mutableStateOf(false) }
+                if (isRemoveAccountDialogVisible) {
+                    Dialog(
+                        onSubmit = onRemove,
+                        onDismiss = {
+                            isRemoveAccountDialogVisible = false
+                        },
+                        dialogTitle = "Удаление аккаунта",
+                        dialogDescription = "Вы уверены, что хотите удалить аккаунт?\n Вы потеряете все свои данные."
+                    )
+                }
                 PrimaryButton(
                     needsCaution = true,
                     text = "Удалить аккаунт",
                     isActivated = state.isRemoving || state.isRemovalConfirmed == true,
-                    onClick = onRemove
+                    onClick = {
+                        isRemoveAccountDialogVisible = true
+                    }
                 )
             }
         }
