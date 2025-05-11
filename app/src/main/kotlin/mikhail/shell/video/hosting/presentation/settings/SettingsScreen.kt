@@ -76,28 +76,6 @@ fun SettingsScreen(
         ) {
             Text(
                 modifier = Modifier.padding(10.dp),
-                text = "Язык"
-            )
-            var selectedLanguage by remember { mutableStateOf(Language.RUSSIAN) }
-            val languages = mapOf(
-                Language.RUSSIAN to "Русский",
-                Language.ENGLISH to "English"
-            )
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Toggle(
-                    modifier = Modifier.fillMaxWidth(),
-                    key = selectedLanguage,
-                    values = languages,
-                    onValueChanged = {
-                        selectedLanguage = it
-                    }
-                )
-            }
-            Text(
-                modifier = Modifier.padding(10.dp),
                 text = "Тема"
             )
             var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
