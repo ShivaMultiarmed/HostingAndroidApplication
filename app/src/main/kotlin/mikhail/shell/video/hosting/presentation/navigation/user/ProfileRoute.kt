@@ -47,7 +47,9 @@ fun NavGraphBuilder.profileRoute(
                     commit()
                 }
                 navController.navigate(Route.Authentication) {
-                    // TODO clear backstack
+                    popUpTo<Route.Authentication> {
+                        inclusive = true
+                    }
                 }
             },
             onInvite = {

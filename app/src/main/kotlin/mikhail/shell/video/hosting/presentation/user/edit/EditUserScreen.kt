@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +22,9 @@ import androidx.compose.material.icons.rounded.DensityMedium
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PersonOff
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -35,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -69,8 +73,8 @@ fun EditUserScreen(
     onRemoveSuccess: () -> Unit = {},
     onPopup: () -> Unit = {}
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
     if (state.initialUser != null) {
-        val snackbarHostState = remember { SnackbarHostState() }
         var nick by rememberSaveable { mutableStateOf(state.initialUser.nick) }
         var name by rememberSaveable { mutableStateOf(state.initialUser.name?: "") }
         var avatarUri by rememberSaveable { mutableStateOf(null as Uri?) }
@@ -324,7 +328,8 @@ fun EditUserScreen(
                             isRemoveAccountDialogVisible = false
                         },
                         dialogTitle = "Удаление аккаунта",
-                        dialogDescription = "Вы уверены, что хотите удалить аккаунт?\n Вы потеряете все свои данные."
+                        dialogDescription = "Вы уверены, что хотите удалить аккаунт?\n" +
+                                " Вы потеряете все свои данные."
                     )
                 }
                 PrimaryButton(
@@ -348,25 +353,40 @@ fun EditUserScreen(
                 onEditSuccess(userId)
             }
         }
-        LaunchedEffect(state.isRemovalConfirmed) {
-            if (state.isRemovalConfirmed == true) {
-                delay(1000)
-                snackbarHostState.showSnackbar(
-                    message = "Вы удалили свой аккаунт",
-                    withDismissAction = true,
-                    duration = SnackbarDuration.Long
-                )
-                onRemoveSuccess()
-            }
-        }
+
     } else if (state.isInitializing) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()
         )
-    } else {
+    } else if (state.isRemovalConfirmed != true) {
         ErrorComponent(
             modifier = Modifier.fillMaxSize(),
             onRetry = onInitialize
+        )
+    } else {
+        AccountRemovedScreen()
+    }
+    LaunchedEffect(state.isRemovalConfirmed) {
+        if (state.isRemovalConfirmed == true) {
+            delay(3000)
+            onRemoveSuccess()
+        }
+    }
+}
+
+@Composable
+fun AccountRemovedScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            modifier = Modifier
+                .fillMaxWidth(0.4f)
+                .aspectRatio(1f),
+            imageVector = Icons.Rounded.PersonOff,
+            tint = MaterialTheme.colorScheme.onSurface,
+            contentDescription = "Аккаунт удалён"
         )
     }
 }

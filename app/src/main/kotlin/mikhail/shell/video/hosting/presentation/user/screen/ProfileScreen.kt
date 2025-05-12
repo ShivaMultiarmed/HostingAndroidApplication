@@ -196,12 +196,13 @@ fun ProfileScreenContent(
                                 }
                             ), channel = channel, onClick = {
                                 onGoToChannel(channel.channelId!!)
-                            })
+                            }
+                        )
                     }
                 }
             } else {
                 Box(
-                    modifier = Modifier, contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Здесь пока нет каналов"

@@ -132,9 +132,9 @@ class MainActivity : ComponentActivity() {
     private fun getHomeDestination(): Route {
         intent.extras?.let {
             if (it.getLong("videoId") != 0L) {
+                it.clear()
                 return Route.Video.View(it.getLong("videoId"))
             }
-            it.clear()
         }
         return Route.Search
     }

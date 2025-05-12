@@ -1,9 +1,10 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,8 +24,7 @@ fun Dialog(
             if (dialogTitle != null) {
                 Text(
                     text = dialogTitle,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.clickable { onSubmit() }
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         },
@@ -32,26 +32,39 @@ fun Dialog(
             if (dialogDescription != null) {
                 Text(
                     text = dialogDescription,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.clickable { onSubmit() }
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(10.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         confirmButton = {
-            Text(
-                text = "Ок",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.clickable { onSubmit() }
-            )
+            Button(
+                modifier = Modifier.clip(CircleShape),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
+                onClick = onSubmit
+            ) {
+                Text(
+                    text = "Ок"
+                )
+            }
         },
         dismissButton = {
-            Text(
-                text = "Отмена",
-                modifier = Modifier.clickable(onClick = onDismiss)
-            )
+            Button(
+                modifier = Modifier.clip(CircleShape),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Отмена"
+                )
+            }
         },
         onDismissRequest = onDismiss
     )

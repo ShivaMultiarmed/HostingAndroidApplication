@@ -19,16 +19,10 @@ fun NavGraphBuilder.signInRoute(
     composable<Route.Authentication.SignIn> {
         val viewModel = hiltViewModel<SignInWithPasswordViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref =
-            LocalContext.current.applicationContext.getSharedPreferences(
-                "user_details",
-                MODE_PRIVATE
-            )
+        val sharedPref = LocalContext.current.applicationContext.getSharedPreferences("user_details", MODE_PRIVATE)
         SignInScreen(
             state = state,
-            onSubmit = { email, password ->
-                viewModel.signIn(email, password)
-            },
+            onSubmit = viewModel::signIn,
             onSuccess = {
                 if (state.authModel != null) {
                     sharedPref.edit {

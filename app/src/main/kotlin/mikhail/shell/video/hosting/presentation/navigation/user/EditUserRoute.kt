@@ -38,7 +38,7 @@ fun NavGraphBuilder.editUserRoute(
                     commit()
                 }
                 navController.navigate(Route.Authentication) {
-                    popUpTo<Route.Authentication.SignIn> {
+                    popUpTo<Route.Authentication> {
                         inclusive = true
                     }
                 }

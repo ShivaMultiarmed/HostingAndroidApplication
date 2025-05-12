@@ -5,6 +5,9 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -34,7 +37,8 @@
             android:exported="true"
             android:label="@string/app_name"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.VideoHosting">
+            android:theme="@style/Theme.VideoHosting"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
