@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
+import android.view.WindowInsetsController
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -83,6 +84,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -238,6 +241,18 @@ fun VideoScreen(
                 }
                 LaunchedEffect(isFullScreenReached) {
                     onFullScreen(isFullScreenReached)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val window = activity.window
+                        WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
+                        if (isFullScreenReached) {
+                            window.insetsController?.let {
+                                it.hide(WindowInsetsCompat.Type.systemBars())
+                                it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                            }
+                        } else {
+                            window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
+                        }
+                    }
                 }
                 LaunchedEffect(targetOrientation) {
                     if (activity?.requestedOrientation != targetOrientation) {

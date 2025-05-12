@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -60,6 +61,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
+import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @Composable
@@ -375,18 +377,30 @@ fun EditUserScreen(
 }
 
 @Composable
+@Preview
 fun AccountRemovedScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .aspectRatio(1f),
-            imageVector = Icons.Rounded.PersonOff,
-            tint = MaterialTheme.colorScheme.onSurface,
-            contentDescription = "Аккаунт удалён"
-        )
+        Column (
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                modifier = Modifier
+                    .fillMaxWidth(0.3f)
+                    .aspectRatio(1f),
+                imageVector = Icons.Rounded.PersonOff,
+                tint = MaterialTheme.colorScheme.onSurface,
+                contentDescription = "Аккаунт удалён"
+            )
+            Title(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                text = "Аккаунт удалён"
+            )
+        }
     }
 }

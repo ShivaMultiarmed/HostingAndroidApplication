@@ -412,8 +412,8 @@ fun PlayerControls(
                             .height(35.dp)
                             .padding(horizontal = 15.dp)
                     ) {
-                        val width = constraints.maxWidth
-                        val height = constraints.maxHeight
+                        val width = this.constraints.maxWidth
+                        val height = this.constraints.maxHeight
                         val primaryColor = MaterialTheme.colorScheme.primary
                         val progress = position.toFloat() / duration
                         Canvas(

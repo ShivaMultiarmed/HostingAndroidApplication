@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.Activity
 import android.net.Uri
 import android.os.Build
+import android.view.WindowInsetsController
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -47,6 +49,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -86,6 +90,7 @@ fun UploadVideoScreen(
     onPopup: () -> Unit = {},
     onFullScreen: (Boolean) -> Unit
 ) {
+    val activity = LocalActivity.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -288,6 +293,21 @@ fun UploadVideoScreen(
                                 onFullScreen(isFullScreen)
                             }
                         )
+                    }
+                    LaunchedEffect(isFullScreen) {
+                        onFullScreen(isFullScreen)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            val window = activity?.window!!
+                            WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)
+                            if (isFullScreen) {
+                                window.insetsController?.let {
+                                    it.hide(WindowInsetsCompat.Type.systemBars())
+                                    it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                                }
+                            } else {
+                                window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
+                            }
+                        }
                     }
                 }
                 if (!isFullScreen) {
