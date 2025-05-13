@@ -52,7 +52,7 @@ interface ChannelApi {
         @Query("subscriptionState") subscriptionState: SubscriptionState
     ): ChannelWithUserDto
     @PATCH("channels/resubscribe")
-    suspend fun resubscribe(
+    suspend fun resubscribeToNotifications(
         @Query("userId") userId: Long,
         @Query("token") token: String
     ): Void

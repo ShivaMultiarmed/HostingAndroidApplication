@@ -38,7 +38,7 @@ interface ChannelRepository {
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, ChannelLoadingError>
 
-    suspend fun resubscribe(
+    suspend fun resubscribeToNotifications(
         userId: Long
     ): Result<Void, ChannelSubscriptionError>
 

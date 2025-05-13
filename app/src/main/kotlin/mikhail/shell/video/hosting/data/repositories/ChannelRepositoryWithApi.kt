@@ -129,12 +129,12 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun resubscribe(
+    override suspend fun resubscribeToNotifications(
         userId: Long
     ): Result<Void, ChannelSubscriptionError> {
         return try {
             val token = fcm.token.result
-            Result.Success(_channelApi.resubscribe(userId, token))
+            Result.Success(_channelApi.resubscribeToNotifications(userId, token))
         } catch (e: HttpException) {
             Result.Failure(RESUBSCRIBING_FAILED)
         } catch (e: Exception) {

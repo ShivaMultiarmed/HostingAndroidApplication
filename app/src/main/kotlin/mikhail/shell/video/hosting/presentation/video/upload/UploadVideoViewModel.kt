@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.Player
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -18,6 +19,7 @@ import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
 @HiltViewModel(assistedFactory = UploadVideoViewModel.Factory::class)
 class UploadVideoViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
+    @Assisted("player") val player: Player,
     private val _getChannelsByOwner: GetChannelsByOwner
 ): ViewModel() {
     private val _state = MutableStateFlow(UploadVideoScreenState())
@@ -71,6 +73,9 @@ class UploadVideoViewModel @AssistedInject constructor(
     }
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("userId") userId: Long): UploadVideoViewModel
+        fun create(
+            @Assisted("userId") userId: Long,
+            @Assisted("player") player: Player
+        ): UploadVideoViewModel
     }
 }

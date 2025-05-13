@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -26,18 +27,22 @@ fun NavGraphBuilder.uploadVideoRoute(
     composable<Route.Video.Upload> {
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
-        val player = ExoPlayer.Builder(context).build()
-        val viewModel = hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory> { it.create(userId) }
+        val viewModel = hiltViewModel<UploadVideoViewModel, UploadVideoViewModel.Factory> {
+            val mediaSourceFactory = DefaultMediaSourceFactory(context)
+            val player = ExoPlayer.Builder(context)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .build()
+            it.create(userId, player)
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         UploadVideoScreen(
             state = state,
-            player = player,
+            player = viewModel.player,
             onSubmit = { input ->
                 if (viewModel.validateVideoInput(input) == null) {
                     coroutineScope.launch {
                         delay(1000)
-
                         context.startService(
                             Intent(
                                 context,

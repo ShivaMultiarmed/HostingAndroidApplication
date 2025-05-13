@@ -30,10 +30,9 @@ fun NavGraphBuilder.videoRoute(
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
-        val videoScreenViewModel =
-            hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-                factory.create(userId, videoId, player)
-            }
+        val videoScreenViewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
+            factory.create(userId, videoId, player)
+        }
         val state by videoScreenViewModel.state.collectAsStateWithLifecycle()
         VideoScreen(
             userId = userId,

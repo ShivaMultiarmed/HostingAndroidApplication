@@ -134,7 +134,11 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             val channelId = _state.value.videoDetails?.channel?.channelId!!
-            _subscribe(channelId, userId, subscriptionState).onSuccess { channelWithUser ->
+            _subscribe(
+                channelId = channelId,
+                userId = userId,
+                subscriptionState = subscriptionState
+            ).onSuccess { channelWithUser ->
                 _state.update {
                     it.copy(
                         videoDetails = it.videoDetails?.copy(

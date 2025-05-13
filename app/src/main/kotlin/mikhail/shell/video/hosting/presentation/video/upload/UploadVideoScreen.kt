@@ -44,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
@@ -105,7 +104,6 @@ fun UploadVideoScreen(
     if (state.channels != null) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        val orientation = LocalConfiguration.current.orientation
         val snackbarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -154,8 +152,10 @@ fun UploadVideoScreen(
                     val sourceCreator = rememberLauncherForActivityResult(
                         ActivityResultContracts.CaptureVideo()
                     ) {
-                        if (!it) {
-                            sourceUri = null
+                        if (it) {
+                            val newMediaItem = MediaItem.fromUri(sourceUri!!)
+                            player.setMediaItem(newMediaItem)
+                            player.prepare()
                         }
                     }
 
@@ -164,6 +164,9 @@ fun UploadVideoScreen(
                     ) {
                         if (it != null) {
                             sourceUri = it
+                            val newMediaItem = MediaItem.fromUri(sourceUri!!)
+                            player.setMediaItem(newMediaItem)
+                            player.prepare()
                         }
                     }
                     val sourceErrMsg =
@@ -197,8 +200,7 @@ fun UploadVideoScreen(
                             )
                         }
                         val cacheDir = context.cacheDir.absolutePath
-                        val cameraPermission =
-                            rememberPermissionState(Manifest.permission.CAMERA)
+                        val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
                             onDismiss = {
@@ -230,7 +232,7 @@ fun UploadVideoScreen(
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar(
                                                         message = "Разрешите доступ к камере в настройках Вашего устройства.",
-                                                        duration = SnackbarDuration.Long
+                                                        duration = SnackbarDuration.Short
                                                     )
                                                 }
                                             } else {
@@ -252,10 +254,8 @@ fun UploadVideoScreen(
                     }
                 }
                 LaunchedEffect(sourceUri) {
-                    if (sourceUri != null) {
-                        player.setMediaItem(MediaItem.fromUri(sourceUri!!))
-                        player.prepare()
-                    } else {
+                    if (sourceUri == null) {
+                        player.stop()
                         player.clearMediaItems()
                     }
                 }
@@ -302,7 +302,8 @@ fun UploadVideoScreen(
                             if (isFullScreen) {
                                 window.insetsController?.let {
                                     it.hide(WindowInsetsCompat.Type.systemBars())
-                                    it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                                    it.systemBarsBehavior =
+                                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                                 }
                             } else {
                                 window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
