@@ -11,6 +11,7 @@ import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.RESUBSCRIBING_FAILED
+import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.UNSUBSCRIBING_FAILED
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.DeleteChannelError
 import mikhail.shell.video.hosting.domain.errors.EditChannelError
@@ -129,16 +130,25 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun resubscribeToNotifications(
+    override suspend fun resubscribe(
         userId: Long
-    ): Result<Void, ChannelSubscriptionError> {
+    ): Result<Unit, ChannelSubscriptionError> {
         return try {
             val token = fcm.token.result
-            Result.Success(_channelApi.resubscribeToNotifications(userId, token))
-        } catch (e: HttpException) {
-            Result.Failure(RESUBSCRIBING_FAILED)
+            Result.Success(_channelApi.resubscribe(userId, token))
         } catch (e: Exception) {
             Result.Failure(RESUBSCRIBING_FAILED)
+        }
+    }
+
+    override suspend fun unsubscribe(
+        userId: Long
+    ): Result<Unit, ChannelSubscriptionError> {
+        return try {
+            val token = fcm.token.result
+            Result.Success(_channelApi.unsubscribe(userId, token))
+        } catch (e: Exception) {
+            Result.Failure(UNSUBSCRIBING_FAILED)
         }
     }
 

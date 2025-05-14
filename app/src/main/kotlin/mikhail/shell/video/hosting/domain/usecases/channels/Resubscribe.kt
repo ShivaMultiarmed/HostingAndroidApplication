@@ -5,10 +5,10 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 
-class ResubscribeToNotifications @Inject constructor(
+class Resubscribe @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<Void, ChannelSubscriptionError> {
-        return channelRepository.resubscribeToNotifications(userId)
+    suspend operator fun invoke(userId: Long): Result<Unit, ChannelSubscriptionError> {
+        return channelRepository.resubscribe(userId)
     }
 }

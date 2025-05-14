@@ -41,6 +41,7 @@ import javax.net.ssl.X509TrustManager
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiModule {
+
     @Provides
     @Singleton
     fun provideAndroidFileProvider(
@@ -142,5 +143,7 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideFCM() = Firebase.messaging
+    fun provideFCM() = Firebase.messaging.apply {
+        isAutoInitEnabled = false
+    }
 }

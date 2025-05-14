@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize(),
                             navController = navController,
-                            startDestination = getStartDestination()
+                            startDestination = if (userDetailsProvider.getUserId() != 0L) Route.Search else Route.Authentication
                         ) {
                             authenticationGraph(navController)
                             videoGraph(navController, player, userDetailsProvider, { isVideoFullScreened = it })
@@ -126,23 +126,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun getStartDestination(): Route {
-        return if (userDetailsProvider.getUserId() != 0L) {
-            if (intent.extras?.isEmpty != false) {
-                Route.Search
-            } else {
-                if (intent.extras?.containsKey("videoId") == true) {
-                    val videoId = intent.extras?.getLong("videoId")
-                    videoId?.let { Route.Video.View(it) }?: Route.Search
-                } else {
-                    Route.Search
-                }
-            }
-        } else {
-            Route.Authentication
         }
     }
 

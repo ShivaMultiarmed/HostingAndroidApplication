@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.presentation.user.toModel
@@ -18,7 +19,8 @@ import mikhail.shell.video.hosting.presentation.user.toModel
 class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val _getUser: GetUser,
-    private val _getChannelsByOwner: GetChannelsByOwner
+    private val _getChannelsByOwner: GetChannelsByOwner,
+    private val _signOut: SignOut
 ): ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
     val state = _state.asStateFlow()
@@ -72,6 +74,11 @@ class ProfileViewModel @AssistedInject constructor(
                     )
                 }
             }
+        }
+    }
+    fun signOut() {
+        viewModelScope.launch {
+            _signOut(userId)
         }
     }
     @AssistedFactory

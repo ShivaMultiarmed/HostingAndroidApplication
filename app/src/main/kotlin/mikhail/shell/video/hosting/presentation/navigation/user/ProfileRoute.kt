@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -14,6 +13,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
+import mikhail.shell.video.hosting.presentation.utils.logOut
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,
@@ -42,15 +42,7 @@ fun NavGraphBuilder.profileRoute(
                 }
             },
             onLogOut = {
-                sharedPref.edit {
-                    clear()
-                    commit()
-                }
-                navController.navigate(Route.Authentication) {
-                    popUpTo<Route.Authentication> {
-                        inclusive = true
-                    }
-                }
+                logOut(sharedPref, navController)
             },
             onInvite = {
                 navController.navigate(Route.User.Invite)

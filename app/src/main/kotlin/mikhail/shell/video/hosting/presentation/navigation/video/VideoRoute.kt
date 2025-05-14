@@ -10,9 +10,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
@@ -25,7 +27,13 @@ fun NavGraphBuilder.videoRoute(
     userDetailsProvider: UserDetailsProvider,
     onFullScreen: (Boolean) -> Unit = {}
 ) {
-    composable<Route.Video.View> {
+    composable<Route.Video.View>(
+        deepLinks = listOf(
+            navDeepLink<Route.Video.View>(
+                basePath = "https://$HOST/videos"
+            )
+        )
+    ) {
         val videoRouteInfo = it.toRoute<Route.Video.View>()
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()

@@ -38,9 +38,13 @@ interface ChannelRepository {
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, ChannelLoadingError>
 
-    suspend fun resubscribeToNotifications(
+    suspend fun resubscribe(
         userId: Long
-    ): Result<Void, ChannelSubscriptionError>
+    ): Result<Unit, ChannelSubscriptionError>
+
+    suspend fun unsubscribe(
+        userId: Long
+    ): Result<Unit, ChannelSubscriptionError>
 
     suspend fun editChannel(
         channel: Channel,

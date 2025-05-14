@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -43,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +76,7 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val orientation = LocalConfiguration.current.orientation
     val content: @Composable () -> Unit = {
         ProfileScreenContent(
             modifier = modifier,
@@ -88,9 +91,11 @@ fun ProfileScreen(
         )
     }
     Scaffold(
-        modifier = modifier.fillMaxSize(), topBar = {
+        modifier = modifier.fillMaxSize(),
+        topBar = {
             TopBar(
-                title = "Профиль", actions = if (isOwner) listOf(
+                title = "Профиль",
+                actions = if (isOwner) listOf(
                     {
                         IconButton(
                             onClick = onOpenSettings
@@ -101,10 +106,12 @@ fun ProfileScreen(
                                 contentDescription = "Открыть настройки"
                             )
                         }
-                    }) else null
+                    }
+                ) else null
             )
-        }) { padding ->
-        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+        }
+    ) { padding ->
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -139,16 +146,18 @@ fun ProfileScreenContent(
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    val orientation = LocalConfiguration.current.orientation
 
     if (state.user != null && state.channels != null) {
         Column(
             modifier = Modifier.then(
-                if (isWidthCompact) {
+                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                     Modifier.fillMaxWidth()
                 } else {
                     Modifier
                         .fillMaxHeight()
                         .fillMaxWidth(0.5f)
+                        .verticalScroll(rememberScrollState())
                 }
             )
         ) {
@@ -169,6 +178,13 @@ fun ProfileScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 10.dp)
+                .then(
+                    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        Modifier.verticalScroll(rememberScrollState())
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             if (state.channels.isNotEmpty()) {
                 Title(

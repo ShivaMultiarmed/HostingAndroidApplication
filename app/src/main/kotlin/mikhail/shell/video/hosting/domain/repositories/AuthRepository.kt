@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignInError
+import mikhail.shell.video.hosting.domain.errors.SignOutError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
@@ -15,4 +16,8 @@ interface AuthRepository {
     suspend fun signUpWithPassword(
         userName: String, password: String, user: User
     ): Result<AuthModel, CompoundError<SignUpError>>
+
+    suspend fun signOut(
+        userId: Long
+    ): Result<Unit, SignOutError>
 }

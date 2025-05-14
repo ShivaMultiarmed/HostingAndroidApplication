@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
@@ -17,13 +18,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.presentation.activities.MainActivity
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
+import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
 @AndroidEntryPoint
 class VideoUploadingService : Service() {
@@ -76,8 +78,8 @@ class VideoUploadingService : Service() {
 
     @OptIn(UnstableApi::class)
     private fun displaySuccessNotification(vid: Video) {
-        val deepLinkIntent = Intent(this, MainActivity::class.java).also {
-            it.putExtra("videoId", vid.videoId)
+        val deepLinkIntent = Intent(this, MainActivity::class.java).apply {
+            data = "https://$HOST/videos/${vid.videoId!!}".toUri()
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
