@@ -11,7 +11,9 @@ class SignOut @Inject constructor(
     private val unsubscribe: Unsubscribe
 ) {
     suspend operator fun invoke(userId: Long): Result<Unit, SignOutError> {
-        return if (unsubscribe(userId) is Result.Success) {
+        return if (unsubscribe(userId) is Result.Success
+            && authRepository.signOut(userId) is Result.Success
+            ) {
             Result.Success(Unit)
         } else {
             Result.Failure(SignOutError.UNEXPECTED)
