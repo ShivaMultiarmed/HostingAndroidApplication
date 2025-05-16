@@ -21,8 +21,7 @@ fun NavGraphBuilder.signUpRoute(
     composable<Route.Authentication.SignUp> {
         val viewModel = hiltViewModel<SignUpWithPasswordViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref =
-            LocalContext.current.applicationContext.getSharedPreferences(
+        val sharedPref = LocalContext.current.applicationContext.getSharedPreferences(
                 "user_details",
                 MODE_PRIVATE
             )
@@ -39,6 +38,8 @@ fun NavGraphBuilder.signUpRoute(
                         putString("token", it.token)
                         commit()
                     }
+                    viewModel.subscribeToNotifications()
+                }.invokeOnCompletion {
                     navController.navigate(Route.Search)
                 }
             }

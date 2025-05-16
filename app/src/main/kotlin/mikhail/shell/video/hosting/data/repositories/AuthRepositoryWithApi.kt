@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.dto.SignUpDto
 import mikhail.shell.video.hosting.data.dto.toDto
@@ -30,9 +29,7 @@ class AuthRepositoryWithApi @Inject constructor(
         return try {
             Result.Success(
                 authApi.signInWithPassword(email, password)
-            ).also {
-                fcm.isAutoInitEnabled = true
-            }
+            )
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<SignInError>>() {}.type
@@ -56,9 +53,7 @@ class AuthRepositoryWithApi @Inject constructor(
             )
             Result.Success(
                 authApi.signUpWithPassword(signUpDto)
-            ).also {
-                fcm.isAutoInitEnabled = true
-            }
+            )
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
@@ -71,8 +66,6 @@ class AuthRepositoryWithApi @Inject constructor(
 
     override suspend fun signOut(userId: Long): Result<Unit, SignOutError> {
         return try {
-            fcm.deleteToken().await()
-            fcm.isAutoInitEnabled = false
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(SignOutError.UNEXPECTED)

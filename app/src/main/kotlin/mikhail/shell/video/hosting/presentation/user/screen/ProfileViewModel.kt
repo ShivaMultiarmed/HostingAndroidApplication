@@ -78,7 +78,9 @@ class ProfileViewModel @AssistedInject constructor(
     }
     fun signOut() {
         viewModelScope.launch {
-            _signOut(userId)
+            _signOut(userId).onSuccess {
+                _state.update { it.copy(isLoggedOut = true) }
+            }
         }
     }
     @AssistedFactory

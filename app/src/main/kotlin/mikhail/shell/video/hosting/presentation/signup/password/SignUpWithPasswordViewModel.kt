@@ -15,18 +15,22 @@ import mikhail.shell.video.hosting.domain.errors.SignUpError.NAME_EMPTY
 import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORD_EMPTY
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
+import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import javax.inject.Inject
 
 @HiltViewModel
 class SignUpWithPasswordViewModel @Inject constructor(
-    private val _signUpWithPassword: SignUpWithPassword
-): ViewModel() {
+    private val _signUpWithPassword: SignUpWithPassword,
+    private val _subscribeToChannelNotifications: SubscribeToChannelNotifications
+) : ViewModel() {
     private val _state = MutableStateFlow(SignUpWithPasswordState())
     val state = _state.asStateFlow()
+
     companion object {
         private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
     }
+
     private fun validateSignUpInput(inputState: SignUpInputState): CompoundError<SignUpError>? {
         val error = CompoundError<SignUpError>()
         if (inputState.userName == "")
@@ -42,6 +46,7 @@ class SignUpWithPasswordViewModel @Inject constructor(
         else
             null
     }
+
     fun signUp(signUpInputState: SignUpInputState) {
         _state.update {
             it.copy(
@@ -80,5 +85,10 @@ class SignUpWithPasswordViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    suspend fun subscribeToNotifications() {
+        val userId = state.value.authModel?.userId ?: return
+        _subscribeToChannelNotifications(userId)
     }
 }

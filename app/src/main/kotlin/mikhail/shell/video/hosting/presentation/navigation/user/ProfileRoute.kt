@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,11 +23,15 @@ fun NavGraphBuilder.profileRoute(
     composable<Route.User.Profile> {
         val bundle = it.toRoute<Route.User.Profile>()
         val userId = bundle.userId
-        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
+        val viewModel =
+            hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
+        val sharedPref =
+            LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
+        val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             state = state,
+            isOwner = userId == userDetailsProvider.getUserId(),
             onGoToChannel = {
                 navController.navigate(Route.Channel.View(it))
             },
@@ -41,7 +46,8 @@ fun NavGraphBuilder.profileRoute(
                     viewModel.loadChannels()
                 }
             },
-            onLogOut = {
+            onLogOut = viewModel::signOut,
+            onLogOutSuccess = {
                 logOut(sharedPref, navController)
             },
             onInvite = {
@@ -49,8 +55,7 @@ fun NavGraphBuilder.profileRoute(
             },
             onOpenSettings = {
                 navController.navigate(Route.User.Settings)
-            },
-            isOwner = userId == userDetailsProvider.getUserId()
+            }
         )
     }
 }

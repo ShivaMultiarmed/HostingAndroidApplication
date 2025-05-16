@@ -124,7 +124,6 @@ class EditUserViewModel @AssistedInject constructor(
         }
         return if (compoundError.isNotNull()) compoundError else null
     }
-
     fun removeUser() {
         _state.update {
             it.copy(

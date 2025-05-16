@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
 import android.content.res.Configuration
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +36,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,10 +74,10 @@ fun ProfileScreen(
     onCreateChannel: () -> Unit,
     onRefresh: () -> Unit,
     onLogOut: () -> Unit,
+    onLogOutSuccess: () -> Unit,
     onInvite: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val orientation = LocalConfiguration.current.orientation
     val content: @Composable () -> Unit = {
         ProfileScreenContent(
@@ -90,7 +92,7 @@ fun ProfileScreen(
             onInvite = onInvite
         )
     }
-    Scaffold(
+    Scaffold (
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopBar(
@@ -129,6 +131,11 @@ fun ProfileScreen(
             }
         }
     }
+    LaunchedEffect(state.isLoggedOut) {
+        if (state.isLoggedOut == true) {
+            onLogOutSuccess()
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -162,7 +169,8 @@ fun ProfileScreenContent(
             )
         ) {
             UserDetailsSection(
-                modifier = Modifier, user = state.user
+                modifier = Modifier,
+                user = state.user
             )
             if (isOwner) {
                 UserActions(
@@ -176,11 +184,17 @@ fun ProfileScreenContent(
         }
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .then(
+                    if (orientation == ORIENTATION_LANDSCAPE) {
+                        Modifier
+                    } else {
+                        Modifier.fillMaxSize()
+                    }
+                )
                 .padding(top = 10.dp)
                 .then(
-                    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        Modifier.verticalScroll(rememberScrollState())
+                    if (orientation == ORIENTATION_LANDSCAPE) {
+                        Modifier//.verticalScroll(rememberScrollState())
                     } else {
                         Modifier
                     }
@@ -188,10 +202,15 @@ fun ProfileScreenContent(
         ) {
             if (state.channels.isNotEmpty()) {
                 Title(
-                    modifier = Modifier.fillMaxWidth(), text = "Каналы пользователя"
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 5.dp),
+                    text = "Каналы пользователя"
                 )
                 LazyVerticalGrid(
-                    modifier = Modifier.then(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
                         if (isWidthCompact) {
                             Modifier
                         } else {
@@ -218,7 +237,8 @@ fun ProfileScreenContent(
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Здесь пока нет каналов"
@@ -240,7 +260,8 @@ fun ProfileScreenContent(
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun UserDetailsSection(
-    modifier: Modifier = Modifier, user: UserModel
+    modifier: Modifier = Modifier,
+    user: UserModel
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
@@ -250,33 +271,43 @@ fun UserDetailsSection(
             contentScale = ContentScale.Crop,
             contentDescription = "Изображение профиля",
             modifier = Modifier
-                .size(90.dp)
+                .padding(top = 10.dp)
+                .size(100.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         )
     }
+    val nick: @Composable () -> Unit = {
+        Text(
+            modifier = Modifier
+                .padding(top = 5.dp),
+            text = user.nick,
+            fontSize = 16.sp
+        )
+    }
     val userTextDetails: @Composable () -> Unit = {
         UserTextDetails(
-            modifier = Modifier, user = user
+            modifier = Modifier,
+            user = user
         )
     }
     if (isCompact) {
         Column(
             modifier = modifier
-                .fillMaxWidth()
+                //.fillMaxWidth()
                 .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             avatar()
+            nick()
             userTextDetails()
         }
     } else {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            nick()
             avatar()
             userTextDetails()
         }
@@ -289,8 +320,6 @@ fun UserTextDetails(
     modifier: Modifier = Modifier,
     user: UserModel,
 ) {
-    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
-    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     var showMore by rememberSaveable { mutableStateOf(false) }
     val showMoreButton: @Composable () -> Unit = {
         IconButton(
@@ -312,7 +341,7 @@ fun UserTextDetails(
         modifier = modifier
             .fillMaxWidth()
             .padding(10.dp),
-        horizontalAlignment = if (isWidthCompact) Alignment.CenterHorizontally else Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             modifier = Modifier,
@@ -320,13 +349,8 @@ fun UserTextDetails(
         ) {
             Column(
                 modifier = Modifier,
-                horizontalAlignment = if (isWidthCompact) Alignment.CenterHorizontally else Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    modifier = Modifier.padding(top = 5.dp),
-                    text = user.nick,
-                    fontSize = 16.sp
-                )
                 user.name?.let {
                     UserDetail(
                         text = it
@@ -340,20 +364,17 @@ fun UserTextDetails(
                     }
                 }
             }
-            if (!isWidthCompact) {
-                showMoreButton()
-            }
         }
-        if (isWidthCompact) {
-            showMoreButton()
-        }
+        showMoreButton()
     }
 }
 
 @Composable
 fun UserDetail(text: String) {
     Text(
-        modifier = Modifier.padding(top = 5.dp), text = text, fontSize = 12.sp
+        modifier = Modifier.padding(top = 5.dp),
+        text = text,
+        fontSize = 12.sp
     )
 }
 
@@ -431,8 +452,10 @@ fun ProfileScreenPreviewDay() {
             onCreateChannel = {},
             onRefresh = {},
             onLogOut = {},
+            onLogOutSuccess = {},
             onInvite = {},
-            onOpenSettings = {})
+            onOpenSettings = {}
+        )
     }
 }
 

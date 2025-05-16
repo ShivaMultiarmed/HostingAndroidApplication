@@ -51,13 +51,13 @@ interface ChannelApi {
         @Query("token") token: String,
         @Query("subscriptionState") subscriptionState: SubscriptionState
     ): ChannelWithUserDto
-    @PATCH("channels/resubscribe")
-    suspend fun resubscribe(
+    @PATCH("channels/notifications/subscribe")
+    suspend fun subscribeToChannelNotifications(
         @Query("userId") userId: Long,
         @Query("token") token: String
     )
-    @PATCH("channels/unsubscribe")
-    suspend fun unsubscribe(
+    @PATCH("channels/notifications/unsubscribe")
+    suspend fun unsubscribeFromChannelNotifications(
         @Query("userId") userId: Long,
         @Query("token") token: String
     )

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -130,24 +131,25 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun resubscribe(
+    override suspend fun subscribeToNotifications(
         userId: Long
     ): Result<Unit, ChannelSubscriptionError> {
         return try {
-            val token = fcm.token.result
-            Result.Success(_channelApi.resubscribe(userId, token))
+            val token = fcm.token.await()
+            Result.Success(_channelApi.subscribeToChannelNotifications(userId, token))
         } catch (e: Exception) {
             Result.Failure(RESUBSCRIBING_FAILED)
         }
     }
 
-    override suspend fun unsubscribe(
+    override suspend fun unsubscribeFromNotifications(
         userId: Long
     ): Result<Unit, ChannelSubscriptionError> {
         return try {
-            val token = fcm.token.result
-            Result.Success(_channelApi.unsubscribe(userId, token))
+            val token = fcm.token.await()
+            Result.Success(_channelApi.unsubscribeFromChannelNotifications(userId, token))
         } catch (e: Exception) {
+            Log.e("Channel Repository with API", e.stackTraceToString())
             Result.Failure(UNSUBSCRIBING_FAILED)
         }
     }
