@@ -1,4 +1,4 @@
-@file:kotlin.OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package mikhail.shell.video.hosting.presentation.video.screen
 
@@ -11,9 +11,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -167,7 +164,6 @@ fun VideoScreen(
     if (state.videoDetails != null) {
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-        var videoInfoExpanded by rememberSaveable { mutableStateOf(false) }
         val scrollState = rememberScrollState()
         val video = state.videoDetails.video
         val channel = state.videoDetails.channel
@@ -225,7 +221,7 @@ fun VideoScreen(
                                     if (isSmallWindow) {
                                         Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
                                     } else {
-                                        Modifier.fillMaxHeight(0.7f)
+                                        Modifier.fillMaxHeight(0.5f)
                                     }
                                 }
                             ),
@@ -288,16 +284,6 @@ fun VideoScreen(
                             .background(MaterialTheme.colorScheme.background)
                             .padding(12.dp)
                             .verticalScroll(scrollState)
-                            .draggable(
-                                orientation = Orientation.Vertical,
-                                state = rememberDraggableState {
-                                    if (it < -50f) {
-                                        videoInfoExpanded = true
-                                    } else if (it > 50f) {
-                                        videoInfoExpanded = false
-                                    }
-                                }
-                            )
                     ) {
                         Box(
                             modifier = Modifier
