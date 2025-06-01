@@ -222,7 +222,13 @@ fun VideoEditScreen(
                                 )
                             }
                         }
-                        if (coverExists == true && coverAction == REMOVE) {
+                    }
+                    if (coverExists == true && coverAction == REMOVE) {
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = "Вы удалите обложку"
                             )

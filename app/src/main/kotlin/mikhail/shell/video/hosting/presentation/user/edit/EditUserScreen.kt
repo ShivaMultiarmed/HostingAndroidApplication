@@ -5,14 +5,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -50,7 +54,6 @@ import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.domain.errors.EditUserError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
-import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
@@ -78,12 +81,12 @@ fun EditUserScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     if (state.initialUser != null) {
         var nick by rememberSaveable { mutableStateOf(state.initialUser.nick) }
-        var name by rememberSaveable { mutableStateOf(state.initialUser.name?: "") }
+        var name by rememberSaveable { mutableStateOf(state.initialUser.name ?: "") }
         var avatarUri by rememberSaveable { mutableStateOf(null as Uri?) }
-        var avatarAction by rememberSaveable { mutableStateOf(EditAction.KEEP) }
-        var bio by rememberSaveable { mutableStateOf(state.initialUser.bio?: "") }
-        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel?.toString()?: "") }
-        var email by rememberSaveable { mutableStateOf(state.initialUser.email?: "") }
+        var avatarAction by rememberSaveable { mutableStateOf(KEEP) }
+        var bio by rememberSaveable { mutableStateOf(state.initialUser.bio ?: "") }
+        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel?.toString() ?: "") }
+        var email by rememberSaveable { mutableStateOf(state.initialUser.email ?: "") }
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +99,15 @@ fun EditUserScreen(
                     title = "Редактировать профиль",
                     onPopup = onPopup,
                     onSubmit = {
-                        val input = EditUserInputState(nick, name, avatarUri?.toString(), avatarAction, bio, tel, email)
+                        val input = EditUserInputState(
+                            nick,
+                            name,
+                            avatarUri?.toString(),
+                            avatarAction,
+                            bio,
+                            tel,
+                            email
+                        )
                         onEdit(input)
                     },
                     inProgress = state.isEditing || state.isRemoving
@@ -138,16 +149,17 @@ fun EditUserScreen(
                         errorMsg = nickErrMsg
                     )
                 }
-                val nameErrMsg = if (state.editUserError.equivalentTo(EditUserError.NAME_TOO_LARGE)) {
-                    "Имя больше 255 символов"
-                } else null
+                val nameErrMsg =
+                    if (state.editUserError.equivalentTo(EditUserError.NAME_TOO_LARGE)) {
+                        "Имя больше 255 символов"
+                    } else null
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
                     updated = name != (state.initialUser.name ?: ""),
                     empty = name.isEmpty(),
                     onRevert = {
-                        name = state.initialUser.name?: ""
+                        name = state.initialUser.name ?: ""
                     },
                     onDelete = {
                         name = ""
@@ -196,46 +208,62 @@ fun EditUserScreen(
                             }
                         )
                     }
-                    Column {
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            30.dp,
+                            Alignment.CenterHorizontally
+                        )
+                    ) {
                         if (avatarExists != false) {
-                            Text(
-                                text = "Текущий аватар"
-                            )
-                            AsyncImage(
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                                model = state.initialUser.avatar,
-                                contentDescription = null,
-                                onSuccess = {
-                                    avatarExists = true
-                                },
-                                onError = {
-                                    avatarExists = false
-                                }
-                            )
-                        }
-                        if (avatarUri != null) {
-                            Text("Вы выбрали")
-                            val painter = rememberAsyncImagePainter(model = avatarUri)
-                            Image(
-                                painter = painter,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                        if (avatarExists == true) {
-                            if (avatarAction == REMOVE) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = "Вы удалите аватар."
+                                    text = "Текущий аватар"
+                                )
+                                AsyncImage(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop,
+                                    model = state.initialUser.avatar,
+                                    contentDescription = null,
+                                    onSuccess = {
+                                        avatarExists = true
+                                    },
+                                    onError = {
+                                        avatarExists = false
+                                    }
                                 )
                             }
+                        }
+                        if (avatarUri != null) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("Вы выбрали")
+                                val painter = rememberAsyncImagePainter(model = avatarUri)
+                                Image(
+                                    painter = painter,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                    }
+                    if (avatarExists == true && avatarAction == REMOVE) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Вы удалите аватар."
+                            )
                         }
                     }
                 }
@@ -245,10 +273,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = tel != (state.initialUser.tel?: ""),
+                    updated = tel != (state.initialUser.tel ?: ""),
                     empty = tel.isEmpty(),
                     onRevert = {
-                        tel = state.initialUser.tel?.toString()?: ""
+                        tel = state.initialUser.tel?.toString() ?: ""
                     },
                     onDelete = {
                         tel = ""
@@ -266,18 +294,19 @@ fun EditUserScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                 }
-                val emailError = if (state.editUserError.equivalentTo(EditUserError.EMAIL_MALFORMED)) {
-                    "Введите корректный e-mail"
-                } else if (state.editUserError.equivalentTo(EditUserError.EMAIL_TOO_LARGE)) {
-                    "Email больше чем 255 символов"
-                } else null
+                val emailError =
+                    if (state.editUserError.equivalentTo(EditUserError.EMAIL_MALFORMED)) {
+                        "Введите корректный e-mail"
+                    } else if (state.editUserError.equivalentTo(EditUserError.EMAIL_TOO_LARGE)) {
+                        "Email больше чем 255 символов"
+                    } else null
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = email != (state.initialUser.email?: ""),
+                    updated = email != (state.initialUser.email ?: ""),
                     empty = email.isEmpty(),
                     onRevert = {
-                        email = state.initialUser.email?: ""
+                        email = state.initialUser.email ?: ""
                     },
                     onDelete = {
                         email = ""
@@ -301,10 +330,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = bio != (state.initialUser.bio?: ""),
+                    updated = bio != (state.initialUser.bio ?: ""),
                     empty = bio.isEmpty(),
                     onRevert = {
-                        bio = state.initialUser.bio?: ""
+                        bio = state.initialUser.bio ?: ""
                     },
                     onDelete = {
                         bio = ""
@@ -334,14 +363,24 @@ fun EditUserScreen(
                                 " Вы потеряете все свои данные."
                     )
                 }
-                PrimaryButton(
-                    needsCaution = true,
-                    text = "Удалить аккаунт",
-                    isActivated = state.isRemoving || state.isRemovalConfirmed == true,
-                    onClick = {
-                        isRemoveAccountDialogVisible = true
-                    }
-                )
+                Box (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(10.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    PrimaryButton(
+                        needsCaution = true,
+                        text = "Удалить аккаунт",
+                        isActivated = state.isRemoving || state.isRemovalConfirmed == true,
+                        onClick = {
+                            isRemoveAccountDialogVisible = true
+                        }
+                    )
+                }
             }
         }
         LaunchedEffect(state.editedUser) {
@@ -383,7 +422,7 @@ fun AccountRemovedScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column (
+        Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

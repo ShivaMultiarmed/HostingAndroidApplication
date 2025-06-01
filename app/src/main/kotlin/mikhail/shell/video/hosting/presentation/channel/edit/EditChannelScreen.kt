@@ -274,12 +274,15 @@ fun EditChannelScreen(
                                 )
                             }
                         }
-                        if (avatarExists == true && avatarAction == REMOVE) {
-                            Column {
-                                Text(
-                                    text = "Вы удалите аватар."
-                                )
-                            }
+                    }
+                    if (avatarExists == true && avatarAction == REMOVE) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Вы удалите аватар."
+                            )
                         }
                     }
                 }
