@@ -62,7 +62,7 @@ interface VideoRepository {
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, VideoEditingError>
+    ): Result<Video, CompoundError<VideoEditingError>>
 
     suspend fun downloadVideo(
         videoId: Long,

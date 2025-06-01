@@ -70,7 +70,6 @@ interface VideoApi {
     @POST("videos/upload/{videoId}/source")
     suspend fun uploadVideoSource(
         @Path("videoId") videoId: Long,
-        @Query("chunkNumber") chunkNumber: Int,
         @Query("extension") extension: String,
         @Body source: RequestBody
     ): Boolean

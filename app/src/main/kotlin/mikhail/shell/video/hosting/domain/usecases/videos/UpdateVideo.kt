@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
+import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
@@ -15,7 +16,15 @@ class UpdateVideo @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, VideoEditingError> {
-        return videoRepository.editVideo(video, coverAction, cover)
+    ): Result<Video, CompoundError<VideoEditingError>> {
+        val compoundError = CompoundError<VideoEditingError>()
+        if (video.title.length > 255) {
+            compoundError.add(VideoEditingError.TITLE_TOO_LARGE)
+        }
+        return if (compoundError.isNotNull()) {
+            Result.Failure(compoundError)
+        } else {
+            videoRepository.editVideo(video, coverAction, cover)
+        }
     }
 }

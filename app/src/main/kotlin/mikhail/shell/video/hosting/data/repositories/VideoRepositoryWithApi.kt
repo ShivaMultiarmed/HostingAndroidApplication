@@ -156,10 +156,9 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceMime = fileProvider.getFileMimeType(sourceUri)
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
-            fileProvider.getFileAsInputStream(sourceUri)?.proccess { bytesRead, buffer, chunkNumber ->
+            fileProvider.getFileAsInputStream(sourceUri)?.proccess { bytesRead, buffer ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
-                    chunkNumber,
                     sourceExtension!!,
                     buffer.toOctetStream(bytesRead)
                 )
@@ -220,14 +219,18 @@ class VideoRepositoryWithApi @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, VideoEditingError> {
+    ): Result<Video, CompoundError<VideoEditingError>> {
         return try {
             val coverPart = cover?.toPart("cover")
             Result.Success(videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain())
         } catch (e: HttpException) {
-            Result.Failure(VideoEditingError.UNEXPECTED)
-        } catch (e: HttpException) {
-            Result.Failure(VideoEditingError.UNEXPECTED)
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<VideoEditingError>>() {}.type
+            val compoundError = gson.fromJson<CompoundError<VideoEditingError>>(json, type)
+            Result.Failure(compoundError)
+        } catch (_: Exception) {
+            val compoundError = CompoundError<VideoEditingError>(VideoEditingError.UNEXPECTED)
+            Result.Failure(compoundError)
         }
     }
 
@@ -333,14 +336,14 @@ class StreamedRequestBody(
 }
 
 suspend fun InputStream.proccess(
-    onChunkRead: suspend (bytesRead: Int, buffer: ByteArray, chunkNumber: Int) -> Unit
+    onChunkRead: suspend (bytesRead: Int, buffer: ByteArray) -> Unit
 ) {
     this.use {
         val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
         var curChunkNumber = 0
         var bytesRead: Int
         while (it.read(buffer).also { bytesRead = it } != -1) {
-            onChunkRead(bytesRead, buffer, curChunkNumber)
+            onChunkRead(bytesRead, buffer)
             curChunkNumber++
         }
     }
