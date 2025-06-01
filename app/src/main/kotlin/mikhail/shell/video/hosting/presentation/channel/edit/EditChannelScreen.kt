@@ -1,17 +1,22 @@
 package mikhail.shell.video.hosting.presentation.channel.edit
 
 import android.net.Uri
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,6 +31,9 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -51,6 +60,7 @@ import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun EditChannelScreen(
     modifier: Modifier = Modifier,
@@ -59,6 +69,8 @@ fun EditChannelScreen(
     onSuccess: (Channel) -> Unit,
     onPopup: () -> Unit
 ) {
+    val activity = LocalActivity.current!!
+    val windowSize = calculateWindowSizeClass(activity)
     val snackbarHostState = remember { SnackbarHostState() }
     val initialChannel = state.initialChannel
     if (initialChannel != null) {
@@ -145,10 +157,10 @@ fun EditChannelScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = alias != (initialChannel.alias?: ""),
+                    updated = alias != (initialChannel.alias ?: ""),
                     empty = alias.isEmpty(),
                     onRevert = {
-                        alias = initialChannel.alias?: ""
+                        alias = initialChannel.alias ?: ""
                     },
                     onDelete = {
                         alias = ""
@@ -167,10 +179,10 @@ fun EditChannelScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = description != (initialChannel.description?: ""),
+                    updated = description != (initialChannel.description ?: ""),
                     empty = description.isEmpty(),
                     onRevert = {
-                        description = initialChannel.description?: ""
+                        description = initialChannel.description ?: ""
                     },
                     onDelete = {
                         description = ""
@@ -218,42 +230,52 @@ fun EditChannelScreen(
                             }
                         )
                     }
-                    Column {
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterHorizontally)
+                    ) {
                         if (avatarExists != false) {
-                            Text(
-                                text = "Текущий аватар"
-                            )
-                            AsyncImage(
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                                model = initialChannel.avatarUrl,
-                                contentDescription = title,
-                                onSuccess = {
-                                    avatarExists = true
-                                },
-                                onError = {
-                                    avatarExists = false
-                                }
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Текущий аватар"
+                                )
+                                AsyncImage(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop,
+                                    model = initialChannel.avatarUrl,
+                                    contentDescription = title,
+                                    onSuccess = {
+                                        avatarExists = true
+                                    },
+                                    onError = {
+                                        avatarExists = false
+                                    }
+                                )
+                            }
                         }
                         if (avatarUri != null) {
-                            Text("Вы выбрали")
-                            val painter = rememberAsyncImagePainter(model = avatarUri)
-                            Image(
-                                painter = painter,
-                                contentDescription = title,
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop
-                            )
+                            Column (
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("Выбранный аватар")
+                                val painter = rememberAsyncImagePainter(model = avatarUri)
+                                Image(
+                                    painter = painter,
+                                    contentDescription = title,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
-                        if (avatarExists == true) {
-                            if (avatarAction == REMOVE) {
+                        if (avatarExists == true && avatarAction == REMOVE) {
+                            Column {
                                 Text(
                                     text = "Вы удалите аватар."
                                 )
@@ -293,35 +315,65 @@ fun EditChannelScreen(
                             }
                         )
                     }
-                    Column {
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            30.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                    ) {
                         if (coverExists != false) {
-                            Text(
-                                text = "Текущая обложка"
-                            )
-                            AsyncImage(
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                                model = initialChannel.coverUrl,
-                                contentDescription = title,
-                                onSuccess = { coverExists = true },
-                                onError = { coverExists = false }
-                            )
+                            Column(
+                                modifier = Modifier.then(
+                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier.width(350.dp)
+                                    }
+                                ),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Текущая обложка"
+                                )
+                                AsyncImage(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp)
+                                        .clip(RoundedCornerShape(10.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    model = initialChannel.coverUrl,
+                                    contentDescription = title,
+                                    onSuccess = { coverExists = true },
+                                    onError = { coverExists = false }
+                                )
+                            }
                         }
                         if (coverUri != null) {
-                            Text("Вы выбрали")
-                            val painter = rememberAsyncImagePainter(model = coverUri)
-                            Image(
-                                painter = painter,
-                                contentDescription = title,
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop
-                            )
+                            Column(
+                                modifier = Modifier.then(
+                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier.width(350.dp)
+                                    }
+                                ),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("Выбранная обложка")
+                                val painter = rememberAsyncImagePainter(model = coverUri)
+                                Image(
+                                    painter = painter,
+                                    contentDescription = title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp)
+                                        .clip(RoundedCornerShape(10.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                         if (coverExists == true) {
                             if (coverAction == REMOVE) {

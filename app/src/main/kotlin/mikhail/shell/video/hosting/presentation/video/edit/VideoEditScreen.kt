@@ -1,11 +1,14 @@
 package mikhail.shell.video.hosting.presentation.video.edit
 
 import android.net.Uri
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +26,9 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -53,6 +60,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoEditScreen(
     modifier: Modifier = Modifier,
@@ -62,16 +70,18 @@ fun VideoEditScreen(
     onSuccess: (Video) -> Unit,
     onCancel: (Long) -> Unit
 ) {
+    val activity = LocalActivity.current!!
+    val windowSize = calculateWindowSizeClass(activity)
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     if (state.initialVideo != null) {
         val snackbarHostState = remember { SnackbarHostState() }
         val video = state.initialVideo
         val compoundError = state.error
-        var coverUri by rememberSaveable{ mutableStateOf<Uri?>(null) }
+        var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var title by rememberSaveable { mutableStateOf(video.title) }
         var coverAction by rememberSaveable { mutableStateOf(KEEP) }
-        Scaffold (
+        Scaffold(
             modifier = modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
@@ -104,7 +114,7 @@ fun VideoEditScreen(
                 val titleErrMsg = if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
                     "Заполните название"
                 } else null
-                StandardEditField (
+                StandardEditField(
                     firstTime = false,
                     updated = title != state.initialVideo.title,
                     empty = title.isEmpty(),
@@ -153,40 +163,69 @@ fun VideoEditScreen(
                             icon = Icons.Rounded.Wallpaper
                         )
                     }
-                    Column {
+                    FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterHorizontally),
+                    ) {
                         if (coverExists != false) {
-                            Text(
-                                text = "Текущая обложка"
-                            )
-                            AsyncImage(
-                                modifier = Modifier.width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                                model = video.coverUrl,
-                                contentDescription = video.title,
-                                onSuccess = { coverExists = true },
-                                onError = { coverExists = false }
-                            )
-                        }
-                        if (coverUri != null) {
-                            Text("Вы выбрали")
-                            val painter = rememberAsyncImagePainter(model = coverUri)
-                            Image(
-                                painter = painter,
-                                contentDescription = video.title,
-                                modifier = Modifier.width(300.dp)
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                        if (coverExists == true) {
-                            if (coverAction == REMOVE) {
+                            Column (
+                                modifier = Modifier.then(
+                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier.width(350.dp)
+                                    }
+                                ),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = "Вы удалите обложку"
+                                    text = "Текущая обложка"
+                                )
+                                AsyncImage(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(16f / 9)
+                                        .clip(RoundedCornerShape(10.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    model = video.coverUrl,
+                                    contentDescription = video.title,
+                                    onSuccess = { coverExists = true },
+                                    onError = { coverExists = false }
                                 )
                             }
+                        }
+                        if (coverUri != null) {
+                            Column (
+                                modifier = Modifier.then(
+                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                        Modifier.fillMaxWidth()
+                                    } else {
+                                        Modifier.width(350.dp)
+                                    }
+                                ),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Выбранная обложка"
+                                )
+                                val painter = rememberAsyncImagePainter(model = coverUri)
+                                Image(
+                                    painter = painter,
+                                    contentDescription = video.title,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(16f / 9)
+                                        .clip(RoundedCornerShape(10.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                        if (coverExists == true && coverAction == REMOVE) {
+                            Text(
+                                text = "Вы удалите обложку"
+                            )
                         }
                     }
                 }

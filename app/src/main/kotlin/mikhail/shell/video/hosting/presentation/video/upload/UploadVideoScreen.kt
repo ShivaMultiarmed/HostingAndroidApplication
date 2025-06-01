@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.view.WindowInsetsController
@@ -18,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
@@ -31,6 +34,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,10 +49,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
@@ -77,7 +86,7 @@ import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import java.io.File
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun UploadVideoScreen(
     modifier: Modifier = Modifier,
@@ -89,12 +98,13 @@ fun UploadVideoScreen(
     onPopup: () -> Unit = {},
     onFullScreen: (Boolean) -> Unit
 ) {
-    val activity = LocalActivity.current
-    val context = LocalContext.current
+    val activity = LocalActivity.current!!
+    val windowSize = calculateWindowSizeClass(activity)
+    val context = activity as Context
     val coroutineScope = rememberCoroutineScope()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ActivityCompat.requestPermissions(
-            context as Activity,
+            activity,
             arrayOf("android.permission.POST_NOTIFICATIONS"),
             0
         )
@@ -394,14 +404,31 @@ fun UploadVideoScreen(
                         )
                     }
                     if (coverUri != null) {
-                        Image(
+                        Column (
                             modifier = Modifier
-                                .fillMaxSize()
-                                .aspectRatio(16f / 9),
-                            contentScale = ContentScale.Crop,
-                            painter = rememberAsyncImagePainter(coverUri),
-                            contentDescription = "Обложка для видео"
-                        )
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Выбранная обложка"
+                            )
+                            Image(
+                                modifier = Modifier
+                                    .then(
+                                        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                            Modifier.fillMaxWidth()
+                                        } else {
+                                            Modifier.width(350.dp)
+                                        }
+                                    )
+                                    .aspectRatio(16f / 9)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop,
+                                painter = rememberAsyncImagePainter(coverUri),
+                                contentDescription = "Обложка для видео"
+                            )
+                        }
                     }
                 }
             }
