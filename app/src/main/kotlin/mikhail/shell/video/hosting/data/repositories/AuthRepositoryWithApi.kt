@@ -33,10 +33,10 @@ class AuthRepositoryWithApi @Inject constructor(
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<SignInError>>() {}.type
-            val compoundError = gson.fromJson(json, type)?: DEFAULT_SIGN_IN_ERROR
+            val compoundError = gson.fromJson(json, type)?: CompoundError(SignInError.UNEXPECTED)
             Result.Failure(compoundError)
         } catch (e: Exception) {
-            Result.Failure(DEFAULT_SIGN_IN_ERROR)
+            Result.Failure(CompoundError(SignInError.UNEXPECTED))
         }
     }
 
@@ -57,23 +57,17 @@ class AuthRepositoryWithApi @Inject constructor(
         } catch (e: HttpException) {
             val json = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-            val compoundError = gson.fromJson(json, type)?: DEFAULT_SIGN_UP_ERROR
+            val compoundError = gson.fromJson(json, type)?: CompoundError(SignUpError.UNEXPECTED)
             Result.Failure(compoundError)
-        } catch (e: Exception) {
-            Result.Failure(DEFAULT_SIGN_UP_ERROR)
+        } catch (_: Exception) {
+            Result.Failure(CompoundError(SignUpError.UNEXPECTED))
         }
     }
-
     override suspend fun signOut(userId: Long): Result<Unit, SignOutError> {
         return try {
             Result.Success(Unit)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(SignOutError.UNEXPECTED)
         }
-    }
-
-    companion object {
-        private val DEFAULT_SIGN_UP_ERROR = CompoundError(mutableListOf(SignUpError.UNEXPECTED))
-        private val DEFAULT_SIGN_IN_ERROR = CompoundError(mutableListOf(SignInError.UNEXPECTED))
     }
 }

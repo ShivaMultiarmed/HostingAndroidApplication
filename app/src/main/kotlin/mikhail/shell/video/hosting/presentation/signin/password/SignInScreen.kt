@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.SignInError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -75,13 +75,14 @@ fun SignInScreen(
                 }
             }
             var email by rememberSaveable { mutableStateOf("") }
-            val emailErrorMsg = if (error.equivalentTo(SignInError.EMAIL_EMPTY)) {
-                "Заполните email"
-            } else if (error.equivalentTo(SignInError.EMAIL_INVALID)) {
-                "Email не корректно введён"
-            } else if (error.equivalentTo(SignInError.EMAIL_NOT_FOUND)) {
-                "Пользователь с email $email не найден"
-            } else null
+            val emailErrorMsg = constructInfoMessage(
+                error,
+                mapOf(
+                    SignInError.USERNAME_EMPTY to "Заполните e-mail",
+                    SignInError.USERNAME_MALFORMED to "E-mail не корректно введён",
+                    SignInError.USERNAME_NOT_FOUND to "Пользователь с таким e-mail не найден"
+                )
+            )
             InputField(
                 modifier = Modifier
                     .width(280.dp)
@@ -95,11 +96,13 @@ fun SignInScreen(
                 errorMsg = emailErrorMsg
             )
             var password by rememberSaveable { mutableStateOf("") }
-            val passwordErrorMsg = if (error.equivalentTo(SignInError.PASSWORD_EMPTY)) {
-                "Введите пароль"
-            } else if (error.equivalentTo(SignInError.PASSWORD_INCORRECT)) {
-                "Неправильный пароль"
-            } else null
+            val passwordErrorMsg = constructInfoMessage(
+                error,
+                mapOf(
+                    SignInError.PASSWORD_EMPTY to "Введите пароль",
+                    SignInError.PASSWORD_INCORRECT to "Неправильный пароль"
+                )
+            )
             InputField(
                 modifier = Modifier
                     .width(280.dp)

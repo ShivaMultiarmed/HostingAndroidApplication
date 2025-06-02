@@ -31,8 +31,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.domain.errors.SignUpError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.AuthModel
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
@@ -77,13 +78,19 @@ fun SignUpScreen(
             }
             val compoundError = state.error
             var userName by rememberSaveable { mutableStateOf("") }
-            val userNameErrorMsg = if (compoundError.equivalentTo(SignUpError.EMAIL_EMPTY)) {
-                "Введите почту"
-            } else if (compoundError.equivalentTo(SignUpError.EMAIL_INVALID)) {
-                "Некорректная почта"
-            } else null
+            val userNameErrorMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    SignUpError.USERNAME_EMPTY to "Введите почту",
+                    SignUpError.USERNAME_MALFORMED to "Некорректная почта",
+                    SignUpError.USERNAME_EXISTS to "Такой e-mail уже существует",
+                    SignUpError.USERNAME_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_USERNAME_LENGTH}"
+                )
+            )
             InputField(
-                modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Email,
                 value = userName,
                 onValueChange = {
@@ -92,9 +99,13 @@ fun SignUpScreen(
                 errorMsg = userNameErrorMsg,
                 placeholder = "E-mail"
             )
-            val passwordErrorMsg = if (compoundError.equivalentTo(SignUpError.PASSWORD_EMPTY)) {
-                "Введите пароль"
-            } else null
+            val passwordErrorMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    SignUpError.PASSWORD_EMPTY to "Введите пароль",
+                    SignUpError.PASSWORD_NOT_VALID to "Пароль должен быть длиной от 8 до 20 символов"
+                )
+            )
             var password by rememberSaveable { mutableStateOf("") }
             InputField(
                 modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
@@ -107,21 +118,24 @@ fun SignUpScreen(
                 secure = true,
                 placeholder = "Пароль"
             )
-            var name by rememberSaveable { mutableStateOf("") }
-            val nameErrMsg = if (compoundError.equivalentTo(SignUpError.NAME_EMPTY))
-                "Введите имя"
-            else null
+            var nick by rememberSaveable { mutableStateOf("") }
+            val nickErrMsg = constructInfoMessage(
+                compoundError,
+                mapOf(
+                    SignUpError.NICK_EMPTY to "Заполните ник",
+                    SignUpError.NICK_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}"
+                )
+            )
             InputField(
                 modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Person,
-                value = name,
+                value = nick,
                 onValueChange = {
-                    name = it
+                    nick = it
                 },
-                errorMsg = nameErrMsg,
-                placeholder = "Имя"
+                errorMsg = nickErrMsg,
+                placeholder = "Ник"
             )
-
             PrimaryButton(
                 text = "Зарегистрироваться",
                 onClick = {
@@ -129,7 +143,7 @@ fun SignUpScreen(
                         SignUpInputState(
                             userName = userName,
                             password = password,
-                            name = name
+                            nick = nick
                         )
                     )
                 }

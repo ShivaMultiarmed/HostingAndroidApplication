@@ -9,10 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
-import mikhail.shell.video.hosting.domain.errors.SignUpError.EMAIL_EMPTY
-import mikhail.shell.video.hosting.domain.errors.SignUpError.EMAIL_INVALID
-import mikhail.shell.video.hosting.domain.errors.SignUpError.NAME_EMPTY
-import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORD_EMPTY
+import mikhail.shell.video.hosting.domain.errors.SignUpError.*
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
@@ -33,18 +30,18 @@ class SignUpWithPasswordViewModel @Inject constructor(
 
     private fun validateSignUpInput(inputState: SignUpInputState): CompoundError<SignUpError>? {
         val error = CompoundError<SignUpError>()
-        if (inputState.userName == "")
-            error.add(EMAIL_EMPTY)
-        else if (!emailRegex.matches(inputState.userName))
-            error.add(EMAIL_INVALID)
-        if (inputState.password == "")
+        if (inputState.userName.isEmpty()) {
+            error.add(USERNAME_EMPTY)
+        } else if (!emailRegex.matches(inputState.userName)) {
+            error.add(USERNAME_MALFORMED)
+        }
+        if (inputState.password.isEmpty()) {
             error.add(PASSWORD_EMPTY)
-        if (inputState.name == "")
-            error.add(NAME_EMPTY)
-        return if (error.isNotNull())
-            error
-        else
-            null
+        }
+        if (inputState.nick.isEmpty()) {
+            error.add(NICK_EMPTY)
+        }
+        return error.takeIf { it.isNotNull() }
     }
 
     fun signUp(signUpInputState: SignUpInputState) {
@@ -56,7 +53,7 @@ class SignUpWithPasswordViewModel @Inject constructor(
         val compoundError = validateSignUpInput(signUpInputState)
         if (compoundError == null) {
             val user = User(
-                nick = signUpInputState.name
+                nick = signUpInputState.nick
             )
             viewModelScope.launch {
                 _signUpWithPassword(

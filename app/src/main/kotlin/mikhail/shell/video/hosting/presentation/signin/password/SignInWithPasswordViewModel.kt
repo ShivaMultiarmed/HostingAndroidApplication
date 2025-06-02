@@ -28,9 +28,9 @@ class SignInWithPasswordViewModel @Inject constructor(
     private fun validateSignInInput(email: String, password: String): CompoundError<SignInError>? {
         val compoundError = CompoundError<SignInError>()
         if (email.isEmpty())
-            compoundError.add(SignInError.EMAIL_EMPTY)
+            compoundError.add(SignInError.USERNAME_EMPTY)
         else if (!emailRegex.matches(email))
-            compoundError.add(SignInError.EMAIL_INVALID)
+            compoundError.add(SignInError.USERNAME_MALFORMED)
         if (password.isEmpty())
             compoundError.add(SignInError.PASSWORD_EMPTY)
         return if (compoundError.isNull()) null else compoundError

@@ -312,7 +312,7 @@ fun EditUserScreen(
                     state.editUserError,
                     mapOf(
                         EditUserError.EMAIL_MALFORMED to "Введите корректный e-mail",
-                        EditUserError.EMAIL_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_EMAIL_LENGTH}"
+                        EditUserError.EMAIL_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_USERNAME_LENGTH}"
                     )
                 )
                 StandardEditField(
