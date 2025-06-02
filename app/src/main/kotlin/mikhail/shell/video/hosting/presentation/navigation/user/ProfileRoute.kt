@@ -42,6 +42,9 @@ fun NavGraphBuilder.profileRoute(
                 navController.navigate(Route.Channel.Create)
             },
             onRefresh = {
+                if (state.user == null) {
+                    viewModel.loadProfile()
+                }
                 if (state.channels == null) {
                     viewModel.loadChannels()
                 }

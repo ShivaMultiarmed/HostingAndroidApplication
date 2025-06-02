@@ -24,6 +24,7 @@ import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -49,7 +50,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 else -> VideoError.UNEXPECTED_ERROR
             }
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(VideoError.UNEXPECTED_ERROR)
         }
     }
@@ -150,13 +151,36 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
-            val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
-            var bytesTransfered = 0
+            val compoundError = CompoundError<UploadVideoError>()
             val sourceUri = Uri.parse(source)
             val sourceMime = fileProvider.getFileMimeType(sourceUri)
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
-            fileProvider.getFileAsInputStream(sourceUri)?.proccess { bytesRead, buffer ->
+            if (!fileProvider.exists(sourceUri)) {
+                compoundError.add(UploadVideoError.SOURCE_NOT_FOUND)
+            } else if (!sourceMime!!.startsWith("video")) {
+                compoundError.add(UploadVideoError.SOURCE_TYPE_INVALID)
+            } else if (sourceSize > ValidationRules.MAX_VIDEO_SIZE) {
+                compoundError.add(UploadVideoError.SOURCE_TOO_LARGE)
+            }
+            cover?.let { notNullCover ->
+                val coverUri = Uri.parse(notNullCover)
+                val coverMime = fileProvider.getFileMimeType(coverUri)
+                if (!fileProvider.exists(coverUri)) {
+                    compoundError.add(UploadVideoError.COVER_NOT_FOUND)
+                } else if (!coverMime!!.contains("image")) {
+                    compoundError.add(UploadVideoError.COVER_TYPE_INVALID)
+                } else if ((fileProvider.getFileSize(coverUri) ?: 0) > ValidationRules.MAX_IMAGE_SIZE) {
+                    compoundError.add(UploadVideoError.COVER_TOO_LARGE)
+                }
+            }
+            if (compoundError.isNotNull()) {
+                return Result.Failure(compoundError)
+            }
+            val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
+            var bytesTransfered = 0
+            val sourceInputStream = fileProvider.getFileAsInputStream(sourceUri)
+            sourceInputStream!!.proccess { bytesRead, buffer ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
                     sourceExtension!!,
@@ -186,7 +210,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
             val compoundError = gson.fromJson<CompoundError<UploadVideoError>>(json, type)
             Result.Failure(compoundError)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(DEFAULT_UPLOAD_ERROR)
         }
     }
@@ -221,6 +245,17 @@ class VideoRepositoryWithApi @Inject constructor(
         cover: File?
     ): Result<Video, CompoundError<VideoEditingError>> {
         return try {
+            val compoundError = CompoundError<VideoEditingError>()
+            if (cover == null) {
+                compoundError.add(VideoEditingError.COVER_NOT_FOUND)
+            } else if (!cover.name.contains("image")) {
+                compoundError.add(VideoEditingError.COVER_TYPE_INVALID)
+            } else if (cover.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                compoundError.add(VideoEditingError.COVER_TOO_LARGE)
+            }
+            if (compoundError.isNotNull()) {
+                return Result.Failure(compoundError)
+            }
             val coverPart = cover?.toPart("cover")
             Result.Success(videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain())
         } catch (e: HttpException) {
@@ -303,10 +338,6 @@ fun File.toPart(partName: String): MultipartBody.Part {
     return MultipartBody.Part.createFormData(partName, this.name, requestBody)
 }
 
-fun File.toOctetStream(mimeType: String = "application/octet-stream"): RequestBody {
-    return RequestBody.create(mimeType.toMediaTypeOrNull(), this)
-}
-
 fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
     return RequestBody.create(
         "application/octet-stream".toMediaTypeOrNull(),
@@ -349,6 +380,6 @@ suspend fun InputStream.proccess(
     }
 }
 
-fun String.parseFileSize(): Long {
+fun String.parseFileSize(): Long { // from HTTP-header
     return this.substringAfter("/").toLong()
 }

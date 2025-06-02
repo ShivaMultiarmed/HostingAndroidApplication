@@ -1,5 +1,11 @@
 package mikhail.shell.video.hosting.domain.errors
 
 enum class VideoEditingError: Error {
-    UNEXPECTED, TITLE_EMPTY, TITLE_TOO_LARGE, VIDEO_NOT_FOUND
+    VIDEO_NOT_FOUND,
+    TITLE_EMPTY,
+    TITLE_TOO_LARGE,
+    COVER_NOT_FOUND,
+    COVER_TYPE_INVALID,
+    COVER_TOO_LARGE,
+    UNEXPECTED
 }

@@ -6,6 +6,7 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.repositories.UserRepository
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import javax.inject.Inject
 
 class EditUser @Inject constructor(
@@ -17,14 +18,17 @@ class EditUser @Inject constructor(
         avatarAction: EditAction
     ): Result<User, CompoundError<EditUserError>> {
         val compoundError = CompoundError<EditUserError>()
-        if (user.nick.length > 20) {
+        if (user.nick.length > ValidationRules.MAX_NAME_LENGTH) {
             compoundError.add(EditUserError.NICK_TOO_LARGE)
         }
-        if ((user.name?.length?: 0) > 20) {
+        if ((user.name?.length?: 0) > ValidationRules.MAX_NAME_LENGTH) {
             compoundError.add(EditUserError.NAME_TOO_LARGE)
         }
-        if ((user.bio?.length ?: 0) > 255) {
+        if ((user.bio?.length ?: 0) > ValidationRules.MAX_TEXT_LENGTH) {
             compoundError.add(EditUserError.BIO_TOO_LARGE)
+        }
+        if ((user.email?.length ?: 0) > ValidationRules.MAX_EMAIL_LENGTH) {
+            compoundError.add(EditUserError.EMAIL_TOO_LARGE)
         }
         return if (compoundError.isNotNull()) {
             Result.Failure(compoundError)

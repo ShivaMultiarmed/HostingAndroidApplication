@@ -35,7 +35,7 @@ fun Long.toFullSubscribers(): String {
 }
 
 fun Long.toViews(): String {
-    return this.toRoundString() + this.toCorrectSuffix() + " " +  "\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8\uFE0F"// this.toCorrectWordForm("просмотр", "просмотра", "просмотров")
+    return this.toRoundString() + this.toCorrectSuffix() + " " +  "\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8\uFE0F"
 }
 
 fun Long.toRoundString(): String {

@@ -68,12 +68,10 @@ class CreateChannelViewModel @AssistedInject constructor(
     }
     private fun validateChannelInput(input: CreateChannelInputState): CompoundError<ChannelCreationError>? {
         val error = CompoundError<ChannelCreationError>()
-        if (input.title.isBlank())
+        if (input.title.isBlank()) {
             error.add(ChannelCreationError.TITLE_EMPTY)
-        return if (error.isNotNull())
-            error
-        else
-            null
+        }
+        return error.takeIf { it.isNotNull() }
     }
     @AssistedFactory
     interface Factory {

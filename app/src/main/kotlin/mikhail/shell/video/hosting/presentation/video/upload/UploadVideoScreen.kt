@@ -72,6 +72,8 @@ import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
@@ -179,13 +181,15 @@ fun UploadVideoScreen(
                             player.prepare()
                         }
                     }
-                    val sourceErrMsg =
-                        if (compoundError.equivalentTo(UploadVideoError.SOURCE_EMPTY)) {
-                            "Выберите видео"
-                        } else if (compoundError.equivalentTo(UploadVideoError.SOURCE_TYPE_INVALID)) {
-                            "Некорректный формат видео"
-                        } else null
-
+                    val sourceErrMsg = constructInfoMessage(
+                        error = compoundError,
+                        errorMessages = mapOf(
+                            UploadVideoError.SOURCE_EMPTY to "Выберите видео",
+                            UploadVideoError.SOURCE_NOT_FOUND to "Видео не найдено",
+                            UploadVideoError.SOURCE_TYPE_INVALID to "Некорректный формат видео",
+                            UploadVideoError.SOURCE_TOO_LARGE to "Слишком большое видео"
+                        )
+                    )
                     val sourceActionItems = if (sourceUri == null) listOf()
                     else listOf(
                         DeletingItem(
@@ -307,7 +311,7 @@ fun UploadVideoScreen(
                     LaunchedEffect(isFullScreen) {
                         onFullScreen(isFullScreen)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            val window = activity?.window!!
+                            val window = activity.window!!
                             WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)
                             if (isFullScreen) {
                                 window.insetsController?.let {
@@ -322,10 +326,13 @@ fun UploadVideoScreen(
                     }
                 }
                 if (!isFullScreen) {
-                    val titleErrMsg =
-                        if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
-                            "Заполните название"
-                        } else null
+                    val titleErrMsg = constructInfoMessage(
+                        compoundError,
+                        mapOf(
+                            UploadVideoError.TITLE_EMPTY to "Заполните название",
+                            UploadVideoError.TITLE_TOO_LARGE to "Название не должно превышать ${ValidationRules.MAX_TITLE_LENGTH} символов"
+                        )
+                    )
                     val titleActionItems = if (title.isBlank()) emptyList() else listOf(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
@@ -349,10 +356,7 @@ fun UploadVideoScreen(
                         )
                     }
 
-                    val channelErrMsg =
-                        if (compoundError.equivalentTo(UploadVideoError.CHANNEL_NOT_CHOSEN)) {
-                            "Выберите канал"
-                        } else null
+                    val channelErrMsg = constructInfoMessage(compoundError, mapOf(UploadVideoError.CHANNEL_INVALID to "Выберите канал"))
                     val channelActionItems = if (channelId == null) emptyList() else listOf(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
@@ -373,17 +377,23 @@ fun UploadVideoScreen(
                                 channelId = it
                             },
                             errorMsg = channelErrMsg,
-                            icon = Icons.Rounded.Apps
+                            icon = Icons.Rounded.Apps,
                         )
                     }
-
-
                     val coverPicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null)
                             coverUri = it
                     }
+                    val coverErrMsg = constructInfoMessage(
+                        compoundError,
+                        mapOf(
+                            UploadVideoError.COVER_NOT_FOUND to "Обложка не найдена",
+                            UploadVideoError.COVER_TYPE_INVALID to "Некорректный тип обложки",
+                            UploadVideoError.COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ"
+                        )
+                    )
                     EditField(
                         actionItems = if (coverUri == null) emptyList() else listOf(
                             ActionItem(
@@ -400,7 +410,8 @@ fun UploadVideoScreen(
                                 coverPicker.launch("image/*")
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            icon = Icons.Rounded.Image
+                            icon = Icons.Rounded.Image,
+                            errorMsg = coverErrMsg
                         )
                     }
                     if (coverUri != null) {

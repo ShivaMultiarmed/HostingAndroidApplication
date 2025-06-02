@@ -48,13 +48,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_NOT_FOUND
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_TYPE_NOT_VALID
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.COVER_NOT_FOUND
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.COVER_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.COVER_TYPE_NOT_VALID
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.DESCRIPTION_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
@@ -126,11 +135,13 @@ fun EditChannelScreen(
                         onSuccess(state.editedChannel)
                     }
                 }
-                val titleErrMsg = if (state.error.equivalentTo(TITLE_EMPTY)) {
-                    "Заполните название"
-                } else if (state.error.equivalentTo(TITLE_TOO_LARGE)) {
-                    "Название слишком большое"
-                } else null
+                val titleErrMsg = constructInfoMessage(
+                    state.error,
+                    mapOf(
+                        TITLE_EMPTY to "Заполните название",
+                        TITLE_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -154,6 +165,12 @@ fun EditChannelScreen(
                         errorMsg = titleErrMsg
                     )
                 }
+                val aliasErrMsg = constructInfoMessage(
+                    state.error,
+                    mapOf(
+                        TITLE_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -164,7 +181,7 @@ fun EditChannelScreen(
                     },
                     onDelete = {
                         alias = ""
-                    }
+                    },
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
@@ -173,9 +190,16 @@ fun EditChannelScreen(
                         onValueChange = {
                             alias = it
                         },
-                        placeholder = "Никнейм канала"
+                        placeholder = "Никнейм канала",
+                        errorMsg = aliasErrMsg
                     )
                 }
+                val descriptionErrMsg = constructInfoMessage(
+                    state.error,
+                    mapOf(
+                        DESCRIPTION_TOO_LARGE to "Максимальная длина - $MAX_TEXT_LENGTH"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -197,6 +221,7 @@ fun EditChannelScreen(
                         },
                         placeholder = "Описание",
                         maxLines = 50,
+                        errorMsg = descriptionErrMsg
                     )
                 }
                 val avatarPicker =
@@ -206,6 +231,14 @@ fun EditChannelScreen(
                             avatarAction = UPDATE
                         }
                     }
+                val avatarErrMsg = constructInfoMessage(
+                    state.error,
+                    mapOf(
+                        AVATAR_TOO_LARGE to "Изображение не должно превышать 10 МБ",
+                        AVATAR_TYPE_NOT_VALID to "Некорректный формат изображения",
+                        AVATAR_NOT_FOUND to "Аватар не найден"
+                    )
+                )
                 Column {
                     StandardEditField(
                         modifier = Modifier,
@@ -227,7 +260,8 @@ fun EditChannelScreen(
                             placeholder = if (avatarUri == null) "Выбрать аватар" else "Поменять аватар",
                             onClick = {
                                 avatarPicker.launch("image/*")
-                            }
+                            },
+                            errorMsg = avatarErrMsg
                         )
                     }
                     FlowRow(
@@ -294,6 +328,14 @@ fun EditChannelScreen(
                             coverAction = UPDATE
                         }
                     }
+                val coverErrMsg = constructInfoMessage(
+                    state.error,
+                    mapOf(
+                        COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ",
+                        COVER_TYPE_NOT_VALID to "Некорректный формат изображения",
+                        COVER_NOT_FOUND to "Обложка не найдена"
+                    )
+                )
                 Column {
                     StandardEditField(
                         modifier = Modifier,
@@ -315,7 +357,8 @@ fun EditChannelScreen(
                             placeholder = if (coverUri == null) "Выбрать обложку" else "Поменять обложку",
                             onClick = {
                                 coverPicker.launch("image/*")
-                            }
+                            },
+                            errorMsg = coverErrMsg
                         )
                     }
                     FlowRow(

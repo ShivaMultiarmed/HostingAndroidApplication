@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
 
 @HiltViewModel(assistedFactory = UploadVideoViewModel.Factory::class)
@@ -53,13 +54,16 @@ class UploadVideoViewModel @AssistedInject constructor(
     }
     fun validateVideoInput(input: UploadVideoInput): CompoundError<UploadVideoError>? {
         val compoundError = CompoundError<UploadVideoError>()
-        if (input.title.isEmpty())
+        if (input.title.isEmpty()) {
             compoundError.add(UploadVideoError.TITLE_EMPTY)
+        } else if (input.title.length > ValidationRules.MAX_TITLE_LENGTH) {
+            compoundError.add(UploadVideoError.TITLE_TOO_LARGE)
+        }
         if (input.source == null) {
             compoundError.add(UploadVideoError.SOURCE_EMPTY)
         }
         if (input.channelId == null) {
-            compoundError.add(UploadVideoError.CHANNEL_NOT_CHOSEN)
+            compoundError.add(UploadVideoError.CHANNEL_INVALID)
         }
         return if (compoundError.isNotNull()) compoundError.also { cerr ->
             _state.update {

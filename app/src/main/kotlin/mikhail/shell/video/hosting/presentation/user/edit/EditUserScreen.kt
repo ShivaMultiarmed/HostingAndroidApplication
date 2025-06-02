@@ -57,6 +57,8 @@ import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
@@ -121,11 +123,13 @@ fun EditUserScreen(
                     .background(MaterialTheme.colorScheme.surface)
                     .verticalScroll(rememberScrollState()),
             ) {
-                val nickErrMsg = if (state.editUserError.equivalentTo(EditUserError.NICK_EMPTY)) {
-                    "Заполните никнейм"
-                } else if (state.editUserError.equivalentTo(EditUserError.NICK_TOO_LARGE)) {
-                    "Никнейм больше 255 символов"
-                } else null
+                val nickErrMsg = constructInfoMessage(
+                    state.editUserError,
+                    mapOf(
+                        EditUserError.NICK_EMPTY to "Заполните никнейм",
+                        EditUserError.NICK_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_NAME_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -149,10 +153,12 @@ fun EditUserScreen(
                         errorMsg = nickErrMsg
                     )
                 }
-                val nameErrMsg =
-                    if (state.editUserError.equivalentTo(EditUserError.NAME_TOO_LARGE)) {
-                        "Имя больше 255 символов"
-                    } else null
+                val nameErrMsg = constructInfoMessage(
+                    state.editUserError,
+                    mapOf(
+                        EditUserError.NAME_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -184,6 +190,13 @@ fun EditUserScreen(
                         }
                     }
                 var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
+                val avatarErrMsg = constructInfoMessage(
+                    state.editUserError,
+                    mapOf(
+                        EditUserError.AVATAR_MIME_NOT_SUPPORTED to "Некорректный формат изображения",
+                        EditUserError.AVATAR_TOO_LARGE to "Изображение не должно быть больше 10 МБ."
+                    )
+                )
                 Column {
                     StandardEditField(
                         modifier = Modifier,
@@ -205,7 +218,8 @@ fun EditUserScreen(
                             placeholder = if (avatarUri == null) "Выбрать аватар" else "Поменять аватар",
                             onClick = {
                                 avatarPicker.launch("image/*")
-                            }
+                            },
+                            errorMsg = avatarErrMsg
                         )
                     }
                     FlowRow(
@@ -294,12 +308,13 @@ fun EditUserScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                 }
-                val emailError =
-                    if (state.editUserError.equivalentTo(EditUserError.EMAIL_MALFORMED)) {
-                        "Введите корректный e-mail"
-                    } else if (state.editUserError.equivalentTo(EditUserError.EMAIL_TOO_LARGE)) {
-                        "Email больше чем 255 символов"
-                    } else null
+                val emailError = constructInfoMessage(
+                    state.editUserError,
+                    mapOf(
+                        EditUserError.EMAIL_MALFORMED to "Введите корректный e-mail",
+                        EditUserError.EMAIL_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_EMAIL_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
@@ -325,7 +340,7 @@ fun EditUserScreen(
                     )
                 }
                 val bioError = if (state.editUserError.equivalentTo(EditUserError.BIO_TOO_LARGE)) {
-                    "Описание больше 5000 символов."
+                    "Максимальная длина ${ValidationRules.MAX_TEXT_LENGTH}."
                 } else null
                 StandardEditField(
                     modifier = Modifier,

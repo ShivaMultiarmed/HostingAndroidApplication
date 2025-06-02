@@ -274,7 +274,7 @@ fun VideoWithChannelSnippet(
                     maxLines = 2
                 )
                 Text(
-                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime.toPresentation(),
+                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 13.sp,

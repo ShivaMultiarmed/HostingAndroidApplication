@@ -130,7 +130,6 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import java.time.Duration
 import java.time.LocalDateTime
 
-
 @Composable
 fun VideoScreen(
     userId: Long,
@@ -311,7 +310,7 @@ fun VideoScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = video.dateTime.toPresentation(),
+                                text = video.dateTime!!.toPresentation(),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
@@ -895,53 +894,6 @@ fun CommentForm(
     }
 }
 
-@Composable
-@Preview
-fun CommentFormPreview() {
-    val sampleUserId = 100500L
-    VideoHostingTheme {
-        CommentForm()
-    }
-}
-//@Composable
-//@Preview(
-//    //name = "Dark Mode Preview",
-//    //uiMode = Configuration.UI_MODE_NIGHT_YES,
-//    uiMode = Configuration.UI_MODE_NIGHT_NO,
-//    showBackground = true
-//)
-//fun VideoScreenPreview() {
-//    VideoScreen(
-//        state = VideoScreenState(
-//
-//            ExtendedVideoInfo(
-//                videoInfo = VideoInfo(
-//                    1,
-//                    1,
-//                    "Какой-то заголовок видео",
-//                    LocalDateTime.of(
-//                        2024,
-//                        12,
-//                        9,
-//                        10,
-//                        9
-//                    ),
-//                    views = 100,
-//                    likes = 23,
-//                    dislikes = 14
-//                ),
-//                liking = true
-//            )
-//        ),
-//        exoPlayerConnection = { context ->
-//            PlayerView(context)
-//        },
-//        onRefresh = {},
-//        onRate = {},
-//        onSubscribe = {}
-//    )
-//}
-
 fun Instant.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
     val dateTime = this.toLocalDateTime(timeZone).toJavaLocalDateTime()
     return dateTime.toPresentation()
@@ -949,8 +901,9 @@ fun Instant.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault())
 
 fun LocalDateTime.toPresentation(): String {
     val now = LocalDateTime.now()
-    return if (now.minusMinutes(10) < this)
+    return if (now.minusMinutes(10) < this) {
         "Только что"
+    }
     else if (now.minusMinutes(60) < this) {
         val diff = Duration.between(this, now).toMinutes().toInt()
         when (diff % 10) {

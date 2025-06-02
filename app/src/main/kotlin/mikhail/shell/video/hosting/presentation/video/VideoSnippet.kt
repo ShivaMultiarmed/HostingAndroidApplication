@@ -65,7 +65,7 @@ fun VideoSnippet(
                 maxLines = 2,
                 fontSize = 12.sp,
                 lineHeight = 14.sp,
-                text = video.views.toViews() + " - " + video.dateTime.toPresentation(),
+                text = video.views.toViews() + " - " + video.dateTime!!.toPresentation(),
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

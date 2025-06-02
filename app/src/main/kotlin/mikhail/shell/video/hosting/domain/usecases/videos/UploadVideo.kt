@@ -14,14 +14,6 @@ class UploadVideo @Inject constructor(
     suspend operator fun invoke(
         video: Video, source: String, cover: String?, onProgress: (Float) -> Unit = {}
     ): Result<Video, CompoundError<UploadVideoError>> {
-        val compoundError = CompoundError<UploadVideoError>()
-        if (video.title.length > 255) {
-            compoundError.add(UploadVideoError.TITLE_TOO_LARGE)
-        }
-        return if (compoundError.isNotNull()) {
-            Result.Failure(compoundError)
-        } else {
-            videoRepository.uploadVideo(video, source, cover, onProgress)
-        }
+        return videoRepository.uploadVideo(video, source, cover, onProgress)
     }
 }

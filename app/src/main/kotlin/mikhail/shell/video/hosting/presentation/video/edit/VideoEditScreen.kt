@@ -45,12 +45,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -111,9 +112,13 @@ fun VideoEditScreen(
                     .padding(it)
                     .verticalScroll(scrollState)
             ) {
-                val titleErrMsg = if (compoundError.equivalentTo(UploadVideoError.TITLE_EMPTY)) {
-                    "Заполните название"
-                } else null
+                val titleErrMsg = constructInfoMessage(
+                    compoundError,
+                    mapOf(
+                        VideoEditingError.TITLE_EMPTY to "Заполните название",
+                        VideoEditingError.TITLE_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                    )
+                )
                 StandardEditField(
                     firstTime = false,
                     updated = title != state.initialVideo.title,
@@ -139,6 +144,14 @@ fun VideoEditScreen(
                     }
                 }
                 var coverExists by rememberSaveable { mutableStateOf<Boolean?>(null) }
+                val coverErrMsg = constructInfoMessage(
+                    compoundError,
+                    mapOf(
+                        VideoEditingError.COVER_NOT_FOUND to "Обложка не найдена",
+                        VideoEditingError.COVER_TYPE_INVALID to "Некорретктный формат изображения",
+                        VideoEditingError.COVER_TOO_LARGE to "Изображение не может быть больше 10 МБ."
+                    )
+                )
                 Column {
                     StandardEditField(
                         firstTime = false,
@@ -160,7 +173,8 @@ fun VideoEditScreen(
                             },
                             placeholder = if (coverUri != null || coverExists == true && coverAction == KEEP)
                                 "Изменить обложку" else "Выбрать обложку",
-                            icon = Icons.Rounded.Wallpaper
+                            icon = Icons.Rounded.Wallpaper,
+                            errorMsg = coverErrMsg
                         )
                     }
                     FlowRow(

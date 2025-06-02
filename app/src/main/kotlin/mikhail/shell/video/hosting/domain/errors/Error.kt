@@ -7,12 +7,11 @@ interface Error
 data class CompoundError<T: Error>(
     @SerializedName("errors") private val _errors: MutableList<T> = mutableListOf()
 ): Error {
-    constructor(vararg errors: T): this() {
+    constructor(vararg errors: T): this(mutableListOf()) {
         _errors.addAll(errors)
     }
     val errors: List<T>
         get() = _errors.toList()
-
     fun add(error: T) {
         _errors.add(error)
     }

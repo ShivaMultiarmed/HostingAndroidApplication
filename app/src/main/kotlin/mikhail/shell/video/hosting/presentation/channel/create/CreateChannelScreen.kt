@@ -44,9 +44,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import coil.compose.rememberAsyncImagePainter
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.AVATAR_NOT_FOUND
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.AVATAR_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.AVATAR_TYPE_NOT_VALID
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.COVER_NOT_FOUND
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.COVER_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.COVER_TYPE_NOT_VALID
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.DESCRIPTION_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EXISTS
+import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_TOO_LARGE
 import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
@@ -101,13 +113,21 @@ fun CreateChannelScreen(
         ) {
             LaunchedEffect(state.channel) {
                 if (state.channel != null) {
-                    snackbarHostState.showSnackbar(message = "Канал был успешно создан", duration = SnackbarDuration.Long)
+                    snackbarHostState.showSnackbar(
+                        message = "Канал был успешно создан",
+                        duration = SnackbarDuration.Long
+                    )
                     onSuccess(state.channel)
                 }
             }
-            val titleErrMsg = if (state.error.equivalentTo(TITLE_EMPTY)) {
-                "Заполните название"
-            } else null
+            val titleErrMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    TITLE_EMPTY to "Заполните название",
+                    TITLE_EXISTS to "Название уже существует",
+                    TITLE_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                )
+            )
             EditField (
                 actionItems = if (title.isNotEmpty()) listOf(
                     DeletingItem (
@@ -126,6 +146,12 @@ fun CreateChannelScreen(
                     errorMsg = titleErrMsg
                 )
             }
+            val aliasErrMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    ChannelCreationError.ALIAS_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                )
+            )
             EditField (
                 actionItems = if (alias.isNotEmpty()) listOf(
                     DeletingItem (
@@ -140,9 +166,16 @@ fun CreateChannelScreen(
                     onValueChange = {
                         alias = it
                     },
-                    placeholder = "Никнейм канала"
+                    placeholder = "Никнейм канала",
+                    errorMsg = aliasErrMsg
                 )
             }
+            val descriptionErrMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    DESCRIPTION_TOO_LARGE to "Максимальная длина - $MAX_TEXT_LENGTH"
+                )
+            )
             EditField (
                 actionItems = if (description.isNotEmpty()) listOf(
                     DeletingItem (
@@ -159,12 +192,21 @@ fun CreateChannelScreen(
                     },
                     placeholder = "Описание",
                     maxLines = 50,
+                    errorMsg = descriptionErrMsg
                 )
             }
             val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                 if (it != null)
                     avatarUri = it
             }
+            val avatarErrMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    AVATAR_TOO_LARGE to "Изображение не должно превышать 10 МБ",
+                    AVATAR_TYPE_NOT_VALID to "Некорректный формат изображения",
+                    AVATAR_NOT_FOUND to "Аватар не найден"
+                )
+            )
             EditField (
                 actionItems = if (avatarUri != null) listOf(
                     DeletingItem (
@@ -178,7 +220,8 @@ fun CreateChannelScreen(
                     placeholder = if (avatarUri == null) "Выбрать аватар канала" else "Поменять аватар канала",
                     onClick = {
                         avatarPicker.launch("image/*")
-                    }
+                    },
+                    errorMsg = avatarErrMsg
                 )
             }
             if (avatarUri != null) {
@@ -198,12 +241,18 @@ fun CreateChannelScreen(
                     )
                 }
             }
-
             val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                 if (it != null)
                     coverUri = it
             }
-
+            val coverErrMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ",
+                    COVER_TYPE_NOT_VALID to "Некорректный формат изображения",
+                    COVER_NOT_FOUND to "Обложка не найдена"
+                )
+            )
             EditField (
                 actionItems = if (coverUri != null) listOf(
                     DeletingItem (
@@ -217,7 +266,8 @@ fun CreateChannelScreen(
                     placeholder = if (coverUri == null) "Выбрать обложку" else "Поменять обложку",
                     onClick = {
                         coverPicker.launch("image/*")
-                    }
+                    },
+                    errorMsg = coverErrMsg
                 )
             }
             if (coverUri != null) {

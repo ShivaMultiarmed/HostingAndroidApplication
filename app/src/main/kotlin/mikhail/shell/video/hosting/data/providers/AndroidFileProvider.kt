@@ -38,8 +38,8 @@ class AndroidFileProvider(context: Context) : FileProvider {
     }
 
     override fun exists(uri: Uri): Boolean {
-        return contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
-            it.moveToFirst()
-        }?: false
+        return contentResolver
+            .query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)
+            ?.use { it.moveToFirst() } == true
     }
 }

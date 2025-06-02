@@ -192,13 +192,6 @@ fun ProfileScreenContent(
                     }
                 )
                 .padding(top = 10.dp)
-                .then(
-                    if (orientation == ORIENTATION_LANDSCAPE) {
-                        Modifier//.verticalScroll(rememberScrollState())
-                    } else {
-                        Modifier
-                    }
-                )
         ) {
             if (state.channels.isNotEmpty()) {
                 Title(
@@ -294,7 +287,6 @@ fun UserDetailsSection(
     if (isCompact) {
         Column(
             modifier = modifier
-                //.fillMaxWidth()
                 .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

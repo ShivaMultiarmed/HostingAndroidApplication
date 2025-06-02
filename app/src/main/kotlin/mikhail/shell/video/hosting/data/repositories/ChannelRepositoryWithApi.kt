@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.util.Log
+import android.webkit.MimeTypeMap
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -23,6 +24,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import retrofit2.HttpException
 import java.io.File
 import javax.inject.Inject
@@ -60,6 +62,36 @@ class ChannelRepositoryWithApi @Inject constructor(
         cover: File?
     ): Result<Channel, CompoundError<ChannelCreationError>> {
         return try {
+            val compoundError = CompoundError<ChannelCreationError>()
+            avatar?.let {
+                if (!it.exists()) {
+                    compoundError.add(ChannelCreationError.AVATAR_NOT_FOUND)
+                } else {
+                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                    if (!mimeType!!.contains("image")) {
+                        compoundError.add(ChannelCreationError.AVATAR_TYPE_NOT_VALID)
+                    }
+                    if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                        compoundError.add(ChannelCreationError.AVATAR_TOO_LARGE)
+                    }
+                }
+            }
+            cover?.let {
+                if (!it.exists()) {
+                    compoundError.add(ChannelCreationError.COVER_NOT_FOUND)
+                } else {
+                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                    if (!mimeType!!.contains("image")) {
+                        compoundError.add(ChannelCreationError.COVER_TYPE_NOT_VALID)
+                    }
+                    if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                        compoundError.add(ChannelCreationError.COVER_TOO_LARGE)
+                    }
+                }
+            }
+            if (compoundError.isNotNull()) {
+                return Result.Failure(compoundError)
+            }
             val avatarPart = avatar?.toPart("avatar")
             val coverPart = cover?.toPart("cover")
             val response = _channelApi.createChannel(
@@ -73,7 +105,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
             val error = gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             val error = CompoundError(mutableListOf(ChannelCreationError.UNEXPECTED))
             Result.Failure(error)
         }
@@ -161,20 +193,8 @@ class ChannelRepositoryWithApi @Inject constructor(
         editAvatarAction: EditAction,
         avatar: String?
     ): Result<Channel, CompoundError<EditChannelError>> {
-        val coverPart = cover?.let {
-            if (editCoverAction == EditAction.UPDATE) {
-                fileProvider.uriToPart(it, "cover")
-            } else {
-                null
-            }
-        }
-        val avatarPart = avatar?.let {
-            if (editAvatarAction == EditAction.UPDATE) {
-                fileProvider.uriToPart(it, "avatar")
-            } else {
-                null
-            }
-        }
+        val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(cover!!, "cover") else null
+        val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(avatar!!, "avatar") else null
         return try {
             val editedChannel = _channelApi.editChannel(
                 channel.toDto(),
