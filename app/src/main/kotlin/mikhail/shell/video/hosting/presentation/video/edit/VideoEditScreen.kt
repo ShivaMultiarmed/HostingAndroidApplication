@@ -148,7 +148,7 @@ fun VideoEditScreen(
                     compoundError,
                     mapOf(
                         VideoEditingError.COVER_NOT_FOUND to "Обложка не найдена",
-                        VideoEditingError.COVER_TYPE_NOT_VALID to "Некорретктный формат изображения",
+                        VideoEditingError.COVER_TYPE_NOT_VALID to "Некорректный формат изображения",
                         VideoEditingError.COVER_TOO_LARGE to "Изображение не может быть больше 10 МБ."
                     )
                 )

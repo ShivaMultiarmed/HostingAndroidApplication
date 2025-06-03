@@ -151,32 +151,10 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
-            val compoundError = CompoundError<UploadVideoError>()
             val sourceUri = Uri.parse(source)
             val sourceMime = fileProvider.getFileMimeType(sourceUri)
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
-            if (!fileProvider.exists(sourceUri)) {
-                compoundError.add(UploadVideoError.SOURCE_NOT_FOUND)
-            } else if (!sourceMime!!.startsWith("video")) {
-                compoundError.add(UploadVideoError.SOURCE_TYPE_NOT_VALID)
-            } else if (sourceSize > ValidationRules.MAX_VIDEO_SIZE) {
-                compoundError.add(UploadVideoError.SOURCE_TOO_LARGE)
-            }
-            cover?.let { notNullCover ->
-                val coverUri = Uri.parse(notNullCover)
-                val coverMime = fileProvider.getFileMimeType(coverUri)
-                if (!fileProvider.exists(coverUri)) {
-                    compoundError.add(UploadVideoError.COVER_NOT_FOUND)
-                } else if (!coverMime!!.contains("image")) {
-                    compoundError.add(UploadVideoError.COVER_TYPE_NOT_VALID)
-                } else if ((fileProvider.getFileSize(coverUri) ?: 0) > ValidationRules.MAX_IMAGE_SIZE) {
-                    compoundError.add(UploadVideoError.COVER_TOO_LARGE)
-                }
-            }
-            if (compoundError.isNotNull()) {
-                return Result.Failure(compoundError)
-            }
             val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
             var bytesTransfered = 0
             val sourceInputStream = fileProvider.getFileAsInputStream(sourceUri)
@@ -246,12 +224,15 @@ class VideoRepositoryWithApi @Inject constructor(
     ): Result<Video, CompoundError<VideoEditingError>> {
         return try {
             val compoundError = CompoundError<VideoEditingError>()
-            if (cover == null) {
-                compoundError.add(VideoEditingError.COVER_NOT_FOUND)
-            } else if (!cover.name.contains("image")) {
-                compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
-            } else if (cover.length() > ValidationRules.MAX_IMAGE_SIZE) {
-                compoundError.add(VideoEditingError.COVER_TOO_LARGE)
+            cover?.let {
+                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                if (!it.exists()) {
+                    compoundError.add(VideoEditingError.COVER_NOT_FOUND)
+                } else if (!mime!!.contains("image")) {
+                    compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
+                } else if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                    compoundError.add(VideoEditingError.COVER_TOO_LARGE)
+                }
             }
             if (compoundError.isNotNull()) {
                 return Result.Failure(compoundError)

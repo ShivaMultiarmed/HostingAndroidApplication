@@ -14,14 +14,16 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.usecases.videos.ValidateUploadingVideo
 
 @HiltViewModel(assistedFactory = UploadVideoViewModel.Factory::class)
 class UploadVideoViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     @Assisted("player") val player: Player,
-    private val _getChannelsByOwner: GetChannelsByOwner
+    private val _getChannelsByOwner: GetChannelsByOwner,
+    private val _validateVideo: ValidateUploadingVideo
 ): ViewModel() {
     private val _state = MutableStateFlow(UploadVideoScreenState())
     val state = _state.asStateFlow()
@@ -56,8 +58,6 @@ class UploadVideoViewModel @AssistedInject constructor(
         val compoundError = CompoundError<UploadVideoError>()
         if (input.title.isEmpty()) {
             compoundError.add(UploadVideoError.TITLE_EMPTY)
-        } else if (input.title.length > ValidationRules.MAX_TITLE_LENGTH) {
-            compoundError.add(UploadVideoError.TITLE_TOO_LARGE)
         }
         if (input.source == null) {
             compoundError.add(UploadVideoError.SOURCE_EMPTY)
@@ -65,7 +65,15 @@ class UploadVideoViewModel @AssistedInject constructor(
         if (input.channelId == null) {
             compoundError.add(UploadVideoError.CHANNEL_NOT_VALID)
         }
-        return if (compoundError.isNotNull()) compoundError.also { cerr ->
+        val resultError = if (compoundError.isNotNull()) compoundError else _validateVideo(
+            video = Video(
+                channelId = input.channelId!!,
+                title = input.title
+            ),
+            source = input.source.toString(),
+            cover = input.cover.toString()
+        )
+        return resultError?.also { cerr ->
             _state.update {
                 it.copy(
                     video = null,
@@ -73,7 +81,7 @@ class UploadVideoViewModel @AssistedInject constructor(
                     error = CompoundError(cerr.errors)
                 )
             }
-        } else null
+        }
     }
     @AssistedFactory
     interface Factory {
