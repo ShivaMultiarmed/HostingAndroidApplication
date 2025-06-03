@@ -159,7 +159,7 @@ class VideoRepositoryWithApi @Inject constructor(
             if (!fileProvider.exists(sourceUri)) {
                 compoundError.add(UploadVideoError.SOURCE_NOT_FOUND)
             } else if (!sourceMime!!.startsWith("video")) {
-                compoundError.add(UploadVideoError.SOURCE_TYPE_INVALID)
+                compoundError.add(UploadVideoError.SOURCE_TYPE_NOT_VALID)
             } else if (sourceSize > ValidationRules.MAX_VIDEO_SIZE) {
                 compoundError.add(UploadVideoError.SOURCE_TOO_LARGE)
             }
@@ -169,7 +169,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 if (!fileProvider.exists(coverUri)) {
                     compoundError.add(UploadVideoError.COVER_NOT_FOUND)
                 } else if (!coverMime!!.contains("image")) {
-                    compoundError.add(UploadVideoError.COVER_TYPE_INVALID)
+                    compoundError.add(UploadVideoError.COVER_TYPE_NOT_VALID)
                 } else if ((fileProvider.getFileSize(coverUri) ?: 0) > ValidationRules.MAX_IMAGE_SIZE) {
                     compoundError.add(UploadVideoError.COVER_TOO_LARGE)
                 }
@@ -249,7 +249,7 @@ class VideoRepositoryWithApi @Inject constructor(
             if (cover == null) {
                 compoundError.add(VideoEditingError.COVER_NOT_FOUND)
             } else if (!cover.name.contains("image")) {
-                compoundError.add(VideoEditingError.COVER_TYPE_INVALID)
+                compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
             } else if (cover.length() > ValidationRules.MAX_IMAGE_SIZE) {
                 compoundError.add(VideoEditingError.COVER_TOO_LARGE)
             }

@@ -136,7 +136,7 @@ class ChannelRepositoryWithApi @Inject constructor(
                 else -> ChannelLoadingError.UNEXPECTED
             }
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
@@ -169,7 +169,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         return try {
             val token = fcm.token.await()
             Result.Success(_channelApi.subscribeToChannelNotifications(userId, token))
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(RESUBSCRIBING_FAILED)
         }
     }
@@ -205,10 +205,11 @@ class ChannelRepositoryWithApi @Inject constructor(
             ).toDomain()
             Result.Success(editedChannel)
         } catch (e: HttpException) {
-            val error = CompoundError<EditChannelError>()
-            error.add(EditChannelError.UNEXPECTED)
+            val responseBody = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
+            val error = gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             val error = CompoundError<EditChannelError>()
             error.add(EditChannelError.UNEXPECTED)
             Result.Failure(error)

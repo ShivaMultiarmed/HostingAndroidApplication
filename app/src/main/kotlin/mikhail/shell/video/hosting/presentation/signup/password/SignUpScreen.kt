@@ -103,7 +103,7 @@ fun SignUpScreen(
                 state.error,
                 mapOf(
                     SignUpError.PASSWORD_EMPTY to "Введите пароль",
-                    SignUpError.PASSWORD_NOT_VALID to "Пароль должен быть длиной от 8 до 20 символов"
+                    SignUpError.PASSWORD_NOT_VALID to "Длина пароля от 8 до 20 символов"
                 )
             )
             var password by rememberSaveable { mutableStateOf("") }
@@ -123,7 +123,8 @@ fun SignUpScreen(
                 compoundError,
                 mapOf(
                     SignUpError.NICK_EMPTY to "Заполните ник",
-                    SignUpError.NICK_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}"
+                    SignUpError.NICK_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}",
+                    SignUpError.NICK_EXISTS to "Этот ник занят"
                 )
             )
             InputField(

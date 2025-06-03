@@ -48,6 +48,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.ALIAS_EXISTS
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.ALIAS_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_NOT_FOUND
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.AVATAR_TYPE_NOT_VALID
@@ -56,6 +58,7 @@ import mikhail.shell.video.hosting.domain.errors.EditChannelError.COVER_TOO_LARG
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.COVER_TYPE_NOT_VALID
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.DESCRIPTION_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_EMPTY
+import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.EditChannelError.TITLE_TOO_LARGE
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
@@ -139,7 +142,8 @@ fun EditChannelScreen(
                     state.error,
                     mapOf(
                         TITLE_EMPTY to "Заполните название",
-                        TITLE_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}"
+                        TITLE_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}",
+                        TITLE_EXISTS to "Название уже занято"
                     )
                 )
                 StandardEditField(
@@ -168,7 +172,8 @@ fun EditChannelScreen(
                 val aliasErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        TITLE_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}"
+                        ALIAS_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_TITLE_LENGTH}",
+                        ALIAS_EXISTS to "Ник уже занят"
                     )
                 )
                 StandardEditField(

@@ -4,10 +4,12 @@ import com.google.gson.annotations.SerializedName
 
 interface Error
 
-data class CompoundError<T: Error>(
+class CompoundError<T: Error>(): Error {
     @SerializedName("errors") private val _errors: MutableList<T> = mutableListOf()
-): Error {
-    constructor(vararg errors: T): this(mutableListOf()) {
+    constructor(errors: List<T>): this() {
+        _errors.addAll(errors)
+    }
+    constructor(vararg errors: T): this() {
         _errors.addAll(errors)
     }
     val errors: List<T>

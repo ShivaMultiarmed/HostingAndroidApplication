@@ -186,8 +186,8 @@ fun UploadVideoScreen(
                         errorMessages = mapOf(
                             UploadVideoError.SOURCE_EMPTY to "Выберите видео",
                             UploadVideoError.SOURCE_NOT_FOUND to "Видео не найдено",
-                            UploadVideoError.SOURCE_TYPE_INVALID to "Некорректный формат видео",
-                            UploadVideoError.SOURCE_TOO_LARGE to "Слишком большое видео"
+                            UploadVideoError.SOURCE_TYPE_NOT_VALID to "Некорректный формат видео",
+                            UploadVideoError.SOURCE_TOO_LARGE to "Максимальный размер видео ${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} МБ"
                         )
                     )
                     val sourceActionItems = if (sourceUri == null) listOf()
@@ -356,7 +356,7 @@ fun UploadVideoScreen(
                         )
                     }
 
-                    val channelErrMsg = constructInfoMessage(compoundError, mapOf(UploadVideoError.CHANNEL_INVALID to "Выберите канал"))
+                    val channelErrMsg = constructInfoMessage(compoundError, mapOf(UploadVideoError.CHANNEL_NOT_VALID to "Выберите канал"))
                     val channelActionItems = if (channelId == null) emptyList() else listOf(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
@@ -390,7 +390,7 @@ fun UploadVideoScreen(
                         compoundError,
                         mapOf(
                             UploadVideoError.COVER_NOT_FOUND to "Обложка не найдена",
-                            UploadVideoError.COVER_TYPE_INVALID to "Некорректный тип обложки",
+                            UploadVideoError.COVER_TYPE_NOT_VALID to "Некорректный тип обложки",
                             UploadVideoError.COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ"
                         )
                     )

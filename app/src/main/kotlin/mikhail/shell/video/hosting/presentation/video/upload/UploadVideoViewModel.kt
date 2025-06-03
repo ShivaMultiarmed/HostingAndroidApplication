@@ -14,8 +14,8 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 
 @HiltViewModel(assistedFactory = UploadVideoViewModel.Factory::class)
 class UploadVideoViewModel @AssistedInject constructor(
@@ -63,14 +63,14 @@ class UploadVideoViewModel @AssistedInject constructor(
             compoundError.add(UploadVideoError.SOURCE_EMPTY)
         }
         if (input.channelId == null) {
-            compoundError.add(UploadVideoError.CHANNEL_INVALID)
+            compoundError.add(UploadVideoError.CHANNEL_NOT_VALID)
         }
         return if (compoundError.isNotNull()) compoundError.also { cerr ->
             _state.update {
                 it.copy(
                     video = null,
                     isLoading = false,
-                    error = CompoundError(cerr.errors.toMutableList())
+                    error = CompoundError(cerr.errors)
                 )
             }
         } else null

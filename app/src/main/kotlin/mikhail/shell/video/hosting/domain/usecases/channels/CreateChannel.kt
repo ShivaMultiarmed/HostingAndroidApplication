@@ -24,6 +24,9 @@ class CreateChannel @Inject constructor(
         if ((channel.alias?.length ?: 0) > ValidationRules.MAX_TITLE_LENGTH) {
             compoundError.add(ChannelCreationError.ALIAS_TOO_LARGE)
         }
+        if ((channel.description?.length ?: 0) > ValidationRules.MAX_TEXT_LENGTH) {
+            compoundError.add(ChannelCreationError.DESCRIPTION_TOO_LARGE)
+        }
         return if (compoundError.isNotNull()) {
             Result.Failure(compoundError)
         } else {

@@ -149,7 +149,8 @@ fun CreateChannelScreen(
             val aliasErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    ChannelCreationError.ALIAS_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                    ChannelCreationError.ALIAS_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}",
+                    ChannelCreationError.ALIAS_EXISTS to "Никнейм уже занят"
                 )
             )
             EditField (

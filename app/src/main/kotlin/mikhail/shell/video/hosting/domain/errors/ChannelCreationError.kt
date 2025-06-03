@@ -6,6 +6,7 @@ enum class ChannelCreationError: Error {
     TITLE_TOO_LARGE,
 
     ALIAS_TOO_LARGE,
+    ALIAS_EXISTS,
 
     DESCRIPTION_TOO_LARGE,
 
