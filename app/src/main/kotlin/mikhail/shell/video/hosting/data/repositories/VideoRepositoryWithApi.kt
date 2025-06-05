@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.net.Uri
-import android.util.Log
 import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
@@ -189,8 +188,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
             val compoundError = gson.fromJson<CompoundError<UploadVideoError>>(json, type)
             Result.Failure(compoundError)
-        } catch (e: Exception) {
-            Log.e(this::class.toString(), e.stackTraceToString())
+        } catch (_: Exception) {
             Result.Failure(DEFAULT_UPLOAD_ERROR)
         }
     }
