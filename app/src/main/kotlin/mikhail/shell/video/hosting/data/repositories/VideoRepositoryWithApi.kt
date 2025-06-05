@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.net.Uri
+import android.util.Log
 import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
@@ -158,7 +159,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
             var bytesTransfered = 0
             val sourceInputStream = fileProvider.getFileAsInputStream(sourceUri)
-            sourceInputStream!!.proccess { bytesRead, buffer ->
+            sourceInputStream!!.process { bytesRead, buffer ->
                 videoApi.uploadVideoSource(
                     videoResponse.videoId!!,
                     sourceExtension!!,
@@ -172,7 +173,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 val coverUri = Uri.parse(notNullCover)
                 val coverMime = fileProvider.getFileMimeType(coverUri)!!
                 val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
-                val coverContent = fileProvider.getFileAsInputStream(coverUri)?.use{
+                val coverContent = fileProvider.getFileAsInputStream(coverUri)?.use {
                     it.readBytes().toOctetStream()
                 }
                 videoApi.uploadVideoCover(
@@ -188,7 +189,8 @@ class VideoRepositoryWithApi @Inject constructor(
             val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
             val compoundError = gson.fromJson<CompoundError<UploadVideoError>>(json, type)
             Result.Failure(compoundError)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e(this::class.toString(), e.stackTraceToString())
             Result.Failure(DEFAULT_UPLOAD_ERROR)
         }
     }
@@ -201,7 +203,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 else -> VideoPatchingError.VIEWS_NOT_INCREMENTED
             }
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(VideoPatchingError.UNEXPECTED)
         }
     }
@@ -210,9 +212,9 @@ class VideoRepositoryWithApi @Inject constructor(
         return try {
             videoApi.deleteVideo(videoId)
             Result.Success(true)
-        } catch (e: HttpException) {
+        } catch (_: HttpException) {
             Result.Failure(VideoDeletingError.UNEXPECTED)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(VideoDeletingError.UNEXPECTED)
         }
     }
@@ -347,7 +349,7 @@ class StreamedRequestBody(
     }
 }
 
-suspend fun InputStream.proccess(
+suspend fun InputStream.process(
     onChunkRead: suspend (bytesRead: Int, buffer: ByteArray) -> Unit
 ) {
     this.use {

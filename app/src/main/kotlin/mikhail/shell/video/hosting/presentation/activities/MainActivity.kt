@@ -11,15 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
@@ -29,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
 import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
@@ -37,6 +35,7 @@ import mikhail.shell.video.hosting.presentation.navigation.searchRoute
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
+import mikhail.shell.video.hosting.presentation.video.shouldShowMiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -110,13 +109,13 @@ class MainActivity : ComponentActivity() {
                             startDestination = if (userDetailsProvider.getUserId() != 0L) Route.Search else Route.Authentication
                         ) {
                             authenticationGraph(navController)
-                            videoGraph(navController, player, userDetailsProvider, { isVideoFullScreened = it })
+                            videoGraph(navController, player, userDetailsProvider) { isVideoFullScreened = it }
                             channelGraph(navController, userDetailsProvider)
-                            userGraph(navController,userDetailsProvider)
+                            userGraph(navController, userDetailsProvider, player)
                             searchRoute(navController)
                         }
                     }
-                    if (shouldMiniPlay() && isPlayerPrepared()) {
+                    if (shouldShowMiniPlayer(navController) && isPlayerPrepared(player)) {
                         MiniPlayer(
                             player = player,
                             onFullScreen = {
@@ -138,35 +137,7 @@ class MainActivity : ComponentActivity() {
         registerReceiver(mediaReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
     }
 
-    @Composable
-    private fun shouldMiniPlay(): Boolean {
-        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-        return Route.Video::class.qualifiedName!! !in currentRoute.toString()
-                && currentRoute != null
-    }
 
-    @Composable
-    private fun isPlayerPrepared(): Boolean {
-        val initialValue = player.currentMediaItem != null
-        var isPrepared by rememberSaveable { mutableStateOf(initialValue) }
-        DisposableEffect(Unit) {
-            val playerListener = object : Player.Listener {
-                override fun onMediaItemTransition(
-                    mediaItem: MediaItem?,
-                    reason: Int
-                ) {
-                    val uri = mediaItem?.localConfiguration?.uri?.toString()
-                    isPrepared = uri != null
-                }
-            }
-            player.addListener(playerListener)
-            onDispose {
-                isPrepared = player.currentMediaItem != null
-                player.removeListener(playerListener)
-            }
-        }
-        return isPrepared
-    }
 
     override fun onStop() {
         if (!isChangingConfigurations) {

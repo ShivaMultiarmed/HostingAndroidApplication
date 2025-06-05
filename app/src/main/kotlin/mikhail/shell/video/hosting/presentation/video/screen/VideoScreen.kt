@@ -94,6 +94,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.Action
 import mikhail.shell.video.hosting.domain.ActionModel
@@ -123,12 +124,14 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
+import mikhail.shell.video.hosting.presentation.utils.toCorrectWordForm
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Composable
 fun VideoScreen(
@@ -894,53 +897,41 @@ fun CommentForm(
     }
 }
 
-fun Instant.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
-    val dateTime = this.toLocalDateTime(timeZone).toJavaLocalDateTime()
+fun Instant.toPresentation(): String {
+    val dateTime = this.toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()
     return dateTime.toPresentation()
 }
 
-fun LocalDateTime.toPresentation(): String {
+fun LocalDateTime.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
     val now = LocalDateTime.now()
-    return if (now.minusMinutes(10) < this) {
-        "Только что"
-    }
-    else if (now.minusMinutes(60) < this) {
-        val diff = Duration.between(this, now).toMinutes().toInt()
-        when (diff % 10) {
-            1 -> "$diff минуту назад назад"
-            in 2..4 -> "$diff минуты назад"
-            else -> "$diff минут назад"
-        }
-    } else if (now.minusHours(24) < this) {
-        val diff = Duration.between(this, now).toHours().toInt()
-        when (diff % 10) {
-            1 -> "$diff час назад"
-            in 2..4 -> "$diff часа назад"
-            else -> "$diff часов назад"
-        }
-    } else if (now.minusDays(30) < this) {
-        val diff = Duration.between(this, now).toDays().toInt()
-
-        when (diff % 10) {
-            1 -> if (diff != 1) "$diff день назад" else "Вчера"
-            in 2..4 -> "$diff дня назад"
-            else -> "$diff дней назад"
-        }
+    val currentDateTime = this
+        .toInstant(ZoneOffset.UTC)
+        .toKotlinInstant()
+        .toLocalDateTime(timeZone)
+        .toJavaLocalDateTime()
+    val stringBuilder = StringBuilder()
+    if (now.minusMinutes(10) < currentDateTime) {
+        stringBuilder.append("Только что")
+    } else if (now.minusMinutes(60) < currentDateTime) {
+        val diff = Duration.between(currentDateTime, now).toMinutes().toInt()
+        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("минута", "минуты", "минут"))
+    } else if (now.minusHours(24) < currentDateTime) {
+        val diff = Duration.between(currentDateTime, now).toHours().toInt()
+        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("час", "часа", "часов"))
+    } else if (now.minusDays(30) < currentDateTime) {
+        val diff = Duration.between(currentDateTime, now).toDays().toInt()
+        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("день", "дня", "дней"))
     } else if (now.minusMonths(12) < this) {
-        val diff = Duration.between(this, now).toDays().div(30).toInt()
-        when (diff % 10) {
-            1 -> "$diff месяц назад"
-            in 2..4 -> "$diff месяца назад"
-            else -> "$diff месяцев назад"
-        }
+        val diff = Duration.between(currentDateTime, now).toDays().div(30).toInt()
+        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("месяц", "месяца", "месяцев"))
     } else {
-        val diff = Duration.between(this, now).toDays().div(30).div(12).toInt()
-        when (diff % 10) {
-            1 -> "$diff год назад"
-            in 2..4 -> "$diff года назад"
-            else -> "$diff лет назад"
-        }
+        val diff = Duration.between(currentDateTime, now).toDays().div(30).div(12).toInt()
+        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("год", "года", "лет"))
     }
+    if (now.minusMinutes(10) >= currentDateTime) {
+        stringBuilder.append(" назад")
+    }
+    return stringBuilder.toString()
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

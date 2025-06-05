@@ -2,10 +2,10 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Context
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -18,7 +18,8 @@ import mikhail.shell.video.hosting.presentation.utils.logOut
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    player: Player
 ) {
     composable<Route.User.Profile> {
         val bundle = it.toRoute<Route.User.Profile>()
@@ -28,7 +29,6 @@ fun NavGraphBuilder.profileRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref =
             LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
-        val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             state = state,
             isOwner = userId == userDetailsProvider.getUserId(),
@@ -49,7 +49,12 @@ fun NavGraphBuilder.profileRoute(
                     viewModel.loadChannels()
                 }
             },
-            onLogOut = viewModel::signOut,
+            onLogOut = {
+                player.stop()
+                player.clearMediaItems()
+
+                viewModel.signOut()
+            },
             onLogOutSuccess = {
                 logOut(sharedPref, navController)
             },

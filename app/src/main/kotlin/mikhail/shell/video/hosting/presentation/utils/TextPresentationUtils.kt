@@ -3,6 +3,12 @@ package mikhail.shell.video.hosting.presentation.utils
 import kotlin.math.floor
 import kotlin.math.round
 
+fun Int.toCorrectWordForm(
+    f1: String,
+    f2: String,
+    f3: String
+) = this.toLong().toCorrectWordForm(f1, f2, f3)
+
 fun Long.toCorrectWordForm(
     f1: String,
     f2: String,

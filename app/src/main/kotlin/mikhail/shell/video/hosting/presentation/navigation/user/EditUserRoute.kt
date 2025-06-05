@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -16,7 +17,8 @@ import mikhail.shell.video.hosting.presentation.utils.logOut
 
 fun NavGraphBuilder.editUserRoute(
     navController: NavController,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    player: Player
 ) {
     composable<Route.User.Edit> {
         val userId = userDetailsProvider.getUserId()
@@ -31,7 +33,12 @@ fun NavGraphBuilder.editUserRoute(
             onEditSuccess = {
                 navController.navigate(Route.User.Profile(userId))
             },
-            onRemove = viewModel::removeUser,
+            onRemove = {
+                player.stop()
+                player.clearMediaItems()
+
+                viewModel.removeUser()
+            },
             onRemoveSuccess = {
                 logOut(sharedPref, navController)
             },

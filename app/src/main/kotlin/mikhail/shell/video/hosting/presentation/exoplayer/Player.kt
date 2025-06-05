@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
@@ -540,4 +541,27 @@ fun PlayerControlsPreview() {
             onFullscreen = {}
         )
     }
+}
+
+@Composable
+fun isPlayerPrepared(player: Player): Boolean {
+    val initialValue = player.currentMediaItem != null
+    var isPrepared by rememberSaveable { mutableStateOf(initialValue) }
+    DisposableEffect(Unit) {
+        val playerListener = object : Player.Listener {
+            override fun onMediaItemTransition(
+                mediaItem: MediaItem?,
+                reason: Int
+            ) {
+                val uri = mediaItem?.localConfiguration?.uri?.toString()
+                isPrepared = uri != null
+            }
+        }
+        player.addListener(playerListener)
+        onDispose {
+            isPrepared = player.currentMediaItem != null
+            player.removeListener(playerListener)
+        }
+    }
+    return isPrepared
 }
