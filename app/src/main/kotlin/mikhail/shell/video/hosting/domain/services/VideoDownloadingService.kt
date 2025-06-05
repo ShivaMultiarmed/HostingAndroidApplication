@@ -121,14 +121,14 @@ class VideoDownloadingService : Service() {
     private fun createSuccessNotification(): Notification {
         return NotificationCompat.Builder(this, "video_downloading")
             .setContentTitle("Видео успешно скачано")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .build()
     }
 
     private fun createFailureNotification(): Notification {
         return NotificationCompat.Builder(this, "video_downloading")
             .setContentTitle("Ошибка при скачивании видео")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .build()
     }
 
@@ -136,7 +136,7 @@ class VideoDownloadingService : Service() {
         return NotificationCompat.Builder(this, "video_downloading")
             .setContentTitle("Скачивание видео")
             .setContentText("Видео скачается в течение нескольких минут.")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setProgress(100, progress, false)
             .setOnlyAlertOnce(true)
             .setOngoing(true)
@@ -146,7 +146,7 @@ class VideoDownloadingService : Service() {
 
     private fun createCancelAction(): NotificationCompat.Action {
         return NotificationCompat.Action(
-            R.drawable.icon,
+            R.drawable.ic_launcher_monochrome,
             "Отменить",
             PendingIntent.getService(
                 this,

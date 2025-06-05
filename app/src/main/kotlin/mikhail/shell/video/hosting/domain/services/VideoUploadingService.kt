@@ -88,7 +88,7 @@ class VideoUploadingService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val notification = NotificationCompat.Builder(this, "video_uploading")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Видео успешно загружено")
             .setContentText("Нажмите, чтобы перейти к нему.")
             .setContentIntent(pendingIntent)
@@ -99,7 +99,7 @@ class VideoUploadingService : Service() {
 
     private fun displayFailureNotification(err: CompoundError<UploadVideoError>) {
         val notification = NotificationCompat.Builder(this, "video_uploading")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Ошибка при загрузке видео")
             .setContentText("Нажмите и попробуйте ещё раз.")
             .setAutoCancel(true)
@@ -113,7 +113,7 @@ class VideoUploadingService : Service() {
     }
     private fun createProgressNotification(progress: Int = 0): Notification {
         return NotificationCompat.Builder(this, "video_uploading")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Видео загружается на сервер")
             .setContentText("Оно появится на канале в течение пары минут.")
             .setSilent(true)

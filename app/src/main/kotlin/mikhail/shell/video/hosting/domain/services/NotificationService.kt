@@ -80,7 +80,7 @@ class NotificationService: FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val notification = NotificationCompat.Builder(this, "channel_subscriptions")
-            .setSmallIcon(R.drawable.icon)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Новое видео на канале $channelTitle")
             .setContentText(videoTitle)
             .setContentIntent(pendingIntent)
