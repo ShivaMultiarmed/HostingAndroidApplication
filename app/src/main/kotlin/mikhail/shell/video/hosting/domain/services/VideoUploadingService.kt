@@ -47,6 +47,8 @@ class VideoUploadingService : Service() {
             } else {
                 startForeground(++NOTIFICATION_COUNT, createProgressNotification())
             }
+            val sourceUri = it.getString("source")!!.toUri()
+            val coverUri = it.getString("cover")?.toUri()
             coroutineScope.launch {
                 _uploadVideo(
                     video = Video(
@@ -59,10 +61,22 @@ class VideoUploadingService : Service() {
                     val progress = (it * 100).toInt()
                     updateProgressNotification(progress)
                 }.onSuccess { vid ->
+                    contentResolver.apply {
+                        releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        coverUri?.let {
+                            releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    }
                     displaySuccessNotification(vid)
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }.onFailure { err ->
+                    contentResolver.apply {
+                        releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        coverUri?.let {
+                            releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    }
                     displayFailureNotification(err)
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()

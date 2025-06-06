@@ -3,6 +3,8 @@ package mikhail.shell.video.hosting.presentation.video.upload
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.os.Build
 import android.view.WindowInsetsController
@@ -175,7 +177,11 @@ fun UploadVideoScreen(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
+                            if (sourceUri != null) {
+                                context.contentResolver.releasePersistableUriPermission(sourceUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
                             sourceUri = it
+                            context.contentResolver.takePersistableUriPermission(sourceUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             val newMediaItem = MediaItem.fromUri(sourceUri!!)
                             player.setMediaItem(newMediaItem)
                             player.prepare()
@@ -383,8 +389,13 @@ fun UploadVideoScreen(
                     val coverPicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
                     ) {
-                        if (it != null)
+                        if (it != null) {
+                            if (coverUri != null) {
+                                context.contentResolver.releasePersistableUriPermission(coverUri!!, FLAG_GRANT_READ_URI_PERMISSION)
+                            }
                             coverUri = it
+                            context.contentResolver.takePersistableUriPermission(coverUri!!, FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                     }
                     val coverErrMsg = constructInfoMessage(
                         compoundError,
