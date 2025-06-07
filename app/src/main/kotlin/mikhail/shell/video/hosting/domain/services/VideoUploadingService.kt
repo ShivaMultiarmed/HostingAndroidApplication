@@ -62,7 +62,9 @@ class VideoUploadingService : Service() {
                     updateProgressNotification(progress)
                 }.onSuccess { vid ->
                     contentResolver.apply {
-                        releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        if (!sourceUri.toString().contains("$packageName.fileprovider")) {
+                            releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                         coverUri?.let {
                             releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
@@ -72,7 +74,9 @@ class VideoUploadingService : Service() {
                     stopSelf()
                 }.onFailure { err ->
                     contentResolver.apply {
-                        releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        if (!sourceUri.toString().contains("$packageName.fileprovider")) {
+                            releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                         coverUri?.let {
                             releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }

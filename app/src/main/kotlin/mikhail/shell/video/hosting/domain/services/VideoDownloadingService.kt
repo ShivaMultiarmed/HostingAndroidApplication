@@ -67,7 +67,6 @@ class VideoDownloadingService : Service() {
             } else {
                 startForeground(++NOTIFICATION_COUNT, persistentNotification)
             }
-            uri = null
             var output: OutputStream? = null
             var progress = 0
             process = coroutineScope.launch {
@@ -91,7 +90,7 @@ class VideoDownloadingService : Service() {
                 }.onSuccess { _ ->
                     onResult(createSuccessNotification())
                     output?.close()
-                }.onFailure { err ->
+                }.onFailure { _ ->
                     onResult(createFailureNotification())
                     output?.close()
                 }

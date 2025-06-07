@@ -3,10 +3,9 @@ package mikhail.shell.video.hosting.presentation.video.upload
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.view.WindowInsetsController
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -172,16 +171,11 @@ fun UploadVideoScreen(
                             player.prepare()
                         }
                     }
-
                     val sourcePicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
-                            if (sourceUri != null) {
-                                context.contentResolver.releasePersistableUriPermission(sourceUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
                             sourceUri = it
-                            context.contentResolver.takePersistableUriPermission(sourceUri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             val newMediaItem = MediaItem.fromUri(sourceUri!!)
                             player.setMediaItem(newMediaItem)
                             player.prepare()
@@ -219,7 +213,7 @@ fun UploadVideoScreen(
                                 errorMsg = sourceErrMsg
                             )
                         }
-                        val cacheDir = context.cacheDir.absolutePath
+                        val recordedVideoDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
                         val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
@@ -234,9 +228,10 @@ fun UploadVideoScreen(
                                             cameraPermission.status.isGranted
                                         if (isCameraPermissionGranted) {
                                             val file = File(
-                                                cacheDir,
-                                                "tmp_file_${System.currentTimeMillis()}.mp4"
+                                                recordedVideoDir,
+                                                "${System.currentTimeMillis()}.mp4"
                                             )
+                                            file.createNewFile()
                                             sourceUri = FileProvider.getUriForFile(
                                                 context,
                                                 "mikhail.shell.video.hosting.fileprovider",
@@ -390,11 +385,7 @@ fun UploadVideoScreen(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
-                            if (coverUri != null) {
-                                context.contentResolver.releasePersistableUriPermission(coverUri!!, FLAG_GRANT_READ_URI_PERMISSION)
-                            }
                             coverUri = it
-                            context.contentResolver.takePersistableUriPermission(coverUri!!, FLAG_GRANT_READ_URI_PERMISSION)
                         }
                     }
                     val coverErrMsg = constructInfoMessage(

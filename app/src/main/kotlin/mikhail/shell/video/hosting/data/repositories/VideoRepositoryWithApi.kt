@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.repositories
 
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import androidx.core.net.toUri
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -151,7 +152,7 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Video, CompoundError<UploadVideoError>> {
         return try {
-            val sourceUri = Uri.parse(source)
+            val sourceUri = source.toUri()
             val sourceMime = fileProvider.getFileMimeType(sourceUri)
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
@@ -169,7 +170,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 onProgress(progress)
             }
             cover?.let { notNullCover ->
-                val coverUri = Uri.parse(notNullCover)
+                val coverUri = notNullCover.toUri()
                 val coverMime = fileProvider.getFileMimeType(coverUri)!!
                 val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
                 val coverContent = fileProvider.getFileAsInputStream(coverUri)?.use {

@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
 import android.content.Intent
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +42,14 @@ fun NavGraphBuilder.uploadVideoRoute(
             player = viewModel.player,
             onSubmit = { input ->
                 if (viewModel.validateVideoInput(input) == null) {
+                    val sourceUri = input.source!!
+                    if (!sourceUri.toString().contains(context.packageName + ".fileprovider")) {
+                        context.contentResolver.takePersistableUriPermission(sourceUri, FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val coverUri = input.cover
+                    coverUri?.let {
+                        context.contentResolver.takePersistableUriPermission(it, FLAG_GRANT_READ_URI_PERMISSION)
+                    }
                     coroutineScope.launch {
                         delay(1000)
                         context.startService(
@@ -50,7 +59,7 @@ fun NavGraphBuilder.uploadVideoRoute(
                             ).also {
                                 it.putExtra("channelId", input.channelId)
                                 it.putExtra("title", input.title)
-                                it.putExtra("source", input.source!!.toString())
+                                it.putExtra("source", input.source.toString())
                                 it.putExtra("cover", input.cover?.toString())
                             }
                         )
