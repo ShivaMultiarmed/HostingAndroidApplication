@@ -234,7 +234,7 @@ fun UploadVideoScreen(
                                             file.createNewFile()
                                             sourceUri = FileProvider.getUriForFile(
                                                 context,
-                                                "mikhail.shell.video.hosting.fileprovider",
+                                                "${context.packageName}.fileprovider",
                                                 file
                                             )
                                             sourceCreator.launch(sourceUri!!)
