@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.IBinder
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
@@ -75,7 +76,14 @@ class VideoDownloadingService : Service() {
                         val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
                         val fileName = "$videoId.$extension"
                         val contentValues = ContentValues().apply {
-                            put(MediaStore.Video.Media.DISPLAY_NAME, fileName)
+                            put(
+                                MediaStore.Video.Media.RELATIVE_PATH,
+                                Environment.DIRECTORY_MOVIES + "/" + getString(R.string.app_name)
+                            )
+                            put(
+                                MediaStore.Video.Media.DISPLAY_NAME,
+                                fileName
+                            )
                         }
                         uri = contentResolver.insert(
                             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
