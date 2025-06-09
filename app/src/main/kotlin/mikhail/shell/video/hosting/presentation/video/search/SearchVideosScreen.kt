@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
@@ -95,7 +97,7 @@ fun SearchVideosScreen(
                         query = it
                     },
                     errorMsg = errorMsg,
-                    placeholder = "Искать",
+                    placeholder = stringResource(R.string.video_search_label),
                     icon = Icons.Rounded.Search
                 )
                 if (query.isNotBlank()) {
@@ -175,7 +177,7 @@ fun SearchVideosScreen(
                         modifier = modifier
                             .padding(padding)
                             .fillMaxSize(),
-                        message = "Ничего не найдено"
+                        message = stringResource(R.string.video_found_nothing)
                     )
                 }
             } else if (state.error != null) {
@@ -196,7 +198,7 @@ fun SearchVideosScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Введите запрос, чтобы найти видео",
+                        text = stringResource(R.string.video_search_hint),
                         textAlign = TextAlign.Center
                     )
                 }

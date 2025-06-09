@@ -10,6 +10,9 @@
 
     <!-- Common -->
 
+    <string name="ok_button">Ок</string>
+    <string name="primary_button_hint">Ок</string>
+    <string name="refresh_hint">Перезагрузить</string>
     <string name="text_empty_error">Заполните поле</string>
     <string name="text_too_large_error">Максимальная длина - %d</string>
 
@@ -21,6 +24,10 @@
 
     <string name="subscribe_button">Подписаться</string>
     <string name="unsubscribe_button">Отписаться</string>
+
+    <string name="channel_create_title">Создать канал</string>
+    <string name="channel_create_success">Канал был успешно создан</string>
+
     <string name="channel_avatar_description">Аватар канала</string>
     <string name="channel_actions_description">Действия с каналом</string>
     <string name="channel_delete_button">Удалить</string>
@@ -28,14 +35,15 @@
     <string name="channel_delete_title">Удаление канала</string>
     <string name="channel_delete_description">Вы действительно хотите удалить канал?</string>
     
-    <string name="edit_channel_title">Редактировать канал</string>
-    <string name="edit_channel_success">Канал был успешно изменён</string>
+    <string name="channel_edit_title">Редактировать канал</string>
+    <string name="channel_edit_success">Канал был успешно изменён</string>
 
-    <string name="channel_title_exists_error">Название уже занято</string>
     <string name="channel_title_label">Название</string>
+    <string name="channel_title_exists_error">Название уже занято</string>
 
-    <string name="channel_alias_exists">Никнейм занят</string>
     <string name="channel_alias_label">Никнейм канала</string>
+    <string name="channel_alias_exists_error">Никнейм занят</string>
+
     <string name="channel_description_label">Описание</string>
 
     <string name="channel_avatar_choose_label">Выбрать аватар</string>
@@ -88,6 +96,20 @@
 
     <!-- Profile -->
 
+    <string name="profile_title">Профиль</string>
+    <string name="open_settings_button">Открыть настройки</string>
+    <string name="user_channels_title">Каналы пользователя</string>
+    <string name="user_channels_empty_message">Здесь пока нет каналов</string>
+    <string name="profile_avatar_hint">Изображение профиля</string>
+    <string name="profile_more_info_button">Ещё информация</string>
+
+    <string name="upload_video_button">Загрузить видео</string>
+    <string name="create_channel_button">Создать канал</string>
+    <string name="invite_button">Пригласить</string>
+    <string name="sign_out_button">Выйти</string>
+    <string name="sign_out_warning_title">Выход</string>
+    <string name="sign_out_warning_message">Вы уверены, что хотите выйти?</string>
+
     <string name="edit_profile_title">Редактировать профиль</string>
     <string name="name_label">Имя</string>
     <string name="profile_choose_avatar_label">Выбрать аватар</string>
@@ -102,4 +124,28 @@
     <string name="delete_account_warning_title">Удаление аккаунта</string>
     <string name="delete_account_warning_message">Вы уверены, что хотите удалить аккаунт?\nВы потеряете все свои данные.</string>
     <string name="delete_account_success">Аккаунт удалён</string>
+
+    <!-- Video -->
+    <string name="channel_link">Ссылка на канал</string>
+    <string name="video_share_button">Поделиться</string>
+    <string name="video_download_button">Поделиться</string>
+
+    <string name="comments_title">Комментарии</string>
+    <string name="comments_empty_message">Здесь ещё нет комментариев</string>
+    <string name="comments_leave_hint">Оставьте комментарий</string>
+
+    <string name="video_search_label">Искать</string>
+    <string name="video_search_hint">Введите запрос, чтобы найти видео</string>
+    <string name="video_found_nothing">Ничего не найдено</string>
+
+    <string name="video_download_success">Видео успешно скачано</string>
+    <string name="video_download_failure">Ошибка при скачивании видео</string>
+    <string name="video_download_progress_title">Скачивание видео</string>
+    <string name="video_download_progress_message">Видео скачается в течение нескольких минут</string>
+
+    <string name="video_edit_button">Редактировать</string>
+    <string name="video_delete_button">Удалить</string>
+    <string name="video_delete_warning_title">Удалить видео</string>
+    <string name="video_delete_warning_message">Вы уверены, что хотите продолжить?</string>
+
 </resources>

@@ -10,7 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 
 @Composable
 fun Dialog(
@@ -48,7 +50,7 @@ fun Dialog(
                 onClick = onSubmit
             ) {
                 Text(
-                    text = "Ок"
+                    text = stringResource(R.string.ok_button)
                 )
             }
         },
@@ -62,7 +64,7 @@ fun Dialog(
                 onClick = onDismiss
             ) {
                 Text(
-                    text = "Отмена"
+                    text = stringResource(R.string.cancel_button)
                 )
             }
         },

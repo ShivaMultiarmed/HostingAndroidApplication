@@ -40,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import coil.compose.rememberAsyncImagePainter
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.AVATAR_NOT_FOUND
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.AVATAR_TOO_LARGE
@@ -90,7 +92,7 @@ fun CreateChannelScreen(
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
             TopBar(
-                title = "Создать канал",
+                title = stringResource(R.string.channel_create_title),
                 onPopup = onPopup,
                 inProgress = state.isLoading,
                 onSubmit = {
@@ -114,7 +116,7 @@ fun CreateChannelScreen(
             LaunchedEffect(state.channel) {
                 if (state.channel != null) {
                     snackbarHostState.showSnackbar(
-                        message = "Канал был успешно создан",
+                        message = context.getString(R.string.channel_create_success),
                         duration = SnackbarDuration.Long
                     )
                     onSuccess(state.channel)
@@ -123,9 +125,9 @@ fun CreateChannelScreen(
             val titleErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    TITLE_EMPTY to "Заполните название",
-                    TITLE_EXISTS to "Название уже существует",
-                    TITLE_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                    TITLE_EMPTY to stringResource(R.string.text_empty_error),
+                    TITLE_EXISTS to stringResource(R.string.channel_title_exists_error),
+                    TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TITLE_LENGTH / 1024 / 1024).toString() + " MB")
                 )
             )
             EditField (
@@ -142,15 +144,15 @@ fun CreateChannelScreen(
                     onValueChange = {
                         title = it
                     },
-                    placeholder = "Название",
+                    placeholder = stringResource(R.string.channel_title_label),
                     errorMsg = titleErrMsg
                 )
             }
             val aliasErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    ChannelCreationError.ALIAS_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}",
-                    ChannelCreationError.ALIAS_EXISTS to "Никнейм уже занят"
+                    ChannelCreationError.ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TITLE_LENGTH).toString() + " MB"),
+                    ChannelCreationError.ALIAS_EXISTS to stringResource(R.string.channel_alias_exists_error)
                 )
             )
             EditField (
@@ -167,14 +169,14 @@ fun CreateChannelScreen(
                     onValueChange = {
                         alias = it
                     },
-                    placeholder = "Никнейм канала",
+                    placeholder = stringResource(R.string.channel_alias_label),
                     errorMsg = aliasErrMsg
                 )
             }
             val descriptionErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    DESCRIPTION_TOO_LARGE to "Максимальная длина - $MAX_TEXT_LENGTH"
+                    DESCRIPTION_TOO_LARGE to stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                 )
             )
             EditField (
@@ -191,7 +193,7 @@ fun CreateChannelScreen(
                     onValueChange = {
                         description = it
                     },
-                    placeholder = "Описание",
+                    placeholder = stringResource(R.string.channel_description_label),
                     maxLines = 50,
                     errorMsg = descriptionErrMsg
                 )
@@ -203,9 +205,9 @@ fun CreateChannelScreen(
             val avatarErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    AVATAR_TOO_LARGE to "Изображение не должно превышать 10 МБ",
-                    AVATAR_TYPE_NOT_VALID to "Некорректный формат изображения",
-                    AVATAR_NOT_FOUND to "Аватар не найден"
+                    AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error, (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB"),
+                    AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                    AVATAR_NOT_FOUND to stringResource(R.string.file_not_found_error)
                 )
             )
             EditField (
@@ -218,7 +220,8 @@ fun CreateChannelScreen(
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Person,
-                    placeholder = if (avatarUri == null) "Выбрать аватар канала" else "Поменять аватар канала",
+                    placeholder = if (avatarUri == null) stringResource(R.string.channel_avatar_choose_label)
+                    else stringResource(R.string.channel_avatar_choose_another_label),
                     onClick = {
                         avatarPicker.launch("image/*")
                     },
@@ -230,7 +233,9 @@ fun CreateChannelScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Выбранный аватар")
+                    Text(
+                        text = stringResource(R.string.channel_chosen_avatar_message)
+                    )
                     val painter = rememberAsyncImagePainter(model = avatarUri)
                     Image(
                         painter = painter,
@@ -249,9 +254,9 @@ fun CreateChannelScreen(
             val coverErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ",
-                    COVER_TYPE_NOT_VALID to "Некорректный формат изображения",
-                    COVER_NOT_FOUND to "Обложка не найдена"
+                    COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB"),
+                    COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                    COVER_NOT_FOUND to stringResource(R.string.file_not_found_error)
                 )
             )
             EditField (
@@ -264,7 +269,8 @@ fun CreateChannelScreen(
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Wallpaper,
-                    placeholder = if (coverUri == null) "Выбрать обложку" else "Поменять обложку",
+                    placeholder = if (coverUri == null) stringResource(R.string.channel_choose_cover_label)
+                    else stringResource(R.string.channel_avatar_choose_another_label),
                     onClick = {
                         coverPicker.launch("image/*")
                     },

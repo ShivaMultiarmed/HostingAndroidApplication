@@ -62,7 +62,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Rounded.BorderColor,
                                 tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = stringResource(R.string.go_back)
+                                contentDescription = stringResource(R.string.go_back_button)
                             )
                         }
                     }

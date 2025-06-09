@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 
 @Composable
 fun ErrorComponent(
@@ -30,7 +32,7 @@ fun ErrorComponent(
                 .clickable(onClick = onRetry),
             imageVector = Icons.Rounded.Refresh,
             tint = MaterialTheme.colorScheme.error,
-            contentDescription = "Перезагрузить",
+            contentDescription = stringResource(R.string.refresh_hint),
         )
     }
 }

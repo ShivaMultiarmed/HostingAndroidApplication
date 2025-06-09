@@ -6,7 +6,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +38,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,10 +45,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.user.UserModel
@@ -92,11 +92,11 @@ fun ProfileScreen(
             onInvite = onInvite
         )
     }
-    Scaffold (
+    Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopBar(
-                title = "Профиль",
+                title = stringResource(R.string.profile_title),
                 actions = if (isOwner) listOf(
                     {
                         IconButton(
@@ -105,7 +105,7 @@ fun ProfileScreen(
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
                                 tint = MaterialTheme.colorScheme.onBackground,
-                                contentDescription = "Открыть настройки"
+                                contentDescription = stringResource(R.string.open_settings_button)
                             )
                         }
                     }
@@ -198,18 +198,18 @@ fun ProfileScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 5.dp),
-                    text = "Каналы пользователя"
+                    text = stringResource(R.string.user_channels_title)
                 )
                 LazyVerticalGrid(
                     modifier = Modifier
                         .fillMaxSize()
                         .then(
-                        if (isWidthCompact) {
-                            Modifier
-                        } else {
-                            Modifier.padding(10.dp)
-                        }
-                    ),
+                            if (isWidthCompact) {
+                                Modifier
+                            } else {
+                                Modifier.padding(10.dp)
+                            }
+                        ),
                     horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                     verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                     columns = GridCells.Adaptive(300.dp)
@@ -234,7 +234,7 @@ fun ProfileScreenContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Здесь пока нет каналов"
+                        text = stringResource(R.string.user_channels_empty_message)
                     )
                 }
             }
@@ -262,7 +262,7 @@ fun UserDetailsSection(
         AsyncImage(
             model = user.avatar,
             contentScale = ContentScale.Crop,
-            contentDescription = "Изображение профиля",
+            contentDescription = stringResource(R.string.profile_avatar_hint),
             modifier = Modifier
                 .padding(top = 10.dp)
                 .size(100.dp)
@@ -325,7 +325,7 @@ fun UserTextDetails(
                     false -> Icons.Rounded.KeyboardArrowDown
                     true -> Icons.Rounded.KeyboardArrowUp
                 },
-                contentDescription = "Ещё информация"
+                contentDescription = stringResource(R.string.profile_more_info_button)
             )
         }
     }
@@ -388,36 +388,34 @@ fun UserActions(
     ) {
         if (onPublishVideo != null) {
             ActionButton(
-                text = "Загрузить видео",
+                text = stringResource(R.string.upload_video_button),
                 onClick = onPublishVideo
             )
         }
         ActionButton(
-            text = "Создать канал",
+            text = stringResource(R.string.create_channel_button),
             onClick = onCreateChannel
         )
         ActionButton(
-            text = "Пригласить",
+            text = stringResource(R.string.invite_button),
             onClick = onInvite
         )
-        Box {
-            var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
-            ActionButton(
-                text = "Выйти",
-                onClick = {
-                    isLogoutDialogVisible = true
-                }
-            )
-            if (isLogoutDialogVisible) {
-                Dialog(
-                    onSubmit = onLogOut,
-                    onDismiss = {
-                        isLogoutDialogVisible = false
-                    },
-                    dialogTitle = "Выход",
-                    dialogDescription = "Вы уверены, что хотите выйти?"
-                )
+        var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
+        ActionButton(
+            text = stringResource(R.string.sign_out_button),
+            onClick = {
+                isLogoutDialogVisible = true
             }
+        )
+        if (isLogoutDialogVisible) {
+            Dialog(
+                onSubmit = onLogOut,
+                onDismiss = {
+                    isLogoutDialogVisible = false
+                },
+                dialogTitle = stringResource(R.string.sign_out_warning_title),
+                dialogDescription = stringResource(R.string.sign_out_warning_message)
+            )
         }
     }
 }
@@ -455,18 +453,15 @@ fun ProfileScreenPreviewDay() {
 fun ChannelSnippet(
     modifier: Modifier = Modifier, channel: Channel, onClick: (Long) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(
-//                interactionSource = interactionSource,
-//                indication = null
-            ) {
+            .clickable {
                 onClick(channel.channelId!!)
             }
-            .padding(10.dp)) {
+            .padding(10.dp)
+    ) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically

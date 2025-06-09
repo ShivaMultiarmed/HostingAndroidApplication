@@ -127,22 +127,22 @@ class VideoDownloadingService : Service() {
 
     private fun createSuccessNotification(): Notification {
         return NotificationCompat.Builder(this, "video_downloading")
-            .setContentTitle("Видео успешно скачано")
+            .setContentTitle(getString(R.string.video_download_success))
             .setSmallIcon(R.mipmap.ic_launcher)
             .build()
     }
 
     private fun createFailureNotification(): Notification {
         return NotificationCompat.Builder(this, "video_downloading")
-            .setContentTitle("Ошибка при скачивании видео")
+            .setContentTitle(getString(R.string.video_download_failure))
             .setSmallIcon(R.mipmap.ic_launcher)
             .build()
     }
 
     private fun createProcessNotification(progress: Int = 0): Notification {
         return NotificationCompat.Builder(this, "video_downloading")
-            .setContentTitle("Скачивание видео")
-            .setContentText("Видео скачается в течение нескольких минут.")
+            .setContentTitle(getString(R.string.video_download_progress_title))
+            .setContentText(getString(R.string.video_download_progress_message))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setProgress(100, progress, false)
             .setOnlyAlertOnce(true)

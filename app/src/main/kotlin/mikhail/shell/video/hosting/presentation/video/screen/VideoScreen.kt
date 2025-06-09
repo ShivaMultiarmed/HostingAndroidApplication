@@ -76,6 +76,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -96,11 +97,12 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
-import mikhail.shell.video.hosting.domain.models.Action
-import mikhail.shell.video.hosting.domain.models.ActionModel
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.GetCommentsError
+import mikhail.shell.video.hosting.domain.models.Action
+import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -364,8 +366,8 @@ fun VideoScreen(
                                         onDismiss = {
                                             isDeletingDialogOpen = false
                                         },
-                                        dialogTitle = "Удалить видео",
-                                        dialogDescription = "Вы уверены, что хотите продолжить?"
+                                        dialogTitle = stringResource(R.string.video_delete_warning_title),
+                                        dialogDescription = stringResource(R.string.video_delete_warning_message)
                                     )
                                 }
                             }
@@ -385,7 +387,7 @@ fun VideoScreen(
                             ) {
                                 AsyncImage(
                                     model = channel.avatarUrl,
-                                    contentDescription = "Ссылка на канал",
+                                    contentDescription = stringResource(R.string.channel_link),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(40.dp)
@@ -409,8 +411,8 @@ fun VideoScreen(
                                 modifier = Modifier.padding(end = 5.dp)
                             )
                             val subscriptionText = when (channel.subscription) {
-                                SUBSCRIBED -> "Отписаться"
-                                else -> "Подписаться"
+                                SUBSCRIBED -> stringResource(R.string.unsubscribe_button)
+                                else -> stringResource(R.string.subscribe_button)
                             }
                             PrimaryButton(
                                 text = subscriptionText,
@@ -463,14 +465,14 @@ fun VideoScreen(
                             )
                             ActionButton(
                                 icon = Icons.Outlined.Repeat,
-                                text = "Поделиться",
+                                text = stringResource(R.string.video_share_button),
                                 onClick = {
 
                                 }
                             )
                             ActionButton(
                                 icon = Icons.Outlined.Download,
-                                text = "Скачать",
+                                text = stringResource(R.string.video_download_button),
                                 onClick = {
                                     Intent(context, VideoDownloadingService::class.java).also {
                                         it.action =
@@ -502,9 +504,8 @@ fun VideoScreen(
                                 }
                                 .padding(10.dp)
                         ) {
-
                             Text(
-                                text = "Комментарии",
+                                text = stringResource(R.string.comments_title),
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Row(
@@ -525,7 +526,7 @@ fun VideoScreen(
                                         .padding(vertical = 3.dp, horizontal = 10.dp)
                                 ) {
                                     Text(
-                                        text = "Оставьте комментарий",
+                                        text = stringResource(R.string.comments_leave_hint),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
@@ -650,7 +651,7 @@ fun CommentsBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Здесь ещё нет комментариев."
+                        text = stringResource(R.string.comments_empty_message)
                     )
                 }
             }
