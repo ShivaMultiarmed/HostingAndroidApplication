@@ -10,7 +10,7 @@ import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
-import mikhail.shell.video.hosting.domain.ActionModel
+import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Comment

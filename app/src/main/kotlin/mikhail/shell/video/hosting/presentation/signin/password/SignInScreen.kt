@@ -29,8 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -54,6 +57,7 @@ fun SignInScreen(
             SnackbarHost(snackbarHostState)
         }
     ) { padding ->
+        val context = LocalContext.current
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -64,11 +68,13 @@ fun SignInScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
             val error = state.error
-            Title(text = "Войти")
+            Title(
+                text = stringResource(R.string.sign_in_title)
+            )
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
                     snackbarHostState.showSnackbar(
-                        message = "Вы успешно вошли",
+                        message = context.getString(R.string.sign_in_success),
                         duration = SnackbarDuration.Short
                     )
                     onSuccess()
@@ -78,9 +84,9 @@ fun SignInScreen(
             val emailErrorMsg = constructInfoMessage(
                 error,
                 mapOf(
-                    SignInError.USERNAME_EMPTY to "Заполните e-mail",
-                    SignInError.USERNAME_MALFORMED to "E-mail не корректно введён",
-                    SignInError.USERNAME_NOT_FOUND to "Пользователь с таким e-mail не найден"
+                    SignInError.USERNAME_EMPTY to stringResource(R.string.email_empty),
+                    SignInError.USERNAME_MALFORMED to stringResource(R.string.email_malformed),
+                    SignInError.USERNAME_NOT_FOUND to stringResource(R.string.sign_in_email_not_found)
                 )
             )
             InputField(
@@ -88,7 +94,7 @@ fun SignInScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Email,
-                placeholder = "E-mail",
+                placeholder = stringResource(R.string.email_label),
                 value = email,
                 onValueChange = {
                     email = it
@@ -99,8 +105,8 @@ fun SignInScreen(
             val passwordErrorMsg = constructInfoMessage(
                 error,
                 mapOf(
-                    SignInError.PASSWORD_EMPTY to "Введите пароль",
-                    SignInError.PASSWORD_INCORRECT to "Неправильный пароль"
+                    SignInError.PASSWORD_EMPTY to stringResource(R.string.password_empty),
+                    SignInError.PASSWORD_INCORRECT to stringResource(R.string.sign_in_password_incorrect)
                 )
             )
             InputField(
@@ -108,7 +114,7 @@ fun SignInScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
-                placeholder = "Пароль",
+                placeholder = stringResource(R.string.password_label),
                 value = password,
                 onValueChange = {
                     password = it
@@ -121,13 +127,13 @@ fun SignInScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 PrimaryButton(
-                    text = "Войти",
+                    text = stringResource(R.string.sign_in_main_btn_label),
                     onClick = {
                         onSubmit(email, password)
                     }
                 )
                 Text(
-                    text = "Зарегистрироваться",
+                    text = stringResource(R.string.sign_up_link_label),
                     modifier = Modifier.clickable {
                         onSigningUp()
                     }

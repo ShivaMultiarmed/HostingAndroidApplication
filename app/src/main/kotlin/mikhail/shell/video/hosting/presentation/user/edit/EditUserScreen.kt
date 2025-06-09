@@ -46,12 +46,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.EditUserError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
@@ -81,6 +84,7 @@ fun EditUserScreen(
     onPopup: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     if (state.initialUser != null) {
         var nick by rememberSaveable { mutableStateOf(state.initialUser.nick) }
         var name by rememberSaveable { mutableStateOf(state.initialUser.name ?: "") }
@@ -98,7 +102,7 @@ fun EditUserScreen(
             },
             topBar = {
                 TopBar(
-                    title = "Редактировать профиль",
+                    title = stringResource(R.string.edit_profile_title),
                     onPopup = onPopup,
                     onSubmit = {
                         val input = EditUserInputState(
@@ -126,8 +130,8 @@ fun EditUserScreen(
                 val nickErrMsg = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.NICK_EMPTY to "Заполните никнейм",
-                        EditUserError.NICK_TOO_LARGE to "Максимальная длина - ${ValidationRules.MAX_NAME_LENGTH}"
+                        EditUserError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
+                        EditUserError.NICK_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH)
                     )
                 )
                 StandardEditField(
@@ -156,7 +160,7 @@ fun EditUserScreen(
                 val nameErrMsg = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.NAME_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}"
+                        EditUserError.NAME_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH)
                     )
                 )
                 StandardEditField(
@@ -178,7 +182,7 @@ fun EditUserScreen(
                         onValueChange = {
                             name = it
                         },
-                        placeholder = "Имя",
+                        placeholder = stringResource(R.string.name_label),
                         errorMsg = nameErrMsg
                     )
                 }
@@ -193,8 +197,9 @@ fun EditUserScreen(
                 val avatarErrMsg = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.AVATAR_MIME_NOT_SUPPORTED to "Некорректный формат изображения",
-                        EditUserError.AVATAR_TOO_LARGE to "Изображение не должно быть больше 10 МБ."
+                        EditUserError.AVATAR_MIME_NOT_SUPPORTED to stringResource(R.string.type_not_valid_error),
+                        EditUserError.AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error,
+                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB")
                     )
                 )
                 Column {
@@ -215,7 +220,8 @@ fun EditUserScreen(
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Image,
-                            placeholder = if (avatarUri == null) "Выбрать аватар" else "Поменять аватар",
+                            placeholder = if (avatarUri == null) stringResource(R.string.profile_choose_avatar_label)
+                            else stringResource(R.string.profile_choose_another_avatar_label),
                             onClick = {
                                 avatarPicker.launch("image/*")
                             },
@@ -235,7 +241,7 @@ fun EditUserScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Текущий аватар"
+                                    text = stringResource(R.string.profile_current_avatar_hint)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -257,7 +263,9 @@ fun EditUserScreen(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Вы выбрали")
+                                Text(
+                                    text = stringResource(R.string.profile_chosen_avatar_hint)
+                                )
                                 val painter = rememberAsyncImagePainter(model = avatarUri)
                                 Image(
                                     painter = painter,
@@ -276,7 +284,7 @@ fun EditUserScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Вы удалите аватар."
+                                text = stringResource(R.string.profile_delete_avatar_hint)
                             )
                         }
                     }
@@ -304,15 +312,15 @@ fun EditUserScreen(
                         onValueChange = {
                             tel = it
                         },
-                        placeholder = "Телефон",
+                        placeholder = stringResource(R.string.profile_telephone_label),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                 }
                 val emailError = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.EMAIL_MALFORMED to "Введите корректный e-mail",
-                        EditUserError.EMAIL_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_USERNAME_LENGTH}"
+                        EditUserError.EMAIL_MALFORMED to stringResource(R.string.email_malformed_error),
+                        EditUserError.EMAIL_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_USERNAME_LENGTH / 1024 / 1024).toString() + " MB")
                     )
                 )
                 StandardEditField(
@@ -335,12 +343,12 @@ fun EditUserScreen(
                         onValueChange = {
                             email = it
                         },
-                        placeholder = "E-mail",
+                        placeholder = stringResource(R.string.email_label),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                 }
                 val bioError = if (state.editUserError.equivalentTo(EditUserError.BIO_TOO_LARGE)) {
-                    "Максимальная длина ${ValidationRules.MAX_TEXT_LENGTH}."
+                    stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TEXT_LENGTH).toString() + " MB")
                 } else null
                 StandardEditField(
                     modifier = Modifier,
@@ -361,7 +369,7 @@ fun EditUserScreen(
                         onValueChange = {
                             bio = it
                         },
-                        placeholder = "Описание",
+                        placeholder = stringResource(R.string.profile_bio),
                         errorMsg = bioError,
                         maxLines = 50,
                     )
@@ -373,9 +381,8 @@ fun EditUserScreen(
                         onDismiss = {
                             isRemoveAccountDialogVisible = false
                         },
-                        dialogTitle = "Удаление аккаунта",
-                        dialogDescription = "Вы уверены, что хотите удалить аккаунт?\n" +
-                                "Вы потеряете все свои данные."
+                        dialogTitle = "",
+                        dialogDescription = ""
                     )
                 }
                 Box (
@@ -389,7 +396,7 @@ fun EditUserScreen(
                 ) {
                     PrimaryButton(
                         needsCaution = true,
-                        text = "Удалить аккаунт",
+                        text = stringResource(R.string.delete_account_button),
                         isActivated = state.isRemoving || state.isRemovalConfirmed == true,
                         onClick = {
                             isRemoveAccountDialogVisible = true
@@ -402,7 +409,7 @@ fun EditUserScreen(
             state.editedUser?.let {
                 delay(1000)
                 snackbarHostState.showSnackbar(
-                    message = "Профиль успешно отредактирован",
+                    message = context.getString(R.string.profile_edit_success),
                     withDismissAction = true,
                     duration = SnackbarDuration.Short
                 )
@@ -447,13 +454,13 @@ fun AccountRemovedScreen() {
                     .aspectRatio(1f),
                 imageVector = Icons.Rounded.PersonOff,
                 tint = MaterialTheme.colorScheme.onSurface,
-                contentDescription = "Аккаунт удалён"
+                contentDescription = stringResource(R.string.delete_account_success)
             )
             Title(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp),
-                text = "Аккаунт удалён"
+                text = stringResource(R.string.delete_account_success)
             )
         }
     }

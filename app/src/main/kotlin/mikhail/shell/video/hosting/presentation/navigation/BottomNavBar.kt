@@ -25,37 +25,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.borderTop
 
-sealed class BottomNavItem(
+data class BottomNavItem(
     val route: Route,
     val title: String,
     val baseIcon: ImageVector,
     val selectedIcon: ImageVector
-) {
-    data object Subscriptions : BottomNavItem(
-        Route.User.Subscriptions,
-        "Подписки",
-        Icons.Outlined.Subscriptions,
-        Icons.Rounded.Subscriptions
-    )
-
-    data object Search : BottomNavItem(
-        Route.Search,
-        "Поиск",
-        Icons.Outlined.Search,
-        Icons.Rounded.Search
-    )
-
-    data class Profile(val userId: Long) : BottomNavItem(
-        Route.User.Profile(userId),
-        "Профиль",
-        Icons.Outlined.Person,
-        Icons.Rounded.Person
-    )
-}
+)
 
 @Composable
 fun BottomNavBar(
@@ -64,9 +45,24 @@ fun BottomNavBar(
 ) {
     BottomNavBar(
         navItems = listOf(
-            BottomNavItem.Subscriptions,
-            BottomNavItem.Search,
-            BottomNavItem.Profile(userId)
+            BottomNavItem(
+                Route.User.Subscriptions,
+                stringResource(R.string.nav_subscribers_item_label),
+                Icons.Outlined.Subscriptions,
+                Icons.Rounded.Subscriptions
+            ),
+            BottomNavItem(
+                Route.Search,
+                stringResource(R.string.nav_search_item_label),
+                Icons.Outlined.Search,
+                Icons.Rounded.Search
+            ),
+            BottomNavItem(
+                Route.User.Profile(userId),
+                stringResource(R.string.nav_profile_item_label),
+                Icons.Outlined.Person,
+                Icons.Rounded.Person
+            )
         ),
         onClick = onClick,
     )

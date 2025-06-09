@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.NotificationEntryPoint
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
-import mikhail.shell.video.hosting.domain.ActionModel
+import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository

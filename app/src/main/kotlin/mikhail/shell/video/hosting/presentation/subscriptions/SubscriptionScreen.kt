@@ -17,7 +17,9 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
@@ -39,7 +41,7 @@ fun SubscriptionsScreen(
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
             TopBar(
-                title = "Подписки"
+                title = stringResource(R.string.subscriptions_title)
             )
         }
     ) { padding ->

@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.usecases.comments
 
 import kotlinx.coroutines.flow.Flow
-import mikhail.shell.video.hosting.domain.ActionModel
+import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import javax.inject.Inject

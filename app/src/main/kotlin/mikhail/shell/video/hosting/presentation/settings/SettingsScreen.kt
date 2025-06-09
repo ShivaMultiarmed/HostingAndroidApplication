@@ -21,18 +21,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.Toggle
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.ui.theme.Theme
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import mikhail.shell.video.hosting.ui.theme.getLocale
 import mikhail.shell.video.hosting.ui.theme.getThemeSelected
+import mikhail.shell.video.hosting.ui.theme.setLocale
 import mikhail.shell.video.hosting.ui.theme.setTheme
 
 @Composable
@@ -48,7 +52,7 @@ fun SettingsScreen(
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
             TopBar(
-                title = "Настройки",
+                title = stringResource(R.string.settings_title),
                 onPopup = onPopup,
                 actions = listOf(
                     {
@@ -58,7 +62,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Rounded.BorderColor,
                                 tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = "Вернуться назад"
+                                contentDescription = stringResource(R.string.go_back)
                             )
                         }
                     }
@@ -78,7 +82,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(10.dp),
                 text = "Тема"
             )
-            var selectedTheme by remember { mutableStateOf(context.getThemeSelected()) }
+            var selectedTheme by rememberSaveable { mutableStateOf(context.getThemeSelected()) }
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -97,12 +101,41 @@ fun SettingsScreen(
                     }
                 )
             }
+            Text(
+                modifier = Modifier.padding(10.dp),
+                text = "Язык"
+            )
+            var selectedLocale by rememberSaveable { mutableStateOf(context.getLocale()) }
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Toggle(
+                    modifier = Modifier.fillMaxWidth(),
+                    key = selectedLocale,
+                    values = mapOf(
+                        Locale.RUSSIAN to Locale.RUSSIAN.label,
+                        Locale.ENGLISH to Locale.ENGLISH.label
+                    ),
+                    onValueChanged = {
+                        context.setLocale(it)
+                        selectedLocale = it
+                    }
+                )
+            }
         }
     }
 }
 
-enum class Language {
-    RUSSIAN, ENGLISH
+enum class Locale(val label: String, val iso: String) {
+    RUSSIAN("Русский", "ru"),
+    ENGLISH("English", "en");
+
+    companion object {
+        fun ofTag(tag: String): Locale {
+            return Locale.entries.find { it.iso == tag }?: throw IllegalArgumentException("Invalid locale tag")
+        }
+    }
 }
 
 @Composable

@@ -28,8 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -66,7 +68,9 @@ fun SignUpScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
-            Title(text = "Зарегистрироваться")
+            Title(
+                text = stringResource(R.string.sign_up_title)
+            )
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
                     snackbarHostState.showSnackbar(
@@ -81,10 +85,10 @@ fun SignUpScreen(
             val userNameErrorMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    SignUpError.USERNAME_EMPTY to "Введите почту",
-                    SignUpError.USERNAME_MALFORMED to "Некорректная почта",
-                    SignUpError.USERNAME_EXISTS to "Такой e-mail уже существует",
-                    SignUpError.USERNAME_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_USERNAME_LENGTH}"
+                    SignUpError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
+                    SignUpError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
+                    SignUpError.USERNAME_EXISTS to stringResource(R.string.email_exists_msg_error),
+                    SignUpError.USERNAME_TOO_LARGE to stringResource(R.string.text_too_large_error, "${ValidationRules.MAX_USERNAME_LENGTH}")
                 )
             )
             InputField(
@@ -102,8 +106,9 @@ fun SignUpScreen(
             val passwordErrorMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    SignUpError.PASSWORD_EMPTY to "Введите пароль",
-                    SignUpError.PASSWORD_NOT_VALID to "Длина пароля от 8 до 20 символов"
+                    SignUpError.PASSWORD_EMPTY to stringResource(R.string.password_empty_error),
+                    SignUpError.PASSWORD_NOT_VALID to stringResource(R.string.password_not_valid_error,
+                        ValidationRules.MIN_PASSWORD_LENGTH, ValidationRules.MAX_PASSWORD_LENGTH)
                 )
             )
             var password by rememberSaveable { mutableStateOf("") }
@@ -122,9 +127,9 @@ fun SignUpScreen(
             val nickErrMsg = constructInfoMessage(
                 compoundError,
                 mapOf(
-                    SignUpError.NICK_EMPTY to "Заполните ник",
-                    SignUpError.NICK_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_NAME_LENGTH}",
-                    SignUpError.NICK_EXISTS to "Этот ник занят"
+                    SignUpError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
+                    SignUpError.NICK_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH),
+                    SignUpError.NICK_EXISTS to stringResource(R.string.nick_exists_error)
                 )
             )
             InputField(
@@ -135,7 +140,7 @@ fun SignUpScreen(
                     nick = it
                 },
                 errorMsg = nickErrMsg,
-                placeholder = "Ник"
+                placeholder = stringResource(R.string.nick_label)
             )
             PrimaryButton(
                 text = "Зарегистрироваться",

@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain
+package mikhail.shell.video.hosting.domain.models
 
 data class ActionModel<T>(
     val action: Action,

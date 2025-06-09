@@ -1,18 +1,26 @@
 package mikhail.shell.video.hosting.ui.theme
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
+import mikhail.shell.video.hosting.SharedPreferencesUtils.Ui
+import mikhail.shell.video.hosting.presentation.settings.Locale
 import mikhail.shell.video.hosting.ui.theme.Theme.BY_TIME
 import mikhail.shell.video.hosting.ui.theme.Theme.DARK
 import mikhail.shell.video.hosting.ui.theme.Theme.LIGHT
@@ -76,7 +84,7 @@ enum class Theme {
 }
 
 fun Context.getThemeSelected(): Theme {
-    val str = this.getSharedPreferences("theme", Context.MODE_PRIVATE).getString("theme", BY_TIME.name)?: BY_TIME.name
+    val str = this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).getString(Ui.theme, BY_TIME.name)?: BY_TIME.name
     return Theme.valueOf(str)
 }
 
@@ -94,11 +102,26 @@ fun Context.getColorScheme(
 }
 
 fun Context.setTheme(theme: Theme) {
-    this.getSharedPreferences("theme", Context.MODE_PRIVATE).edit {
-        putString("theme", theme.name)
+    this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
+        putString(Ui.theme, theme.name)
         commit()
     }
 }
+
+fun Context.getLocale(): Locale {
+    return this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
+        .getString(Ui.language, Locale.ENGLISH.iso)!!
+        .let { Locale.ofTag(it) }
+}
+
+fun Context.setLocale(locale: Locale): Context {
+    val config = Configuration(resources.configuration)
+    val jdkLocale = java.util.Locale(locale.iso)
+    config.setLocale(jdkLocale)
+    return createConfigurationContext(config)
+}
+
+val LocalLocale = compositionLocalOf { Locale.RUSSIAN }
 
 @Composable
 fun VideoHostingTheme(
@@ -108,15 +131,33 @@ fun VideoHostingTheme(
     val isDark = isSystemInDarkTheme()
     val selectedColorScheme = context.getColorScheme(isDark)
     var colorScheme by remember { mutableStateOf(selectedColorScheme) }
-    context.getSharedPreferences("theme", Context.MODE_PRIVATE)
-        .registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
-            if (key == "theme") {
-                colorScheme = context.getColorScheme(isDark)
+    var locale by remember { mutableStateOf(context.getLocale()) }
+    val uiPreferences = context.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
+    CompositionLocalProvider(LocalLocale provides locale) {
+        CompositionLocalProvider(LocalContext provides context) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = Typography,
+                content = content
+            )
+        }
+    }
+    DisposableEffect(Unit) {
+        val uiPreferencesListener = object : OnSharedPreferenceChangeListener {
+            override fun onSharedPreferenceChanged(
+                sharedPreferences: SharedPreferences?,
+                key: String?
+            ) {
+                if (key == Ui.theme) {
+                    colorScheme = context.getColorScheme(isDark)
+                } else if (key == Ui.language) {
+                    locale = sharedPreferences?.getString(key, Locale.ENGLISH.iso)!!.let { Locale.ofTag(it) }
+                }
             }
         }
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+        uiPreferences.registerOnSharedPreferenceChangeListener(uiPreferencesListener)
+        onDispose {
+            uiPreferences.unregisterOnSharedPreferenceChangeListener(uiPreferencesListener)
+        }
+    }
 }

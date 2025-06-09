@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +78,7 @@ import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @OptIn(UnstableApi::class)
@@ -288,7 +290,7 @@ fun PlayerControls(
                 modifier = Modifier.size(25.dp),
                 tint = Color(0f, 0f, 0f, 0.6f),
                 imageVector = Icons.Rounded.FastRewind,
-                contentDescription = "Назад"
+                contentDescription = stringResource(R.string.player_seek_backward)
             )
         }
         var seekForwardProgress by rememberSaveable { mutableFloatStateOf(0f) }
@@ -333,7 +335,7 @@ fun PlayerControls(
                 modifier = Modifier.size(25.dp),
                 tint = Color(0f, 0f, 0f, 0.6f),
                 imageVector = Icons.Rounded.FastForward,
-                contentDescription = "Вперёд"
+                contentDescription = stringResource(R.string.player_seek_forward)
             )
         }
         if (animatedControlsAlpha > 0f) {
@@ -363,7 +365,7 @@ fun PlayerControls(
                     },
                     tint = Color(0f, 0f, 0f, 0.8f),
                     modifier = Modifier.size(28.dp),
-                    contentDescription = "Кнопка проигрывания"
+                    contentDescription = stringResource(R.string.player_main_button)
                 )
             }
             if (duration >= 0) {

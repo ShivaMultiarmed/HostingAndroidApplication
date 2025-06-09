@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +43,7 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.AsyncImagePainter.State.Success
 import coil.request.ImageRequest
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
@@ -344,7 +346,7 @@ fun ChannelAvatar(
 ) {
     AsyncImage(
         model = avatarUrl,
-        contentDescription = "Аватар канала",
+        contentDescription = stringResource(R.string.channel_avatar_description),
         contentScale = ContentScale.Crop,
         modifier = modifier
             .size(80.dp)
@@ -375,7 +377,8 @@ fun SubscriptionButton(
 ) {
     PrimaryButton(
         modifier = modifier,
-        text = if (state == SUBSCRIBED) "Отписаться" else "Подписаться",
+        text = if (state == SUBSCRIBED) stringResource(R.string.unsubscribe)
+        else stringResource(R.string.subscribe),
         isActivated = state == SUBSCRIBED,
         onClick = {
             val subscriptionState =
@@ -443,20 +446,20 @@ fun ChannelActionsButton(
         ) {
             Icon(
                 imageVector = Icons.Rounded.MoreVert,
-                contentDescription = "Действия с каналом."
+                contentDescription = stringResource(R.string.channel_actions_description)
             )
         }
         ContextMenu(
             isExpanded = actionDialogVisible,
             menuItems = listOf(
                 MenuItem(
-                    title = "Редактировать",
+                    title = stringResource(R.string.channel_edit_btn),
                      onClick = {
                         onEdit(channelId)
                      }
                 ),
                 MenuItem(
-                    title = "Удалить",
+                    title = stringResource(R.string.channel_delete_btn),
                     onClick = {
                         removeDialogVisible = true
                     }
@@ -474,8 +477,8 @@ fun ChannelActionsButton(
                 onDismiss = {
                     removeDialogVisible = false
                 },
-                dialogTitle = "Удаление канала",
-                dialogDescription = "Вы действительно хотите удалить канал?"
+                dialogTitle = stringResource(R.string.channel_deleting_title),
+                dialogDescription = stringResource(R.string.channel_deleting_description)
             )
         }
     }
