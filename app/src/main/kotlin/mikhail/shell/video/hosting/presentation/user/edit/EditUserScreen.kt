@@ -381,8 +381,8 @@ fun EditUserScreen(
                         onDismiss = {
                             isRemoveAccountDialogVisible = false
                         },
-                        dialogTitle = "",
-                        dialogDescription = ""
+                        dialogTitle = stringResource(R.string.delete_account_warning_title),
+                        dialogDescription = stringResource(R.string.delete_account_warning_message)
                     )
                 }
                 Box (

@@ -92,7 +92,7 @@
     <string name="channel_choose_cover_label">Choose a cover</string>
     <string name="channel_choose_another_cover_label">Choose another cover</string>
     <string name="channel_current_cover_message">Current cover</string>
-    <string name="channel_chosen_cover_message">Current cover</string>
+    <string name="channel_chosen_cover_message">Chosen cover</string>
     <string name="channel_delete_cover_warning">You\'re gonna remove the cover</string>
 
     <plurals name="subscribers_number">
