@@ -90,7 +90,7 @@ fun SignUpScreen(
                     SignUpError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
                     SignUpError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
                     SignUpError.USERNAME_EXISTS to stringResource(R.string.email_exists_msg_error),
-                    SignUpError.USERNAME_TOO_LARGE to stringResource(R.string.text_too_large_error, "${ValidationRules.MAX_USERNAME_LENGTH}")
+                    SignUpError.USERNAME_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_USERNAME_LENGTH)
                 )
             )
             InputField(
@@ -145,7 +145,7 @@ fun SignUpScreen(
                 placeholder = stringResource(R.string.nick_label)
             )
             PrimaryButton(
-                text = stringResource(R.string.sign_up_title),
+                text = stringResource(R.string.sign_up_main_button),
                 onClick = {
                     onSubmit(
                         SignUpInputState(

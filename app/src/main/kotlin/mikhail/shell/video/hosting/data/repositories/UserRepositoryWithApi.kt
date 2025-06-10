@@ -57,7 +57,7 @@ class UserRepositoryWithApi @Inject constructor(
             val avatarPart = avatar?.let {
                 val uri = Uri.parse(it)
                 if (fileProvider.getFileMimeType(uri)!!.substringBefore("/") != "image") {
-                    compoundError.add(EditUserError.AVATAR_MIME_NOT_SUPPORTED)
+                    compoundError.add(EditUserError.AVATAR_TYPE_NOT_VALID)
                     return@let null
                 }
                 if (fileProvider.getFileSize(uri)!! > MAX_FILE_SIZE) {

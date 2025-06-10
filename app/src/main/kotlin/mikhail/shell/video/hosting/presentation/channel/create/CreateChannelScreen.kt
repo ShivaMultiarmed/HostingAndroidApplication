@@ -127,7 +127,7 @@ fun CreateChannelScreen(
                 mapOf(
                     TITLE_EMPTY to stringResource(R.string.text_empty_error),
                     TITLE_EXISTS to stringResource(R.string.channel_title_exists_error),
-                    TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TITLE_LENGTH / 1024 / 1024).toString() + " MB")
+                    TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                 )
             )
             EditField (
@@ -151,7 +151,7 @@ fun CreateChannelScreen(
             val aliasErrMsg = constructInfoMessage(
                 state.error,
                 mapOf(
-                    ChannelCreationError.ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TITLE_LENGTH).toString() + " MB"),
+                    ChannelCreationError.ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
                     ChannelCreationError.ALIAS_EXISTS to stringResource(R.string.channel_alias_exists_error)
                 )
             )
@@ -248,8 +248,9 @@ fun CreateChannelScreen(
                 }
             }
             val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                if (it != null)
+                if (it != null) {
                     coverUri = it
+                }
             }
             val coverErrMsg = constructInfoMessage(
                 state.error,

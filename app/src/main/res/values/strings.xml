@@ -164,7 +164,7 @@
     <string name="profile_telephone_label">Phone</string>
     <string name="profile_bio">Bio</string>
     <string name="profile_edit_success">Profile is successfully edited</string>
-    <string name="delete_account_button">Remove</string>
+    <string name="delete_account_button">Delete the account</string>
     <string name="delete_account_warning_title">Removing account</string>
     <string name="delete_account_warning_message">Are you sure you want to delete your account?\nYou\'re gonna loose all your data.</string>
     <string name="delete_account_success">Account is deleted</string>
@@ -241,4 +241,5 @@
     <string name="nc_video_downloading">Downloading videos</string>
     <string name="nc_channel_subscriptions">Subscriptions</string>
     <string name="video_upload_failure_hint">Try again</string>
+    <string name="sign_up_main_button">Sign up</string>
 </resources>

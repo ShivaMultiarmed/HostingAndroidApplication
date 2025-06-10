@@ -144,7 +144,8 @@
     <string name="nick_empty_error">Заполните никнейм</string>
     <string name="nick_exists_error">Этот никнейм занят</string>
     <string name="nick_label">Никнейм</string>
-    <string name="sign_up_success">You successfully signed up</string>
+    <string name="sign_up_success">Вы успешно зарегистрировались</string>
+    <string name="sign_up_main_button">Зарегистрироваться</string>
 
     <!-- Subscriptions -->
 
@@ -171,12 +172,12 @@
     <string name="profile_choose_avatar_label">Выбрать аватар</string>
     <string name="profile_choose_another_avatar_label">Поменять аватар</string>
     <string name="profile_current_avatar_hint">Текущий аватар</string>
-    <string name="profile_chosen_avatar_hint">Текущий аватар</string>
+    <string name="profile_chosen_avatar_hint">Выбранный аватар</string>
     <string name="profile_delete_avatar_hint">Вы удалите аватар</string>
     <string name="profile_telephone_label">Телефон</string>
     <string name="profile_bio">О себе</string>
     <string name="profile_edit_success">Профиль успешно отредактирован</string>
-    <string name="delete_account_button">Удалить</string>
+    <string name="delete_account_button">Удалить аккаунт</string>
     <string name="delete_account_warning_title">Удаление аккаунта</string>
     <string name="delete_account_warning_message">Вы уверены, что хотите удалить аккаунт?\nВы потеряете все свои данные.</string>
     <string name="delete_account_success">Аккаунт удалён</string>

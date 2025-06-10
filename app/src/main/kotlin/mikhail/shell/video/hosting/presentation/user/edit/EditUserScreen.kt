@@ -197,7 +197,7 @@ fun EditUserScreen(
                 val avatarErrMsg = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.AVATAR_MIME_NOT_SUPPORTED to stringResource(R.string.type_not_valid_error),
+                        EditUserError.AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
                         EditUserError.AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error,
                             (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB")
                     )
@@ -348,7 +348,7 @@ fun EditUserScreen(
                     )
                 }
                 val bioError = if (state.editUserError.equivalentTo(EditUserError.BIO_TOO_LARGE)) {
-                    stringResource(R.string.text_too_large_error, (ValidationRules.MAX_TEXT_LENGTH).toString() + " MB")
+                    stringResource(R.string.text_too_large_error, ValidationRules.MAX_TEXT_LENGTH)
                 } else null
                 StandardEditField(
                     modifier = Modifier,
