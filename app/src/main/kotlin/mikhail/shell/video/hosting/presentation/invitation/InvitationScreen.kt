@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Contact
 import mikhail.shell.video.hosting.presentation.utils.SearchTopBar
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -95,7 +97,12 @@ fun InvitationScreen(
                             contact = contact,
                             onClick = {
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Вы пригласили ${contact.name}.")
+                                    snackbarHostState.showSnackbar(
+                                        context.getString(
+                                            R.string.invitation_success,
+                                            contact.name
+                                        )
+                                    )
                                 }
                                 onContactClick(it)
                             }
@@ -110,7 +117,7 @@ fun InvitationScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Вы не предоставили доступ к контактам и/или запретили отправлять SMS.",
+                text = stringResource(R.string.invitation_contacts_and_sms_permissions_rationale),
                 textAlign = TextAlign.Center
             )
         }

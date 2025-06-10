@@ -393,9 +393,10 @@ fun SubscriberNumberText(
     modifier: Modifier = Modifier,
     subscribers: Long
 ) {
+    val context = LocalContext.current
     Text(
         modifier = modifier,
-        text = subscribers.toFullSubscribers(),
+        text = subscribers.toFullSubscribers(context),
         fontSize = 13.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )

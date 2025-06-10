@@ -81,7 +81,7 @@ class NotificationService: FirebaseMessagingService() {
         )
         val notification = NotificationCompat.Builder(this, "channel_subscriptions")
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Новое видео на канале $channelTitle")
+            .setContentTitle(getString(R.string.new_video_title, channelTitle))
             .setContentText(videoTitle)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

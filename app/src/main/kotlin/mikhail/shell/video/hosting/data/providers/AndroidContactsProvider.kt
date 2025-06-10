@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.providers
 import android.content.Context
 import android.provider.ContactsContract
 import android.telephony.SmsManager
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Contact
 import mikhail.shell.video.hosting.domain.providers.ContactsProvider
 
@@ -45,6 +46,6 @@ class AndroidContactsProvider(private val context: Context): ContactsProvider {
 
     override fun invite(number: String) {
         val smsManager = context.getSystemService(SmsManager::class.java)
-        smsManager.sendTextMessage(number, null, "Приглашаю Вас в приложение Trendy!", null, null)
+        smsManager.sendTextMessage(number, null, context.getString(R.string.invitation_text), null, null)
     }
 }

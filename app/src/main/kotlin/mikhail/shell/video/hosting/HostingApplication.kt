@@ -24,21 +24,21 @@ class HostingApplication: Application() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         val videoUploadingChannel = NotificationChannel(
             "video_uploading",
-            "Загрузка видео",
+            getString(R.string.nc_video_uploading),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(videoUploadingChannel)
 
         val videoDownloadingChannel = NotificationChannel(
             "video_downloading",
-            "Скачивание видео",
+            getString(R.string.nc_video_downloading),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(videoDownloadingChannel)
 
         val channelSubscriptionChannel = NotificationChannel(
             "channel_subscriptions",
-            "Подписки на канал",
+            getString(R.string.nc_channel_subscriptions),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(channelSubscriptionChannel)

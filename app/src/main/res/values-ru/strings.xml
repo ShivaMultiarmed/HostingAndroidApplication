@@ -6,26 +6,32 @@
 
     <string name="language_title">Язык</string>
     <string name="theme_title">Тема</string>
-    <string name="cancel_button">Отменить</string>
     <string name="settings_title">Настройки</string>
-    <string name="go_back_button">Вернуться назад</string>
 
     <!-- Common -->
 
     <string name="ok_button">Ок</string>
     <string name="primary_button_hint">Ок</string>
+    <string name="cancel_button">Отменить</string>
+    <string name="more_button">Ещё</string>
+    <string name="go_back_button">Вернуться назад</string>
     <string name="refresh_hint">Перезагрузить</string>
     <string name="text_empty_error">Заполните поле</string>
     <string name="text_too_large_error">Максимальная длина - %d</string>
+
 
     <string name="file_too_large_error">Файл не должен превышать %s</string>
     <string name="type_not_valid_error">Некорректный формат файла</string>
     <string name="file_not_found_error">Файл не найден</string>
 
+    <string name="phone_number_malformed_error">Введите корректный номер телефона</string>
+
     <string name="unexpected_error">Непредвиденная ошибка</string>
 
     <string name="date_time_just_now_message">Только что</string>
     <string name="date_time_ago_message">назад</string>
+
+    <string name="pip_container_close_hint">Закрыть плавающее окно</string>
     
     <plurals name="minutes_presentation">
         <item quantity="one">%d минуту</item>
@@ -99,6 +105,13 @@
     <string name="channel_current_cover_message">Текущая обложка</string>
     <string name="channel_chosen_cover_message">Выбранная обложка</string>
     <string name="channel_delete_cover_warning">Вы удалите обложку</string>
+
+    <plurals name="subscribers_number">
+        <item quantity="one">%s подписчик</item>
+        <item quantity="few">%s подписчика</item>
+        <item quantity="many">%s подписчиков</item>
+        <item quantity="other">%s подписчиков</item>
+    </plurals>
     
     <!-- Player -->
 
@@ -131,6 +144,7 @@
     <string name="nick_empty_error">Заполните никнейм</string>
     <string name="nick_exists_error">Этот никнейм занят</string>
     <string name="nick_label">Никнейм</string>
+    <string name="sign_up_success">You successfully signed up</string>
 
     <!-- Subscriptions -->
 
@@ -143,7 +157,7 @@
     <string name="user_channels_title">Каналы пользователя</string>
     <string name="user_channels_empty_message">Здесь пока нет каналов</string>
     <string name="profile_avatar_hint">Изображение профиля</string>
-    <string name="profile_more_info_button">Ещё информация</string>
+
 
     <string name="upload_video_button">Загрузить видео</string>
     <string name="create_channel_button">Создать канал</string>
@@ -209,9 +223,15 @@
     <string name="video_upload_choose_another_source_label">Изменить видео</string>
     <string name="video_upload_source_empty">Выберите видео</string>
 
-    <string name="video_upload_camera_permission_rationale">Разрешите доступ к камере в настройках Вашего устройства</string>
-
+    <string name="video_upload_success">Видео успешно загружено</string>
+    <string name="video_upload_success_hint">Нажмите, чтобы перейти к нему</string>
+    <string name="video_upload_failure">Ошибка при загрузке видео</string>
+    <string name="video_upload_failure_hint">Попробуйте ещё раз</string>
+    <string name="video_upload_progress_title">Видео загружается на сервер</string>
     <string name="video_upload_progress_hint">Вы можете отслеживать прогресс загрузки в уведомлениях</string>
+    <string name="new_video_title">Новое видео на канале %s</string>
+
+    <string name="video_upload_camera_permission_rationale">Разрешите доступ к камере в настройках Вашего устройства</string>
 
     <string name="video_edit_title">Обновить видео</string>
 
@@ -225,4 +245,14 @@
     <string name="video_cover_choose_another_label">Изменить обложку</string>
 
     <string name="video_edit_success">Видео успешно отредактировано</string>
+
+    <!-- Invitation -->
+    <string name="invitation_success">Вы пригласили контакт %s</string>
+    <string name="invitation_contacts_and_sms_permissions_rationale">Вы не предоставили доступ к контактам и/или запретили отправлять SMS</string>
+    <string name="invitation_text">Приглашаю Вас в приложение Trendy!</string>
+
+    <!-- Notifications (nc - notification channel) -->
+    <string name="nc_video_uploading">Загрузка видео</string>
+    <string name="nc_video_downloading">Скачивание видео</string>
+    <string name="nc_channel_subscriptions">Подписки</string>
 </resources>

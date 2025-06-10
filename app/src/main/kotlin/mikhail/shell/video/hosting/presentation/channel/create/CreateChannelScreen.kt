@@ -285,7 +285,7 @@ fun CreateChannelScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Выбранная обложка"
+                        text = stringResource(R.string.channel_chosen_cover_message)
                     )
                     val painter = rememberAsyncImagePainter(model = coverUri)
                     Image(

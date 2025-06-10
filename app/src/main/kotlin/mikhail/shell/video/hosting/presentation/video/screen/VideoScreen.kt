@@ -322,7 +322,7 @@ fun VideoScreen(
                                 lineHeight = 16.sp
                             )
                             Text(
-                                text = "Ещё",
+                                text = stringResource(R.string.more_button),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -343,13 +343,13 @@ fun VideoScreen(
                                             isExpanded = true,
                                             menuItems = listOf(
                                                 MenuItem(
-                                                    title = "Редактировать",
+                                                    title = stringResource(R.string.video_edit_button),
                                                     onClick = {
                                                         onUpdate(video.videoId!!)
                                                     }
                                                 ),
                                                 MenuItem(
-                                                    title = "Удалить",
+                                                    title = stringResource(R.string.video_delete_button),
                                                     onClick = {
                                                         isDeletingDialogOpen = true
                                                     }

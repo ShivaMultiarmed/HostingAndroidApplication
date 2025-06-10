@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.presentation.utils
 
+import android.content.Context
+import mikhail.shell.video.hosting.R
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -44,8 +46,7 @@ fun Long.toCorrectSuffix(): String {
         this < 1_000 -> ""
         this < 1_000_000 -> "K"
         this < 1_000_000_000 -> "M"
-        this < 1_000_000_000_000 -> "B"
-        else -> ""
+        else -> "B"
     }
 }
 
@@ -53,8 +54,13 @@ fun Long.toSubscribers(): String {
     return this.toRoundString() + this.toCorrectSuffix()
 }
 
-fun Long.toFullSubscribers(): String {
-    return this.toSubscribers() + " " + this.toCorrectRussianWordForm("подписчик", "подписчика", "подписчиков")
+fun Long.toFullSubscribers(context: Context): String {
+    val quantityForWordForm = (if (this < 1000) this else this / 1000 * 1000).toInt()
+    return context.resources.getQuantityString(
+        R.plurals.subscribers_number,
+        quantityForWordForm,
+        this.toSubscribers()
+    )
 }
 
 fun Long.toViews(): String {
@@ -66,8 +72,7 @@ fun Long.toRoundString(): String {
         this < 1_000 -> this.toDouble()
         this < 1_000_000 -> this.toDouble() / 1_000
         this < 1_000_000_000 -> this.toDouble() / 1_000_000
-        this < 1_000_000_000_000 -> this.toDouble() / 1_000_000_000
-        else -> this.toDouble()
+        else -> this.toDouble() / 1_000_000_000
     }.round(2)
     return if (roundedNumber == this.toDouble()){
         roundedNumber.toLong().toString()

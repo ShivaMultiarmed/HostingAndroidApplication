@@ -154,7 +154,7 @@ class VideoDownloadingService : Service() {
     private fun createCancelAction(): NotificationCompat.Action {
         return NotificationCompat.Action(
             R.drawable.ic_launcher_monochrome,
-            "Отменить",
+            getString(R.string.cancel_button),
             PendingIntent.getService(
                 this,
                 0,

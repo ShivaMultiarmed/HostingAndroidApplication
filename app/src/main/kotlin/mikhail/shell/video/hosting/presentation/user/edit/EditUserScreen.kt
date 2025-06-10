@@ -153,7 +153,7 @@ fun EditUserScreen(
                         onValueChange = {
                             nick = it
                         },
-                        placeholder = "Никнейм",
+                        placeholder = stringResource(R.string.nick_label),
                         errorMsg = nickErrMsg
                     )
                 }
@@ -290,7 +290,7 @@ fun EditUserScreen(
                     }
                 }
                 val telError = if (state.editUserError.equivalentTo(EditUserError.TEL_MALFORMED)) {
-                    "Введите корректный номер телефона"
+                    stringResource(R.string.phone_number_malformed_error)
                 } else null
                 StandardEditField(
                     modifier = Modifier,
@@ -320,7 +320,7 @@ fun EditUserScreen(
                     state.editUserError,
                     mapOf(
                         EditUserError.EMAIL_MALFORMED to stringResource(R.string.email_malformed_error),
-                        EditUserError.EMAIL_TOO_LARGE to stringResource(R.string.text_too_large_error, (ValidationRules.MAX_USERNAME_LENGTH / 1024 / 1024).toString() + " MB")
+                        EditUserError.EMAIL_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_USERNAME_LENGTH)
                     )
                 )
                 StandardEditField(

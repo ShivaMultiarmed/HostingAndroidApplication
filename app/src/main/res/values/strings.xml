@@ -6,14 +6,15 @@
 
     <string name="language_title">Language</string>
     <string name="theme_title">Theme</string>
-    <string name="cancel_button">Cancel</string>
     <string name="settings_title">Settings</string>
-    <string name="go_back_button">Go back</string>
 
     <!-- Common -->
 
     <string name="ok_button">OK</string>
     <string name="primary_button_hint">OK</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="more_button">More</string>
+    <string name="go_back_button">Go back</string>
     <string name="refresh_hint">Refresh</string>
     <string name="text_empty_error">Fill the field</string>
     <string name="text_too_large_error">Max length is %d</string>
@@ -22,10 +23,14 @@
     <string name="type_not_valid_error">Invalid file type</string>
     <string name="file_not_found_error">File is not found</string>
 
+    <string name="phone_number_malformed_error">Phone number is malformed</string>
+
     <string name="unexpected_error">Unexpected error</string>
 
     <string name="date_time_just_now_message">Just now</string>
     <string name="date_time_ago_message">ago</string>
+
+    <string name="pip_container_close_hint">Close floating window</string>
 
     <plurals name="minutes_presentation">
         <item quantity="one">%d minute</item>
@@ -90,6 +95,12 @@
     <string name="channel_chosen_cover_message">Current cover</string>
     <string name="channel_delete_cover_warning">You\'re gonna remove the cover</string>
 
+    <plurals name="subscribers_number">
+        <item quantity="one">%s subscriber</item>
+        <item quantity="many">%s subscribers</item>
+        <item quantity="other">%s subscribers</item>
+    </plurals>
+
     <!-- Player -->
 
     <string name="player_seek_backward_hint">Backward</string>
@@ -121,6 +132,7 @@
     <string name="nick_empty_error">Enter your nickname</string>
     <string name="nick_exists_error">The nickname is already taken</string>
     <string name="nick_label">Nickname</string>
+    <string name="sign_up_success">You successfully signed up</string>
 
     <!-- Subscriptions -->
 
@@ -133,7 +145,7 @@
     <string name="user_channels_title">User\'s channels</string>
     <string name="user_channels_empty_message">There are no channels here yet</string>
     <string name="profile_avatar_hint">User\'s avatar</string>
-    <string name="profile_more_info_button">More info</string>
+
 
     <string name="upload_video_button">Upload a video</string>
     <string name="create_channel_button">Create a channel</string>
@@ -215,4 +227,18 @@
     <string name="video_cover_choose_another_label">Choose another cover</string>
 
     <string name="video_edit_success">The video was successfully edited</string>
+
+    <!-- Invitation -->
+    <string name="invitation_success">You invited the contact %s</string>
+    <string name="invitation_contacts_and_sms_permissions_rationale">You haven\'t granted access to contacts and/or haven\'t granted permission to send SMS</string>
+    <string name="video_upload_success">Video is uploaded successfully</string>
+    <string name="video_upload_success_hint">Tap to proceed</string>
+    <string name="video_upload_failure">Uploading the video was a failure</string>
+    <string name="video_upload_progress_title">Video is being uploaded</string>
+    <string name="new_video_title">New video on channel %s</string>
+    <string name="invitation_text">I am inviting you to Trendy application!</string>
+    <string name="nc_video_uploading">Uploading videos</string>
+    <string name="nc_video_downloading">Downloading videos</string>
+    <string name="nc_channel_subscriptions">Subscriptions</string>
+    <string name="video_upload_failure_hint">Try again</string>
 </resources>

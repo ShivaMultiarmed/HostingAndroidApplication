@@ -19,8 +19,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +55,7 @@ fun TopBar(
                     Icon(
                         imageVector = Icons.Rounded.ArrowBack,
                         tint = MaterialTheme.colorScheme.onSurface,
-                        contentDescription = "Вернуться назад"
+                        contentDescription = stringResource(R.string.go_back_button)
                     )
                 }
             }
@@ -127,7 +129,7 @@ fun SearchTopBar(
                 Icon(
                     imageVector = Icons.Rounded.ArrowBack,
                     tint = Color.White,
-                    contentDescription = "Вернуться назад"
+                    contentDescription = stringResource(R.string.go_back_button)
                 )
             }
         }
@@ -139,7 +141,7 @@ fun SearchTopBar(
                 value = value,
                 onValueChange = onValueChange,
                 errorMsg = errorMsg,
-                placeholder = "Искать",
+                placeholder = stringResource(R.string.video_search_label),
                 icon = Icons.Rounded.Search
             )
         }

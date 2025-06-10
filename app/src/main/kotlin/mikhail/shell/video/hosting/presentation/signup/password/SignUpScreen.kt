@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ fun SignUpScreen(
     onSubmit: (SignUpInputState) -> Unit,
     onSuccess: (AuthModel) -> Unit
 ) {
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold (
         modifier = Modifier
@@ -74,7 +76,7 @@ fun SignUpScreen(
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
                     snackbarHostState.showSnackbar(
-                        message = "Вы успешно зарегистрировались",
+                        message = context.getString(R.string.sign_up_success),
                         duration = SnackbarDuration.Short
                     )
                     onSuccess(state.authModel)
@@ -121,7 +123,7 @@ fun SignUpScreen(
                 },
                 errorMsg = passwordErrorMsg,
                 secure = true,
-                placeholder = "Пароль"
+                placeholder = stringResource(R.string.password_label)
             )
             var nick by rememberSaveable { mutableStateOf("") }
             val nickErrMsg = constructInfoMessage(
@@ -143,7 +145,7 @@ fun SignUpScreen(
                 placeholder = stringResource(R.string.nick_label)
             )
             PrimaryButton(
-                text = "Зарегистрироваться",
+                text = stringResource(R.string.sign_up_title),
                 onClick = {
                     onSubmit(
                         SignUpInputState(

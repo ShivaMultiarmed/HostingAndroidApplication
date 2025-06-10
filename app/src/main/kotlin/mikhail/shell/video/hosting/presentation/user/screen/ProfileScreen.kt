@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -325,7 +326,7 @@ fun UserTextDetails(
                     false -> Icons.Rounded.KeyboardArrowDown
                     true -> Icons.Rounded.KeyboardArrowUp
                 },
-                contentDescription = stringResource(R.string.profile_more_info_button)
+                contentDescription = stringResource(R.string.more_button)
             )
         }
     }
@@ -453,6 +454,7 @@ fun ProfileScreenPreviewDay() {
 fun ChannelSnippet(
     modifier: Modifier = Modifier, channel: Channel, onClick: (Long) -> Unit
 ) {
+    val context = LocalContext.current
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -492,7 +494,7 @@ fun ChannelSnippet(
                     maxLines = 1
                 )
                 Text(
-                    text = channel.subscribers.toFullSubscribers(),
+                    text = channel.subscribers.toFullSubscribers(context),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1

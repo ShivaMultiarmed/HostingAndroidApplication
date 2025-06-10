@@ -23,9 +23,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
 
 @Composable
 fun PipContainer(
@@ -77,7 +79,7 @@ fun PipTopBar(
                 .clickable(onClick = onClose),
             imageVector = Icons.Rounded.Close,
             tint = Color.White,
-            contentDescription = "Закрыть видео"
+            contentDescription = stringResource(R.string.pip_container_close_hint)
         )
     }
 }
