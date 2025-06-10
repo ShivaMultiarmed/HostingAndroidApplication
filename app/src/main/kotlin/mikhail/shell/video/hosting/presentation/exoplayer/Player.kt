@@ -290,7 +290,7 @@ fun PlayerControls(
                 modifier = Modifier.size(25.dp),
                 tint = Color(0f, 0f, 0f, 0.6f),
                 imageVector = Icons.Rounded.FastRewind,
-                contentDescription = stringResource(R.string.player_seek_backward)
+                contentDescription = stringResource(R.string.player_seek_backward_hint)
             )
         }
         var seekForwardProgress by rememberSaveable { mutableFloatStateOf(0f) }
@@ -335,7 +335,7 @@ fun PlayerControls(
                 modifier = Modifier.size(25.dp),
                 tint = Color(0f, 0f, 0f, 0.6f),
                 imageVector = Icons.Rounded.FastForward,
-                contentDescription = stringResource(R.string.player_seek_forward)
+                contentDescription = stringResource(R.string.player_seek_forward_hint)
             )
         }
         if (animatedControlsAlpha > 0f) {
@@ -365,7 +365,7 @@ fun PlayerControls(
                     },
                     tint = Color(0f, 0f, 0f, 0.8f),
                     modifier = Modifier.size(28.dp),
-                    contentDescription = stringResource(R.string.player_main_button)
+                    contentDescription = stringResource(R.string.player_main_button_hint)
                 )
             }
             if (duration >= 0) {

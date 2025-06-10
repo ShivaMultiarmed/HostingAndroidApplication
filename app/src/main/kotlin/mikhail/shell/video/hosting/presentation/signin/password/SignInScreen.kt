@@ -74,7 +74,7 @@ fun SignInScreen(
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
                     snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.sign_in_success),
+                        message = context.getString(R.string.sign_in_success_message),
                         duration = SnackbarDuration.Short
                     )
                     onSuccess()
@@ -84,9 +84,9 @@ fun SignInScreen(
             val emailErrorMsg = constructInfoMessage(
                 error,
                 mapOf(
-                    SignInError.USERNAME_EMPTY to stringResource(R.string.email_empty),
-                    SignInError.USERNAME_MALFORMED to stringResource(R.string.email_malformed),
-                    SignInError.USERNAME_NOT_FOUND to stringResource(R.string.sign_in_email_not_found)
+                    SignInError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
+                    SignInError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
+                    SignInError.USERNAME_NOT_FOUND to stringResource(R.string.email_not_found_error)
                 )
             )
             InputField(
@@ -105,8 +105,8 @@ fun SignInScreen(
             val passwordErrorMsg = constructInfoMessage(
                 error,
                 mapOf(
-                    SignInError.PASSWORD_EMPTY to stringResource(R.string.password_empty),
-                    SignInError.PASSWORD_INCORRECT to stringResource(R.string.sign_in_password_incorrect)
+                    SignInError.PASSWORD_EMPTY to stringResource(R.string.password_empty_error),
+                    SignInError.PASSWORD_INCORRECT to stringResource(R.string.password_incorrect_error)
                 )
             )
             InputField(

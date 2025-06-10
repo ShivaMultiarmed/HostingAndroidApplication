@@ -10,8 +10,8 @@
 
     <!-- Common -->
 
-    <string name="ok_button">Ok</string>
-    <string name="primary_button_hint">Ok</string>
+    <string name="ok_button">OK</string>
+    <string name="primary_button_hint">OK</string>
     <string name="refresh_hint">Refresh</string>
     <string name="text_empty_error">Fill the field</string>
     <string name="text_too_large_error">Max length is %d</string>
@@ -26,28 +26,28 @@
     <string name="date_time_ago_message">ago</string>
 
     <plurals name="minutes_presentation">
-        <item quantity="one">minute</item>
-        <item quantity="many">minutes</item>
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
     </plurals>
 
     <plurals name="hours_presentation">
-        <item quantity="one">hour</item>
-        <item quantity="many">hours</item>
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
     </plurals>
 
     <plurals name="days_presentation">
-        <item quantity="one">day</item>
-        <item quantity="many">days</item>
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
     </plurals>
 
     <plurals name="months_presentation">
-        <item quantity="one">month</item>
-        <item quantity="many">months</item>
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
     </plurals>
 
     <plurals name="years_presentation">
-        <item quantity="one">year</item>
-        <item quantity="many">years</item>
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
     </plurals>
 
     <!-- Channel related screens -->
@@ -62,8 +62,8 @@
     <string name="channel_actions_description">Channel actions</string>
     <string name="channel_delete_button">Remove</string>
     <string name="channel_edit_button">Edit</string>
-    <string name="channel_delete_title">Delete the channel</string>
-    <string name="channel_delete_description">Are you sure you want to delete the channel?</string>
+    <string name="channel_delete_warning_title">Delete the channel</string>
+    <string name="channel_delete_warning_message">Are you sure you want to delete the channel?</string>
 
     <string name="channel_edit_title">Edit the channel</string>
     <string name="channel_edit_success">The channel was successfully edited</string>
@@ -86,7 +86,7 @@
     <string name="channel_choose_another_cover_label">Choose another cover</string>
     <string name="channel_current_cover_message">Current cover</string>
     <string name="channel_chosen_cover_message">Current cover</string>
-    <string name="channel_delete_cover_message">You\'re gonna remove the cover</string>
+    <string name="channel_delete_cover_warning">You\'re gonna remove the cover</string>
 
     <!-- Player -->
 
@@ -152,7 +152,7 @@
     <string name="profile_edit_success">Profile is successfully edited</string>
     <string name="delete_account_button">Remove</string>
     <string name="delete_account_warning_title">Removing account</string>
-    <string name="delete_account_warning_message">Are you sure you want to delete your account?\nYou're gonna loose all your data.</string>
+    <string name="delete_account_warning_message">Are you sure you want to delete your account?\nYou\'re gonna loose all your data.</string>
     <string name="delete_account_success">Account is deleted</string>
 
     <!-- Video -->

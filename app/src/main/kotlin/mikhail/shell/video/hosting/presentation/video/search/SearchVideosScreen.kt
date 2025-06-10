@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -214,6 +215,7 @@ fun VideoWithChannelSnippet(
     videoWithChannel: VideoWithChannel,
     onClick: (Long) -> Unit
 ) {
+    val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
     val video = videoWithChannel.video
@@ -276,7 +278,7 @@ fun VideoWithChannelSnippet(
                     maxLines = 2
                 )
                 Text(
-                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(),
+                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(context),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 13.sp,

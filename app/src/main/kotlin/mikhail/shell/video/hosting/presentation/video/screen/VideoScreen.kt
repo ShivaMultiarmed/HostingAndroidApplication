@@ -922,19 +922,19 @@ fun LocalDateTime.toPresentation(
         stringBuilder.append(context.getString(R.string.date_time_just_now_message))
     } else if (now.minusMinutes(60) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toMinutes().toInt()
-        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.minutes_presentation, diff))
+        stringBuilder.append(context.resources.getQuantityString(R.plurals.minutes_presentation, diff, diff))
     } else if (now.minusHours(24) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toHours().toInt()
-        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.hours_presentation, diff))
+        stringBuilder.append(context.resources.getQuantityString(R.plurals.hours_presentation, diff, diff))
     } else if (now.minusDays(30) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toDays().toInt()
-        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.days_presentation, diff))
+        stringBuilder.append(context.resources.getQuantityString(R.plurals.days_presentation, diff, diff))
     } else if (now.minusMonths(12) < this) {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).toInt()
-        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.months_presentation, diff))
+        stringBuilder.append(context.resources.getQuantityString(R.plurals.months_presentation, diff, diff))
     } else {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).div(12).toInt()
-        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.years_presentation, diff))
+        stringBuilder.append(context.resources.getQuantityString(R.plurals.years_presentation, diff, diff))
     }
     if (now.minusMinutes(10) >= currentDateTime) {
         stringBuilder.append(" ").append(context.getString(R.string.date_time_ago_message))

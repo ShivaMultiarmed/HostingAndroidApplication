@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +29,7 @@ fun VideoSnippet(
     video: Video,
     onClick: (Long) -> Unit
 ) {
+    val context = LocalContext.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -65,7 +67,7 @@ fun VideoSnippet(
                 maxLines = 2,
                 fontSize = 12.sp,
                 lineHeight = 14.sp,
-                text = video.views.toViews() + " - " + video.dateTime!!.toPresentation(),
+                text = video.views.toViews() + " - " + video.dateTime!!.toPresentation(context),
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

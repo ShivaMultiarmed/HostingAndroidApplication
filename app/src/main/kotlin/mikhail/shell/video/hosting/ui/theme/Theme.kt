@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.res.Configuration
+import android.os.LocaleList
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -12,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,18 +86,20 @@ enum class Theme {
 }
 
 fun Context.getThemeSelected(): Theme {
-    val str = this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).getString(Ui.theme, BY_TIME.name)?: BY_TIME.name
+    val str = this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
+        .getString(Ui.theme, BY_TIME.name) ?: BY_TIME.name
     return Theme.valueOf(str)
 }
 
 fun Context.getColorScheme(
     isSystemDarkTheme: Boolean
 ): ColorScheme {
-    return when(this.getThemeSelected()) {
+    return when (this.getThemeSelected()) {
         BY_TIME -> when {
             isSystemDarkTheme -> DarkColorScheme
             else -> LightColorScheme
         }
+
         DARK -> DarkColorScheme
         LIGHT -> LightColorScheme
     }
@@ -114,14 +118,16 @@ fun Context.getLocale(): Locale {
         .let { Locale.ofTag(it) }
 }
 
-fun Context.setLocale(locale: Locale): Context {
+fun Context.setLocale(locale: Locale) {
     val config = Configuration(resources.configuration)
-    val jdkLocale = java.util.Locale(locale.iso)
-    config.setLocale(jdkLocale)
-    return createConfigurationContext(config)
+    config.setLocales(LocaleList.forLanguageTags(locale.iso))
+    getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
+        putString(Ui.language, locale.iso)
+        commit()
+    }
 }
 
-val LocalLocale = compositionLocalOf { Locale.RUSSIAN }
+val LocalLocale = compositionLocalOf { Locale.ENGLISH }
 
 @Composable
 fun VideoHostingTheme(
@@ -133,14 +139,18 @@ fun VideoHostingTheme(
     var colorScheme by remember { mutableStateOf(selectedColorScheme) }
     var locale by remember { mutableStateOf(context.getLocale()) }
     val uiPreferences = context.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-    CompositionLocalProvider(LocalLocale provides locale) {
-        CompositionLocalProvider(LocalContext provides context) {
-            MaterialTheme(
-                colorScheme = colorScheme,
-                typography = Typography,
-                content = content
-            )
-        }
+    CompositionLocalProvider(
+        LocalContext provides context,
+        LocalLocale provides locale
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+    LaunchedEffect(locale) {
+
     }
     DisposableEffect(Unit) {
         val uiPreferencesListener = object : OnSharedPreferenceChangeListener {
@@ -151,7 +161,8 @@ fun VideoHostingTheme(
                 if (key == Ui.theme) {
                     colorScheme = context.getColorScheme(isDark)
                 } else if (key == Ui.language) {
-                    locale = sharedPreferences?.getString(key, Locale.ENGLISH.iso)!!.let { Locale.ofTag(it) }
+                    locale = sharedPreferences?.getString(key, Locale.ENGLISH.iso)!!
+                        .let { Locale.ofTag(it) }
                 }
             }
         }

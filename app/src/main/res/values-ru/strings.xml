@@ -26,33 +26,38 @@
     <string name="date_time_ago_message">назад</string>
     
     <plurals name="minutes_presentation">
-        <item quantity="one">минуту</item>
-        <item quantity="few">минуты</item>
-        <item quantity="many">минут</item>
+        <item quantity="one">%d минуту</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минут</item>
     </plurals>
 
     <plurals name="hours_presentation">
-        <item quantity="one">час</item>
-        <item quantity="few">часа</item>
-        <item quantity="many">часов</item>
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часов</item>
     </plurals>
 
     <plurals name="days_presentation">
-        <item quantity="one">день</item>
-        <item quantity="few">дня</item>
-        <item quantity="many">дней</item>
+        <item quantity="one">%d день</item>
+        <item quantity="few">%d дня</item>
+        <item quantity="many">%d дней</item>
+        <item quantity="other">%d дней</item>
     </plurals>
 
     <plurals name="months_presentation">
-        <item quantity="one">месяц</item>
-        <item quantity="few">месяца</item>
-        <item quantity="many">месяцев</item>
+        <item quantity="one">%d месяц</item>
+        <item quantity="few">%d месяца</item>
+        <item quantity="many">%d месяцев</item>
+        <item quantity="other">%d месяцев</item>
     </plurals>
 
     <plurals name="years_presentation">
-        <item quantity="one">год</item>
-        <item quantity="few">года</item>
-        <item quantity="many">лет</item>
+        <item quantity="one">%d год</item>
+        <item quantity="few">%d года</item>
+        <item quantity="many">%d лет</item>
+        <item quantity="other">%d лет</item>
     </plurals>
 
     <!-- Channel related screens -->
@@ -67,8 +72,8 @@
     <string name="channel_actions_description">Действия с каналом</string>
     <string name="channel_delete_button">Удалить</string>
     <string name="channel_edit_button">Редактировать</string>
-    <string name="channel_delete_title">Удаление канала</string>
-    <string name="channel_delete_description">Вы действительно хотите удалить канал?</string>
+    <string name="channel_delete_warning_title">Удаление канала</string>
+    <string name="channel_delete_warning_message">Вы действительно хотите удалить канал?</string>
     
     <string name="channel_edit_title">Редактировать канал</string>
     <string name="channel_edit_success">Канал был успешно изменён</string>
@@ -91,7 +96,7 @@
     <string name="channel_choose_another_cover_label">Поменять обложку</string>
     <string name="channel_current_cover_message">Текущая обложка</string>
     <string name="channel_chosen_cover_message">Выбранная обложка</string>
-    <string name="channel_delete_cover_message">Вы удалите обложку</string>
+    <string name="channel_delete_cover_warning">Вы удалите обложку</string>
     
     <!-- Player -->
 

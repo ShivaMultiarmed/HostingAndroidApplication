@@ -104,7 +104,7 @@ fun EditChannelScreen(
                 .background(MaterialTheme.colorScheme.surface),
             topBar = {
                 TopBar(
-                    title = stringResource(R.string.edit_channel_title),
+                    title = stringResource(R.string.channel_edit_title),
                     onPopup = onPopup,
                     inProgress = state.isLoading,
                     onSubmit = {
@@ -134,7 +134,7 @@ fun EditChannelScreen(
                 LaunchedEffect(state.editedChannel) {
                     if (state.editedChannel != null) {
                         snackbarHostState.showSnackbar(
-                            message = activity.resources.getString(R.string.edit_channel_success),
+                            message = activity.resources.getString(R.string.channel_edit_success),
                             duration = SnackbarDuration.Long
                         )
                         onSuccess(state.editedChannel)
@@ -143,9 +143,9 @@ fun EditChannelScreen(
                 val titleErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        TITLE_EMPTY to stringResource(R.string.text_empty),
-                        TITLE_TOO_LARGE to stringResource(R.string.text_too_large, ValidationRules.MAX_TITLE_LENGTH),
-                        TITLE_EXISTS to stringResource(R.string.channel_title_exists)
+                        TITLE_EMPTY to stringResource(R.string.text_empty_error),
+                        TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
+                        TITLE_EXISTS to stringResource(R.string.channel_title_exists_error)
                     )
                 )
                 StandardEditField(
@@ -174,8 +174,8 @@ fun EditChannelScreen(
                 val aliasErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        ALIAS_TOO_LARGE to stringResource(R.string.text_too_large, ValidationRules.MAX_TITLE_LENGTH),
-                        ALIAS_EXISTS to stringResource(R.string.channel_alias_exists)
+                        ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
+                        ALIAS_EXISTS to stringResource(R.string.channel_alias_exists_error)
                     )
                 )
                 StandardEditField(
@@ -204,7 +204,7 @@ fun EditChannelScreen(
                 val descriptionErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        DESCRIPTION_TOO_LARGE to stringResource(R.string.text_too_large, MAX_TEXT_LENGTH)
+                        DESCRIPTION_TOO_LARGE to stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                     )
                 )
                 StandardEditField(
@@ -241,9 +241,9 @@ fun EditChannelScreen(
                 val avatarErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        AVATAR_TOO_LARGE to stringResource(R.string.file_too_large, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB"),
-                        AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid),
-                        AVATAR_NOT_FOUND to stringResource(R.string.file_not_found)
+                        AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB"),
+                        AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                        AVATAR_NOT_FOUND to stringResource(R.string.file_not_found_error)
                     )
                 )
                 Column {
@@ -282,7 +282,7 @@ fun EditChannelScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_current_avatar_msg)
+                                    text = stringResource(R.string.channel_current_avatar_message)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -305,7 +305,7 @@ fun EditChannelScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_chosen_avatar_msg)
+                                    text = stringResource(R.string.channel_chosen_avatar_message)
                                 )
                                 val painter = rememberAsyncImagePainter(model = avatarUri)
                                 Image(
@@ -325,7 +325,7 @@ fun EditChannelScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = stringResource(R.string.channel_delete_avatar_msg)
+                                text = stringResource(R.string.channel_delete_avatar_message)
                             )
                         }
                     }
@@ -341,9 +341,9 @@ fun EditChannelScreen(
                 val coverErrMsg = constructInfoMessage(
                     state.error,
                     mapOf(
-                        COVER_TOO_LARGE to stringResource(R.string.file_too_large, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB"),
-                        COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid),
-                        COVER_NOT_FOUND to stringResource(R.string.file_not_found)
+                        COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB"),
+                        COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                        COVER_NOT_FOUND to stringResource(R.string.file_not_found_error)
                     )
                 )
                 Column {
@@ -364,8 +364,8 @@ fun EditChannelScreen(
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Wallpaper,
-                            placeholder = if (coverUri == null) stringResource(R.string.channel_choose_cover)
-                            else stringResource(R.string.channel_choose_another_cover),
+                            placeholder = if (coverUri == null) stringResource(R.string.channel_choose_cover_label)
+                            else stringResource(R.string.channel_choose_another_cover_label),
                             onClick = {
                                 coverPicker.launch("image/*")
                             },
@@ -393,7 +393,7 @@ fun EditChannelScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_current_cover)
+                                    text = stringResource(R.string.channel_current_cover_message)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -420,7 +420,7 @@ fun EditChannelScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_chosen_cover)
+                                    text = stringResource(R.string.channel_chosen_cover_message)
                                 )
                                 val painter = rememberAsyncImagePainter(model = coverUri)
                                 Image(
@@ -436,7 +436,7 @@ fun EditChannelScreen(
                         }
                         if (coverExists == true && coverAction == REMOVE) {
                             Text(
-                                text = stringResource(R.string.channel_delete_cover)
+                                text = stringResource(R.string.channel_delete_cover_warning)
                             )
                         }
                     }

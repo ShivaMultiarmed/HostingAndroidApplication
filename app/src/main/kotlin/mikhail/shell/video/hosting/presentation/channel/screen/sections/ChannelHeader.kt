@@ -377,8 +377,8 @@ fun SubscriptionButton(
 ) {
     PrimaryButton(
         modifier = modifier,
-        text = if (state == SUBSCRIBED) stringResource(R.string.unsubscribe)
-        else stringResource(R.string.subscribe),
+        text = if (state == SUBSCRIBED) stringResource(R.string.unsubscribe_button)
+        else stringResource(R.string.subscribe_button),
         isActivated = state == SUBSCRIBED,
         onClick = {
             val subscriptionState =
@@ -453,13 +453,13 @@ fun ChannelActionsButton(
             isExpanded = actionDialogVisible,
             menuItems = listOf(
                 MenuItem(
-                    title = stringResource(R.string.channel_edit_btn),
+                    title = stringResource(R.string.channel_edit_button),
                      onClick = {
                         onEdit(channelId)
                      }
                 ),
                 MenuItem(
-                    title = stringResource(R.string.channel_delete_btn),
+                    title = stringResource(R.string.channel_delete_button),
                     onClick = {
                         removeDialogVisible = true
                     }
@@ -477,8 +477,8 @@ fun ChannelActionsButton(
                 onDismiss = {
                     removeDialogVisible = false
                 },
-                dialogTitle = stringResource(R.string.channel_deleting_title),
-                dialogDescription = stringResource(R.string.channel_deleting_description)
+                dialogTitle = stringResource(R.string.channel_delete_warning_title),
+                dialogDescription = stringResource(R.string.channel_delete_warning_message)
             )
         }
     }
