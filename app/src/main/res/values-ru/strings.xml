@@ -4,6 +4,8 @@
 
     <!-- Settings screen -->
 
+    <string name="language_title">Язык</string>
+    <string name="theme_title">Тема</string>
     <string name="cancel_button">Отменить</string>
     <string name="settings_title">Настройки</string>
     <string name="go_back_button">Вернуться назад</string>

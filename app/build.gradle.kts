@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
     implementation("androidx.constraintlayout:constraintlayout-compose-android:1.1.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
 
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 

@@ -80,7 +80,7 @@ fun SettingsScreen(
         ) {
             Text(
                 modifier = Modifier.padding(10.dp),
-                text = "Тема"
+                text = stringResource(R.string.theme_title)
             )
             var selectedTheme by rememberSaveable { mutableStateOf(context.getThemeSelected()) }
             Box(
@@ -103,7 +103,7 @@ fun SettingsScreen(
             }
             Text(
                 modifier = Modifier.padding(10.dp),
-                text = "Язык"
+                text = stringResource(R.string.language_title)
             )
             var selectedLocale by rememberSaveable { mutableStateOf(context.getLocale()) }
             Box(

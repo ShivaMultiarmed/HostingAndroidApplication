@@ -1,26 +1,27 @@
 package mikhail.shell.video.hosting.ui.theme
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.res.Configuration
+import android.os.Build
 import android.os.LocaleList
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
+import androidx.core.os.LocaleListCompat
 import mikhail.shell.video.hosting.SharedPreferencesUtils.Ui
 import mikhail.shell.video.hosting.presentation.settings.Locale
 import mikhail.shell.video.hosting.ui.theme.Theme.BY_TIME
@@ -127,8 +128,6 @@ fun Context.setLocale(locale: Locale) {
     }
 }
 
-val LocalLocale = compositionLocalOf { Locale.ENGLISH }
-
 @Composable
 fun VideoHostingTheme(
     content: @Composable () -> Unit
@@ -137,21 +136,12 @@ fun VideoHostingTheme(
     val isDark = isSystemInDarkTheme()
     val selectedColorScheme = context.getColorScheme(isDark)
     var colorScheme by remember { mutableStateOf(selectedColorScheme) }
-    var locale by remember { mutableStateOf(context.getLocale()) }
     val uiPreferences = context.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-    CompositionLocalProvider(
-        LocalContext provides context,
-        LocalLocale provides locale
-    ) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            content = content
-        )
-    }
-    LaunchedEffect(locale) {
-
-    }
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
     DisposableEffect(Unit) {
         val uiPreferencesListener = object : OnSharedPreferenceChangeListener {
             override fun onSharedPreferenceChanged(
@@ -161,8 +151,13 @@ fun VideoHostingTheme(
                 if (key == Ui.theme) {
                     colorScheme = context.getColorScheme(isDark)
                 } else if (key == Ui.language) {
-                    locale = sharedPreferences?.getString(key, Locale.ENGLISH.iso)!!
-                        .let { Locale.ofTag(it) }
+                    val localeTag = context.getLocale().iso
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        context.getSystemService(LocaleManager::class.java).applicationLocales =
+                            LocaleList.forLanguageTags(localeTag)
+                    } else {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(localeTag))
+                    }
                 }
             }
         }
