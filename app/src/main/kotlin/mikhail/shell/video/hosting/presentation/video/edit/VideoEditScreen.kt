@@ -41,10 +41,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
@@ -88,7 +90,7 @@ fun VideoEditScreen(
                 .background(MaterialTheme.colorScheme.surface),
             topBar = {
                 TopBar(
-                    title = "Обновить видео",
+                    title = stringResource(R.string.video_edit_title),
                     onPopup = { onCancel(state.initialVideo.videoId!!) },
                     inProgress = state.isLoading,
                     onSubmit = {
@@ -115,8 +117,8 @@ fun VideoEditScreen(
                 val titleErrMsg = constructInfoMessage(
                     compoundError,
                     mapOf(
-                        VideoEditingError.TITLE_EMPTY to "Заполните название",
-                        VideoEditingError.TITLE_TOO_LARGE to "Максимальная длина ${ValidationRules.MAX_TITLE_LENGTH}"
+                        VideoEditingError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
+                        VideoEditingError.TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                     )
                 )
                 StandardEditField(
@@ -131,7 +133,7 @@ fun VideoEditScreen(
                         value = title,
                         onValueChange = { title = it },
                         errorMsg = titleErrMsg,
-                        placeholder = "Название",
+                        placeholder = stringResource(R.string.video_title_label),
                         icon = Icons.Rounded.Title
                     )
                 }
@@ -147,9 +149,10 @@ fun VideoEditScreen(
                 val coverErrMsg = constructInfoMessage(
                     compoundError,
                     mapOf(
-                        VideoEditingError.COVER_NOT_FOUND to "Обложка не найдена",
-                        VideoEditingError.COVER_TYPE_NOT_VALID to "Некорректный формат изображения",
-                        VideoEditingError.COVER_TOO_LARGE to "Изображение не может быть больше 10 МБ."
+                        VideoEditingError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
+                        VideoEditingError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                        VideoEditingError.COVER_TOO_LARGE to stringResource(R.string.file_too_large_error,
+                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB")
                     )
                 )
                 Column {
@@ -172,7 +175,8 @@ fun VideoEditScreen(
                                 coverPicker.launch("image/*")
                             },
                             placeholder = if (coverUri != null || coverExists == true && coverAction == KEEP)
-                                "Изменить обложку" else "Выбрать обложку",
+                                stringResource(R.string.video_cover_choose_another_label)
+                            else stringResource(R.string.video_cover_choose_label),
                             icon = Icons.Rounded.Wallpaper,
                             errorMsg = coverErrMsg
                         )
@@ -195,7 +199,7 @@ fun VideoEditScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Текущая обложка"
+                                    text = stringResource(R.string.video_cover_current_label)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -222,7 +226,7 @@ fun VideoEditScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Выбранная обложка"
+                                    text = stringResource(R.string.video_cover_chosen_label)
                                 )
                                 val painter = rememberAsyncImagePainter(model = coverUri)
                                 Image(
@@ -244,7 +248,7 @@ fun VideoEditScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Вы удалите обложку"
+                                text = stringResource(R.string.video_cover_delete_warning)
                             )
                         }
                     }
@@ -254,7 +258,7 @@ fun VideoEditScreen(
         LaunchedEffect(state.updatedVideo) {
             if (state.updatedVideo != null) {
                 snackbarHostState.showSnackbar(
-                    message = "Видео успешно отредактировано.",
+                    message = context.getString(R.string.video_edit_success),
                     duration = SnackbarDuration.Long
                 )
                 onSuccess(state.updatedVideo)

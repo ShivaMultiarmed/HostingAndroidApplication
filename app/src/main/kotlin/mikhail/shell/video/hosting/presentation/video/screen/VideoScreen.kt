@@ -2,6 +2,7 @@
 
 package mikhail.shell.video.hosting.presentation.video.screen
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -114,6 +115,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
+import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.models.CommentModel
 import mikhail.shell.video.hosting.presentation.models.toModel
@@ -126,7 +128,6 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
-import mikhail.shell.video.hosting.presentation.utils.toCorrectWordForm
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
@@ -315,7 +316,7 @@ fun VideoScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = video.dateTime!!.toPresentation(),
+                                text = video.dateTime!!.toPresentation(context),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
@@ -595,6 +596,7 @@ fun CommentsBottomSheet(
     onLoad: (Instant) -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {}
 ) {
+    val context = LocalContext.current
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
@@ -660,12 +662,13 @@ fun CommentsBottomSheet(
             LaunchedEffect(commentError) {
                 commentError?.let {
                     val message = when (it) {
-                        CommentError.TEXT_TOO_LARGE -> "Комментарий не должен превышать 200 символов"
-                        CommentError.NOT_FOUND -> "Комментарий не найден"
-                        CommentError.TEXT_EMPTY -> "Комментарий пустой"
-                        GetCommentsError.VIDEO_NOT_FOUND -> "Комментарии к видео не найдены"
-                        GetCommentsError.USER_NOT_FOUND -> "Пользователь не указан"
-                        else -> "Непредвиденная ошибка"
+                        CommentError.TEXT_TOO_LARGE -> context.getString(R.string.text_too_large_error,
+                            ValidationRules.MAX_TEXT_LENGTH)
+                        CommentError.NOT_FOUND -> context.getString(R.string.comment_not_found_error)
+                        CommentError.TEXT_EMPTY -> context.getString(R.string.text_empty_error)
+                        GetCommentsError.VIDEO_NOT_FOUND -> context.getString(R.string.comment_video_not_found)
+                        GetCommentsError.USER_NOT_FOUND -> context.getString(R.string.comment_user_not_found)
+                        else -> context.getString(R.string.unexpected_error)
                     }
                     snackbarHostState.showSnackbar(
                         message = message,
@@ -676,9 +679,9 @@ fun CommentsBottomSheet(
             LaunchedEffect(actionComment) {
                 actionComment?.let {
                     val message = when (it.action) {
-                        Action.ADD -> "Комментарий добавлен"
-                        Action.REMOVE -> "Комментарий удалён"
-                        Action.UPDATE -> "Комментарий изменён"
+                        Action.ADD -> context.getString(R.string.comment_add_success)
+                        Action.REMOVE -> context.getString(R.string.comment_delete_success)
+                        Action.UPDATE -> context.getString(R.string.comment_edit_success)
                     }
                     snackbarHostState.showSnackbar(
                         message = message,
@@ -712,6 +715,7 @@ fun CommentBox(
     onRemove: (commentId: Long) -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {}
 ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
@@ -722,14 +726,14 @@ fun CommentBox(
                 isExpanded = isMenuVisible,
                 menuItems = listOf(
                     MenuItem(
-                        title = "Редактировать",
+                        title = stringResource(R.string.comment_edit_button),
                         onClick = {
                             onEdit(comment.commentId, comment.text)
                             isMenuVisible = false
                         }
                     ),
                     MenuItem(
-                        title = "Удалить",
+                        title = stringResource(R.string.comment_delete_button),
                         onClick = {
                             onRemove(comment.commentId)
                             isMenuVisible = false
@@ -763,7 +767,7 @@ fun CommentBox(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = comment.nick + " - " + comment.dateTime.toPresentation(),
+                        text = comment.nick + " - " + comment.dateTime.toPresentation(context),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (own) {
@@ -873,7 +877,7 @@ fun CommentForm(
                     } else {
                         Text(
                             fontSize = 16.sp,
-                            text = "Оставьте комментарий"
+                            text = stringResource(R.string.comments_leave_hint)
                         )
                     }
                 }
@@ -898,12 +902,15 @@ fun CommentForm(
     }
 }
 
-fun Instant.toPresentation(): String {
+fun Instant.toPresentation(context: Context): String {
     val dateTime = this.toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()
-    return dateTime.toPresentation()
+    return dateTime.toPresentation(context)
 }
 
-fun LocalDateTime.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefault()): String {
+fun LocalDateTime.toPresentation(
+    context: Context,
+    timeZone: TimeZone = TimeZone.currentSystemDefault()
+): String {
     val now = LocalDateTime.now()
     val currentDateTime = this
         .toInstant(ZoneOffset.UTC)
@@ -912,25 +919,25 @@ fun LocalDateTime.toPresentation(timeZone: TimeZone = TimeZone.currentSystemDefa
         .toJavaLocalDateTime()
     val stringBuilder = StringBuilder()
     if (now.minusMinutes(10) < currentDateTime) {
-        stringBuilder.append("Только что")
+        stringBuilder.append(context.getString(R.string.date_time_just_now_message))
     } else if (now.minusMinutes(60) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toMinutes().toInt()
-        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("минута", "минуты", "минут"))
+        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.minutes_presentation, diff))
     } else if (now.minusHours(24) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toHours().toInt()
-        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("час", "часа", "часов"))
+        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.hours_presentation, diff))
     } else if (now.minusDays(30) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toDays().toInt()
-        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("день", "дня", "дней"))
+        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.days_presentation, diff))
     } else if (now.minusMonths(12) < this) {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).toInt()
-        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("месяц", "месяца", "месяцев"))
+        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.months_presentation, diff))
     } else {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).div(12).toInt()
-        stringBuilder.append(diff.toString() + " " + diff.toCorrectWordForm("год", "года", "лет"))
+        stringBuilder.append(diff).append(" ").append(context.resources.getQuantityString(R.plurals.years_presentation, diff))
     }
     if (now.minusMinutes(10) >= currentDateTime) {
-        stringBuilder.append(" назад")
+        stringBuilder.append(" ").append(context.getString(R.string.date_time_ago_message))
     }
     return stringBuilder.toString()
 }

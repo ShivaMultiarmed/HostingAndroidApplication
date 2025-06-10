@@ -4,148 +4,213 @@
 
     <!-- Settings screen -->
 
-    <string name="cancel_button">Отменить</string>
-    <string name="settings_title">Настройки</string>
-    <string name="go_back_button">Вернуться назад</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="settings_title">Settings</string>
+    <string name="go_back_button">Go back</string>
 
     <!-- Common -->
 
-    <string name="ok_button">Ок</string>
-    <string name="primary_button_hint">Ок</string>
-    <string name="refresh_hint">Перезагрузить</string>
-    <string name="text_empty_error">Заполните поле</string>
-    <string name="text_too_large_error">Максимальная длина - %d</string>
+    <string name="ok_button">Ok</string>
+    <string name="primary_button_hint">Ok</string>
+    <string name="refresh_hint">Refresh</string>
+    <string name="text_empty_error">Fill the field</string>
+    <string name="text_too_large_error">Max length is %d</string>
 
-    <string name="file_too_large_error">Файл не должен превышать %s</string>
-    <string name="type_not_valid_error">Некорректный формат файла</string>
-    <string name="file_not_found_error">Файл не найден</string>
+    <string name="file_too_large_error">Max file size is %s</string>
+    <string name="type_not_valid_error">Invalid file type</string>
+    <string name="file_not_found_error">File is not found</string>
+
+    <string name="unexpected_error">Unexpected error</string>
+
+    <string name="date_time_just_now_message">Just now</string>
+    <string name="date_time_ago_message">ago</string>
+
+    <plurals name="minutes_presentation">
+        <item quantity="one">minute</item>
+        <item quantity="many">minutes</item>
+    </plurals>
+
+    <plurals name="hours_presentation">
+        <item quantity="one">hour</item>
+        <item quantity="many">hours</item>
+    </plurals>
+
+    <plurals name="days_presentation">
+        <item quantity="one">day</item>
+        <item quantity="many">days</item>
+    </plurals>
+
+    <plurals name="months_presentation">
+        <item quantity="one">month</item>
+        <item quantity="many">months</item>
+    </plurals>
+
+    <plurals name="years_presentation">
+        <item quantity="one">year</item>
+        <item quantity="many">years</item>
+    </plurals>
 
     <!-- Channel related screens -->
 
-    <string name="subscribe_button">Подписаться</string>
-    <string name="unsubscribe_button">Отписаться</string>
+    <string name="subscribe_button">Subscribe</string>
+    <string name="unsubscribe_button">Unsubscribe</string>
 
-    <string name="channel_create_title">Создать канал</string>
-    <string name="channel_create_success">Канал был успешно создан</string>
+    <string name="channel_create_title">Create channel</string>
+    <string name="channel_create_success">Channel was successfully created</string>
 
-    <string name="channel_avatar_description">Аватар канала</string>
-    <string name="channel_actions_description">Действия с каналом</string>
-    <string name="channel_delete_button">Удалить</string>
-    <string name="channel_edit_button">Редактировать</string>
-    <string name="channel_delete_title">Удаление канала</string>
-    <string name="channel_delete_description">Вы действительно хотите удалить канал?</string>
+    <string name="channel_avatar_description">Channel avatar</string>
+    <string name="channel_actions_description">Channel actions</string>
+    <string name="channel_delete_button">Remove</string>
+    <string name="channel_edit_button">Edit</string>
+    <string name="channel_delete_title">Delete the channel</string>
+    <string name="channel_delete_description">Are you sure you want to delete the channel?</string>
 
-    <string name="channel_edit_title">Редактировать канал</string>
-    <string name="channel_edit_success">Канал был успешно изменён</string>
+    <string name="channel_edit_title">Edit the channel</string>
+    <string name="channel_edit_success">The channel was successfully edited</string>
 
-    <string name="channel_title_label">Название</string>
-    <string name="channel_title_exists_error">Название уже занято</string>
+    <string name="channel_title_label">Title</string>
+    <string name="channel_title_exists_error">The title is already in use</string>
 
-    <string name="channel_alias_label">Никнейм канала</string>
-    <string name="channel_alias_exists_error">Никнейм занят</string>
+    <string name="channel_alias_label">Channel alias</string>
+    <string name="channel_alias_exists_error">The alias is already taken</string>
 
-    <string name="channel_description_label">Описание</string>
+    <string name="channel_description_label">Description</string>
 
-    <string name="channel_avatar_choose_label">Выбрать аватар</string>
-    <string name="channel_avatar_choose_another_label">Поменять аватар</string>
-    <string name="channel_current_avatar_message">Текущий аватар</string>
-    <string name="channel_chosen_avatar_message">Выбранный аватар</string>
-    <string name="channel_delete_avatar_message">Вы удалите аватар</string>
+    <string name="channel_avatar_choose_label">Choose an avatar</string>
+    <string name="channel_avatar_choose_another_label">Choose another avatar</string>
+    <string name="channel_current_avatar_message">Current avatar</string>
+    <string name="channel_chosen_avatar_message">Chosen avatar</string>
+    <string name="channel_delete_avatar_message">You\'re gonna remove the avatar</string>
 
-    <string name="channel_choose_cover_label">Выбрать обложку</string>
-    <string name="channel_choose_another_cover_label">Поменять обложку</string>
-    <string name="channel_current_cover_message">Текущая обложка</string>
-    <string name="channel_chosen_cover_message">Выбранная обложка</string>
-    <string name="channel_delete_cover_message">Вы удалите обложку</string>
+    <string name="channel_choose_cover_label">Choose a cover</string>
+    <string name="channel_choose_another_cover_label">Choose another cover</string>
+    <string name="channel_current_cover_message">Current cover</string>
+    <string name="channel_chosen_cover_message">Current cover</string>
+    <string name="channel_delete_cover_message">You\'re gonna remove the cover</string>
 
     <!-- Player -->
 
-    <string name="player_seek_backward_hint">Назад</string>
-    <string name="player_seek_forward_hint">Назад</string>
-    <string name="player_main_button_hint">Кнопка проигрывания</string>
+    <string name="player_seek_backward_hint">Backward</string>
+    <string name="player_seek_forward_hint">Forward</string>
+    <string name="player_main_button_hint">Play button</string>
 
     <!-- Navigation -->
 
-    <string name="nav_subscribers_item_label">Подписки</string>
-    <string name="nav_search_item_label">Поиск</string>
-    <string name="nav_profile_item_label">Профиль</string>
+    <string name="nav_subscribers_item_label">Subscriptions</string>
+    <string name="nav_search_item_label">Search</string>
+    <string name="nav_profile_item_label">Profile</string>
 
     <!-- Authentication -->
 
-    <string name="sign_in_title">Войти</string>
-    <string name="sign_in_success_message">Вы успешно вошли</string>
-    <string name="email_empty_error">Заполните e-mail</string>
+    <string name="sign_in_title">Sign in</string>
+    <string name="sign_in_success_message">You successfully signed in</string>
+    <string name="email_empty_error">Enter your e-mail</string>
     <string name="email_label">E-mail</string>
-    <string name="email_malformed_error">E-mail не корректно введён</string>
-    <string name="email_not_found_error">Пользователь с таким e-mail не найден</string>
-    <string name="password_empty_error">Введите пароль</string>
-    <string name="password_incorrect_error">Неправильный пароль</string>
-    <string name="password_label">Пароль</string>
-    <string name="sign_in_main_btn_label">Войти</string>
-    <string name="sign_up_link_label">Зарегистрироваться</string>
-    <string name="sign_up_title">Зарегистрироваться</string>
-    <string name="email_exists_msg_error">Такой e-mail уже существует</string>
-    <string name="password_not_valid_error">Длина пароля от %d до %d</string>
-    <string name="nick_empty_error">Заполните никнейм</string>
-    <string name="nick_exists_error">Этот никнейм занят</string>
-    <string name="nick_label">Никнейм</string>
+    <string name="email_malformed_error">E-mail is malformed</string>
+    <string name="email_not_found_error">E-mail is not found</string>
+    <string name="password_empty_error">Enter your password</string>
+    <string name="password_incorrect_error">The password is incorrect</string>
+    <string name="password_label">Password</string>
+    <string name="sign_in_main_btn_label">Sign in</string>
+    <string name="sign_up_link_label">Sign up</string>
+    <string name="sign_up_title">Sign up</string>
+    <string name="email_exists_msg_error">The email is already taken</string>
+    <string name="password_not_valid_error">Password length should be from %d to %d</string>
+    <string name="nick_empty_error">Enter your nickname</string>
+    <string name="nick_exists_error">The nickname is already taken</string>
+    <string name="nick_label">Nickname</string>
 
     <!-- Subscriptions -->
 
-    <string name="subscriptions_title">Подписки</string>
+    <string name="subscriptions_title">Subscriptions</string>
 
     <!-- Profile -->
 
-    <string name="profile_title">Профиль</string>
-    <string name="open_settings_button">Открыть настройки</string>
-    <string name="user_channels_title">Каналы пользователя</string>
-    <string name="user_channels_empty_message">Здесь пока нет каналов</string>
-    <string name="profile_avatar_hint">Изображение профиля</string>
-    <string name="profile_more_info_button">Ещё информация</string>
+    <string name="profile_title">Profile</string>
+    <string name="open_settings_button">Open settings</string>
+    <string name="user_channels_title">User\'s channels</string>
+    <string name="user_channels_empty_message">There are no channels here yet</string>
+    <string name="profile_avatar_hint">User\'s avatar</string>
+    <string name="profile_more_info_button">More info</string>
 
-    <string name="upload_video_button">Загрузить видео</string>
-    <string name="create_channel_button">Создать канал</string>
-    <string name="invite_button">Пригласить</string>
-    <string name="sign_out_button">Выйти</string>
-    <string name="sign_out_warning_title">Выход</string>
-    <string name="sign_out_warning_message">Вы уверены, что хотите выйти?</string>
+    <string name="upload_video_button">Upload a video</string>
+    <string name="create_channel_button">Create a channel</string>
+    <string name="invite_button">Invite</string>
+    <string name="sign_out_button">Sign out</string>
+    <string name="sign_out_warning_title">Sign out</string>
+    <string name="sign_out_warning_message">Are you sure you want to sign out?</string>
 
-    <string name="edit_profile_title">Редактировать профиль</string>
-    <string name="name_label">Имя</string>
-    <string name="profile_choose_avatar_label">Выбрать аватар</string>
-    <string name="profile_choose_another_avatar_label">Поменять аватар</string>
-    <string name="profile_current_avatar_hint">Текущий аватар</string>
-    <string name="profile_chosen_avatar_hint">Текущий аватар</string>
-    <string name="profile_delete_avatar_hint">Вы удалите аватар</string>
-    <string name="profile_telephone_label">Телефон</string>
-    <string name="profile_bio">О себе</string>
-    <string name="profile_edit_success">Профиль успешно отредактирован</string>
-    <string name="delete_account_button">Удалить</string>
-    <string name="delete_account_warning_title">Удаление аккаунта</string>
-    <string name="delete_account_warning_message">Вы уверены, что хотите удалить аккаунт?\nВы потеряете все свои данные.</string>
-    <string name="delete_account_success">Аккаунт удалён</string>
+    <string name="edit_profile_title">Edit the profile</string>
+    <string name="name_label">Name</string>
+    <string name="profile_choose_avatar_label">Choose an avatar</string>
+    <string name="profile_choose_another_avatar_label">Choose another avatar</string>
+    <string name="profile_current_avatar_hint">Current avatar</string>
+    <string name="profile_chosen_avatar_hint">Chosen avatar</string>
+    <string name="profile_delete_avatar_hint">You\'re gonna delete the avatar</string>
+    <string name="profile_telephone_label">Phone</string>
+    <string name="profile_bio">Bio</string>
+    <string name="profile_edit_success">Profile is successfully edited</string>
+    <string name="delete_account_button">Remove</string>
+    <string name="delete_account_warning_title">Removing account</string>
+    <string name="delete_account_warning_message">Are you sure you want to delete your account?\nYou're gonna loose all your data.</string>
+    <string name="delete_account_success">Account is deleted</string>
 
     <!-- Video -->
-    <string name="channel_link">Ссылка на канал</string>
-    <string name="video_share_button">Поделиться</string>
-    <string name="video_download_button">Поделиться</string>
+    <string name="channel_link">Channel link</string>
+    <string name="video_share_button">Share</string>
+    <string name="video_download_button">Download</string>
 
-    <string name="comments_title">Комментарии</string>
-    <string name="comments_empty_message">Здесь ещё нет комментариев</string>
-    <string name="comments_leave_hint">Оставьте комментарий</string>
+    <string name="comments_title">Comments</string>
+    <string name="comments_empty_message">No comments yet</string>
+    <string name="comments_leave_hint">Leave a comment</string>
 
-    <string name="video_search_label">Искать</string>
-    <string name="video_search_hint">Введите запрос, чтобы найти видео</string>
-    <string name="video_found_nothing">Ничего не найдено</string>
+    <string name="video_search_label">Search</string>
+    <string name="video_search_hint">Enter a prompt to search for videos</string>
+    <string name="video_found_nothing">Nothing was found</string>
 
-    <string name="video_download_success">Видео успешно скачано</string>
-    <string name="video_download_failure">Ошибка при скачивании видео</string>
-    <string name="video_download_progress_title">Скачивание видео</string>
-    <string name="video_download_progress_message">Видео скачается в течение нескольких минут</string>
+    <string name="video_download_success">The video was downloaded successfully</string>
+    <string name="video_download_failure">An error occurred while downloading the video</string>
+    <string name="video_download_progress_title">The video is being downloaded</string>
+    <string name="video_download_progress_message">The video will be downloaded in a few minutes</string>
 
-    <string name="video_edit_button">Редактировать</string>
-    <string name="video_delete_button">Удалить</string>
-    <string name="video_delete_warning_title">Удалить видео</string>
-    <string name="video_delete_warning_message">Вы уверены, что хотите продолжить?</string>
+    <string name="video_edit_button">Edit</string>
+    <string name="video_delete_button">Remove</string>
+    <string name="video_delete_warning_title">Remove the video</string>
+    <string name="video_delete_warning_message">Are you sure you want to delete the video?</string>
 
+    <string name="comment_not_found_error">The comment was not found</string>
+    <string name="comment_video_not_found">The comments to the video were not found</string>
+    <string name="comment_user_not_found">The user is not specified</string>
+    <string name="comment_add_success">Comment is added</string>
+    <string name="comment_delete_success">Comment is removed</string>
+    <string name="comment_edit_success">Comment is deleted</string>
+    <string name="comment_edit_button">Edit</string>
+    <string name="comment_delete_button">Delete</string>
+
+    <string name="video_upload_title">Upload a video</string>
+
+    <string name="video_upload_channel_label">Channel</string>
+    <string name="video_upload_channel_not_valid_error">Choose a channel</string>
+
+    <string name="video_upload_create_source_label">Record a video</string>
+    <string name="video_upload_choose_source_label">Choose a video</string>
+    <string name="video_upload_choose_another_source_label">Choose another video</string>
+    <string name="video_upload_source_empty">Choose a video</string>
+
+    <string name="video_upload_camera_permission_rationale">Grant the camera permission in your phone\'s settings</string>
+
+    <string name="video_upload_progress_hint">You can monitor the uploading progress in notifications</string>
+
+    <string name="video_edit_title">Edit the video</string>
+
+    <string name="video_title_label">Title</string>
+
+    <string name="video_cover_label">Cover</string>
+    <string name="video_cover_current_label">Current cover</string>
+    <string name="video_cover_chosen_label">Chosen cover</string>
+    <string name="video_cover_delete_warning">You\'re gonna delete the cover</string>
+    <string name="video_cover_choose_label">Choose a cover</string>
+    <string name="video_cover_choose_another_label">Choose another cover</string>
+
+    <string name="video_edit_success">The video was successfully edited</string>
 </resources>

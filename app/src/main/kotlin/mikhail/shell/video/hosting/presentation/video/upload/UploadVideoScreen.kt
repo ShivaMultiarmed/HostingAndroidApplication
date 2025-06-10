@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -68,6 +69,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
@@ -127,7 +129,7 @@ fun UploadVideoScreen(
                 if (!isFullScreen) {
                     TopBar(
                         onPopup = onPopup,
-                        title = "Выложить видео",
+                        title = stringResource(R.string.video_upload_title),
                         inProgress = state.isLoading,
                         onSubmit = {
                             val input = UploadVideoInput(
@@ -184,10 +186,10 @@ fun UploadVideoScreen(
                     val sourceErrMsg = constructInfoMessage(
                         error = compoundError,
                         errorMessages = mapOf(
-                            UploadVideoError.SOURCE_EMPTY to "Выберите видео",
-                            UploadVideoError.SOURCE_NOT_FOUND to "Видео не найдено",
-                            UploadVideoError.SOURCE_TYPE_NOT_VALID to "Некорректный формат видео",
-                            UploadVideoError.SOURCE_TOO_LARGE to "Максимальный размер видео ${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} МБ"
+                            UploadVideoError.SOURCE_EMPTY to stringResource(R.string.video_upload_source_empty),
+                            UploadVideoError.SOURCE_NOT_FOUND to stringResource(R.string.file_not_found_error),
+                            UploadVideoError.SOURCE_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                            UploadVideoError.SOURCE_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB")
                         )
                     )
                     val sourceActionItems = if (sourceUri == null) listOf()
@@ -205,7 +207,8 @@ fun UploadVideoScreen(
                         ) {
                             FileInputField(
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = if (sourceUri == null) "Выбрать запись" else "Изменить запись",
+                                placeholder = if (sourceUri == null) stringResource(R.string.video_upload_choose_source_label)
+                                else stringResource(R.string.video_upload_choose_another_source_label),
                                 onClick = {
                                     isVideoDialogOpen = true
                                 },
@@ -222,7 +225,7 @@ fun UploadVideoScreen(
                             },
                             menuItems = listOf(
                                 MenuItem(
-                                    title = "Создать видео",
+                                    title = stringResource(R.string.video_upload_create_source_label),
                                     onClick = {
                                         val isCameraPermissionGranted =
                                             cameraPermission.status.isGranted
@@ -246,7 +249,7 @@ fun UploadVideoScreen(
                                             ) {
                                                 coroutineScope.launch {
                                                     snackbarHostState.showSnackbar(
-                                                        message = "Разрешите доступ к камере в настройках Вашего устройства.",
+                                                        message = context.getString(R.string.video_upload_camera_permission_rationale),
                                                         duration = SnackbarDuration.Short
                                                     )
                                                 }
@@ -261,7 +264,7 @@ fun UploadVideoScreen(
                                     }
                                 ),
                                 MenuItem(
-                                    title = "Выбрать видео",
+                                    title = stringResource(R.string.video_upload_choose_source_label),
                                     onClick = { sourcePicker.launch("video/*") }
                                 )
                             )
@@ -330,8 +333,8 @@ fun UploadVideoScreen(
                     val titleErrMsg = constructInfoMessage(
                         compoundError,
                         mapOf(
-                            UploadVideoError.TITLE_EMPTY to "Заполните название",
-                            UploadVideoError.TITLE_TOO_LARGE to "Название не должно превышать ${ValidationRules.MAX_TITLE_LENGTH} символов"
+                            UploadVideoError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
+                            UploadVideoError.TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                         )
                     )
                     val titleActionItems = if (title.isBlank()) emptyList() else listOf(
@@ -352,12 +355,17 @@ fun UploadVideoScreen(
                                 title = it
                             },
                             errorMsg = titleErrMsg,
-                            placeholder = "Название",
+                            placeholder = stringResource(R.string.video_title_label),
                             icon = Icons.Rounded.Title
                         )
                     }
 
-                    val channelErrMsg = constructInfoMessage(compoundError, mapOf(UploadVideoError.CHANNEL_NOT_VALID to "Выберите канал"))
+                    val channelErrMsg = constructInfoMessage(
+                        compoundError,
+                        mapOf(
+                            UploadVideoError.CHANNEL_NOT_VALID to stringResource(R.string.video_upload_channel_not_valid_error)
+                        )
+                    )
                     val channelActionItems = if (channelId == null) emptyList() else listOf(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
@@ -372,7 +380,7 @@ fun UploadVideoScreen(
                         Dropdown(
                             selected = channelId,
                             modifier = Modifier.fillMaxWidth(),
-                            placeHolder = "Канал",
+                            placeHolder = stringResource(R.string.video_upload_channel_label),
                             values = state.channels.associate { it.channelId!! to it.title },
                             onValueChange = {
                                 channelId = it
@@ -391,9 +399,9 @@ fun UploadVideoScreen(
                     val coverErrMsg = constructInfoMessage(
                         compoundError,
                         mapOf(
-                            UploadVideoError.COVER_NOT_FOUND to "Обложка не найдена",
-                            UploadVideoError.COVER_TYPE_NOT_VALID to "Некорректный тип обложки",
-                            UploadVideoError.COVER_TOO_LARGE to "Изображение не должно превышать 10 МБ"
+                            UploadVideoError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
+                            UploadVideoError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                            UploadVideoError.COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB")
                         )
                     )
                     EditField(
@@ -407,7 +415,8 @@ fun UploadVideoScreen(
                         )
                     ) {
                         FileInputField(
-                            placeholder = if (coverUri == null) "Выбрать обложку" else "Изменить обложку",
+                            placeholder = if (coverUri == null) stringResource(R.string.video_cover_choose_label)
+                            else stringResource(R.string.video_cover_choose_another_label),
                             onClick = {
                                 coverPicker.launch("image/*")
                             },
@@ -424,7 +433,7 @@ fun UploadVideoScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Выбранная обложка"
+                                text = stringResource(R.string.video_cover_chosen_label)
                             )
                             Image(
                                 modifier = Modifier
@@ -439,7 +448,7 @@ fun UploadVideoScreen(
                                     .clip(RoundedCornerShape(10.dp)),
                                 contentScale = ContentScale.Crop,
                                 painter = rememberAsyncImagePainter(coverUri),
-                                contentDescription = "Обложка для видео"
+                                contentDescription = stringResource(R.string.video_cover_chosen_label)
                             )
                         }
                     }
@@ -449,7 +458,7 @@ fun UploadVideoScreen(
         LaunchedEffect(state.video) {
             if (state.video != null) {
                 snackbarHostState.showSnackbar(
-                    message = "Вы можете отслеживать прогресс загрузки в уведомлениях.",
+                    message = context.getString(R.string.video_upload_progress_hint),
                     duration = SnackbarDuration.Long
                 )
                 onSuccess(state.video)

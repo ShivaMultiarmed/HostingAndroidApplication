@@ -20,6 +20,41 @@
     <string name="type_not_valid_error">Некорректный формат файла</string>
     <string name="file_not_found_error">Файл не найден</string>
 
+    <string name="unexpected_error">Непредвиденная ошибка</string>
+
+    <string name="date_time_just_now_message">Только что</string>
+    <string name="date_time_ago_message">назад</string>
+    
+    <plurals name="minutes_presentation">
+        <item quantity="one">минуту</item>
+        <item quantity="few">минуты</item>
+        <item quantity="many">минут</item>
+    </plurals>
+
+    <plurals name="hours_presentation">
+        <item quantity="one">час</item>
+        <item quantity="few">часа</item>
+        <item quantity="many">часов</item>
+    </plurals>
+
+    <plurals name="days_presentation">
+        <item quantity="one">день</item>
+        <item quantity="few">дня</item>
+        <item quantity="many">дней</item>
+    </plurals>
+
+    <plurals name="months_presentation">
+        <item quantity="one">месяц</item>
+        <item quantity="few">месяца</item>
+        <item quantity="many">месяцев</item>
+    </plurals>
+
+    <plurals name="years_presentation">
+        <item quantity="one">год</item>
+        <item quantity="few">года</item>
+        <item quantity="many">лет</item>
+    </plurals>
+
     <!-- Channel related screens -->
 
     <string name="subscribe_button">Подписаться</string>
@@ -61,7 +96,7 @@
     <!-- Player -->
 
     <string name="player_seek_backward_hint">Назад</string>
-    <string name="player_seek_forward_hint">Назад</string>
+    <string name="player_seek_forward_hint">Вперёд</string>
     <string name="player_main_button_hint">Кнопка проигрывания</string>
     
     <!-- Navigation -->
@@ -128,7 +163,7 @@
     <!-- Video -->
     <string name="channel_link">Ссылка на канал</string>
     <string name="video_share_button">Поделиться</string>
-    <string name="video_download_button">Поделиться</string>
+    <string name="video_download_button">Скачать</string>
 
     <string name="comments_title">Комментарии</string>
     <string name="comments_empty_message">Здесь ещё нет комментариев</string>
@@ -146,6 +181,41 @@
     <string name="video_edit_button">Редактировать</string>
     <string name="video_delete_button">Удалить</string>
     <string name="video_delete_warning_title">Удалить видео</string>
-    <string name="video_delete_warning_message">Вы уверены, что хотите продолжить?</string>
+    <string name="video_delete_warning_message">Вы уверены, что хотите удалить видео?</string>
 
+    <string name="comment_not_found_error">Комментарий не найден</string>
+    <string name="comment_video_not_found">Комментарии к видео не найдены</string>
+    <string name="comment_user_not_found">Пользователь не указан</string>
+    <string name="comment_add_success">Комментарий добавлен</string>
+    <string name="comment_delete_success">Комментарий удалён</string>
+    <string name="comment_edit_success">Комментарий изменён</string>
+    <string name="comment_edit_button">Редактировать</string>
+    <string name="comment_delete_button">Удалить</string>
+
+    <string name="video_upload_title">Выложить видео</string>
+
+    <string name="video_upload_channel_label">Канал</string>
+    <string name="video_upload_channel_not_valid_error">Выберите канал</string>
+
+    <string name="video_upload_create_source_label">Создать видео</string>
+    <string name="video_upload_choose_source_label">Выбрать видео</string>
+    <string name="video_upload_choose_another_source_label">Изменить видео</string>
+    <string name="video_upload_source_empty">Выберите видео</string>
+
+    <string name="video_upload_camera_permission_rationale">Разрешите доступ к камере в настройках Вашего устройства</string>
+
+    <string name="video_upload_progress_hint">Вы можете отслеживать прогресс загрузки в уведомлениях</string>
+
+    <string name="video_edit_title">Обновить видео</string>
+
+    <string name="video_title_label">Название</string>
+
+    <string name="video_cover_label">Обложка</string>
+    <string name="video_cover_current_label">Текущая обложка</string>
+    <string name="video_cover_chosen_label">Выбранная обложка</string>
+    <string name="video_cover_delete_warning">Вы удалите обложку</string>
+    <string name="video_cover_choose_label">Выбрать обложку</string>
+    <string name="video_cover_choose_another_label">Изменить обложку</string>
+
+    <string name="video_edit_success">Видео успешно отредактировано</string>
 </resources>

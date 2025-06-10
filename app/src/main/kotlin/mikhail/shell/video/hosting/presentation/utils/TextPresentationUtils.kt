@@ -3,22 +3,39 @@ package mikhail.shell.video.hosting.presentation.utils
 import kotlin.math.floor
 import kotlin.math.round
 
-fun Int.toCorrectWordForm(
+fun Int.toCorrectRussianWordForm(
     f1: String,
-    f2: String,
-    f3: String
-) = this.toLong().toCorrectWordForm(f1, f2, f3)
+    f2: String = f1,
+    f3: String = f2
+) = this.toLong().toCorrectRussianWordForm(f1, f2, f3)
 
-fun Long.toCorrectWordForm(
+fun Long.toCorrectRussianWordForm(
     f1: String,
-    f2: String,
-    f3: String
+    f2: String = f1,
+    f3: String = f2
 ): String {
     return when {
         this >= 1_000 -> f3
         this % 10 == 1L && this != 11L -> f1
         this in 11..14 || this % 10 in 5..9 || this % 10 == 0L -> f3
         else -> f2
+    }
+}
+
+fun Int.toCorrectEnglishWordForm(
+    singular: String,
+    plural: String
+): String {
+    return this.toLong().toCorrectEnglishWordForm(singular, plural)
+}
+
+fun Long.toCorrectEnglishWordForm(
+    singular: String,
+    plural: String
+): String {
+    return when {
+        this == 1L -> singular
+        else -> plural
     }
 }
 
@@ -37,7 +54,7 @@ fun Long.toSubscribers(): String {
 }
 
 fun Long.toFullSubscribers(): String {
-    return this.toSubscribers() + " " + this.toCorrectWordForm("подписчик", "подписчика", "подписчиков")
+    return this.toSubscribers() + " " + this.toCorrectRussianWordForm("подписчик", "подписчика", "подписчиков")
 }
 
 fun Long.toViews(): String {
