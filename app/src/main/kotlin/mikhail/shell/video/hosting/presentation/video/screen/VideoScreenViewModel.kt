@@ -1,8 +1,8 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.media.session.PlaybackState
-import android.net.Uri
 import androidx.annotation.OptIn
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import mikhail.shell.video.hosting.domain.models.Action
-import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.errors.GetCommentsError
 import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.models.Action
+import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -96,7 +96,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 val url = _state.value.videoDetails?.video?.sourceUrl
                 val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
                 if (url != previousUri) {
-                    val uri = Uri.parse(url)
+                    val uri = url!!.toUri()
                     val mediaItem = MediaItem.fromUri(uri)
                     player.setMediaItem(mediaItem)
                     player.prepare()

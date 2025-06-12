@@ -92,7 +92,8 @@ fun PlayerComponent(
 ) {
     var playerState by rememberSaveable { mutableIntStateOf(Player.STATE_BUFFERING) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
-    var position by rememberSaveable { mutableLongStateOf(0L) }
+    var duration by rememberSaveable { mutableLongStateOf(-1) }
+    var position by rememberSaveable { mutableLongStateOf(-1) }
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
@@ -107,11 +108,15 @@ fun PlayerComponent(
                     isPlaying = newIsPlaying
                 }
             }
-
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
+                if (playbackState == Player.STATE_READY) {
+                    if (player.duration >= 0) {
+                        duration = player.duration
+                    }
+                    position = 0
+                }
             }
-
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -144,7 +149,7 @@ fun PlayerComponent(
             modifier = Modifier
                 .matchParentSize(),
             position = position,
-            duration = player.duration,
+            duration = duration,
             isPlaying = isPlaying,
             onPlay = player::play,
             onPause = player::pause,
@@ -368,7 +373,7 @@ fun PlayerControls(
                     contentDescription = stringResource(R.string.player_main_button_hint)
                 )
             }
-            if (duration >= 0) {
+            if (duration > -1) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
