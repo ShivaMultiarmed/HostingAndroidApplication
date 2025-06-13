@@ -7,5 +7,6 @@ data class UploadVideoInput(
     val title: String,
     val channelId: Long?,
     val source: Uri?,
+    val duration: Long,
     val cover: Uri?
 )

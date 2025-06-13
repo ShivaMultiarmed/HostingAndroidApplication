@@ -61,6 +61,8 @@ class UploadVideoViewModel @AssistedInject constructor(
         }
         if (input.source == null) {
             compoundError.add(UploadVideoError.SOURCE_EMPTY)
+        } else if (input.duration < 0) {
+            compoundError.add(UploadVideoError.SOURCE_METADATA_NOT_VALID)
         }
         if (input.channelId == null) {
             compoundError.add(UploadVideoError.CHANNEL_NOT_VALID)

@@ -92,8 +92,8 @@ fun PlayerComponent(
 ) {
     var playerState by rememberSaveable { mutableIntStateOf(Player.STATE_BUFFERING) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
-    var duration by rememberSaveable { mutableLongStateOf(-1) }
-    var position by rememberSaveable { mutableLongStateOf(-1) }
+    var duration by rememberSaveable { mutableLongStateOf(0) }
+    var position by rememberSaveable { mutableLongStateOf(0) }
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
@@ -103,20 +103,20 @@ fun PlayerComponent(
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained(aspectRatio)
             }
+
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 if (playerState != Player.STATE_BUFFERING) {
                     isPlaying = newIsPlaying
                 }
             }
+
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
-                if (playbackState == Player.STATE_READY) {
-                    if (player.duration >= 0) {
-                        duration = player.duration
-                    }
-                    position = 0
+                if (playbackState == Player.STATE_READY && duration == 0L) {
+                    duration = player.duration
                 }
             }
+
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -162,7 +162,7 @@ fun PlayerComponent(
                 val newPosition =
                     (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
                 player.seekTo(newPosition)
-                delay(1500)
+                delay(500)
             },
             onSeek = {
                 player.seekTo(it)

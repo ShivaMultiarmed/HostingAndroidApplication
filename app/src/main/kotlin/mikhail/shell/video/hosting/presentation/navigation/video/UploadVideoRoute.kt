@@ -73,12 +73,8 @@ fun NavGraphBuilder.uploadVideoRoute(
                     navController.navigate(Route.Video.View(it.videoId!!))
                 }
             },
-            onRefresh = {
-                viewModel.loadChannels()
-            },
-            onPopup = {
-                navController.popBackStack()
-            },
+            onRefresh = viewModel::loadChannels,
+            onPopup = navController::popBackStack,
             onFullScreen = onFullScreen
         )
 

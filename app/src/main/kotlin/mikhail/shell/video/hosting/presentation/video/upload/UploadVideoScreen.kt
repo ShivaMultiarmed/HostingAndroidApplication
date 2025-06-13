@@ -136,6 +136,7 @@ fun UploadVideoScreen(
                                 channelId = channelId,
                                 title = title,
                                 source = sourceUri,
+                                duration = player.duration,
                                 cover = coverUri,
                             )
                             onSubmit(input)
@@ -189,6 +190,7 @@ fun UploadVideoScreen(
                             UploadVideoError.SOURCE_EMPTY to stringResource(R.string.video_upload_source_empty),
                             UploadVideoError.SOURCE_NOT_FOUND to stringResource(R.string.file_not_found_error),
                             UploadVideoError.SOURCE_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
+                            UploadVideoError.SOURCE_METADATA_NOT_VALID to stringResource(R.string.source_metadata_not_valid_error),
                             UploadVideoError.SOURCE_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB")
                         )
                     )
@@ -298,7 +300,9 @@ fun UploadVideoScreen(
                                     if (isFullScreen) {
                                         Modifier.fillMaxSize()
                                     } else {
-                                        Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                        try {
+                                            Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                        } catch (_: IllegalArgumentException) { Modifier.aspectRatio(16f / 9) }
                                     }
                                 ),
                             player = player,
