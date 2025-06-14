@@ -17,18 +17,17 @@ fun NavGraphBuilder.subscriptionsRoute(
 ) {
     composable<Route.User.Subscriptions> {
         val userId = userDetailsProvider.getUserId()
-        val viewModel = hiltViewModel<SubscriptionsScreenViewModel, SubscriptionsScreenViewModel.Factory> {
-            it.create(userId)
-        }
+        val viewModel =
+            hiltViewModel<SubscriptionsScreenViewModel, SubscriptionsScreenViewModel.Factory> {
+                it.create(userId)
+            }
         val state by viewModel.state.collectAsStateWithLifecycle()
         SubscriptionsScreen(
             state = state,
-            onRefresh = {
-                viewModel.loadChannels()
-            },
-             onChannelClick = {
-                 navController.navigate(Route.Channel.View(it))
-             }
+            onRefresh = viewModel::loadChannels,
+            onChannelClick = {
+                navController.navigate(Route.Channel.View(it))
+            }
         )
     }
 }

@@ -127,12 +127,9 @@ fun SearchVideosScreen(
             if (state.videos != null) {
                 if (state.videos.isNotEmpty()) {
                     val lazyGridState = rememberLazyGridState()
-                    val buffer = 4
                     val reachedBottom by remember {
                         derivedStateOf {
-                            lazyGridState.reachedBottom(
-                                buffer
-                            )
+                            lazyGridState.reachedBottom(buffer = 4)
                         }
                     }
                     LazyVerticalGrid(
