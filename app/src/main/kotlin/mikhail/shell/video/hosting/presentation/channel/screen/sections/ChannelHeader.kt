@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.channel.screen.sections
 
 import android.app.Activity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,7 +65,8 @@ fun ChannelHeader(
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
-    owns: Boolean = false
+    owns: Boolean = false,
+    onShowAvatar: () -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
@@ -78,7 +80,8 @@ fun ChannelHeader(
             onSubscription = onSubscription,
             onEdit = onEdit,
             onRemove = onRemove,
-            owns = owns
+            owns = owns,
+            onShowAvatar = onShowAvatar
         )
     } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
         ChannelHeaderMedium(
@@ -87,18 +90,20 @@ fun ChannelHeader(
             onSubscription = onSubscription,
             onEdit = onEdit,
             onRemove = onRemove,
-            owns = owns
+            owns = owns,
+            onShowAvatar = onShowAvatar
         )
     } else {
         ChannelHeaderExpanded(
             modifier = modifier,
-            hasCover,
-            { hasCover = it },
-            channel,
-            onSubscription,
-            onEdit,
-            onRemove,
-            owns
+            hasCover = hasCover,
+            coverUrlAssignment = { hasCover = it },
+            channel = channel,
+            onSubscription = onSubscription,
+            onEdit = onEdit,
+            onRemove = onRemove,
+            owns = owns,
+            onShowAvatar = onShowAvatar
         )
     }
 }
@@ -112,7 +117,8 @@ fun ChannelHeaderCompact(
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
-    owns: Boolean = false
+    owns: Boolean = false,
+    onShowAvatar: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -132,7 +138,8 @@ fun ChannelHeaderCompact(
         ) {
             ChannelAvatar(
                 modifier = Modifier,
-                avatarUrl = channel.avatarUrl
+                avatarUrl = channel.avatarUrl,
+                onShowAvatar = onShowAvatar
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -166,7 +173,8 @@ fun ChannelHeaderMedium(
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
-    owns: Boolean = false
+    owns: Boolean = false,
+    onShowAvatar: () -> Unit = {}
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
@@ -178,7 +186,8 @@ fun ChannelHeaderMedium(
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
             },
-            avatarUrl = channel.avatarUrl
+            avatarUrl = channel.avatarUrl,
+            onShowAvatar = onShowAvatar
         )
         val briefRef = createRef()
         Column(
@@ -223,7 +232,8 @@ fun ChannelHeaderExpanded(
     onSubscription: (SubscriptionState) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
-    owns: Boolean = false
+    owns: Boolean = false,
+    onShowAvatar: () -> Unit = {}
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
@@ -256,7 +266,8 @@ fun ChannelHeaderExpanded(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
-            avatarUrl = channel.avatarUrl
+            avatarUrl = channel.avatarUrl,
+            onShowAvatar = onShowAvatar
         )
         val annotationRef = createRef()
         Column(
@@ -342,16 +353,28 @@ fun ChannelCover(
 @Composable
 fun ChannelAvatar(
     modifier: Modifier = Modifier,
-    avatarUrl: String?
+    avatarUrl: String?,
+    onShowAvatar: (() -> Unit)? = null
 ) {
+    var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
     AsyncImage(
         model = avatarUrl,
         contentDescription = stringResource(R.string.channel_avatar_description),
         contentScale = ContentScale.Crop,
+        onSuccess = {
+            avatarExists = true
+        },
+        onError = {
+            avatarExists = false
+        },
         modifier = modifier
             .size(80.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(
+                enabled = avatarExists == true && onShowAvatar != null,
+                onClick = onShowAvatar?: {}
+            )
     )
 }
 

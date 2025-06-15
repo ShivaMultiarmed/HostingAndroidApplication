@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,7 @@ import mikhail.shell.video.hosting.presentation.user.UserModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -80,6 +82,9 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit
 ) {
     val orientation = LocalConfiguration.current.orientation
+
+    var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
+
     val content: @Composable () -> Unit = {
         ProfileScreenContent(
             modifier = modifier,
@@ -90,46 +95,65 @@ fun ProfileScreen(
             onCreateChannel = onCreateChannel,
             onRefresh = onRefresh,
             onLogOut = onLogOut,
-            onInvite = onInvite
+            onInvite = onInvite,
+            onShowAvatar = {
+                shouldShowAvatar = true
+            }
         )
     }
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopBar(
-                title = stringResource(R.string.profile_title),
-                actions = if (isOwner) listOf(
-                    {
-                        IconButton(
-                            onClick = onOpenSettings
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Settings,
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                contentDescription = stringResource(R.string.open_settings_button)
-                            )
+    Box (
+        modifier = modifier.fillMaxSize()
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopBar(
+                    title = stringResource(R.string.profile_title),
+                    actions = if (isOwner) listOf(
+                        {
+                            IconButton(
+                                onClick = onOpenSettings
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Settings,
+                                    tint = MaterialTheme.colorScheme.onBackground,
+                                    contentDescription = stringResource(R.string.open_settings_button)
+                                )
+                            }
                         }
-                    }
-                ) else null
-            )
+                    ) else null
+                )
+            }
+        ) { padding ->
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    content()
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    content()
+                }
+            }
         }
-    ) { padding ->
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                content()
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                content()
-            }
+        if (shouldShowAvatar) {
+            ImageViewerScreen(
+                model = state.user!!.avatar,
+                imageModifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .aspectRatio(1f)
+                    .clip(CircleShape),
+                onPopup = {
+                    shouldShowAvatar = false
+                }
+            )
         }
     }
     LaunchedEffect(state.isLoggedOut) {
@@ -150,7 +174,8 @@ fun ProfileScreenContent(
     onCreateChannel: () -> Unit,
     onRefresh: () -> Unit,
     onLogOut: () -> Unit,
-    onInvite: () -> Unit
+    onInvite: () -> Unit,
+    onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
@@ -171,7 +196,8 @@ fun ProfileScreenContent(
         ) {
             UserDetailsSection(
                 modifier = Modifier,
-                user = state.user
+                user = state.user,
+                onShowAvatar = onShowAvatar
             )
             if (isOwner) {
                 UserActions(
@@ -255,10 +281,12 @@ fun ProfileScreenContent(
 @Composable
 fun UserDetailsSection(
     modifier: Modifier = Modifier,
-    user: UserModel
+    user: UserModel,
+    onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
     val avatar: @Composable () -> Unit = {
         AsyncImage(
             model = user.avatar,
@@ -269,6 +297,16 @@ fun UserDetailsSection(
                 .size(100.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(
+                    enabled = avatarExists == true,
+                    onClick = onShowAvatar
+                ),
+            onSuccess = {
+                avatarExists = true
+            },
+            onError = {
+                avatarExists = false
+            }
         )
     }
     val nick: @Composable () -> Unit = {
