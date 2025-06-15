@@ -16,16 +16,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -99,6 +96,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.GetCommentsError
@@ -468,7 +466,13 @@ fun VideoScreen(
                                 icon = Icons.Outlined.Repeat,
                                 text = stringResource(R.string.video_share_button),
                                 onClick = {
-
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/${video.videoId}")
+                                        type = "text/plain"
+                                    }
+                                    val shareIntent = Intent.createChooser(sendIntent, null)
+                                    context.startActivity(shareIntent)
                                 }
                             )
                             ActionButton(
@@ -756,7 +760,7 @@ fun CommentBox(
                     .clickable {
                         onGoToProfile(comment.userId)
                     },
-                model = null, // TODO
+                model = comment.avatar,
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )
@@ -838,15 +842,6 @@ fun CommentForm(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = null, // TODO
-            modifier = Modifier
-                .size(25.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.tertiaryContainer),
-            contentScale = ContentScale.Crop,
-            contentDescription = null
-        )
         BasicTextField(
             modifier = Modifier
                 .clip(RoundedCornerShape(5.dp))
@@ -884,10 +879,6 @@ fun CommentForm(
             }
         )
         PrimaryButton(
-            modifier = Modifier
-                .height(25.dp)
-                .width(35.dp),
-            contentPadding = PaddingValues(0.dp),
             isEnabled = text.isNotEmpty(),
             icon = Icons.Rounded.Send,
             onClick = {
