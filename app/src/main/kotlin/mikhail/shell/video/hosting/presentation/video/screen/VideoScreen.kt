@@ -317,11 +317,6 @@ fun VideoScreen(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
                             )
-                            Text(
-                                text = stringResource(R.string.more_button),
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
                             if (channel.ownerId == userId) {
                                 var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
                                 var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }

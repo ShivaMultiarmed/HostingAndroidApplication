@@ -45,10 +45,7 @@ fun ChannelScreen(
         Scaffold (
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            floatingActionButton = {
-                // TODO: move to create video screen
-            }
+                .background(MaterialTheme.colorScheme.background)
         ) { padding ->
             Box(
                 modifier = Modifier.fillMaxSize()

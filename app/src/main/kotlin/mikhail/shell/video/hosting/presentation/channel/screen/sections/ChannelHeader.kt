@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -162,10 +164,17 @@ fun ChannelHeaderCompact(
                 }
             }
         }
-        SubscriptionButton(state = channel.subscription, onSubscription = onSubscription)
+        ChannelDescriptionSection(
+            description = channel.description
+        )
+        SubscriptionButton(
+            state = channel.subscription,
+            onSubscription = onSubscription
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
@@ -290,17 +299,18 @@ fun ChannelHeaderExpanded(
                     state = channel.subscription,
                     onSubscription = onSubscription
                 )
-                Row {
-                    SubscriberNumberText(subscribers = channel.subscribers)
-                    if (owns) {
-                        ChannelActionsButton(
-                            channelId = channel.channelId!!,
-                            onEdit = onEdit,
-                            onRemove = onRemove
-                        )
-                    }
+                SubscriberNumberText(subscribers = channel.subscribers)
+                if (owns) {
+                    ChannelActionsButton(
+                        channelId = channel.channelId!!,
+                        onEdit = onEdit,
+                        onRemove = onRemove
+                    )
                 }
             }
+            ChannelDescriptionSection(
+                description = channel.description
+            )
         }
     }
 }
@@ -340,7 +350,7 @@ fun ChannelCover(
             contentScale = ContentScale.Crop,
             modifier = Modifier.matchParentSize(),
             onState = {
-                when(it) {
+                when (it) {
                     is Success -> coverUrlAssignment(true)
                     is AsyncImagePainter.State.Error -> coverUrlAssignment(false)
                     else -> Unit
@@ -373,7 +383,7 @@ fun ChannelAvatar(
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(
                 enabled = avatarExists == true && onShowAvatar != null,
-                onClick = onShowAvatar?: {}
+                onClick = onShowAvatar ?: {}
             )
     )
 }
@@ -455,6 +465,40 @@ fun ChannelAlias(
 }
 
 @Composable
+fun ChannelDescriptionSection(
+    description: String
+) {
+    if (description.isNotEmpty()) {
+        var shouldShowDescription by rememberSaveable { mutableStateOf(false) }
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                modifier = Modifier.size(18.dp),
+                onClick = {
+                    shouldShowDescription = !shouldShowDescription
+                }
+            ) {
+                Icon(
+                    imageVector = when (shouldShowDescription) {
+                        true -> Icons.Rounded.KeyboardArrowUp
+                        false -> Icons.Rounded.KeyboardArrowDown
+                    },
+                    contentDescription = stringResource(R.string.more_button)
+                )
+            }
+        }
+        if (shouldShowDescription) {
+            ChannelDescription(
+                modifier = Modifier.padding(bottom = 7.dp),
+                description = description
+            )
+        }
+    }
+}
+
+@Composable
 fun ChannelActionsButton(
     channelId: Long,
     onEdit: (channelId: Long) -> Unit,
@@ -478,9 +522,9 @@ fun ChannelActionsButton(
             menuItems = listOf(
                 MenuItem(
                     title = stringResource(R.string.channel_edit_button),
-                     onClick = {
+                    onClick = {
                         onEdit(channelId)
-                     }
+                    }
                 ),
                 MenuItem(
                     title = stringResource(R.string.channel_delete_button),
