@@ -22,7 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.edit
 import androidx.core.os.LocaleListCompat
-import mikhail.shell.video.hosting.SharedPreferencesUtils.Ui
+import mikhail.shell.video.hosting.domain.utils.SharedPreferencesUtils.Ui
 import mikhail.shell.video.hosting.presentation.settings.Locale
 import mikhail.shell.video.hosting.ui.theme.Theme.BY_TIME
 import mikhail.shell.video.hosting.ui.theme.Theme.DARK

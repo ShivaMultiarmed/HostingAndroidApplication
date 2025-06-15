@@ -33,7 +33,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.rounded.MoreVert
@@ -96,7 +95,6 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.GetCommentsError
@@ -460,19 +458,6 @@ fun VideoScreen(
                                         onRate(DISLIKED)
                                     else
                                         onRate(NONE)
-                                }
-                            )
-                            ActionButton(
-                                icon = Icons.Outlined.Repeat,
-                                text = stringResource(R.string.video_share_button),
-                                onClick = {
-                                    val sendIntent = Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/${video.videoId}")
-                                        type = "text/plain"
-                                    }
-                                    val shareIntent = Intent.createChooser(sendIntent, null)
-                                    context.startActivity(shareIntent)
                                 }
                             )
                             ActionButton(
