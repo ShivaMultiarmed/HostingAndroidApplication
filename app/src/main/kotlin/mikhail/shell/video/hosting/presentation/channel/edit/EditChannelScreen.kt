@@ -220,7 +220,9 @@ fun EditChannelScreen(
                     }
                 ) {
                     InputField(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
                         icon = Icons.Rounded.DensityMedium,
                         value = description,
                         onValueChange = {
