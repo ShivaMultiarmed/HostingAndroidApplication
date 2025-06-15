@@ -86,7 +86,7 @@ fun ChannelScreen(
                                 .clip(CircleShape)
                         )
                     }
-                } else if (state.isChannelLoading && state.areVideosLoading) {
+                } else if (state.isChannelLoading || state.areVideosLoading) {
                     LoadingComponent(
                         modifier = Modifier
                             .fillMaxSize()
