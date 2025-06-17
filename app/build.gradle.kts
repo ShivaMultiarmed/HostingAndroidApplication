@@ -20,22 +20,37 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
+    signingConfigs {
+        create("staging") {
+            storeFile = file(project.findProperty("hosting.keystore.path").toString())
+            storePassword = project.findProperty("hosting.keystore.password").toString()
+            keyAlias = project.findProperty("hosting.key.alias").toString()
+            keyPassword = project.findProperty("hosting.key.password").toString()
+        }
+        create("release") {
+            storeFile = file(project.findProperty("hosting.keystore.path").toString())
+            storePassword = project.findProperty("hosting.keystore.password").toString()
+            keyAlias = project.findProperty("hosting.key.alias").toString()
+            keyPassword = project.findProperty("hosting.key.password").toString()
+        }
+    }
     buildTypes {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "true")
+            signingConfig = signingConfigs.getByName("debug")
         }
         create("staging") {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("staging")
         }
         release {
-            isDebuggable = true
+            isDebuggable = false
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
@@ -43,7 +58,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
