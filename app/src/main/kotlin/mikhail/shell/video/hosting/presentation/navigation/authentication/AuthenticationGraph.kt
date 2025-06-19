@@ -3,7 +3,7 @@ package mikhail.shell.video.hosting.presentation.navigation.authentication
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.authenticationGraph(
     navController: NavController

@@ -5,7 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.videoGraph(
     navController: NavController,
@@ -14,7 +14,7 @@ fun NavGraphBuilder.videoGraph(
     onFullScreen: (Boolean) -> Unit = {}
 ) {
     navigation<Route.Video>(
-        startDestination = Route.Video.Upload
+        startDestination = Route.Video.Search
     ) {
         videoRoute(
             navController = navController,
@@ -28,5 +28,6 @@ fun NavGraphBuilder.videoGraph(
             userDetailsProvider = userDetailsProvider,
             onFullScreen = onFullScreen
         )
+        searchRoute(navController)
     }
 }

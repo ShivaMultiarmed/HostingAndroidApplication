@@ -11,7 +11,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 
@@ -39,7 +39,7 @@ fun NavGraphBuilder.signInRoute(
                         }
                         viewModel.subscribeToNotifications()
                     }.invokeOnCompletion {
-                        navController.navigate(Route.Search)
+                        navController.navigate(Route.Video.Search)
                     }
                 }
             },

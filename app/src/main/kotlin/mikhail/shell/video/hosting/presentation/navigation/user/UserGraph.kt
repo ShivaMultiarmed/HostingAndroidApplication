@@ -5,7 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.userGraph(
     navController: NavController,
@@ -19,7 +19,6 @@ fun NavGraphBuilder.userGraph(
         profileRoute(navController, userDetailsProvider, player)
         subscriptionsRoute(navController, userDetailsProvider)
         settingsRoute(navController)
-        inviteUserRoute(navController)
         editUserRoute(navController, userDetailsProvider, player)
     }
 }

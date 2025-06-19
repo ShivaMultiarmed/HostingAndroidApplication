@@ -9,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import mikhail.shell.video.hosting.presentation.channel.edit.EditChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.edit.EditChannelViewModel
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.editChannelRoute(
     navController: NavController

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelViewModel
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.createChannelRoute(
     navController: NavController,

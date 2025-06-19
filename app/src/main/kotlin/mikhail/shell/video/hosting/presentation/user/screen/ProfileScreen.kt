@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.activity.compose.LocalActivity
@@ -177,6 +178,7 @@ fun ProfileScreenContent(
     onInvite: () -> Unit,
     onShowAvatar: () -> Unit
 ) {
+    val context = LocalContext.current
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     val orientation = LocalConfiguration.current.orientation
@@ -205,7 +207,7 @@ fun ProfileScreenContent(
                     onPublishVideo = onPublishVideo.takeIf { state.channels.isNotEmpty() },
                     onCreateChannel = onCreateChannel,
                     onLogOut = onLogOut,
-                    onInvite = onInvite
+                    onInvite = onInvite.takeIf { context.packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) }
                 )
             }
         }
@@ -415,7 +417,7 @@ fun UserActions(
     onPublishVideo: (() -> Unit)? = null,
     onCreateChannel: () -> Unit,
     onLogOut: () -> Unit,
-    onInvite: () -> Unit,
+    onInvite: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -435,10 +437,12 @@ fun UserActions(
             text = stringResource(R.string.create_channel_button),
             onClick = onCreateChannel
         )
-        ActionButton(
-            text = stringResource(R.string.invite_button),
-            onClick = onInvite
-        )
+        if (onInvite != null) {
+            ActionButton(
+                text = stringResource(R.string.invite_button),
+                onClick = onInvite
+            )
+        }
         var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
         ActionButton(
             text = stringResource(R.string.sign_out_button),

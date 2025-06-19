@@ -17,7 +17,7 @@ import androidx.media3.common.Player
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
-import mikhail.shell.video.hosting.presentation.navigation.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PipTopBar
 

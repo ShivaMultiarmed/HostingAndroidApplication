@@ -20,9 +20,7 @@ import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.converters.InstantConverter
 import mikhail.shell.video.hosting.data.converters.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.player.TokenInterceptor
-import mikhail.shell.video.hosting.data.providers.AndroidContactsProvider
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
-import mikhail.shell.video.hosting.domain.providers.ContactsProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -47,12 +45,6 @@ object ApiModule {
     fun provideAndroidFileProvider(
         @ApplicationContext appContext: Context
     ): FileProvider = AndroidFileProvider(appContext)
-
-    @Provides
-    @Singleton
-    fun provideAndroidContactsProvider(
-        @ApplicationContext appContext: Context
-    ): ContactsProvider = AndroidContactsProvider(appContext)
 
     @Provides
     @Singleton

@@ -28,11 +28,10 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
-import mikhail.shell.video.hosting.presentation.navigation.BottomNavBar
-import mikhail.shell.video.hosting.presentation.navigation.Route
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
-import mikhail.shell.video.hosting.presentation.navigation.searchRoute
+import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
+import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
@@ -108,13 +107,12 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize(),
                             navController = navController,
-                            startDestination = if (userDetailsProvider.getUserId() != 0L) Route.Search else Route.Authentication
+                            startDestination = if (userDetailsProvider.getUserId() != 0L) Route.Video else Route.Authentication
                         ) {
                             authenticationGraph(navController)
                             videoGraph(navController, player, userDetailsProvider) { isVideoFullScreened = it }
                             channelGraph(navController, userDetailsProvider)
                             userGraph(navController, userDetailsProvider, player)
-                            searchRoute(navController)
                         }
                     }
                     if (shouldShowMiniPlayer(navController) && isPlayerPrepared(player)) {
