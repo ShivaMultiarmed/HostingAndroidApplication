@@ -51,8 +51,8 @@ class UserRepositoryWithApi @Inject constructor(
         avatar: String?,
         avatarAction: EditAction
     ): Result<User, CompoundError<EditUserError>> {
-        val compoundError = CompoundError<EditUserError>()
         return try {
+            val compoundError = CompoundError<EditUserError>()
             val userDto = user.toDto()
             val avatarPart = avatar?.let {
                 val uri = Uri.parse(it)

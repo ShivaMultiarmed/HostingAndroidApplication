@@ -1,0 +1,81 @@
+package mikhail.shell.video.hosting.presentation.video.recommendations
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.reachedBottom
+import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
+
+@Composable
+fun VideoRecommendationsScreen(
+    state: VideoRecommendationsScreenState,
+    onLoadVideosPart: (partIndex: Long) -> Unit,
+    onVideoClick: (videoId: Long) -> Unit
+) {
+    Scaffold (
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        topBar = {
+            TopBar(
+                title = stringResource(R.string.recommendations_title)
+            )
+        }
+    ) { padding ->
+        if (state.areVideosLoading) {
+            LoadingComponent(
+                modifier = Modifier.fillMaxSize()
+            )
+        } else if (state.videosLoadingError != null) {
+            ErrorComponent (
+                modifier = Modifier.fillMaxSize(),
+                onRetry = {
+                    onLoadVideosPart(state.nextVideosPartIndex)
+                }
+            )
+        } else if (state.videos != null) {
+            val lazyGridState = rememberLazyGridState()
+            val shouldLoadVideosPart = remember {
+                derivedStateOf {
+                    lazyGridState.reachedBottom(buffer = 4)
+                }
+            }
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                columns = GridCells.Adaptive(300.dp),
+                state = lazyGridState
+            ) {
+                items(state.videos.toList()) {
+                    VideoWithChannelSnippet(
+                        modifier = Modifier.fillMaxWidth(),
+                        videoWithChannel = it,
+                        onClick = onVideoClick
+                    )
+                }
+            }
+            LaunchedEffect(shouldLoadVideosPart) {
+                onLoadVideosPart(state.nextVideosPartIndex)
+            }
+        }
+    }
+}

@@ -32,6 +32,8 @@ sealed class Route {
         data object Upload: Route()
         @Serializable
         data object Search: Route()
+        @Serializable
+        data object Recommendations: Route()
     }
     @Serializable
     data object Channel: Route() {

@@ -104,4 +104,10 @@ interface VideoApi {
         @Path("videoId") videoId: Long,
         @Header("Range") byteRange: String
     ): Response<ResponseBody>
+    @GET("videos/recommendations/users/{userId}")
+    suspend fun fetchVideoRecommendationsPart(
+        @Path("userId") userId: Long,
+        @Query("partIndex") partIndex: Long,
+        @Query("partSize") partSize: Int
+    ): Set<VideoWithChannelDto>
 }

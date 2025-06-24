@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
 import mikhail.shell.video.hosting.domain.errors.VideoPatchingError
+import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -53,6 +54,24 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Failure(error)
         } catch (_: Exception) {
             Result.Failure(VideoError.UNEXPECTED_ERROR)
+        }
+    }
+
+    override suspend fun fetchVideoRecommendations(
+        userId: Long,
+        partIndex: Long,
+        partSize: Int
+    ): Result<Set<VideoWithChannel>, VideoRecommendationsLoadingError> {
+        return try {
+            videoApi
+                .fetchVideoRecommendationsPart(userId, partIndex, partSize)
+                .map { it.toDomain() }
+                .toSet()
+                .let { Result.Success(it) }
+        } catch (e: HttpException) {
+            Result.Failure(VideoRecommendationsLoadingError.UNEXPECTED)
+        } catch (e: Exception) {
+            Result.Failure(VideoRecommendationsLoadingError.UNEXPECTED)
         }
     }
 

@@ -29,5 +29,6 @@ fun NavGraphBuilder.videoGraph(
             onFullScreen = onFullScreen
         )
         searchRoute(navController)
+        videoRecommendationsRoute(navController, userDetailsProvider)
     }
 }

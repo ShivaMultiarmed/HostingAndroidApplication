@@ -193,9 +193,9 @@ class ChannelRepositoryWithApi @Inject constructor(
         editAvatarAction: EditAction,
         avatar: String?
     ): Result<Channel, CompoundError<EditChannelError>> {
-        val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(cover!!, "cover") else null
-        val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(avatar!!, "avatar") else null
         return try {
+            val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(cover!!, "cover") else null
+            val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(avatar!!, "avatar") else null
             val editedChannel = _channelApi.editChannel(
                 channel.toDto(),
                 avatarPart,

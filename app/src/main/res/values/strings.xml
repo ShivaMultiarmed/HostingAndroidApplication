@@ -243,4 +243,6 @@
     <string name="video_upload_failure_hint">Try again</string>
     <string name="sign_up_main_button">Sign up</string>
     <string name="source_metadata_not_valid_error">Source\'s metadata is not valid</string>
+
+    <string name="recommendations_title">Recommendations</string>
 </resources>

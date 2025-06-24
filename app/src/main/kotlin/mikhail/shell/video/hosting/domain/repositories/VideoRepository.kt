@@ -7,6 +7,7 @@ import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
 import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.VideoError
 import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -68,4 +69,10 @@ interface VideoRepository {
         videoId: Long,
         onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
     ): Result<Boolean, VideoLoadingError>
+
+    suspend fun fetchVideoRecommendations(
+        userId: Long,
+        partIndex: Long,
+        partSize: Int
+    ): Result<Set<VideoWithChannel>, VideoRecommendationsLoadingError>
 }
