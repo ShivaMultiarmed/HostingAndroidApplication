@@ -182,8 +182,9 @@ fun SearchVideosScreen(
                 ErrorComponent(
                     modifier = modifier.fillMaxSize(),
                     onRetry = {
-                        if (query.isNotEmpty())
+                        if (query.isNotEmpty()) {
                             onSubmit(query)
+                        }
                     }
                 )
             } else if (state.isLoading) {

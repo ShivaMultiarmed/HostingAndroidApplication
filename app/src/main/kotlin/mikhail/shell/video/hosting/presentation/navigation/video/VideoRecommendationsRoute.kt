@@ -22,9 +22,7 @@ fun NavGraphBuilder.videoRecommendationsRoute(
         val state by viewModel.stateFlow.collectAsStateWithLifecycle()
         VideoRecommendationsScreen(
             state = state,
-            onLoadVideosPart = {
-                viewModel.loadVideosPart(it, 10)
-            },
+            onLoadVideosPart = viewModel::loadNextVideosPart,
             onVideoClick = {
                 navController.navigate(Route.Video.View(it))
             }

@@ -1,10 +1,13 @@
 package mikhail.shell.video.hosting.presentation.video.recommendations
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -28,10 +31,10 @@ import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSni
 @Composable
 fun VideoRecommendationsScreen(
     state: VideoRecommendationsScreenState,
-    onLoadVideosPart: (partIndex: Long) -> Unit,
+    onLoadVideosPart: () -> Unit,
     onVideoClick: (videoId: Long) -> Unit
 ) {
-    Scaffold (
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
@@ -41,31 +44,21 @@ fun VideoRecommendationsScreen(
             )
         }
     ) { padding ->
-        if (state.areVideosLoading) {
-            LoadingComponent(
-                modifier = Modifier.fillMaxSize()
-            )
-        } else if (state.videosLoadingError != null) {
-            ErrorComponent (
-                modifier = Modifier.fillMaxSize(),
-                onRetry = {
-                    onLoadVideosPart(state.nextVideosPartIndex)
-                }
-            )
-        } else if (state.videos != null) {
-            val lazyGridState = rememberLazyGridState()
-            val reachedBottom by remember {
-                derivedStateOf {
-                    lazyGridState.reachedBottom(buffer = 4)
-                }
+        val lazyGridState = rememberLazyGridState()
+        val reachedBottom by remember {
+            derivedStateOf {
+                lazyGridState.reachedBottom(buffer = 4)
             }
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                columns = GridCells.Adaptive(300.dp),
-                state = lazyGridState
-            ) {
+        }
+        LazyVerticalGrid(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            columns = GridCells.Adaptive(300.dp),
+            state = lazyGridState,
+            verticalArrangement = if (state.videos == null) Arrangement.Center else Arrangement.spacedBy(10.dp)
+        ) {
+            if (state.videos != null) {
                 items(state.videos) {
                     VideoWithChannelSnippet(
                         modifier = Modifier.fillMaxWidth(),
@@ -74,10 +67,35 @@ fun VideoRecommendationsScreen(
                     )
                 }
             }
-            LaunchedEffect(reachedBottom) {
-                if (reachedBottom && !state.areAllVideosLoaded) {
-                    onLoadVideosPart(state.nextVideosPartIndex)
+            item(
+                span = {
+                    GridItemSpan(maxLineSpan)
                 }
+            ) {
+                val loadModifier = Modifier.then(
+                    if (state.videos == null) {
+                        Modifier.fillMaxSize()
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                    }
+                )
+                if (state.areVideosLoading) {
+                    LoadingComponent(
+                        modifier = loadModifier
+                    )
+                } else if (state.videosLoadingError != null) {
+                    ErrorComponent(
+                        modifier = loadModifier,
+                        onRetry = onLoadVideosPart
+                    )
+                }
+            }
+        }
+        LaunchedEffect(reachedBottom) {
+            if (reachedBottom && !state.areAllVideosLoaded) {
+                onLoadVideosPart()
             }
         }
     }

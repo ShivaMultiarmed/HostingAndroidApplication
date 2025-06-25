@@ -19,10 +19,7 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
 ): ViewModel() {
     private val _mutableStateFlow = MutableStateFlow(VideoRecommendationsScreenState())
     val stateFlow = _mutableStateFlow.asStateFlow()
-    init {
-        loadVideosPart(0, PART_SIZE)
-    }
-    fun loadVideosPart(partIndex: Long, partSize: Int) {
+    fun loadNextVideosPart() {
         _mutableStateFlow.update {
             it.copy(
                 areVideosLoading = true
@@ -31,15 +28,15 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _getVideoRecommendations(
                 userId,
-                partIndex,
-                partSize
+                stateFlow.value.nextVideosPartIndex,
+                PART_SIZE
             ).onSuccess { videoList ->
                 _mutableStateFlow.update {
                     it.copy(
                         videos = ((it.videos?: emptyList()) + videoList).distinctBy { it.video.videoId },
                         nextVideosPartIndex = it.nextVideosPartIndex + 1,
                         areVideosLoading = false,
-                        areAllVideosLoaded = videoList.size < partSize,
+                        areAllVideosLoaded = videoList.size < PART_SIZE,
                         videosLoadingError = null
                     )
                 }

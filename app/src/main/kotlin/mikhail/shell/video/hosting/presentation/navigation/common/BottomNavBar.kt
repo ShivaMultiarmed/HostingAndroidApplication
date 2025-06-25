@@ -81,7 +81,7 @@ fun BottomNavBar(
     navItems: List<BottomNavItem>,
     onClick: (BottomNavItem) -> Unit
 ) {
-    var selectedItemNumber by rememberSaveable { mutableIntStateOf(1) }
+    var selectedItemNumber by rememberSaveable { mutableIntStateOf(0) }
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
