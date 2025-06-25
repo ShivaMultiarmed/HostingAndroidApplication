@@ -14,7 +14,7 @@ fun NavGraphBuilder.videoGraph(
     onFullScreen: (Boolean) -> Unit = {}
 ) {
     navigation<Route.Video>(
-        startDestination = Route.Video.Search
+        startDestination = Route.Video.Recommendations
     ) {
         videoRoute(
             navController = navController,

@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingErro
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 
 data class VideoRecommendationsScreenState(
-    val videos: Set<VideoWithChannel>? = null,
+    val videos: List<VideoWithChannel>? = null,
     val nextVideosPartIndex: Long = 0,
     val videosLoadingError: VideoRecommendationsLoadingError? = null,
     val areVideosLoading: Boolean = false,

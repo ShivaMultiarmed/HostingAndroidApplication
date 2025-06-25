@@ -19,6 +19,9 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
 ): ViewModel() {
     private val _mutableStateFlow = MutableStateFlow(VideoRecommendationsScreenState())
     val stateFlow = _mutableStateFlow.asStateFlow()
+    init {
+        loadVideosPart(0, PART_SIZE)
+    }
     fun loadVideosPart(partIndex: Long, partSize: Int) {
         _mutableStateFlow.update {
             it.copy(
@@ -30,15 +33,13 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
                 userId,
                 partIndex,
                 partSize
-            ).onSuccess { videoSet ->
+            ).onSuccess { videoList ->
                 _mutableStateFlow.update {
                     it.copy(
-                        videos = ((it.videos?: emptySet()) + videoSet)
-                            .sortedByDescending { it.video.dateTime }
-                            .toSet(),
+                        videos = ((it.videos?: emptyList()) + videoList).distinctBy { it.video.videoId },
                         nextVideosPartIndex = it.nextVideosPartIndex + 1,
                         areVideosLoading = false,
-                        areAllVideosLoaded = videoSet.size < 10,
+                        areAllVideosLoaded = videoList.size < partSize,
                         videosLoadingError = null
                     )
                 }
@@ -55,5 +56,8 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("userId") userId: Long): VideoRecommendationsViewModel
+    }
+    companion object {
+        const val PART_SIZE = 10
     }
 }

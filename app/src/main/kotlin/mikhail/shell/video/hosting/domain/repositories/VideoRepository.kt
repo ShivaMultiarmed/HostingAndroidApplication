@@ -74,5 +74,5 @@ interface VideoRepository {
         userId: Long,
         partIndex: Long,
         partSize: Int
-    ): Result<Set<VideoWithChannel>, VideoRecommendationsLoadingError>
+    ): Result<List<VideoWithChannel>, VideoRecommendationsLoadingError>
 }

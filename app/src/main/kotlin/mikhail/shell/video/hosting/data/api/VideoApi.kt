@@ -109,5 +109,5 @@ interface VideoApi {
         @Path("userId") userId: Long,
         @Query("partIndex") partIndex: Long,
         @Query("partSize") partSize: Int
-    ): Set<VideoWithChannelDto>
+    ): List<VideoWithChannelDto>
 }

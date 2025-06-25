@@ -13,7 +13,7 @@ class GetVideoRecommendations @Inject constructor(
         userId: Long,
         partIndex: Long,
         partSize: Int
-    ): Result<Set<VideoWithChannel>, VideoRecommendationsLoadingError> {
+    ): Result<List<VideoWithChannel>, VideoRecommendationsLoadingError> {
         return videoRepository.fetchVideoRecommendations(userId, partIndex, partSize)
     }
 }

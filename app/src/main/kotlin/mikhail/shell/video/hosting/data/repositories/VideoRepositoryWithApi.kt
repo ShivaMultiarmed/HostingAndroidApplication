@@ -61,12 +61,11 @@ class VideoRepositoryWithApi @Inject constructor(
         userId: Long,
         partIndex: Long,
         partSize: Int
-    ): Result<Set<VideoWithChannel>, VideoRecommendationsLoadingError> {
+    ): Result<List<VideoWithChannel>, VideoRecommendationsLoadingError> {
         return try {
             videoApi
                 .fetchVideoRecommendationsPart(userId, partIndex, partSize)
                 .map { it.toDomain() }
-                .toSet()
                 .let { Result.Success(it) }
         } catch (e: HttpException) {
             Result.Failure(VideoRecommendationsLoadingError.UNEXPECTED)

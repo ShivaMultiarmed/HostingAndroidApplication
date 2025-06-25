@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Dataset
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.rounded.Dataset
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Subscriptions
@@ -45,6 +47,12 @@ fun BottomNavBar(
 ) {
     BottomNavBar(
         navItems = listOf(
+            BottomNavItem(
+                Route.Video.Recommendations,
+                stringResource(R.string.recommendations_title),
+                Icons.Outlined.Dataset,
+                Icons.Rounded.Dataset
+            ),
             BottomNavItem(
                 Route.User.Subscriptions,
                 stringResource(R.string.nav_subscribers_item_label),

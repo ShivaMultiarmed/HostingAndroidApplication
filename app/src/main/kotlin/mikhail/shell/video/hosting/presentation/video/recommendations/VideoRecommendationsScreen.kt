@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -53,7 +54,7 @@ fun VideoRecommendationsScreen(
             )
         } else if (state.videos != null) {
             val lazyGridState = rememberLazyGridState()
-            val shouldLoadVideosPart = remember {
+            val reachedBottom by remember {
                 derivedStateOf {
                     lazyGridState.reachedBottom(buffer = 4)
                 }
@@ -65,7 +66,7 @@ fun VideoRecommendationsScreen(
                 columns = GridCells.Adaptive(300.dp),
                 state = lazyGridState
             ) {
-                items(state.videos.toList()) {
+                items(state.videos) {
                     VideoWithChannelSnippet(
                         modifier = Modifier.fillMaxWidth(),
                         videoWithChannel = it,
@@ -73,8 +74,10 @@ fun VideoRecommendationsScreen(
                     )
                 }
             }
-            LaunchedEffect(shouldLoadVideosPart) {
-                onLoadVideosPart(state.nextVideosPartIndex)
+            LaunchedEffect(reachedBottom) {
+                if (reachedBottom && !state.areAllVideosLoaded) {
+                    onLoadVideosPart(state.nextVideosPartIndex)
+                }
             }
         }
     }
