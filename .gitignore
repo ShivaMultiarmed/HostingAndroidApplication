@@ -18,3 +18,5 @@
 local.properties
 app/google-services.json
 gradle.properties
+/app/build
+/app/release
