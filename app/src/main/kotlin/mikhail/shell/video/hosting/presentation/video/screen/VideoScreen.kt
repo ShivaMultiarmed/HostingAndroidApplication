@@ -141,7 +141,6 @@ fun VideoScreen(
     onSubscribe: (SubscriptionState) -> Unit,
     player: Player,
     onChannelLinkClick: (Long) -> Unit,
-    onView: () -> Unit,
     onDelete: () -> Unit,
     onUpdate: (Long) -> Unit,
     onComment: (commentId: Long?, text: String) -> Unit = { _, _ -> },
@@ -155,11 +154,6 @@ fun VideoScreen(
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
     var isScreenActive by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(state.isViewed) {
-        if (state.isViewed) {
-            onView()
-        }
-    }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     if (state.videoDetails != null) {

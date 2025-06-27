@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
-import android.media.session.PlaybackState
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -59,6 +58,11 @@ class VideoScreenViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
     private var _collectCommentsJob: Job? = null
     init {
+        _state.update {
+            it.copy(
+                isLoading = true
+            )
+        }
         player.addListener(
             object : Player.Listener {
                 override fun onRenderedFirstFrame() {
@@ -67,15 +71,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                             isLoading = false
                         )
                     }
-                }
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == PlaybackState.STATE_PLAYING && !_state.value.isViewed) {
-                        _state.update {
-                            it.copy(
-                                isViewed = true
-                            )
-                        }
-                    }
+                    incrementViews()
                 }
             }
         )

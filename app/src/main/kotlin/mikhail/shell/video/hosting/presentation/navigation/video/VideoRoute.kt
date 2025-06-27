@@ -52,7 +52,6 @@ fun NavGraphBuilder.videoRoute(
             onChannelLinkClick = {
                 navController.navigate(Route.Channel.View(it))
             },
-            onView = videoScreenViewModel::incrementViews,
             onDelete = {
                 videoScreenViewModel.deleteVideo()
                 coroutineScope.launch {
