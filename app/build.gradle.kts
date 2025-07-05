@@ -16,8 +16,8 @@ android {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.2.2"
+        versionCode = 7
+        versionName = "1.2.3"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
     signingConfigs {
@@ -50,7 +50,7 @@ android {
             signingConfig = signingConfigs.getByName("staging")
         }
         release {
-            isDebuggable = true
+            isDebuggable = false
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
