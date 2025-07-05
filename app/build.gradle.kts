@@ -16,7 +16,7 @@ android {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
+        versionCode = 6
         versionName = "1.2.2"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
