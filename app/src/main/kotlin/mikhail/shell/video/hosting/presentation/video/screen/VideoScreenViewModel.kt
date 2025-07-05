@@ -57,23 +57,26 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
     private var _collectCommentsJob: Job? = null
+    private val playerListener = object : Player.Listener {
+        override fun onRenderedFirstFrame() {
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    isViewed = true
+                )
+            }
+            if (!_state.value.isViewed) {
+                incrementViews()
+            }
+        }
+    }
     init {
         _state.update {
             it.copy(
                 isLoading = true
             )
         }
-        player.addListener(
-            object : Player.Listener {
-                override fun onRenderedFirstFrame() {
-                    _state.update {
-                        it.copy(
-                            isLoading = false
-                        )
-                    }
-                }
-            }
-        )
+        player.addListener(playerListener)
         loadVideo()
     }
     @OptIn(UnstableApi::class)
@@ -86,6 +89,7 @@ class VideoScreenViewModel @AssistedInject constructor(
             ).onSuccess {
                 _state.value = VideoScreenState(
                     videoDetails = it,
+                    isLoading = false,
                     error = null,
                 )
                 val url = _state.value.videoDetails?.video?.sourceUrl
@@ -115,8 +119,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                             video = it.videoDetails.video.copy(
                                 views = newViews
                             )
-                        ),
-                        isViewed = true
+                        )
                     )
                 }
             }
@@ -319,6 +322,11 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        player.removeListener(playerListener)
+        super.onCleared()
     }
 
     @AssistedFactory

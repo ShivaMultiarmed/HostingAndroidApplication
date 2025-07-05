@@ -73,8 +73,7 @@ fun NavGraphBuilder.videoRoute(
             onGoToProfile = {
                 navController.navigate(Route.User.Profile(it))
             },
-            onFullScreen = onFullScreen,
-            onView = videoScreenViewModel::incrementViews
+            onFullScreen = onFullScreen
         )
 
     }

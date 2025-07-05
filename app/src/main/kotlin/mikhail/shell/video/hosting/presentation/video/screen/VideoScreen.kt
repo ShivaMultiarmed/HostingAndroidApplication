@@ -149,8 +149,7 @@ fun VideoScreen(
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
-    onFullScreen: (Boolean) -> Unit = {},
-    onView: () -> Unit = {}
+    onFullScreen: (Boolean) -> Unit = {}
 ) {
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -230,11 +229,6 @@ fun VideoScreen(
                             isFullScreen = it
                         }
                     )
-                }
-                LaunchedEffect(state.isViewed) {
-                    if (!state.isViewed) {
-                        onView()
-                    }
                 }
                 LaunchedEffect(isFullScreenReached) {
                     onFullScreen(isFullScreenReached)
