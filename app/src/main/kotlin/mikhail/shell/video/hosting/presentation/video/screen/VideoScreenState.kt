@@ -9,6 +9,7 @@ import mikhail.shell.video.hosting.presentation.models.CommentModel
 data class VideoScreenState(
     val videoDetails: VideoDetails? = null,
     val isLoading: Boolean = false,
+    val isViewed: Boolean = false,
     val error: VideoError? = null,
     val comments: List<CommentModel>? = null,
     val actionComment: ActionModel<CommentModel>? = null,

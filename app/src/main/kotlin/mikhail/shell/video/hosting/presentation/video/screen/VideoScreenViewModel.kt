@@ -71,7 +71,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                             isLoading = false
                         )
                     }
-                    incrementViews()
                 }
             }
         )
@@ -116,7 +115,8 @@ class VideoScreenViewModel @AssistedInject constructor(
                             video = it.videoDetails.video.copy(
                                 views = newViews
                             )
-                        )
+                        ),
+                        isViewed = true
                     )
                 }
             }
