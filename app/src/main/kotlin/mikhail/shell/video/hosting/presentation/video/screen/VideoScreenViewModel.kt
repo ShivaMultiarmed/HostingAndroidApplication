@@ -59,14 +59,14 @@ class VideoScreenViewModel @AssistedInject constructor(
     private var _collectCommentsJob: Job? = null
     private val playerListener = object : Player.Listener {
         override fun onRenderedFirstFrame() {
+            if (!_state.value.isViewed) {
+                incrementViews()
+            }
             _state.update {
                 it.copy(
                     isLoading = false,
                     isViewed = true
                 )
-            }
-            if (!_state.value.isViewed) {
-                incrementViews()
             }
         }
     }

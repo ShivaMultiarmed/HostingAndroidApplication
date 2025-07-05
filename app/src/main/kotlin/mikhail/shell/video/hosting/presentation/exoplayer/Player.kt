@@ -90,10 +90,10 @@ fun PlayerComponent(
     onFullscreen: ((Boolean) -> Unit)? = null,
     onRatioObtained: (ratio: Float) -> Unit = {}
 ) {
-    var playerState by rememberSaveable { mutableIntStateOf(Player.STATE_BUFFERING) }
+    var playerState by rememberSaveable { mutableIntStateOf(player.playbackState) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
-    var duration by rememberSaveable { mutableLongStateOf(0) }
-    var position by rememberSaveable { mutableLongStateOf(0) }
+    var duration by rememberSaveable { mutableLongStateOf(player.duration) }
+    var position by rememberSaveable { mutableLongStateOf(player.currentPosition) }
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
@@ -112,7 +112,7 @@ fun PlayerComponent(
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
-                if (playbackState == Player.STATE_READY && duration == 0L) {
+                if (playbackState == Player.STATE_READY && duration < 0L) {
                     duration = player.duration
                 }
             }
@@ -373,7 +373,7 @@ fun PlayerControls(
                     contentDescription = stringResource(R.string.player_main_button_hint)
                 )
             }
-            if (duration > -1) {
+            if (duration >= 0) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
