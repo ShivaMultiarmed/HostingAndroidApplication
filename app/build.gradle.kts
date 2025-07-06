@@ -50,7 +50,7 @@ android {
             signingConfig = signingConfigs.getByName("staging")
         }
         release {
-            isDebuggable = true
+            isDebuggable = false
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
