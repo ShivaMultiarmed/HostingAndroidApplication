@@ -57,26 +57,12 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
     private var _collectCommentsJob: Job? = null
-    private val playerListener = object : Player.Listener {
-        override fun onRenderedFirstFrame() {
-            if (!_state.value.isViewed) {
-                incrementViews()
-            }
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    isViewed = true
-                )
-            }
-        }
-    }
     init {
         _state.update {
             it.copy(
                 isLoading = true
             )
         }
-        player.addListener(playerListener)
         loadVideo()
     }
     @OptIn(UnstableApi::class)
@@ -91,6 +77,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                     videoDetails = it,
                     isLoading = false,
                     error = null,
+                    isViewed = true
                 )
                 val url = _state.value.videoDetails?.video?.sourceUrl
                 val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
@@ -100,6 +87,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                     player.setMediaItem(mediaItem)
                     player.prepare()
                     player.play()
+                    incrementViews()
                 }
             }.onFailure {
                 _state.value = VideoScreenState(
@@ -322,11 +310,6 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-
-    override fun onCleared() {
-        player.removeListener(playerListener)
-        super.onCleared()
     }
 
     @AssistedFactory
