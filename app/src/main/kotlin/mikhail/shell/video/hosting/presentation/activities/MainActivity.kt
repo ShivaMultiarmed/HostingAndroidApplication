@@ -114,14 +114,14 @@ class MainActivity : ComponentActivity() {
                             channelGraph(navController, userDetailsProvider)
                             userGraph(navController, userDetailsProvider, player)
                         }
-                    }
-                    if (shouldShowMiniPlayer(navController) && isPlayerPrepared(player)) {
-                        MiniPlayer(
-                            player = player,
-                            onFullScreen = {
-                                navController.navigate(Route.Video.View(it))
-                            }
-                        )
+                        if (shouldShowMiniPlayer(navController) && isPlayerPrepared(player)) {
+                            MiniPlayer(
+                                player = player,
+                                onFullScreen = {
+                                    navController.navigate(Route.Video.View(it))
+                                }
+                            )
+                        }
                     }
                 }
             }
