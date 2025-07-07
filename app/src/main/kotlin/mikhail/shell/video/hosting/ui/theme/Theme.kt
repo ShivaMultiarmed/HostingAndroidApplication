@@ -7,6 +7,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.res.Configuration
 import android.os.Build
 import android.os.LocaleList
+import androidx.activity.compose.LocalActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
@@ -15,20 +16,23 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.core.content.edit
 import androidx.core.os.LocaleListCompat
+import androidx.core.view.WindowCompat
 import mikhail.shell.video.hosting.domain.utils.SharedPreferencesUtils.Ui
 import mikhail.shell.video.hosting.presentation.settings.Locale
-import mikhail.shell.video.hosting.ui.theme.Theme.BY_TIME
 import mikhail.shell.video.hosting.ui.theme.Theme.DARK
 import mikhail.shell.video.hosting.ui.theme.Theme.LIGHT
+import mikhail.shell.video.hosting.ui.theme.Theme.SYSTEM
 
-private val DarkColorScheme = darkColorScheme(
+val DarkColorScheme = darkColorScheme(
     primary = Blue500,
     onPrimary = White,
 
@@ -55,7 +59,7 @@ private val DarkColorScheme = darkColorScheme(
     onError = White
 )
 
-private val LightColorScheme = lightColorScheme(
+val LightColorScheme = lightColorScheme(
     primary = Blue700,
     onPrimary = White,
 
@@ -83,20 +87,20 @@ private val LightColorScheme = lightColorScheme(
 )
 
 enum class Theme {
-    DARK, LIGHT, BY_TIME
+    DARK, LIGHT, SYSTEM
 }
 
-fun Context.getThemeSelected(): Theme {
-    val str = this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-        .getString(Ui.theme, BY_TIME.name) ?: BY_TIME.name
+fun Context.getCurrentTheme(): Theme {
+    val str = getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
+        .getString(Ui.theme, SYSTEM.name) ?: SYSTEM.name
     return Theme.valueOf(str)
 }
 
 fun Context.getColorScheme(
     isSystemDarkTheme: Boolean
 ): ColorScheme {
-    return when (this.getThemeSelected()) {
-        BY_TIME -> when {
+    return when (getCurrentTheme()) {
+        SYSTEM -> when {
             isSystemDarkTheme -> DarkColorScheme
             else -> LightColorScheme
         }
@@ -107,14 +111,14 @@ fun Context.getColorScheme(
 }
 
 fun Context.setTheme(theme: Theme) {
-    this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
+    getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
         putString(Ui.theme, theme.name)
         commit()
     }
 }
 
 fun Context.getLocale(): Locale {
-    return this.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
+    return getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
         .getString(Ui.language, Locale.ENGLISH.iso)!!
         .let { Locale.ofTag(it) }
 }
@@ -132,6 +136,8 @@ fun Context.setLocale(locale: Locale) {
 fun VideoHostingTheme(
     content: @Composable () -> Unit
 ) {
+    val activity = LocalActivity.current!!
+    val view = LocalView.current
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
     val selectedColorScheme = context.getColorScheme(isDark)
@@ -142,6 +148,10 @@ fun VideoHostingTheme(
         typography = Typography,
         content = content
     )
+    val statusBarIconsColor = selectedColorScheme.onSurface
+    LaunchedEffect(colorScheme) {
+        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = (statusBarIconsColor != DarkColorScheme.onSurface)
+    }
     DisposableEffect(Unit) {
         val uiPreferencesListener = object : OnSharedPreferenceChangeListener {
             override fun onSharedPreferenceChanged(

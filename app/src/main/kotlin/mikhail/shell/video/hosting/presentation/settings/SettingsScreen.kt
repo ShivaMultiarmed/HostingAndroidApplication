@@ -34,8 +34,8 @@ import mikhail.shell.video.hosting.presentation.utils.Toggle
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.ui.theme.Theme
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import mikhail.shell.video.hosting.ui.theme.getCurrentTheme
 import mikhail.shell.video.hosting.ui.theme.getLocale
-import mikhail.shell.video.hosting.ui.theme.getThemeSelected
 import mikhail.shell.video.hosting.ui.theme.setLocale
 import mikhail.shell.video.hosting.ui.theme.setTheme
 
@@ -82,7 +82,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(10.dp),
                 text = stringResource(R.string.theme_title)
             )
-            var selectedTheme by rememberSaveable { mutableStateOf(context.getThemeSelected()) }
+            var selectedTheme by rememberSaveable { mutableStateOf(context.getCurrentTheme()) }
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -92,7 +92,7 @@ fun SettingsScreen(
                     key = selectedTheme,
                     values = mapOf(
                         Theme.LIGHT to Icons.Rounded.WbSunny,
-                        Theme.BY_TIME to Icons.Rounded.Timelapse,
+                        Theme.SYSTEM to Icons.Rounded.Timelapse,
                         Theme.DARK to Icons.Rounded.ModeNight
                     ),
                     onValueChanged = {
