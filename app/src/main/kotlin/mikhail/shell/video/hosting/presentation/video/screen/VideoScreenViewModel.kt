@@ -58,16 +58,15 @@ class VideoScreenViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
     private var _collectCommentsJob: Job? = null
     init {
+        loadVideo()
+    }
+    @OptIn(UnstableApi::class)
+    fun loadVideo() {
         _state.update {
             it.copy(
                 isLoading = true
             )
         }
-        loadVideo()
-    }
-    @OptIn(UnstableApi::class)
-    fun loadVideo() {
-        _state.value = VideoScreenState()
         viewModelScope.launch {
             _getVideoDetails(
                 videoId,
@@ -91,7 +90,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
             }.onFailure {
                 _state.value = VideoScreenState(
-                    videoDetails = _state.value.videoDetails,
+                    videoDetails = null,
                     isLoading = false,
                     error = it
                 )
