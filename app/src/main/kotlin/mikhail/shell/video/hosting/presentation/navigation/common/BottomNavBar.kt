@@ -95,8 +95,8 @@ fun BottomNavBar(
                 strokeWidth = 3
             )
             .fillMaxWidth()
-            .padding(bottom = 10.dp)
-            .background(MaterialTheme.colorScheme.surface),
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 10.dp),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         navItems.forEachIndexed { i, it ->

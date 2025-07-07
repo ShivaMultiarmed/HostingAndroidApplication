@@ -175,23 +175,28 @@ fun VideoScreen(
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
-        val isFullScreenReached = remember (isFullScreen, orientation, targetOrientation, isSmallWindow) {
-            if (isSmallWindow) {
-                isFullScreen && targetOrientation == when (orientation) {
-                    Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        val isFullScreenReached =
+            remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
+                if (isSmallWindow) {
+                    isFullScreen && targetOrientation == when (orientation) {
+                        Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    }
+                } else {
+                    isFullScreen
                 }
-            } else {
-                isFullScreen
             }
-        }
-        Scaffold { padding ->
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+        ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
                     .background(MaterialTheme.colorScheme.surface)
+                    .padding(padding)
             ) {
                 Box(
                     modifier = Modifier
@@ -216,7 +221,7 @@ fun VideoScreen(
                                     if (isSmallWindow) {
                                         try {
                                             Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                        }catch (_: IllegalArgumentException) {
+                                        } catch (_: IllegalArgumentException) {
                                             Modifier.aspectRatio(16f / 9)
                                         }
                                     } else {
@@ -242,7 +247,8 @@ fun VideoScreen(
                         if (isFullScreenReached) {
                             window.insetsController?.let {
                                 it.hide(WindowInsetsCompat.Type.systemBars())
-                                it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                                it.systemBarsBehavior =
+                                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                             }
                         } else {
                             window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
@@ -273,6 +279,7 @@ fun VideoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .fillMaxHeight()
                             .background(Black)
                             .clip(
                                 RoundedCornerShape(
@@ -644,8 +651,11 @@ fun CommentsBottomSheet(
             LaunchedEffect(commentError) {
                 commentError?.let {
                     val message = when (it) {
-                        CommentError.TEXT_TOO_LARGE -> context.getString(R.string.text_too_large_error,
-                            ValidationRules.MAX_TEXT_LENGTH)
+                        CommentError.TEXT_TOO_LARGE -> context.getString(
+                            R.string.text_too_large_error,
+                            ValidationRules.MAX_TEXT_LENGTH
+                        )
+
                         CommentError.NOT_FOUND -> context.getString(R.string.comment_not_found_error)
                         CommentError.TEXT_EMPTY -> context.getString(R.string.text_empty_error)
                         GetCommentsError.VIDEO_NOT_FOUND -> context.getString(R.string.comment_video_not_found)
@@ -891,19 +901,49 @@ fun LocalDateTime.toPresentation(
         stringBuilder.append(context.getString(R.string.date_time_just_now_message))
     } else if (now.minusMinutes(60) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toMinutes().toInt()
-        stringBuilder.append(context.resources.getQuantityString(R.plurals.minutes_presentation, diff, diff))
+        stringBuilder.append(
+            context.resources.getQuantityString(
+                R.plurals.minutes_presentation,
+                diff,
+                diff
+            )
+        )
     } else if (now.minusHours(24) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toHours().toInt()
-        stringBuilder.append(context.resources.getQuantityString(R.plurals.hours_presentation, diff, diff))
+        stringBuilder.append(
+            context.resources.getQuantityString(
+                R.plurals.hours_presentation,
+                diff,
+                diff
+            )
+        )
     } else if (now.minusDays(30) < currentDateTime) {
         val diff = Duration.between(currentDateTime, now).toDays().toInt()
-        stringBuilder.append(context.resources.getQuantityString(R.plurals.days_presentation, diff, diff))
+        stringBuilder.append(
+            context.resources.getQuantityString(
+                R.plurals.days_presentation,
+                diff,
+                diff
+            )
+        )
     } else if (now.minusMonths(12) < this) {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).toInt()
-        stringBuilder.append(context.resources.getQuantityString(R.plurals.months_presentation, diff, diff))
+        stringBuilder.append(
+            context.resources.getQuantityString(
+                R.plurals.months_presentation,
+                diff,
+                diff
+            )
+        )
     } else {
         val diff = Duration.between(currentDateTime, now).toDays().div(30).div(12).toInt()
-        stringBuilder.append(context.resources.getQuantityString(R.plurals.years_presentation, diff, diff))
+        stringBuilder.append(
+            context.resources.getQuantityString(
+                R.plurals.years_presentation,
+                diff,
+                diff
+            )
+        )
     }
     if (now.minusMinutes(10) >= currentDateTime) {
         stringBuilder.append(" ").append(context.getString(R.string.date_time_ago_message))
