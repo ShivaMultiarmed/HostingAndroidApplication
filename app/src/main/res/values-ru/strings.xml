@@ -258,4 +258,6 @@
     <string name="nc_channel_subscriptions">Подписки</string>
     <string name="source_metadata_not_valid_error">Метаданные не корректные</string>
     <string name="recommendations_title">Главная</string>
+    <string name="no_recommendations_yet">Пока нет рекомендаций</string>
+    <string name="no_subscriptions_yet">Пока нет подписок</string>
 </resources>

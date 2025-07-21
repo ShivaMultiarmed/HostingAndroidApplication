@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
@@ -73,7 +72,6 @@ class MainActivity : ComponentActivity() {
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
-                val lifecycleOwner = LocalLifecycleOwner.current
                 val activity = LocalActivity.current!!
                 val view = LocalView.current
                 val navController = rememberNavController()

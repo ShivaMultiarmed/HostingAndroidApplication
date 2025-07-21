@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.recommendations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,13 +14,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -56,15 +60,35 @@ fun VideoRecommendationsScreen(
                 .padding(padding),
             columns = GridCells.Adaptive(300.dp),
             state = lazyGridState,
-            verticalArrangement = if (state.videos == null) Arrangement.Center else Arrangement.spacedBy(10.dp)
+            verticalArrangement = if (state.videos.isNullOrEmpty()) Arrangement.Center else Arrangement.spacedBy(
+                10.dp
+            )
         ) {
             if (state.videos != null) {
-                items(state.videos) {
-                    VideoWithChannelSnippet(
-                        modifier = Modifier.fillMaxWidth(),
-                        videoWithChannel = it,
-                        onClick = onVideoClick
-                    )
+                if (state.videos.isNotEmpty()) {
+                    items(state.videos) {
+                        VideoWithChannelSnippet(
+                            modifier = Modifier.fillMaxWidth(),
+                            videoWithChannel = it,
+                            onClick = onVideoClick
+                        )
+                    }
+                } else {
+                    item(
+                        span = {
+                            GridItemSpan(maxLineSpan)
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.no_recommendations_yet),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
             item(
