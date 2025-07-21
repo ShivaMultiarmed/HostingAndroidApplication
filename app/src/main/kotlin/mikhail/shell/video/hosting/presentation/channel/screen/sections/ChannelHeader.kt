@@ -1,6 +1,10 @@
 package mikhail.shell.video.hosting.presentation.channel.screen.sections
 
 import android.app.Activity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -489,7 +493,15 @@ fun ChannelDescriptionSection(
                 )
             }
         }
-        if (shouldShowDescription) {
+        AnimatedVisibility(
+            visible = shouldShowDescription,
+            enter = expandVertically (
+                tween (durationMillis = 300)
+            ),
+            exit = shrinkVertically(
+                tween(durationMillis = 300)
+            )
+        ) {
             ChannelDescription(
                 modifier = Modifier.padding(bottom = 7.dp),
                 description = description

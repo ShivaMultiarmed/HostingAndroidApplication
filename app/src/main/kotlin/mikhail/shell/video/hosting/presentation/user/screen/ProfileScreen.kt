@@ -4,6 +4,10 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -390,10 +394,26 @@ fun UserTextDetails(
                     )
                 }
                 val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
-                if (showMore) {
-                    UserDetail(contacts)
-                    user.bio?.let {
-                        UserDetail(user.bio)
+                AnimatedVisibility (
+                    visible = showMore,
+                    enter = expandVertically(
+                        tween(
+                            durationMillis = 300
+                        )
+                    ),
+                    exit = shrinkVertically(
+                        tween (
+                            durationMillis = 300
+                        )
+                    )
+                ) {
+                    Column (
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        UserDetail(contacts)
+                        user.bio?.let {
+                            UserDetail(it)
+                        }
                     }
                 }
             }
