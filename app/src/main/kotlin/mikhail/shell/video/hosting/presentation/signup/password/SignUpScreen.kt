@@ -105,6 +105,7 @@ fun SignUpScreen(
                 errorMsg = userNameErrorMsg,
                 placeholder = "E-mail"
             )
+            var password by rememberSaveable { mutableStateOf("") }
             val passwordErrorMsg = constructInfoMessage(
                 state.error,
                 mapOf(
@@ -113,7 +114,6 @@ fun SignUpScreen(
                         ValidationRules.MIN_PASSWORD_LENGTH, ValidationRules.MAX_PASSWORD_LENGTH)
                 )
             )
-            var password by rememberSaveable { mutableStateOf("") }
             InputField(
                 modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
@@ -124,6 +124,24 @@ fun SignUpScreen(
                 errorMsg = passwordErrorMsg,
                 secure = true,
                 placeholder = stringResource(R.string.password_label)
+            )
+            var passwordDuplicate by rememberSaveable { mutableStateOf("") }
+            val passwordDuplicateErrorMsg = constructInfoMessage(
+                state.error,
+                mapOf(
+                    SignUpError.PASSWORDS_NOT_MATCH to stringResource(R.string.passwords_not_match)
+                )
+            )
+            InputField(
+                modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
+                icon = Icons.Rounded.Password,
+                value = passwordDuplicate,
+                onValueChange = {
+                    passwordDuplicate = it
+                },
+                errorMsg = passwordDuplicateErrorMsg,
+                secure = true,
+                placeholder = stringResource(R.string.password_again_label)
             )
             var nick by rememberSaveable { mutableStateOf("") }
             val nickErrMsg = constructInfoMessage(
@@ -151,6 +169,7 @@ fun SignUpScreen(
                         SignUpInputState(
                             userName = userName,
                             password = password,
+                            passwordDuplicate = passwordDuplicate,
                             nick = nick
                         )
                     )

@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
-import mikhail.shell.video.hosting.domain.errors.SignUpError.*
+import mikhail.shell.video.hosting.domain.errors.SignUpError.NICK_EMPTY
+import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORDS_NOT_MATCH
+import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORD_EMPTY
+import mikhail.shell.video.hosting.domain.errors.SignUpError.USERNAME_EMPTY
+import mikhail.shell.video.hosting.domain.errors.SignUpError.USERNAME_MALFORMED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
@@ -24,7 +28,7 @@ class SignUpWithPasswordViewModel @Inject constructor(
     private val _state = MutableStateFlow(SignUpWithPasswordState())
     val state = _state.asStateFlow()
 
-    companion object {
+    private companion object {
         private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
     }
 
@@ -37,6 +41,8 @@ class SignUpWithPasswordViewModel @Inject constructor(
         }
         if (inputState.password.isEmpty()) {
             error.add(PASSWORD_EMPTY)
+        } else if (inputState.password != inputState.passwordDuplicate) {
+            error.add(PASSWORDS_NOT_MATCH)
         }
         if (inputState.nick.isEmpty()) {
             error.add(NICK_EMPTY)

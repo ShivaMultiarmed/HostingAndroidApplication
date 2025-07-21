@@ -247,4 +247,6 @@
     <string name="recommendations_title">Home</string>
     <string name="no_recommendations_yet">No recommended videos yet</string>
     <string name="no_subscriptions_yet">No subscriptions yet</string>
+    <string name="passwords_not_match">Passwords don\'t match</string>
+    <string name="password_again_label">Password (confirm)</string>
 </resources>

@@ -260,4 +260,6 @@
     <string name="recommendations_title">Главная</string>
     <string name="no_recommendations_yet">Пока нет рекомендаций</string>
     <string name="no_subscriptions_yet">Пока нет подписок</string>
+    <string name="passwords_not_match">Пароли не совпадают</string>
+    <string name="password_again_label">Пароль (ещё раз)</string>
 </resources>

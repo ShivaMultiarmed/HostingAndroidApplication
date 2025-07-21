@@ -8,6 +8,7 @@ enum class SignUpError: Error {
 
     PASSWORD_EMPTY,
     PASSWORD_NOT_VALID,
+    PASSWORDS_NOT_MATCH,
 
     NICK_EMPTY,
     NICK_TOO_LARGE,

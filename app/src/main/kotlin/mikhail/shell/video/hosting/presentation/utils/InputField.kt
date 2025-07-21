@@ -15,7 +15,10 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Replay
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -59,6 +62,7 @@ fun InputField(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         var focused by rememberSaveable { mutableStateOf(false) }
+        var exposeText by rememberSaveable { mutableStateOf(!secure) }
         TextField(
             modifier = modifier.onFocusChanged {
                 focused = it.isFocused
@@ -106,7 +110,8 @@ fun InputField(
                 unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
                 focusedLabelColor = MaterialTheme.colorScheme.primary
             ),
-            visualTransformation = if (secure) PasswordVisualTransformation() else VisualTransformation.None,
+            visualTransformation = if (secure && !exposeText) PasswordVisualTransformation()
+            else VisualTransformation.None,
             isError = errorMsg != null,
             textStyle = TextStyle.Default.copy(
                 color = MaterialTheme.colorScheme.onSurface,
@@ -116,7 +121,21 @@ fun InputField(
             maxLines = 1,
             singleLine = maxLines == 1,
             readOnly = readOnly,
-            enabled = enabled
+            enabled = enabled,
+            trailingIcon = {
+                if (secure) {
+                    IconButton(
+                        onClick = {
+                            exposeText = !exposeText
+                        }
+                    ) {
+                        Icon(
+                            contentDescription = null,
+                            imageVector = if (exposeText) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff
+                        )
+                    }
+                }
+            }
         )
         if (errorMsg != null) {
             ErrorText(
