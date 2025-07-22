@@ -168,9 +168,11 @@ fun ChannelHeaderCompact(
                 }
             }
         }
-        ChannelDescriptionSection(
-            description = channel.description
-        )
+        if (channel.description != null) {
+            ChannelDescriptionSection(
+                description = channel.description
+            )
+        }
         SubscriptionButton(
             modifier = Modifier.fillMaxWidth(),
             state = channel.subscription,
@@ -312,9 +314,11 @@ fun ChannelHeaderExpanded(
                     )
                 }
             }
-            ChannelDescriptionSection(
-                description = channel.description
-            )
+            if (channel.description != null) {
+                ChannelDescriptionSection(
+                    description = channel.description
+                )
+            }
         }
     }
 }
