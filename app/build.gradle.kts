@@ -16,8 +16,8 @@ android {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.2.8"
+        versionCode = 13
+        versionName = "1.2.9"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
     signingConfigs {
