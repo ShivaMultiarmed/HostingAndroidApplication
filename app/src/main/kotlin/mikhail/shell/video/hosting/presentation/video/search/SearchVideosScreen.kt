@@ -52,12 +52,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
-import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -101,22 +100,20 @@ fun SearchVideosScreen(
                     placeholder = stringResource(R.string.video_search_label),
                     icon = Icons.Rounded.Search
                 )
-                if (query.isNotBlank()) {
-                    PrimaryButton(
-                        modifier = Modifier.constrainAs(button) {
-                            end.linkTo(parent.end, 10.dp)
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
-                        },
-                        icon = Icons.Rounded.Send,
-                        onClick = {
-                            errorMsg = null
-                            onSubmit(query)
-                        }
-                    )
-                }
+                PrimaryProgressButton(
+                    modifier = Modifier.constrainAs(button) {
+                        end.linkTo(parent.end, 10.dp)
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                    },
+                    enabled = query.isNotEmpty(),
+                    onClick = {
+                        errorMsg = null
+                        onSubmit(query)
+                    },
+                    icon = Icons.Rounded.Send
+                )
             }
-
         }
     ) { padding ->
         Column(
@@ -276,7 +273,9 @@ fun VideoWithChannelSnippet(
                     maxLines = 2
                 )
                 Text(
-                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(context),
+                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(
+                        context
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 13.sp,

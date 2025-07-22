@@ -59,7 +59,7 @@ import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import kotlin.math.roundToInt
 
@@ -172,6 +172,7 @@ fun ChannelHeaderCompact(
             description = channel.description
         )
         SubscriptionButton(
+            modifier = Modifier.fillMaxWidth(),
             state = channel.subscription,
             onSubscription = onSubscription
         )
@@ -299,7 +300,6 @@ fun ChannelHeaderExpanded(
             ) {
                 ChannelAlias(alias = channel.alias)
                 SubscriptionButton(
-                    modifier = Modifier,
                     state = channel.subscription,
                     onSubscription = onSubscription
                 )
@@ -408,19 +408,17 @@ fun ChannelDescription(
 
 @Composable
 fun SubscriptionButton(
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     state: SubscriptionState,
     onSubscription: (SubscriptionState) -> Unit
 ) {
-    PrimaryButton(
+    PrimaryToggleButton(
         modifier = modifier,
-        text = if (state == SUBSCRIBED) stringResource(R.string.unsubscribe_button)
-        else stringResource(R.string.subscribe_button),
-        isActivated = state == SUBSCRIBED,
+        toggledOffText = stringResource(R.string.subscribe_button),
+        toggledOnText = stringResource(R.string.unsubscribe_button),
+        toggled = state == SUBSCRIBED,
         onClick = {
-            val subscriptionState =
-                if (state == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED
-            onSubscription(subscriptionState)
+            onSubscription(if (state == SUBSCRIBED) NOT_SUBSCRIBED else SUBSCRIBED)
         }
     )
 }

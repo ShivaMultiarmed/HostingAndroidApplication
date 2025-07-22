@@ -107,6 +107,7 @@ fun EditChannelScreen(
                     title = stringResource(R.string.channel_edit_title),
                     onPopup = onPopup,
                     inProgress = state.isLoading,
+                    complete = state.editedChannel != null,
                     onSubmit = {
                         val input = EditChannelInputState(
                             title,

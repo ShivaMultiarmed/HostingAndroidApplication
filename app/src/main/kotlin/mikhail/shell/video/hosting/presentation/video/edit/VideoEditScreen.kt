@@ -93,6 +93,7 @@ fun VideoEditScreen(
                     title = stringResource(R.string.video_edit_title),
                     onPopup = { onCancel(state.initialVideo.videoId!!) },
                     inProgress = state.isLoading,
+                    complete = state.updatedVideo != null,
                     onSubmit = {
                         val coverFile = coverUri?.let { context.uriToFile(it) }
                         onSubmit(

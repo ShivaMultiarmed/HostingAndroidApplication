@@ -131,6 +131,7 @@ fun UploadVideoScreen(
                         onPopup = onPopup,
                         title = stringResource(R.string.video_upload_title),
                         inProgress = state.isLoading,
+                        complete = state.video != null,
                         onSubmit = {
                             val input = UploadVideoInput(
                                 channelId = channelId,

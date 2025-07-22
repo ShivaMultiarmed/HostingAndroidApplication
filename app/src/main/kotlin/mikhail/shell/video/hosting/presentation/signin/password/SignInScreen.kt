@@ -37,7 +37,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -52,9 +52,12 @@ fun SignInScreen(
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
-            SnackbarHost(snackbarHostState)
+            SnackbarHost(
+                hostState = snackbarHostState
+            )
         }
     ) { padding ->
         val context = LocalContext.current
@@ -63,7 +66,6 @@ fun SignInScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
@@ -126,11 +128,13 @@ fun SignInScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                PrimaryButton(
-                    text = stringResource(R.string.sign_in_main_btn_label),
+                PrimaryProgressButton(
+                    inProgress = state.isLoading,
+                    complete = state.authModel != null,
                     onClick = {
                         onSubmit(email, password)
-                    }
+                    },
+                    text = stringResource(R.string.sign_in_main_btn_label)
                 )
                 Text(
                     text = stringResource(R.string.sign_up_link_label),

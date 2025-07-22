@@ -95,6 +95,7 @@ fun CreateChannelScreen(
                 title = stringResource(R.string.channel_create_title),
                 onPopup = onPopup,
                 inProgress = state.isLoading,
+                complete = state.channel != null,
                 onSubmit = {
                     val coverFile = coverUri?.let { context.uriToFile(it) }
                     val avatarFile = avatarUri?.let { context.uriToFile(it) }

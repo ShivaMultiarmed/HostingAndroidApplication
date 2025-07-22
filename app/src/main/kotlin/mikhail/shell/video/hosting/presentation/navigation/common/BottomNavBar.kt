@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dataset
 import androidx.compose.material.icons.outlined.Person
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.rounded.Dataset
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Subscriptions
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -95,8 +97,8 @@ fun BottomNavBar(
                 strokeWidth = 3
             )
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = 10.dp),
+            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+            .background(MaterialTheme.colorScheme.surface),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         navItems.forEachIndexed { i, it ->

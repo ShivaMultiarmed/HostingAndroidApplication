@@ -122,7 +122,8 @@ import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -256,15 +257,15 @@ fun VideoScreen(
                     }
                 }
                 LaunchedEffect(targetOrientation) {
-                    if (activity?.requestedOrientation != targetOrientation) {
-                        activity?.requestedOrientation = targetOrientation
+                    if (activity.requestedOrientation != targetOrientation) {
+                        activity.requestedOrientation = targetOrientation
                     }
                 }
                 DisposableEffect(Unit) {
                     val observer = LifecycleEventObserver { _, event ->
                         if (event == Lifecycle.Event.ON_STOP) {
                             isScreenActive = false
-                            activity?.requestedOrientation =
+                            activity.requestedOrientation =
                                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else if (event == Lifecycle.Event.ON_START) {
                             isScreenActive = true
@@ -407,20 +408,17 @@ fun VideoScreen(
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(end = 5.dp)
                             )
-                            val subscriptionText = when (channel.subscription) {
-                                SUBSCRIBED -> stringResource(R.string.unsubscribe_button)
-                                else -> stringResource(R.string.subscribe_button)
-                            }
-                            PrimaryButton(
-                                text = subscriptionText,
-                                isActivated = channel.subscription == SUBSCRIBED,
+                            PrimaryToggleButton(
+                                toggled = channel.subscription == SUBSCRIBED,
                                 onClick = {
                                     val subscriptionState = when (channel.subscription) {
                                         SUBSCRIBED -> NOT_SUBSCRIBED
                                         else -> SUBSCRIBED
                                     }
                                     onSubscribe(subscriptionState)
-                                }
+                                },
+                                toggledOffText = stringResource(R.string.subscribe_button),
+                                toggledOnText = stringResource(R.string.unsubscribe_button)
                             )
                         }
                         Row(
@@ -866,12 +864,12 @@ fun CommentForm(
                 }
             }
         )
-        PrimaryButton(
-            isEnabled = text.isNotEmpty(),
-            icon = Icons.Rounded.Send,
+        PrimaryProgressButton(
+            enabled = text.isNotEmpty(),
             onClick = {
                 onSubmit(initialCommentModel?.commentId, text)
-            }
+            },
+            icon = Icons.Rounded.Send
         )
         LaunchedEffect(actionComment) {
             if (actionComment?.action != Action.REMOVE) {

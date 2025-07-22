@@ -39,7 +39,7 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -58,14 +58,15 @@ fun SignUpScreen(
             .imePadding()
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
-            SnackbarHost(snackbarHostState)
+            SnackbarHost(
+                hostState = snackbarHostState
+            )
         }
     ) { padding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
@@ -153,7 +154,9 @@ fun SignUpScreen(
                 )
             )
             InputField(
-                modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Person,
                 value = nick,
                 onValueChange = {
@@ -162,8 +165,9 @@ fun SignUpScreen(
                 errorMsg = nickErrMsg,
                 placeholder = stringResource(R.string.nick_label)
             )
-            PrimaryButton(
-                text = stringResource(R.string.sign_up_main_button),
+            PrimaryProgressButton(
+                inProgress = state.isLoading,
+                complete = state.authModel != null,
                 onClick = {
                     onSubmit(
                         SignUpInputState(
@@ -173,7 +177,8 @@ fun SignUpScreen(
                             nick = nick
                         )
                     )
-                }
+                },
+                text = stringResource(R.string.sign_up_main_button)
             )
         }
     }

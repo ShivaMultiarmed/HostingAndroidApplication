@@ -2,61 +2,149 @@ package mikhail.shell.video.hosting.presentation.utils
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @Composable
-fun PrimaryButton(
+fun PrimaryToggleButton(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
-    text: String? = null,
-    icon: ImageVector? = null,
-    isActivated: Boolean = false,
-    isEnabled: Boolean = true,
+    enabled: Boolean = true,
     needsCaution: Boolean = false,
-    onClick: () -> Unit
+    toggled: Boolean = false,
+    colors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = when {
+            !toggled && !needsCaution -> MaterialTheme.colorScheme.primary
+            !toggled && needsCaution -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.tertiaryContainer
+        },
+        contentColor = when {
+            !toggled && !needsCaution -> MaterialTheme.colorScheme.onPrimary
+            !toggled && needsCaution -> MaterialTheme.colorScheme.onError
+            else -> MaterialTheme.colorScheme.onTertiaryContainer
+        },
+        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+    ),
+    onClick: () -> Unit,
+    toggledOffText: String? = null,
+    toggledOffIcon: ImageVector? = null,
+    toggledOnText: String? = toggledOffText,
+    toggledOnIcon: ImageVector? = toggledOffIcon
 ) {
-    Button(
-        enabled = isEnabled,
+    PrimaryStandardButton(
         modifier = modifier,
         contentPadding = contentPadding,
+        enabled = enabled,
+        colors = colors,
+        needsCaution = needsCaution,
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = when {
-                !isActivated && !needsCaution -> MaterialTheme.colorScheme.primary
-                !isActivated && needsCaution -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.tertiaryContainer
-            },
-            contentColor = when {
-                !isActivated -> MaterialTheme.colorScheme.onPrimary
-                else -> MaterialTheme.colorScheme.onTertiaryContainer
-            },
-        )
+        text = if (!toggled) toggledOffText else toggledOnText,
+        icon = if (!toggled) toggledOffIcon else toggledOnIcon
+    )
+}
+
+@Composable
+fun PrimaryProgressButton(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
+    enabled: Boolean = true,
+    needsCaution: Boolean = false,
+    inProgress: Boolean = false,
+    complete: Boolean = false,
+    colors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+    ),
+    onClick: () -> Unit,
+    text: String? = null,
+    icon: ImageVector? = null
+) {
+    PrimaryButton(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        enabled = enabled && !complete && !inProgress,
+        needsCaution = needsCaution,
+        colors = colors,
+        onClick = onClick,
     ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                tint = Color.White,
-                contentDescription = stringResource(R.string.primary_button_hint)
+        if (inProgress) {
+            val available = (enabled && !complete)
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = when {
+                    !available -> MaterialTheme.colorScheme.onTertiary
+                    !needsCaution -> MaterialTheme.colorScheme.onPrimary
+                    else -> MaterialTheme.colorScheme.onError
+                }
             )
+        } else {
+            if (text != null) {
+                Text(
+                    text = text
+                )
+            }
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    contentDescription = stringResource(R.string.primary_button_hint)
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun PrimaryStandardButton(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
+    enabled: Boolean = true,
+    needsCaution: Boolean = false,
+    colors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+    ),
+    onClick: () -> Unit,
+    text: String? = null,
+    icon: ImageVector? = null
+) {
+    PrimaryButton(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        enabled = enabled,
+        needsCaution = needsCaution,
+        colors = colors,
+        onClick = onClick
+    ) {
         if (text != null) {
             Text(
                 text = text
             )
         }
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                contentDescription = stringResource(R.string.primary_button_hint)
+            )
+        }
     }
 }
 
@@ -64,40 +152,23 @@ fun PrimaryButton(
 fun PrimaryButton(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
-    onClick: () -> Unit,
-    isActivated: Boolean = false,
-    isEnabled: Boolean = true,
+    enabled: Boolean = true,
     needsCaution: Boolean = false,
+    colors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+        contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+    disabledContentColor = MaterialTheme.colorScheme.onTertiary
+    ),
+    onClick: () -> Unit,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
-        enabled = isEnabled,
         modifier = modifier,
         contentPadding = contentPadding,
+        enabled = enabled,
+        colors = colors,
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = when {
-                !isActivated && !needsCaution -> MaterialTheme.colorScheme.primary
-                !isActivated && needsCaution -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.tertiaryContainer
-            },
-            contentColor = when {
-                !isActivated -> MaterialTheme.colorScheme.onPrimary
-                else -> MaterialTheme.colorScheme.onTertiaryContainer
-            },
-        ),
         content = content
     )
-}
-
-@Composable
-@Preview
-fun PrimaryButtonPreview() {
-    VideoHostingTheme {
-        PrimaryButton(
-            text = "Кнопка",
-            isActivated = false,
-            onClick = {}
-        )
-    }
 }

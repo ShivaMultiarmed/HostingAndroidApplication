@@ -67,7 +67,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.PrimaryButton
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -106,17 +106,18 @@ fun EditUserScreen(
                     onPopup = onPopup,
                     onSubmit = {
                         val input = EditUserInputState(
-                            nick,
-                            name,
-                            avatarUri?.toString(),
-                            avatarAction,
-                            bio,
-                            tel,
-                            email
+                            nick = nick,
+                            name = name,
+                            avatar = avatarUri?.toString(),
+                            avatarAction = avatarAction,
+                            bio = bio,
+                            tel = tel,
+                            email = email
                         )
                         onEdit(input)
                     },
-                    inProgress = state.isEditing || state.isRemoving
+                    inProgress = state.isEditing,
+                    complete = state.editedUser != null
                 )
             }
         ) { padding ->
@@ -394,13 +395,14 @@ fun EditUserScreen(
                         .padding(20.dp),
                     contentAlignment = Alignment.BottomCenter
                 ) {
-                    PrimaryButton(
+                    PrimaryProgressButton(
                         needsCaution = true,
-                        text = stringResource(R.string.delete_account_button),
-                        isActivated = state.isRemoving || state.isRemovalConfirmed == true,
+                        inProgress = state.isRemoving,
+                        complete = state.isRemovalConfirmed == true,
                         onClick = {
                             isRemoveAccountDialogVisible = true
-                        }
+                        },
+                        text = stringResource(R.string.delete_account_button)
                     )
                 }
             }

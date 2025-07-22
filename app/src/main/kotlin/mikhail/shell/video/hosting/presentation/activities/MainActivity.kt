@@ -89,7 +89,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize(),
                     bottomBar = {
                         if (backStackEntry != null && currentRoute !in listOf(
                                 Route.Authentication.SignIn::class.qualifiedName,
@@ -99,7 +100,6 @@ class MainActivity : ComponentActivity() {
                                     && Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } != false
                                     || isVideoFullScreened)
                         ) {
-                            val userId = userDetailsProvider.getUserId()
                             BottomNavBar(
                                 onClick = {
                                     navController.navigate(it.route) {
@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
-                                userId = userId
+                                userId = userDetailsProvider.getUserId()
                             )
                         }
                     }

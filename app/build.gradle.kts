@@ -11,11 +11,11 @@ plugins {
 
 android {
     namespace = "mikhail.shell.video.hosting"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 12
         versionName = "1.2.8"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
