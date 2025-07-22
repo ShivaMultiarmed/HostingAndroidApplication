@@ -14,8 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.ui.theme.disabled
+import mikhail.shell.video.hosting.ui.theme.onDisabled
 
 @Composable
 fun PrimaryToggleButton(
@@ -35,8 +38,8 @@ fun PrimaryToggleButton(
             !toggled && needsCaution -> MaterialTheme.colorScheme.onError
             else -> MaterialTheme.colorScheme.onTertiaryContainer
         },
-        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+        disabledContainerColor = MaterialTheme.colorScheme.disabled,
+        disabledContentColor = MaterialTheme.colorScheme.onDisabled
     ),
     onClick: () -> Unit,
     toggledOffText: String? = null,
@@ -67,8 +70,8 @@ fun PrimaryProgressButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
         contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
-        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+        disabledContainerColor = MaterialTheme.colorScheme.disabled,
+        disabledContentColor = MaterialTheme.colorScheme.onDisabled
     ),
     onClick: () -> Unit,
     text: String? = null,
@@ -83,14 +86,9 @@ fun PrimaryProgressButton(
         onClick = onClick,
     ) {
         if (inProgress) {
-            val available = (enabled && !complete)
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = when {
-                    !available -> MaterialTheme.colorScheme.onTertiary
-                    !needsCaution -> MaterialTheme.colorScheme.onPrimary
-                    else -> MaterialTheme.colorScheme.onError
-                }
+                color = MaterialTheme.colorScheme.onDisabled
             )
         } else {
             if (text != null) {
@@ -101,7 +99,6 @@ fun PrimaryProgressButton(
             if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    tint = MaterialTheme.colorScheme.onPrimary,
                     contentDescription = stringResource(R.string.primary_button_hint)
                 )
             }
@@ -118,8 +115,8 @@ fun PrimaryStandardButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
         contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
-        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-        disabledContentColor = MaterialTheme.colorScheme.onTertiary
+        disabledContainerColor = MaterialTheme.colorScheme.disabled,
+        disabledContentColor = MaterialTheme.colorScheme.onDisabled
     ),
     onClick: () -> Unit,
     text: String? = null,
@@ -141,7 +138,6 @@ fun PrimaryStandardButton(
         if (icon != null) {
             Icon(
                 imageVector = icon,
-                tint = MaterialTheme.colorScheme.onPrimary,
                 contentDescription = stringResource(R.string.primary_button_hint)
             )
         }
@@ -157,8 +153,8 @@ fun PrimaryButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
         contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
-        disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-    disabledContentColor = MaterialTheme.colorScheme.onTertiary
+        disabledContainerColor = MaterialTheme.colorScheme.disabled,
+        disabledContentColor = MaterialTheme.colorScheme.onDisabled
     ),
     onClick: () -> Unit,
     content: @Composable RowScope.() -> Unit
@@ -170,5 +166,14 @@ fun PrimaryButton(
         colors = colors,
         onClick = onClick,
         content = content
+    )
+}
+
+@Composable
+@Preview
+private fun PrimaryButtonPreview() {
+    PrimaryProgressButton(
+        onClick = {},
+        text = "A button"
     )
 }

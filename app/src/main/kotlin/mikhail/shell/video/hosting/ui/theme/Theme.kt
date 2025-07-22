@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.content.edit
@@ -86,6 +87,18 @@ val LightColorScheme = lightColorScheme(
     onError = White
 )
 
+val ColorScheme.disabled: Color
+    @Composable
+    get() {
+        return MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
+    }
+
+val ColorScheme.onDisabled: Color
+    @Composable
+    get() {
+        return MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+    }
+
 enum class Theme {
     DARK, LIGHT, SYSTEM
 }
@@ -104,7 +117,6 @@ fun Context.getColorScheme(
             isSystemDarkTheme -> DarkColorScheme
             else -> LightColorScheme
         }
-
         DARK -> DarkColorScheme
         LIGHT -> LightColorScheme
     }
