@@ -33,10 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.errors.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -52,7 +54,7 @@ fun SignUpScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    Scaffold (
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
@@ -83,6 +85,14 @@ fun SignUpScreen(
                     onSuccess(state.authModel)
                 }
             }
+            LaunchedEffect(state.error) {
+                if (state.error is NetworkError) {
+                    snackbarHostState.showSnackbar(
+                        message = context.constructNetworkErrorMessage(state.error),
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
             val compoundError = state.error
             var userName by rememberSaveable { mutableStateOf("") }
             val userNameErrorMsg = constructInfoMessage(
@@ -91,7 +101,10 @@ fun SignUpScreen(
                     SignUpError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
                     SignUpError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
                     SignUpError.USERNAME_EXISTS to stringResource(R.string.email_exists_msg_error),
-                    SignUpError.USERNAME_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_USERNAME_LENGTH)
+                    SignUpError.USERNAME_TOO_LARGE to stringResource(
+                        R.string.text_too_large_error,
+                        ValidationRules.MAX_USERNAME_LENGTH
+                    )
                 )
             )
             InputField(
@@ -111,12 +124,16 @@ fun SignUpScreen(
                 state.error,
                 mapOf(
                     SignUpError.PASSWORD_EMPTY to stringResource(R.string.password_empty_error),
-                    SignUpError.PASSWORD_NOT_VALID to stringResource(R.string.password_not_valid_error,
-                        ValidationRules.MIN_PASSWORD_LENGTH, ValidationRules.MAX_PASSWORD_LENGTH)
+                    SignUpError.PASSWORD_NOT_VALID to stringResource(
+                        R.string.password_not_valid_error,
+                        ValidationRules.MIN_PASSWORD_LENGTH, ValidationRules.MAX_PASSWORD_LENGTH
+                    )
                 )
             )
             InputField(
-                modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
                 value = password,
                 onValueChange = {
@@ -134,7 +151,9 @@ fun SignUpScreen(
                 )
             )
             InputField(
-                modifier = Modifier.width(280.dp).clip(RoundedCornerShape(10.dp)),
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
                 value = passwordDuplicate,
                 onValueChange = {
@@ -149,7 +168,10 @@ fun SignUpScreen(
                 compoundError,
                 mapOf(
                     SignUpError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
-                    SignUpError.NICK_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH),
+                    SignUpError.NICK_TOO_LARGE to stringResource(
+                        R.string.text_too_large_error,
+                        ValidationRules.MAX_NAME_LENGTH
+                    ),
                     SignUpError.NICK_EXISTS to stringResource(R.string.nick_exists_error)
                 )
             )
@@ -195,6 +217,7 @@ fun SignUpScreenDayPreview() {
         )
     }
 }
+
 @Preview(
     uiMode = UI_MODE_NIGHT_YES
 )
