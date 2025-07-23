@@ -249,4 +249,10 @@
     <string name="no_subscriptions_yet">No subscriptions yet</string>
     <string name="passwords_not_match">Passwords don\'t match</string>
     <string name="password_again_label">Password (confirm)</string>
+    <string name="connection_error">No connection</string>
+    <string name="timeout_exceeded">Timeout is exceeded</string>
+    <string name="server_not_available">The server is not available. Try again later</string>
+    <string name="bad_request">Data is incorrect</string>
+    <string name="forbidden_error">Access is forbidden</string>
+    <string name="server_error">Server error</string>
 </resources>
