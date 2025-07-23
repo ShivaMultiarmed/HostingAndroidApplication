@@ -21,19 +21,22 @@ class SignInWithPasswordViewModel @Inject constructor(
     private val _state = MutableStateFlow(SignInWithPasswordState())
     val state = _state.asStateFlow()
 
-    companion object {
+    private companion object {
         private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
     }
 
     private fun validateSignInInput(email: String, password: String): CompoundError<SignInError>? {
         val compoundError = CompoundError<SignInError>()
-        if (email.isEmpty())
+        if (email.isEmpty()) {
             compoundError.add(SignInError.USERNAME_EMPTY)
-        else if (!emailRegex.matches(email))
+        }
+        else if (!emailRegex.matches(email)) {
             compoundError.add(SignInError.USERNAME_MALFORMED)
-        if (password.isEmpty())
+        }
+        if (password.isEmpty()) {
             compoundError.add(SignInError.PASSWORD_EMPTY)
-        return if (compoundError.isNull()) null else compoundError
+        }
+        return compoundError.takeIf { it.isNotNull() }
     }
 
     fun signIn(email: String, password: String) {
