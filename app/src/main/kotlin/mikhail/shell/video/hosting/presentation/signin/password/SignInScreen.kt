@@ -34,8 +34,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.errors.SignInError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -80,6 +82,14 @@ fun SignInScreen(
                         duration = SnackbarDuration.Short
                     )
                     onSuccess()
+                }
+            }
+            LaunchedEffect(state.error) {
+                if (state.error is NetworkError) {
+                    snackbarHostState.showSnackbar(
+                        message = context.constructNetworkErrorMessage(state.error),
+                        duration = SnackbarDuration.Short
+                    )
                 }
             }
             var email by rememberSaveable { mutableStateOf("") }
