@@ -262,4 +262,10 @@
     <string name="no_subscriptions_yet">Пока нет подписок</string>
     <string name="passwords_not_match">Пароли не совпадают</string>
     <string name="password_again_label">Пароль (ещё раз)</string>
+    <string name="connection_error">Нет соединения</string>
+    <string name="timeout_exceeded">Время ожидания вышло</string>
+    <string name="server_not_available">Сервер не доступен. Попробуйте позже</string>
+    <string name="bad_request">Некорректные данные</string>
+    <string name="forbidden_error">Доступ запрещён</string>
+    <string name="server_error">Ошибка сервера</string>
 </resources>
