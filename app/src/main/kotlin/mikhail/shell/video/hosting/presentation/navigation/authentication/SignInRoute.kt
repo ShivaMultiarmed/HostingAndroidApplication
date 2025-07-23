@@ -30,17 +30,14 @@ fun NavGraphBuilder.signInRoute(
             state = state,
             onSubmit = viewModel::signIn,
             onSuccess = {
-                if (state.authModel != null) {
-                    coroutineScope.launch {
-                        sharedPref.edit {
-                            putLong("userId", state.authModel!!.userId)
-                            putString("token", state.authModel!!.token)
-                            commit()
-                        }
-                        viewModel.subscribeToNotifications()
-                    }.invokeOnCompletion {
-                        navController.navigate(Route.Video.Search)
-                    }
+                sharedPref.edit {
+                    putLong("userId", state.authModel!!.userId)
+                    putString("token", state.authModel!!.token)
+                    commit()
+                }
+                navController.navigate(Route.Video.Recommendations)
+                coroutineScope.launch {
+                    viewModel.subscribeToNotifications()
                 }
             },
             onSigningUp = {
