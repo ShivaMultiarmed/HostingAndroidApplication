@@ -7,5 +7,5 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object PresentationModule {
-    const val HOST = "digit-verse.ru"
+    const val HOST = "trendy-app.ru"
 }

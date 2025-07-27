@@ -16,8 +16,8 @@ android {
         applicationId = "mikhail.shell.video.hosting"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.2.9"
+        versionCode = 14
+        versionName = "2.0.0"
         testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
     }
     signingConfigs {
@@ -45,14 +45,14 @@ android {
         create("staging") {
             isDebuggable = true
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://trendy-app.ru/api/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             signingConfig = signingConfigs.getByName("staging")
         }
         release {
             isDebuggable = false
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"https://digit-verse.ru:10000/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://trendy-app.ru/api/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

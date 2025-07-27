@@ -37,6 +37,7 @@ import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -150,7 +151,8 @@ fun VideoScreen(
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
-    onFullScreen: (Boolean) -> Unit = {}
+    onFullScreen: (Boolean) -> Unit = {},
+    onShare: (Long) -> Unit = {}
 ) {
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -456,6 +458,13 @@ fun VideoScreen(
                                         onRate(DISLIKED)
                                     else
                                         onRate(NONE)
+                                }
+                            )
+                            ActionButton(
+                                icon = Icons.Rounded.Share,
+                                text = stringResource(R.string.video_share),
+                                onClick = {
+                                    onShare(video.videoId!!)
                                 }
                             )
                             ActionButton(

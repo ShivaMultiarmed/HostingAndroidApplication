@@ -1,8 +1,10 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -14,6 +16,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -34,6 +37,7 @@ fun NavGraphBuilder.videoRoute(
             )
         )
     ) {
+        val context = LocalContext.current
         val videoRouteInfo = it.toRoute<Route.Video.View>()
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
@@ -73,7 +77,16 @@ fun NavGraphBuilder.videoRoute(
             onGoToProfile = {
                 navController.navigate(Route.User.Profile(it))
             },
-            onFullScreen = onFullScreen
+            onFullScreen = onFullScreen,
+            onShare = { videoId ->
+                Intent(Intent.ACTION_SEND).apply {
+                    setType("text/plain")
+                    putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/$videoId")
+                    context.startActivity(
+                        Intent.createChooser(this, context.getString(R.string.video_share))
+                    )
+                }
+            }
         )
 
     }

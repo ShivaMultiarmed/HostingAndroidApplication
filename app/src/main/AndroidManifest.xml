@@ -42,13 +42,13 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="digit-verse.ru" android:port="10000" android:pathPrefix="/videos/" />
+                <data android:scheme="https" android:host="trendy-app.ru" android:pathPrefix="/videos/" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="www.digit-verse.ru" android:port="10000" android:pathPrefix="/videos/" />
+                <data android:scheme="https" android:host="www.trendy-app.ru" android:pathPrefix="/videos/" />
             </intent-filter>
         </activity>
         <service
