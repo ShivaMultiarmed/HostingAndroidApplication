@@ -38,7 +38,7 @@ android {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2:10000/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://192.168.1.2/api/v1/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "true")
             signingConfig = signingConfigs.getByName("debug")
         }
