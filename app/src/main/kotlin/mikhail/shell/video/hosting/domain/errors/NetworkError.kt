@@ -5,6 +5,7 @@ enum class NetworkError: Error {
     TIMEOUT_EXCEEDED,
     SERVER_NOT_AVAILABLE,
     BAD_REQUEST,
+    AUTHENTICATION,
     FORBIDDEN,
     NOT_FOUND,
     SERVER_ERROR,

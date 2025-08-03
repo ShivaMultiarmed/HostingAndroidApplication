@@ -56,12 +56,14 @@ import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.EditUserError
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
@@ -83,22 +85,22 @@ fun EditUserScreen(
     onRemoveSuccess: () -> Unit = {},
     onPopup: () -> Unit = {}
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
     if (state.initialUser != null) {
         var nick by rememberSaveable { mutableStateOf(state.initialUser.nick) }
         var name by rememberSaveable { mutableStateOf(state.initialUser.name ?: "") }
         var avatarUri by rememberSaveable { mutableStateOf(null as Uri?) }
         var avatarAction by rememberSaveable { mutableStateOf(KEEP) }
         var bio by rememberSaveable { mutableStateOf(state.initialUser.bio ?: "") }
-        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel?.toString() ?: "") }
+        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel ?: "") }
         var email by rememberSaveable { mutableStateOf(state.initialUser.email ?: "") }
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
             snackbarHost = {
-                SnackbarHost(snackbarHostState)
+                SnackbarHost(snackBarHostState)
             },
             topBar = {
                 TopBar(
@@ -132,7 +134,10 @@ fun EditUserScreen(
                     state.editUserError,
                     mapOf(
                         EditUserError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
-                        EditUserError.NICK_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH)
+                        EditUserError.NICK_TOO_LARGE to stringResource(
+                            R.string.text_too_large_error,
+                            ValidationRules.MAX_NAME_LENGTH
+                        )
                     )
                 )
                 StandardEditField(
@@ -161,7 +166,10 @@ fun EditUserScreen(
                 val nameErrMsg = constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.NAME_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_NAME_LENGTH)
+                        EditUserError.NAME_TOO_LARGE to stringResource(
+                            R.string.text_too_large_error,
+                            ValidationRules.MAX_NAME_LENGTH
+                        )
                     )
                 )
                 StandardEditField(
@@ -199,8 +207,10 @@ fun EditUserScreen(
                     state.editUserError,
                     mapOf(
                         EditUserError.AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                        EditUserError.AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error,
-                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB")
+                        EditUserError.AVATAR_TOO_LARGE to stringResource(
+                            R.string.file_too_large_error,
+                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB"
+                        )
                     )
                 )
                 Column {
@@ -321,7 +331,10 @@ fun EditUserScreen(
                     state.editUserError,
                     mapOf(
                         EditUserError.EMAIL_MALFORMED to stringResource(R.string.email_malformed_error),
-                        EditUserError.EMAIL_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_USERNAME_LENGTH)
+                        EditUserError.EMAIL_TOO_LARGE to stringResource(
+                            R.string.text_too_large_error,
+                            ValidationRules.MAX_USERNAME_LENGTH
+                        )
                     )
                 )
                 StandardEditField(
@@ -386,7 +399,7 @@ fun EditUserScreen(
                         dialogDescription = stringResource(R.string.delete_account_warning_message)
                     )
                 }
-                Box (
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp)
@@ -410,7 +423,7 @@ fun EditUserScreen(
         LaunchedEffect(state.editedUser) {
             state.editedUser?.let {
                 delay(1000)
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     message = context.getString(R.string.profile_edit_success),
                     withDismissAction = true,
                     duration = SnackbarDuration.Short
@@ -418,7 +431,26 @@ fun EditUserScreen(
                 onEditSuccess(userId)
             }
         }
-
+        LaunchedEffect(state.editUserError) {
+            val errorMsg = if (state.editUserError is NetworkError) {
+                context.constructNetworkErrorMessage(state.editUserError)
+            } else {
+                constructInfoMessage(
+                    state.editUserError,
+                    mapOf(
+                        EditUserError.FORBIDDEN to context.getString(R.string.forbidden_error),
+                        EditUserError.USER_NOT_FOUND to context.getString(R.string.user_not_found),
+                        EditUserError.UNEXPECTED to context.getString(R.string.unexpected_error)
+                    )
+                )
+            }
+            errorMsg?.let {
+                snackBarHostState.showSnackbar(
+                    message = it,
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
     } else if (state.isInitializing) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()

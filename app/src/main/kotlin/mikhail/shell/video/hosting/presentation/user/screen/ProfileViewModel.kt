@@ -33,12 +33,11 @@ class ProfileViewModel @AssistedInject constructor(
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            _getUser(userId).onSuccess {  user ->
-                val userModel = user.toModel()
+            _getUser(userId).onSuccess { user ->
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        user = userModel,
+                        user = user.toModel(),
                         userError = null
                     )
                 }

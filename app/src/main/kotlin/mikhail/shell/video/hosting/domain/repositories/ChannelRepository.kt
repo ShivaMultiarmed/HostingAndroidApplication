@@ -1,11 +1,8 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
-import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.DeleteChannelError
-import mikhail.shell.video.hosting.domain.errors.EditChannelError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -22,7 +19,7 @@ interface ChannelRepository {
         channel: Channel,
         avatar: File?,
         cover: File?
-    ): Result<Channel, CompoundError<ChannelCreationError>>
+    ): Result<Channel, Error>
 
     suspend fun fetchChannelsByOwner(
         userId: Long
@@ -52,11 +49,11 @@ interface ChannelRepository {
         cover: String?,
         editAvatarAction: EditAction,
         avatar: String?
-    ): Result<Channel, CompoundError<EditChannelError>>
+    ): Result<Channel, Error>
 
     suspend fun fetchChannel(
         channelId: Long
     ): Result<Channel, ChannelLoadingError>
 
-    suspend fun removeChannel(channelId: Long): Result<Unit, DeleteChannelError>
+    suspend fun removeChannel(channelId: Long): Result<Unit, Error>
 }

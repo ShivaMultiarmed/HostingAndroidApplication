@@ -35,9 +35,7 @@ fun NavGraphBuilder.channelRoute(
                 viewModel.loadChannelInfo()
                 viewModel.loadVideosPart()
             },
-            onSubscription = {
-                viewModel.subscribe(it)
-            },
+            onSubscription = viewModel::subscribe,
             onVideoClick = {
                 navController.navigate(Route.Video.View(it))
             },

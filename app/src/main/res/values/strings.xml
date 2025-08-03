@@ -255,4 +255,6 @@
     <string name="bad_request">Data is incorrect</string>
     <string name="forbidden_error">Access is forbidden</string>
     <string name="server_error">Server error</string>
+    <string name="user_not_found">User was not found</string>
+    <string name="channel_not_found">Channel not found</string>
 </resources>

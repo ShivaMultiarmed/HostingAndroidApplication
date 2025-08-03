@@ -12,5 +12,4 @@ class GetChannel @Inject constructor(
     suspend operator fun invoke(channelId: Long): Result<Channel, ChannelLoadingError> {
         return channelRepository.fetchChannel(channelId)
     }
-
 }

@@ -123,7 +123,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
         fun create(@Assisted("channelId") channelId: Long, @Assisted("userId") userId: Long) : ChannelScreenViewModel
     }
 
-    companion object {
+    private companion object {
         const val PART_SIZE = 10
     }
 }

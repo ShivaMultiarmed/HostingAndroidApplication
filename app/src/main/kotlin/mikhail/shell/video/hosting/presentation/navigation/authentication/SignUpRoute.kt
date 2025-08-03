@@ -28,9 +28,7 @@ fun NavGraphBuilder.signUpRoute(
         val coroutineScope = rememberCoroutineScope()
         SignUpScreen(
             state = state,
-            onSubmit = {
-                viewModel.signUp(it)
-            },
+            onSubmit = viewModel::signUp,
             onSuccess = {
                 coroutineScope.launch {
                     sharedPref.edit {
@@ -38,7 +36,6 @@ fun NavGraphBuilder.signUpRoute(
                         putString("token", it.token)
                         commit()
                     }
-                    viewModel.subscribeToNotifications()
                 }.invokeOnCompletion {
                     navController.navigate(Route.Video.Search)
                 }

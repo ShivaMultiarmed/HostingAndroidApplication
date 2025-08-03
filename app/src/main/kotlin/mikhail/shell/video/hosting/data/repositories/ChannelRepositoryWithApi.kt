@@ -1,14 +1,16 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.util.Log
+import android.content.Context
 import android.webkit.MimeTypeMap
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
+import mikhail.shell.video.hosting.data.utils.isNetworkAvailable
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
@@ -17,6 +19,8 @@ import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError.UNSUBS
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.DeleteChannelError
 import mikhail.shell.video.hosting.domain.errors.EditChannelError
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -27,9 +31,12 @@ import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import retrofit2.HttpException
 import java.io.File
+import java.io.IOException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val _channelApi: ChannelApi,
     private val gson: Gson,
     private val fcm: FirebaseMessaging,
@@ -51,7 +58,7 @@ class ChannelRepositoryWithApi @Inject constructor(
                 else -> ChannelLoadingError.UNEXPECTED
             }
             Result.Failure(error)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.Failure(ChannelLoadingError.UNEXPECTED)
         }
     }
@@ -60,54 +67,71 @@ class ChannelRepositoryWithApi @Inject constructor(
         channel: Channel,
         avatar: File?,
         cover: File?
-    ): Result<Channel, CompoundError<ChannelCreationError>> {
-        return try {
-            val compoundError = CompoundError<ChannelCreationError>()
-            avatar?.let {
-                if (!it.exists()) {
-                    compoundError.add(ChannelCreationError.AVATAR_NOT_FOUND)
-                } else {
-                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-                    if (!mimeType!!.contains("image")) {
-                        compoundError.add(ChannelCreationError.AVATAR_TYPE_NOT_VALID)
-                    }
-                    if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
-                        compoundError.add(ChannelCreationError.AVATAR_TOO_LARGE)
-                    }
-                }
-            }
-            cover?.let {
-                if (!it.exists()) {
-                    compoundError.add(ChannelCreationError.COVER_NOT_FOUND)
-                } else {
-                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-                    if (!mimeType!!.contains("image")) {
-                        compoundError.add(ChannelCreationError.COVER_TYPE_NOT_VALID)
-                    }
-                    if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
-                        compoundError.add(ChannelCreationError.COVER_TOO_LARGE)
+    ): Result<Channel, Error> {
+        return if (appContext.isNetworkAvailable()) {
+            try {
+                val compoundError = CompoundError<ChannelCreationError>()
+                avatar?.let {
+                    if (!it.exists()) {
+                        compoundError.add(ChannelCreationError.AVATAR_NOT_FOUND)
+                    } else {
+                        val mimeType =
+                            MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                        if (!mimeType!!.contains("image")) {
+                            compoundError.add(ChannelCreationError.AVATAR_TYPE_NOT_VALID)
+                        }
+                        if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                            compoundError.add(ChannelCreationError.AVATAR_TOO_LARGE)
+                        }
                     }
                 }
+                cover?.let {
+                    if (!it.exists()) {
+                        compoundError.add(ChannelCreationError.COVER_NOT_FOUND)
+                    } else {
+                        val mimeType =
+                            MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                        if (!mimeType!!.contains("image")) {
+                            compoundError.add(ChannelCreationError.COVER_TYPE_NOT_VALID)
+                        }
+                        if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                            compoundError.add(ChannelCreationError.COVER_TOO_LARGE)
+                        }
+                    }
+                }
+                if (compoundError.isNotNull()) {
+                    return Result.Failure(compoundError)
+                }
+                val avatarPart = avatar?.toPart("avatar")
+                val coverPart = cover?.toPart("cover")
+                val response = _channelApi.createChannel(
+                    channel.toDto(),
+                    avatarPart,
+                    coverPart
+                )
+                Result.Success(response.toDomain())
+            } catch (e: HttpException) {
+                val error = when (e.code()) {
+                    400 -> {
+                        val responseBody = e.response()?.errorBody()?.string()
+                        val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
+                        gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
+                    }
+                    401 -> NetworkError.AUTHENTICATION
+                    403 -> NetworkError.FORBIDDEN
+                    in 500..599 -> NetworkError.SERVER_ERROR
+                    else -> ChannelCreationError.UNEXPECTED
+                }
+                Result.Failure(error)
+            } catch (_: SocketTimeoutException) {
+                Result.Failure(NetworkError.TIMEOUT_EXCEEDED)
+            } catch (_: IOException) {
+                Result.Failure(NetworkError.SERVER_NOT_AVAILABLE)
+            } catch (_: Exception) {
+                Result.Failure(ChannelCreationError.UNEXPECTED)
             }
-            if (compoundError.isNotNull()) {
-                return Result.Failure(compoundError)
-            }
-            val avatarPart = avatar?.toPart("avatar")
-            val coverPart = cover?.toPart("cover")
-            val response = _channelApi.createChannel(
-                channel.toDto(),
-                avatarPart,
-                coverPart
-            )
-            Result.Success(response.toDomain())
-        } catch (e: HttpException) {
-            val responseBody = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
-            val error = gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
-            Result.Failure(error)
-        } catch (_: Exception) {
-            val error = CompoundError(mutableListOf(ChannelCreationError.UNEXPECTED))
-            Result.Failure(error)
+        } else {
+            Result.Failure(NetworkError.CONNECTION_ERROR)
         }
     }
 
@@ -180,8 +204,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         return try {
             val token = fcm.token.await()
             Result.Success(_channelApi.unsubscribeFromChannelNotifications(userId, token))
-        } catch (e: Exception) {
-            Log.e("Channel Repository with API", e.stackTraceToString())
+        } catch (_: Exception) {
             Result.Failure(UNSUBSCRIBING_FAILED)
         }
     }
@@ -192,29 +215,49 @@ class ChannelRepositoryWithApi @Inject constructor(
         cover: String?,
         editAvatarAction: EditAction,
         avatar: String?
-    ): Result<Channel, CompoundError<EditChannelError>> {
-        return try {
-            val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(cover!!, "cover") else null
-            val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(avatar!!, "avatar") else null
-            val editedChannel = _channelApi.editChannel(
-                channel.toDto(),
-                avatarPart,
-                coverPart,
-                editCoverAction,
-                editAvatarAction
-            ).toDomain()
-            Result.Success(editedChannel)
-        } catch (e: HttpException) {
-            val responseBody = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
-            val error = gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)
-            Result.Failure(error)
-        } catch (_: Exception) {
-            val error = CompoundError<EditChannelError>()
-            error.add(EditChannelError.UNEXPECTED)
-            Result.Failure(error)
+    ): Result<Channel, Error> {
+        return if (appContext.isNetworkAvailable()) {
+            try {
+                val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(
+                    cover!!,
+                    "cover"
+                ) else null
+                val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(
+                    avatar!!,
+                    "avatar"
+                ) else null
+                val editedChannel = _channelApi.editChannel(
+                    channel.toDto(),
+                    avatarPart,
+                    coverPart,
+                    editCoverAction,
+                    editAvatarAction
+                ).toDomain()
+                Result.Success(editedChannel)
+            } catch (e: HttpException) {
+                val error = when (e.code()) {
+                    400 -> {
+                        val responseBody = e.response()?.errorBody()?.string()
+                        val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
+                        gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)
+                    }
+                    401 -> NetworkError.AUTHENTICATION
+                    403 -> NetworkError.FORBIDDEN
+                    404 -> EditChannelError.CHANNEL_NOT_EXIST
+                    in 500 .. 599 -> NetworkError.SERVER_ERROR
+                    else -> EditChannelError.UNEXPECTED
+                }
+                Result.Failure(error)
+            } catch (_: SocketTimeoutException) {
+                Result.Failure(NetworkError.TIMEOUT_EXCEEDED)
+            } catch (_: IOException) {
+                Result.Failure(NetworkError.SERVER_NOT_AVAILABLE)
+            } catch (_: Exception) {
+                Result.Failure(EditChannelError.UNEXPECTED)
+            }
+        } else {
+            Result.Failure(NetworkError.CONNECTION_ERROR)
         }
-
     }
 
     override suspend fun fetchChannel(channelId: Long): Result<Channel, ChannelLoadingError> {
@@ -228,12 +271,23 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun removeChannel(channelId: Long): Result<Unit, DeleteChannelError> {
+    override suspend fun removeChannel(channelId: Long): Result<Unit, Error> {
         return try {
             Result.Success(_channelApi.removeChannel(channelId))
         } catch (e: HttpException) {
-            Result.Failure(DeleteChannelError.UNEXPECTED)
-        } catch (e: Exception) {
+            val error = when(e.code()) {
+                401 -> NetworkError.AUTHENTICATION
+                403 -> NetworkError.FORBIDDEN
+                404 -> DeleteChannelError.CHANNEL_NOT_EXISTS
+                in 500 .. 599 -> NetworkError.SERVER_ERROR
+                else -> DeleteChannelError.UNEXPECTED
+            }
+            Result.Failure(error)
+        } catch (_: SocketTimeoutException) {
+            Result.Failure(NetworkError.TIMEOUT_EXCEEDED)
+        } catch (_: IOException) {
+            Result.Failure(NetworkError.SERVER_NOT_AVAILABLE)
+        } catch (_: Exception) {
             Result.Failure(DeleteChannelError.UNEXPECTED)
         }
     }

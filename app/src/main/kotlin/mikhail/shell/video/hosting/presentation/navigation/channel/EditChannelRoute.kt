@@ -16,9 +16,7 @@ fun NavGraphBuilder.editChannelRoute(
 ) {
     composable<Route.Channel.Edit> {
         val data = it.toRoute<Route.Channel.Edit>()
-        val viewModel = hiltViewModel<EditChannelViewModel, EditChannelViewModel.Factory> {
-            it.create(data.channelId)
-        }
+        val viewModel = hiltViewModel<EditChannelViewModel, EditChannelViewModel.Factory> { it.create(data.channelId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         EditChannelScreen(
             state = state,
@@ -26,7 +24,8 @@ fun NavGraphBuilder.editChannelRoute(
             onSubmit = viewModel::editChannel,
             onSuccess = {
                 navController.navigate(Route.Channel.View(it.channelId!!))
-            }
+            },
+            onAuthRequired = { navController.navigate(Route.Authentication) }
         )
     }
 }

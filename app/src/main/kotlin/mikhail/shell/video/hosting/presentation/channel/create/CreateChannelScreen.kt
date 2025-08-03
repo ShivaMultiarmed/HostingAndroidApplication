@@ -57,10 +57,12 @@ import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.DESCRIPTIO
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError.TITLE_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
@@ -76,10 +78,11 @@ fun CreateChannelScreen(
     state: CreateChannelScreenState,
     onSubmit: (CreateChannelInputState) -> Unit,
     onSuccess: (Channel) -> Unit,
-    onPopup: () -> Unit
+    onPopup: () -> Unit,
+    onAuthRequired: () -> Unit
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     var title by rememberSaveable { mutableStateOf("") }
     var alias by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
@@ -105,7 +108,7 @@ fun CreateChannelScreen(
             )
         },
         snackbarHost = {
-            SnackbarHost(snackbarHostState)
+            SnackbarHost(snackBarHostState)
         }
     ) {
         Column(
@@ -116,7 +119,7 @@ fun CreateChannelScreen(
         ) {
             LaunchedEffect(state.channel) {
                 if (state.channel != null) {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = context.getString(R.string.channel_create_success),
                         duration = SnackbarDuration.Long
                     )
@@ -305,6 +308,17 @@ fun CreateChannelScreen(
             }
         }
     }
+    LaunchedEffect(state.error) {
+        if (state.error is NetworkError) {
+            snackBarHostState.showSnackbar(
+                message = context.constructNetworkErrorMessage(state.error),
+                duration = SnackbarDuration.Short
+            )
+            if (state.error == NetworkError.AUTHENTICATION) {
+                onAuthRequired()
+            }
+        }
+    }
 }
 
 @Composable
@@ -315,7 +329,8 @@ fun CreateChannelScreenPreview() {
             state = CreateChannelScreenState(),
             onPopup = {},
             onSubmit = {},
-            onSuccess = {}
+            onSuccess = {},
+            onAuthRequired = {}
         )
     }
 }

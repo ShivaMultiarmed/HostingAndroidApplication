@@ -16,14 +16,12 @@ import mikhail.shell.video.hosting.domain.errors.SignUpError.USERNAME_EMPTY
 import mikhail.shell.video.hosting.domain.errors.SignUpError.USERNAME_MALFORMED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import javax.inject.Inject
 
 @HiltViewModel
 class SignUpWithPasswordViewModel @Inject constructor(
-    private val _signUpWithPassword: SignUpWithPassword,
-    private val _subscribeToChannelNotifications: SubscribeToChannelNotifications
+    private val _signUpWithPassword: SignUpWithPassword
 ) : ViewModel() {
     private val _state = MutableStateFlow(SignUpWithPasswordState())
     val state = _state.asStateFlow()
@@ -88,10 +86,5 @@ class SignUpWithPasswordViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    suspend fun subscribeToNotifications() {
-        val userId = state.value.authModel?.userId ?: return
-        _subscribeToChannelNotifications(userId)
     }
 }

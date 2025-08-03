@@ -36,6 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -44,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,8 +62,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.GetUserError
+import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
+import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.user.UserModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -86,10 +94,9 @@ fun ProfileScreen(
     onInvite: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
+    val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
-
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
-
     val content: @Composable () -> Unit = {
         ProfileScreenContent(
             modifier = modifier,
@@ -106,7 +113,8 @@ fun ProfileScreen(
             }
         )
     }
-    Box (
+    val snackBarHostState = remember { SnackbarHostState() }
+    Box(
         modifier = modifier.fillMaxSize()
     ) {
         Scaffold(
@@ -127,6 +135,11 @@ fun ProfileScreen(
                             }
                         }
                     ) else null
+                )
+            },
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackBarHostState
                 )
             }
         ) { padding ->
@@ -164,6 +177,24 @@ fun ProfileScreen(
     LaunchedEffect(state.isLoggedOut) {
         if (state.isLoggedOut == true) {
             onLogOutSuccess()
+        }
+    }
+    LaunchedEffect(state.userError) {
+        val userErrorMsg = if (state.userError is NetworkError) {
+            context.constructNetworkErrorMessage(state.userError)
+        } else {
+            constructInfoMessage(
+                state.userError,
+                mapOf(
+                    GetUserError.NOT_FOUND to context.getString(R.string.user_not_found)
+                )
+            )
+        }
+        userErrorMsg?.let {
+            snackBarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Short
+            )
         }
     }
 }
@@ -211,7 +242,11 @@ fun ProfileScreenContent(
                     onPublishVideo = onPublishVideo.takeIf { state.channels.isNotEmpty() },
                     onCreateChannel = onCreateChannel,
                     onLogOut = onLogOut,
-                    onInvite = onInvite.takeIf { context.packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY) }
+                    onInvite = onInvite.takeIf {
+                        context.packageManager.hasSystemFeature(
+                            PackageManager.FEATURE_TELEPHONY
+                        )
+                    }
                 )
             }
         }
@@ -394,7 +429,7 @@ fun UserTextDetails(
                     )
                 }
                 val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
-                AnimatedVisibility (
+                AnimatedVisibility(
                     visible = showMore,
                     enter = expandVertically(
                         tween(
@@ -402,12 +437,12 @@ fun UserTextDetails(
                         )
                     ),
                     exit = shrinkVertically(
-                        tween (
+                        tween(
                             durationMillis = 300
                         )
                     )
                 ) {
-                    Column (
+                    Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         UserDetail(contacts)

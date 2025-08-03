@@ -1,8 +1,9 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
-import android.net.Uri
+import androidx.core.net.toUri
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.EditChannelError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
@@ -21,7 +22,7 @@ class EditChannel @Inject constructor(
         coverUri: String?,
         avatarAction: EditAction,
         avatarUri: String?
-    ): Result<Channel, CompoundError<EditChannelError>> {
+    ): Result<Channel, Error> {
         val error = CompoundError<EditChannelError>()
         if (channel.title.length > ValidationRules.MAX_TITLE_LENGTH) {
             error.add(EditChannelError.TITLE_TOO_LARGE)
@@ -33,7 +34,7 @@ class EditChannel @Inject constructor(
             error.add(EditChannelError.DESCRIPTION_TOO_LARGE)
         }
         coverUri?.let {
-            val uri = Uri.parse(it)
+            val uri = it.toUri()
             if (fileProvider.exists(uri)) {
                 if (fileProvider.getFileMimeType(uri)?.contains("image") != true) {
                     error.add(EditChannelError.COVER_TYPE_NOT_VALID)
@@ -46,7 +47,7 @@ class EditChannel @Inject constructor(
             }
         }
         avatarUri?.let {
-            val uri = Uri.parse(it)
+            val uri = it.toUri()
             if (fileProvider.exists(uri)) {
                 if (fileProvider.getFileMimeType(uri)?.contains("image") != true) {
                     error.add(EditChannelError.AVATAR_TYPE_NOT_VALID)
@@ -62,11 +63,11 @@ class EditChannel @Inject constructor(
             Result.Failure(error)
         } else {
             channelRepository.editChannel(
-                channel,
-                coverAction,
-                coverUri,
-                avatarAction,
-                avatarUri
+                channel = channel,
+                editCoverAction = coverAction,
+                cover = coverUri,
+                editAvatarAction = avatarAction,
+                avatar = avatarUri
             )
         }
     }

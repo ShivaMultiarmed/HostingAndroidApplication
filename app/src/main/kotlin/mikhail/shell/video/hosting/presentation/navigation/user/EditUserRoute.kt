@@ -31,12 +31,11 @@ fun NavGraphBuilder.editUserRoute(
             onInitialize = viewModel::loadUser,
             onEdit = viewModel::editUser,
             onEditSuccess = {
-                navController.navigate(Route.User.Profile(userId))
+                navController.navigate(Route.User.Profile(it))
             },
             onRemove = {
                 player.stop()
                 player.clearMediaItems()
-
                 viewModel.removeUser()
             },
             onRemoveSuccess = {

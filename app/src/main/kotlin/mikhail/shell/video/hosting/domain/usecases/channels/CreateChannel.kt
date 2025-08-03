@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.domain.usecases.channels
 
 import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
@@ -16,7 +17,7 @@ class CreateChannel @Inject constructor(
         channel: Channel,
         avatar: File?,
         cover: File?
-    ): Result<Channel, CompoundError<ChannelCreationError>> {
+    ): Result<Channel, Error> {
         val compoundError = CompoundError<ChannelCreationError>()
         if (channel.title.length > ValidationRules.MAX_TITLE_LENGTH) {
             compoundError.add(ChannelCreationError.TITLE_TOO_LARGE)

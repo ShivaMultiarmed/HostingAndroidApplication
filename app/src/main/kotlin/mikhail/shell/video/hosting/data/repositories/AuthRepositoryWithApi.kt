@@ -42,8 +42,6 @@ class AuthRepositoryWithApi @Inject constructor(
                         val type = object : TypeToken<CompoundError<SignInError>>() {}.type
                         gson.fromJson(json, type) ?: SignInError.UNEXPECTED
                     }
-                    401, 403 -> NetworkError.FORBIDDEN
-                    404 -> NetworkError.NOT_FOUND
                     in 500..599 -> NetworkError.SERVER_ERROR
                     else -> NetworkError.UNEXPECTED
                 }
@@ -80,8 +78,6 @@ class AuthRepositoryWithApi @Inject constructor(
                         val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
                         gson.fromJson(json, type) ?: SignUpError.UNEXPECTED
                     }
-                    401, 403 -> NetworkError.FORBIDDEN
-                    404 -> NetworkError.NOT_FOUND
                     in 500..599 -> NetworkError.SERVER_ERROR
                     else -> NetworkError.UNEXPECTED
                 }

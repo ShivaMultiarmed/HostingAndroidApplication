@@ -268,4 +268,6 @@
     <string name="bad_request">Некорректные данные</string>
     <string name="forbidden_error">Доступ запрещён</string>
     <string name="server_error">Ошибка сервера</string>
+    <string name="user_not_found">Пользователь не найден</string>
+    <string name="channel_not_found">Канал не найден</string>
 </resources>
