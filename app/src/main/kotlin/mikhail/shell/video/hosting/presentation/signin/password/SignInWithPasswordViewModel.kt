@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.SignInError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
 import javax.inject.Inject

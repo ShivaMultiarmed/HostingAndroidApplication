@@ -1,7 +1,11 @@
-package mikhail.shell.video.hosting.domain.errors
+package mikhail.shell.video.hosting.domain.errors.video
+
+import mikhail.shell.video.hosting.domain.errors.Error
 
 enum class VideoEditingError: Error {
     VIDEO_NOT_FOUND,
+
+    FORBIDDEN,
 
     TITLE_EMPTY,
     TITLE_TOO_LARGE,

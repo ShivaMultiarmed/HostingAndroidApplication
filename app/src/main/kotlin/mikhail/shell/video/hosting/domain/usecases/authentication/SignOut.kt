@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.authentication
 
-import mikhail.shell.video.hosting.domain.errors.SignOutError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignOutError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
 import mikhail.shell.video.hosting.domain.usecases.channels.UnsubscribeFromChannelNotifications

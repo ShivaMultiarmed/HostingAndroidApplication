@@ -12,10 +12,10 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
-import mikhail.shell.video.hosting.domain.errors.VideoEditingError
-import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
+import mikhail.shell.video.hosting.domain.errors.video.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -41,7 +41,9 @@ class VideoRepositoryWithApi @Inject constructor(
     private val gson: Gson,
     private val fileProvider: FileProvider
 ) : VideoRepository {
-    override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request {
+    override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request (
+        httpExceptionHandler(404) { VideoLoadingError.VIDEO_NOT_FOUND }
+    ) {
         videoApi.fetchVideo(videoId).toDomain()
     }
 
@@ -60,7 +62,14 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun fetchVideoDetails(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, Error> = request {
+    ): Result<VideoDetails, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val type = object : TypeToken<CompoundError<VideoLoadingError>>() {}.type
+            val json = e.response()?.errorBody()?.string()
+            gson.fromJson(json, type)?: VideoLoadingError.UNEXPECTED
+        },
+        httpExceptionHandler(404) { VideoLoadingError.VIDEO_NOT_FOUND }
+    ) {
         videoApi.fetchVideoDetails(videoId, userId).toDomain()
     }
 
@@ -176,8 +185,10 @@ class VideoRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val json = e.response()?.errorBody()?.string()
                 val type = object : TypeToken<CompoundError<VideoEditingError>>() {}.type
-                gson.fromJson<CompoundError<VideoEditingError>>(json, type)
-            }
+                gson.fromJson<CompoundError<VideoEditingError>>(json, type)?: VideoEditingError.UNEXPECTED
+            },
+            httpExceptionHandler(403) { VideoEditingError.FORBIDDEN },
+            httpExceptionHandler(404) { VideoEditingError.VIDEO_NOT_FOUND }
         ) {
             val compoundError = CompoundError<VideoEditingError>()
             cover?.let {

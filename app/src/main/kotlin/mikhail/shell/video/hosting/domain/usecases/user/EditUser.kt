@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.usecases.user
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.EditUserError
+import mikhail.shell.video.hosting.domain.errors.user.EditUserError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result

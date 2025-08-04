@@ -1,4 +1,6 @@
-package mikhail.shell.video.hosting.domain.errors
+package mikhail.shell.video.hosting.domain.errors.authentication
+
+import mikhail.shell.video.hosting.domain.errors.Error
 
 enum class SignUpError: Error {
     USERNAME_EMPTY,

@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.VideoEditingError
+import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE

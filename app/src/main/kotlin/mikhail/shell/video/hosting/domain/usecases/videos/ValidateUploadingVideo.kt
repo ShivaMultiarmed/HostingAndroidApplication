@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.domain.usecases.videos
 
 import androidx.core.net.toUri
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.validation.ValidationRules

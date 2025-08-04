@@ -12,12 +12,13 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
-import mikhail.shell.video.hosting.domain.errors.ChannelCreationError
-import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.EditChannelError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.ValidationException
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelLoadingError
+import mikhail.shell.video.hosting.domain.errors.channel.DeleteChannelError
+import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -42,7 +43,10 @@ class ChannelRepositoryWithApi @Inject constructor(
     override suspend fun fetchChannelForUser(
         channelId: Long,
         userId: Long
-    ): Result<ChannelWithUser, Error> = request {
+    ): Result<ChannelWithUser, Error> = request (
+        httpExceptionHandler(400) { ChannelLoadingError.USER_NOT_FOUND },
+        httpExceptionHandler(404) { ChannelLoadingError.NOT_FOUND }
+    ) {
         _channelApi.fetchChannelDetails(channelId, userId).toDomain()
     }
 
@@ -54,7 +58,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
-            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
+            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)?: ChannelCreationError.UNEXPECTED
         }
     ) {
         val compoundError = CompoundError<ChannelCreationError>()
@@ -100,14 +104,14 @@ class ChannelRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error> = request(
-        httpExceptionHandler(403) { ChannelLoadingError.USER_NOT_SPECIFIED } // change 403 to 400 on the server
+        httpExceptionHandler(404) { ChannelLoadingError.USER_NOT_FOUND }
     ) {
         _channelApi.getChannelsByOwner(userId).map { it.toDomain() }
     }
 
     override suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, Error> =
         request(
-            httpExceptionHandler(403) { ChannelLoadingError.USER_NOT_SPECIFIED } // change 403 to 400 on the server
+            httpExceptionHandler(404) { ChannelLoadingError.USER_NOT_FOUND }
         ) {
             _channelApi.getChannelsBySubscriber(userId).map { it.toDomain() }
         }
@@ -116,9 +120,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         channelId: Long,
         userId: Long,
         subscriptionState: SubscriptionState
-    ): Result<ChannelWithUser, Error> = request(
-        httpExceptionHandler(403) { ChannelLoadingError.USER_NOT_SPECIFIED }
-    ) {
+    ): Result<ChannelWithUser, Error> = request {
         _channelApi.subscribe(
             channelId = channelId,
             userId = userId,
@@ -149,8 +151,10 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
-            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)
-        }
+            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)?: EditChannelError.UNEXPECTED
+        },
+        httpExceptionHandler(403) { EditChannelError.FORBIDDEN },
+        httpExceptionHandler(404) { EditChannelError.CHANNEL_NOT_EXIST }
     ) {
         val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(
             cover!!,
@@ -169,11 +173,16 @@ class ChannelRepositoryWithApi @Inject constructor(
         ).toDomain()
     }
 
-    override suspend fun fetchChannel(channelId: Long): Result<Channel, Error> = request {
+    override suspend fun fetchChannel(channelId: Long): Result<Channel, Error> = request (
+        httpExceptionHandler(404) { ChannelLoadingError.NOT_FOUND }
+    ) {
         _channelApi.fetchChannel(channelId).toDomain()
     }
 
-    override suspend fun removeChannel(channelId: Long): Result<Unit, Error> = request {
+    override suspend fun removeChannel(channelId: Long): Result<Unit, Error> = request (
+        httpExceptionHandler(403) { DeleteChannelError.FORBIDDEN },
+        httpExceptionHandler(404) { DeleteChannelError.CHANNEL_NOT_EXISTS }
+    ) {
         _channelApi.removeChannel(channelId)
     }
 }

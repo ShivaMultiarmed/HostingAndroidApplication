@@ -3,8 +3,8 @@ package mikhail.shell.video.hosting.domain.repositories
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.domain.models.ActionModel
-import mikhail.shell.video.hosting.domain.errors.CommentError
-import mikhail.shell.video.hosting.domain.errors.GetCommentsError
+import mikhail.shell.video.hosting.domain.errors.comment.CommentError
+import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.Result

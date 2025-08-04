@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.domain.usecases.channels
 
 import androidx.core.net.toUri
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.EditChannelError
+import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction

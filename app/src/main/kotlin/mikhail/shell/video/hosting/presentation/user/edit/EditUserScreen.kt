@@ -55,8 +55,8 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.EditUserError
-import mikhail.shell.video.hosting.domain.errors.NetworkError
+import mikhail.shell.video.hosting.domain.errors.user.EditUserError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE

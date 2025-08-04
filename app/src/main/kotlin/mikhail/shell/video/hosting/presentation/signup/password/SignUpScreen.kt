@@ -33,8 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.NetworkError
-import mikhail.shell.video.hosting.domain.errors.SignUpError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage

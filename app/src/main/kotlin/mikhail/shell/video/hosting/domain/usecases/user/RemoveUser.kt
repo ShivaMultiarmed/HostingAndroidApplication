@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.user
 
-import mikhail.shell.video.hosting.domain.errors.RemoveUserError
+import mikhail.shell.video.hosting.domain.errors.user.RemoveUserError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut

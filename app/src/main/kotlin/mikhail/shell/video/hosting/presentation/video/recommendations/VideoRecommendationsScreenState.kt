@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.recommendations
 
-import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingError
+import mikhail.shell.video.hosting.domain.errors.video.VideoRecommendationsLoadingError
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 
 data class VideoRecommendationsScreenState(

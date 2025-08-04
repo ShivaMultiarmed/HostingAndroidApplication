@@ -34,8 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.NetworkError
-import mikhail.shell.video.hosting.domain.errors.SignInError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField

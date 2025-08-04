@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.EditUserError
+import mikhail.shell.video.hosting.domain.errors.user.EditUserError
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser

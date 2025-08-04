@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.presentation.user.edit
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.RemoveUserError
+import mikhail.shell.video.hosting.domain.errors.user.RemoveUserError
 import mikhail.shell.video.hosting.presentation.user.UserModel
 
 data class EditUserScreenState(

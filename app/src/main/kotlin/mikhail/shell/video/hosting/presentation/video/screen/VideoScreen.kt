@@ -96,9 +96,9 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.CommentError
+import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.GetCommentsError
+import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment

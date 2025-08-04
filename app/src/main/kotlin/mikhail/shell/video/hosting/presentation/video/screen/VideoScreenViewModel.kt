@@ -18,8 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import mikhail.shell.video.hosting.domain.errors.GetCommentsError
-import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -134,12 +133,12 @@ class VideoScreenViewModel @AssistedInject constructor(
                         error = null
                     )
                 }
-            }.onFailure {
+            }.onFailure { e ->
                 _state.update {
                     it.copy(
                         videoDetails = null,
                         isLoading = false,
-                        error = VideoError.FAILED_LOADING
+                        error = e
                     )
                 }
             }

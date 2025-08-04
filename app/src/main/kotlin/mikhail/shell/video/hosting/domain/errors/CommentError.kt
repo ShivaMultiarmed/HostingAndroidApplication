@@ -1,8 +1,0 @@
-package mikhail.shell.video.hosting.domain.errors
-
-enum class CommentError: Error {
-    TEXT_EMPTY,
-    TEXT_TOO_LARGE,
-    NOT_FOUND,
-    UNEXPECTED
-}

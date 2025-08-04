@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.comments
 
-import mikhail.shell.video.hosting.domain.errors.CommentError
+import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository

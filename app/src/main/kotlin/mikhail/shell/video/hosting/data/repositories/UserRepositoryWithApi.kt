@@ -1,21 +1,20 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.content.Context
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dagger.hilt.android.qualifiers.ApplicationContext
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.EditUserError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.RemoveUserError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
+import mikhail.shell.video.hosting.domain.errors.user.EditUserError
+import mikhail.shell.video.hosting.domain.errors.user.GetUserError
+import mikhail.shell.video.hosting.domain.errors.user.RemoveUserError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -28,17 +27,18 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
-    @ApplicationContext private val appContext: Context,
     private val userApi: UserApi,
     private val fileProvider: FileProvider,
     private val gson: Gson
 ) : UserRepository {
-    private val MAX_FILE_SIZE = 10 * 1024 * 1024
+    private companion object {
+        val MAX_FILE_SIZE = 10 * 1024 * 1024
+    }
 
-    override suspend fun get(userId: Long): Result<User, Error> {
-        return request {
-            userApi.get(userId).toDomain()
-        }
+    override suspend fun get(userId: Long): Result<User, Error> = request (
+        httpExceptionHandler(404) { GetUserError.NOT_FOUND }
+    ) {
+        userApi.get(userId).toDomain()
     }
 
     override suspend fun edit(
@@ -50,7 +50,10 @@ class UserRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val type = object : TypeToken<CompoundError<EditUserError>>() {}.type
                 val json = e.response()?.errorBody()?.string()
-                gson.fromJson(json, type)
+                gson.fromJson(json, type)?: EditUserError.UNEXPECTED
+            },
+            httpExceptionHandler(404) {
+                EditUserError.USER_NOT_FOUND
             }
         ) {
             val compoundError = CompoundError<EditUserError>()
@@ -105,5 +108,4 @@ class UserRepositoryWithApi @Inject constructor(
             Result.Failure(RemoveUserError.UNEXPECTED)
         }
     }
-
 }

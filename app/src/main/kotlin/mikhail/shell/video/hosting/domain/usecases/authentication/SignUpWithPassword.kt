@@ -2,8 +2,8 @@ package mikhail.shell.video.hosting.domain.usecases.authentication
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.SignUpError
-import mikhail.shell.video.hosting.domain.errors.SignUpError.PASSWORD_NOT_VALID
+import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError.PASSWORD_NOT_VALID
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User

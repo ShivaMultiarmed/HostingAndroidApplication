@@ -62,8 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.GetUserError
-import mikhail.shell.video.hosting.domain.errors.NetworkError
+import mikhail.shell.video.hosting.domain.errors.user.GetUserError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
