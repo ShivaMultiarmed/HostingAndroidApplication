@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import mikhail.shell.video.hosting.domain.errors.VideoError
-import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
@@ -15,12 +14,12 @@ class GetVideoList @Inject constructor(
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, VideoLoadingError> {
+    ): Result<List<Video>, Error> {
         return repository.fetchChannelVideoList(
-            channelId,
-            userId,
-            partNumber,
-            partSize
+            channelId = channelId,
+            userId = userId,
+            partNumber = partNumber,
+            partSize = partSize
         )
     }
 }

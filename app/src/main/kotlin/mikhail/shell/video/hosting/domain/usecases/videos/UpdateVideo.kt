@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
@@ -17,7 +18,7 @@ class UpdateVideo @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, CompoundError<VideoEditingError>> {
+    ): Result<Video, Error> {
         val compoundError = CompoundError<VideoEditingError>()
         if (video.title.length > ValidationRules.MAX_TITLE_LENGTH) {
             compoundError.add(VideoEditingError.TITLE_TOO_LARGE)

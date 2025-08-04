@@ -2,6 +2,8 @@ package mikhail.shell.video.hosting.domain.errors
 
 import com.google.gson.annotations.SerializedName
 
+class ValidationException(val error: Error): RuntimeException()
+
 interface Error
 
 class CompoundError<T: Error>(): Error {

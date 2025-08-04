@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.errors.ChannelLoadingError
-import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -14,7 +12,8 @@ interface ChannelRepository {
     suspend fun fetchChannelForUser(
         channelId: Long,
         userId: Long
-    ): Result<ChannelWithUser, ChannelLoadingError>
+    ): Result<ChannelWithUser, Error>
+
     suspend fun createChannel(
         channel: Channel,
         avatar: File?,
@@ -23,25 +22,25 @@ interface ChannelRepository {
 
     suspend fun fetchChannelsByOwner(
         userId: Long
-    ): Result<List<Channel>, ChannelLoadingError>
+    ): Result<List<Channel>, Error>
 
     suspend fun fetchChannelsBySubscriber(
         userId: Long
-    ): Result<List<Channel>, ChannelLoadingError>
+    ): Result<List<Channel>, Error>
 
     suspend fun subscribe(
         channelId: Long,
         userId: Long,
         subscriptionState: SubscriptionState
-    ): Result<ChannelWithUser, ChannelLoadingError>
+    ): Result<ChannelWithUser, Error>
 
     suspend fun subscribeToNotifications(
         userId: Long
-    ): Result<Unit, ChannelSubscriptionError>
+    ): Result<Unit, Error>
 
     suspend fun unsubscribeFromNotifications(
         userId: Long
-    ): Result<Unit, ChannelSubscriptionError>
+    ): Result<Unit, Error>
 
     suspend fun editChannel(
         channel: Channel,
@@ -53,7 +52,7 @@ interface ChannelRepository {
 
     suspend fun fetchChannel(
         channelId: Long
-    ): Result<Channel, ChannelLoadingError>
+    ): Result<Channel, Error>
 
     suspend fun removeChannel(channelId: Long): Result<Unit, Error>
 }

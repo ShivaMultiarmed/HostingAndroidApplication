@@ -23,10 +23,7 @@ fun NavGraphBuilder.channelRoute(
         val channelRouteInfo = it.toRoute<Route.Channel.View>()
         val userId = userDetailsProvider.getUserId()
         val channelId = channelRouteInfo.channelId
-        val viewModel =
-            hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> {
-                it.create(channelId, userId)
-            }
+        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { it.create(channelId, userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         ChannelScreen(

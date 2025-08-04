@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
@@ -13,7 +13,7 @@ class GetVideoRecommendations @Inject constructor(
         userId: Long,
         partIndex: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, VideoRecommendationsLoadingError> {
+    ): Result<List<VideoWithChannel>, Error> {
         return videoRepository.fetchVideoRecommendations(userId, partIndex, partSize)
     }
 }

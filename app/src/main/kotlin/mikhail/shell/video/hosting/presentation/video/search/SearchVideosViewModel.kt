@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.usecases.videos.SearchForVideos
 import javax.inject.Inject
 
@@ -56,7 +55,7 @@ class SearchVideosViewModel @Inject constructor(
             }
         }
     }
-    companion object {
+    private companion object {
         const val PART_SIZE = 10
     }
 }

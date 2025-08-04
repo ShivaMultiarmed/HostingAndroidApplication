@@ -9,13 +9,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
-import mikhail.shell.video.hosting.data.utils.isNetworkAvailable
+import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
+import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.EditUserError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.GetUserError
-import mikhail.shell.video.hosting.domain.errors.NetworkError
 import mikhail.shell.video.hosting.domain.errors.RemoveUserError
+import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -25,8 +25,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
-import java.io.IOException
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
@@ -38,28 +36,8 @@ class UserRepositoryWithApi @Inject constructor(
     private val MAX_FILE_SIZE = 10 * 1024 * 1024
 
     override suspend fun get(userId: Long): Result<User, Error> {
-        return if (appContext.isNetworkAvailable()) {
-            try {
-                val userDto = userApi.get(userId)
-                val user = userDto.toDomain()
-                Result.Success(user)
-            } catch (e: HttpException) {
-                val error = when (e.code()) {
-                    401 -> NetworkError.AUTHENTICATION
-                    404 -> GetUserError.NOT_FOUND
-                    in 500 .. 599 -> NetworkError.SERVER_ERROR
-                    else -> GetUserError.UNEXPECTED
-                }
-                Result.Failure(error)
-            } catch (_: SocketTimeoutException) {
-                Result.Failure(NetworkError.TIMEOUT_EXCEEDED)
-            } catch (_: IOException) {
-                Result.Failure(NetworkError.SERVER_NOT_AVAILABLE)
-            } catch (_: Exception) {
-                Result.Failure(GetUserError.UNEXPECTED)
-            }
-        } else {
-            Result.Failure(NetworkError.CONNECTION_ERROR)
+        return request {
+            userApi.get(userId).toDomain()
         }
     }
 
@@ -68,63 +46,47 @@ class UserRepositoryWithApi @Inject constructor(
         avatar: String?,
         avatarAction: EditAction
     ): Result<User, Error> {
-        return if (appContext.isNetworkAvailable()) {
-            try {
-                val compoundError = CompoundError<EditUserError>()
-                val userDto = user.toDto()
-                val avatarPart = avatar?.let {
-                    val uri = it.toUri()
-                    if (fileProvider.getFileMimeType(uri)!!.substringBefore("/") != "image") {
-                        compoundError.add(EditUserError.AVATAR_TYPE_NOT_VALID)
-                        return@let null
-                    }
-                    if (fileProvider.getFileSize(uri)!! > MAX_FILE_SIZE) {
-                        compoundError.add(EditUserError.AVATAR_TOO_LARGE)
-                        return@let null
-                    }
-                    val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
-                    val mimeType = fileProvider.getFileMimeType(uri)
-                    val mediaType = mimeType?.toMediaTypeOrNull()
-                    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                    val requestBody = bytes?.toRequestBody(contentType = mediaType)
-                    requestBody?.let {
-                        MultipartBody.Part.createFormData(
-                            "avatar",
-                            "avatar.$extension",
-                            it
-                        )
-                    }
-                }
-                if (compoundError.isNotNull()) {
-                    return Result.Failure(compoundError)
-                } else {
-                    val editedUserDto = userApi.edit(userDto, avatarAction, avatarPart)
-                    val editedUser = editedUserDto.toDomain()
-                    Result.Success(editedUser)
-                }
-            } catch (e: HttpException) {
-                val error = when (e.code()) {
-                    400 -> {
-                        val type = object : TypeToken<CompoundError<EditUserError>>() {}.type
-                        val json = e.response()?.errorBody()?.string()
-                        gson.fromJson(json, type)
-                    }
-                    401 -> NetworkError.AUTHENTICATION
-                    403 -> EditUserError.FORBIDDEN
-                    404 -> EditUserError.USER_NOT_FOUND
-                    in 500 .. 599 -> NetworkError.SERVER_ERROR
-                    else -> EditUserError.UNEXPECTED
-                }
-                Result.Failure(error)
-            } catch (_: SocketTimeoutException) {
-                Result.Failure(NetworkError.TIMEOUT_EXCEEDED)
-            } catch (_: IOException) {
-                Result.Failure(NetworkError.SERVER_NOT_AVAILABLE)
-            } catch (_: Exception) {
-                Result.Failure(EditUserError.UNEXPECTED)
+        return request (
+            httpExceptionHandler(400) { e ->
+                val type = object : TypeToken<CompoundError<EditUserError>>() {}.type
+                val json = e.response()?.errorBody()?.string()
+                gson.fromJson(json, type)
             }
-        } else {
-            Result.Failure(NetworkError.CONNECTION_ERROR)
+        ) {
+            val compoundError = CompoundError<EditUserError>()
+            val userDto = user.toDto()
+            val avatarPart = avatar?.let {
+                val uri = it.toUri()
+                if (fileProvider.getFileMimeType(uri)!!.substringBefore("/") != "image") {
+                    compoundError.add(EditUserError.AVATAR_TYPE_NOT_VALID)
+                    return@let null
+                }
+                if (fileProvider.getFileSize(uri)!! > MAX_FILE_SIZE) {
+                    compoundError.add(EditUserError.AVATAR_TOO_LARGE)
+                    return@let null
+                }
+                val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
+                val mimeType = fileProvider.getFileMimeType(uri)
+                val mediaType = mimeType?.toMediaTypeOrNull()
+                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                val requestBody = bytes?.toRequestBody(contentType = mediaType)
+                requestBody?.let {
+                    MultipartBody.Part.createFormData(
+                        "avatar",
+                        "avatar.$extension",
+                        it
+                    )
+                }
+            }
+            if (compoundError.isNotNull()) {
+                throw ValidationException(compoundError)
+            } else {
+                userApi.edit(
+                    user = userDto,
+                    avatarAction = avatarAction,
+                    avatar = avatarPart
+                ).toDomain()
+            }
         }
     }
 

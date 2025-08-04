@@ -1,13 +1,6 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
-import mikhail.shell.video.hosting.domain.errors.VideoDeletingError
-import mikhail.shell.video.hosting.domain.errors.VideoEditingError
-import mikhail.shell.video.hosting.domain.errors.VideoError
-import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
-import mikhail.shell.video.hosting.domain.errors.VideoRecommendationsLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -19,37 +12,38 @@ import java.io.File
 interface VideoRepository {
     suspend fun fetchVideoInfo(
         videoId: Long
-    ) : Result<Video, VideoError>
+    ) : Result<Video, Error>
+
     suspend fun fetchVideoDetails(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, VideoError>
+    ): Result<VideoDetails, Error>
 
     suspend fun rateVideo(
         videoId: Long,
         userId: Long,
         liking: LikingState
-    ) : Result<Video, VideoError>
+    ) : Result<Video, Error>
 
     suspend fun fetchChannelVideoList(
         channelId: Long,
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, VideoLoadingError>
+    ): Result<List<Video>, Error>
 
     suspend fun fetchVideosWithChannelsByQuery(
         query: String,
         partNumber: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, VideoError>
+    ): Result<List<VideoWithChannel>, Error>
 
     suspend fun uploadVideo(
         video: Video,
         source: String,
         cover: String?,
-        onProgress: (Float) -> Unit = {}
-    ): Result<Video, CompoundError<UploadVideoError>>
+        onProgress: (Float) -> Unit
+    ): Result<Video, Error>
 
     suspend fun incrementViews(
         videoId: Long
@@ -57,22 +51,22 @@ interface VideoRepository {
 
     suspend fun deleteVideo(
         videoId: Long
-    ): Result<Boolean, VideoDeletingError>
+    ): Result<Unit, Error>
 
     suspend fun editVideo(
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, CompoundError<VideoEditingError>>
+    ): Result<Video, Error>
 
     suspend fun downloadVideo(
         videoId: Long,
         onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
-    ): Result<Boolean, VideoLoadingError>
+    ): Result<Boolean, Error>
 
     suspend fun fetchVideoRecommendations(
         userId: Long,
         partIndex: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, VideoRecommendationsLoadingError>
+    ): Result<List<VideoWithChannel>, Error>
 }

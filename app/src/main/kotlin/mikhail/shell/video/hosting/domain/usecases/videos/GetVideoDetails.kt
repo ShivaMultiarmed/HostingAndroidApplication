@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoDetails
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
@@ -12,7 +12,7 @@ class GetVideoDetails @Inject constructor(
     suspend operator fun invoke(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, VideoError> {
+    ): Result<VideoDetails, Error> {
         return repository.fetchVideoDetails(videoId, userId)
     }
 }

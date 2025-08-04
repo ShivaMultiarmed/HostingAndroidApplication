@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import mikhail.shell.video.hosting.domain.errors.VideoLoadingError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import javax.inject.Inject
@@ -11,7 +11,7 @@ class DownloadVideo @Inject constructor(
     suspend operator fun invoke(
         videoId: Long,
         onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
-    ): Result<Boolean, VideoLoadingError> {
+    ): Result<Boolean, Error> {
         return videoRepository.downloadVideo(videoId, onPartitionLoaded)
     }
 }

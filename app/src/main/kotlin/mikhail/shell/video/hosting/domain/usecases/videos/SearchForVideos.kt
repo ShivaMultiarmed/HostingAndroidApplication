@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import mikhail.shell.video.hosting.domain.errors.VideoError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
@@ -13,11 +13,11 @@ class SearchForVideos @Inject constructor(
         query: String,
         partNumber: Long = 1,
         partSize: Int = 10
-    ): Result<List<VideoWithChannel>, VideoError> {
+    ): Result<List<VideoWithChannel>, Error> {
         return videoRepository.fetchVideosWithChannelsByQuery(
-            query,
-            partNumber,
-            partSize
+            query = query,
+            partNumber = partNumber,
+            partSize = partSize
         )
     }
 }

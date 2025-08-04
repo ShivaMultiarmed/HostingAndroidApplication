@@ -21,8 +21,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
-import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
@@ -115,7 +114,7 @@ class VideoUploadingService : Service() {
         notificationManager.notify(++NOTIFICATION_COUNT, notification)
     }
 
-    private fun displayFailureNotification(err: CompoundError<UploadVideoError>) {
+    private fun displayFailureNotification(err: Error) {
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))

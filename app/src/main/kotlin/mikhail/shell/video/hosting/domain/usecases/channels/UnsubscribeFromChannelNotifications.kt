@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
-import mikhail.shell.video.hosting.domain.errors.ChannelSubscriptionError
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
@@ -8,7 +8,7 @@ import javax.inject.Inject
 class UnsubscribeFromChannelNotifications @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<Unit, ChannelSubscriptionError> {
+    suspend operator fun invoke(userId: Long): Result<Unit, Error> {
         return channelRepository.unsubscribeFromNotifications(userId)
     }
 }

@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.videos
 
-import android.net.Uri
+import androidx.core.net.toUri
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Video
@@ -16,7 +16,7 @@ class ValidateUploadingVideo @Inject constructor(
         if (video.title.length > ValidationRules.MAX_TITLE_LENGTH) {
             compoundError.add(UploadVideoError.TITLE_TOO_LARGE)
         }
-        val sourceUri = Uri.parse(source)
+        val sourceUri = source.toUri()
         val sourceMime = fileProvider.getFileMimeType(sourceUri)
         val sourceSize = fileProvider.getFileSize(sourceUri)!!
         if (!fileProvider.exists(sourceUri)) {
@@ -27,7 +27,7 @@ class ValidateUploadingVideo @Inject constructor(
             compoundError.add(UploadVideoError.SOURCE_TOO_LARGE)
         }
         cover?.let { notNullCover ->
-            val coverUri = Uri.parse(notNullCover)
+            val coverUri = notNullCover.toUri()
             val coverMime = fileProvider.getFileMimeType(coverUri)
             if (!fileProvider.exists(coverUri)) {
                 compoundError.add(UploadVideoError.COVER_NOT_FOUND)

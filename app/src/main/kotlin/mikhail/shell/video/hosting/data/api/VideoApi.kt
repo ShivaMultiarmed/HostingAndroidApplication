@@ -91,7 +91,7 @@ interface VideoApi {
     @DELETE("videos/{videoId}")
     suspend fun deleteVideo(
         @Path("videoId") videoId: Long
-    ): Void
+    )
     @GET("videos/{videoId}/play")
     @Streaming
     suspend fun playVideo(
