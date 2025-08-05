@@ -9,8 +9,8 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignOutError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
@@ -30,7 +30,7 @@ class AuthRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val json = e.response()?.errorBody()?.string()
                 val type = object : TypeToken<CompoundError<SignInError>>() {}.type
-                gson.fromJson(json, type) ?: SignInError.UNEXPECTED
+                gson.fromJson(json, type) ?: UnexpectedError
             }
         ) {
             authApi.signInWithPassword(email, password)
@@ -46,7 +46,7 @@ class AuthRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val json = e.response()?.errorBody()?.string()
                 val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-                gson.fromJson(json, type) ?: SignUpError.UNEXPECTED
+                gson.fromJson(json, type) ?: UnexpectedError
             }
         ) {
             val signUpDto = SignUpDto(
@@ -58,11 +58,7 @@ class AuthRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun signOut(userId: Long): Result<Unit, SignOutError> {
-        return try {
-            Result.Success(Unit)
-        } catch (_: Exception) {
-            Result.Failure(SignOutError.UNEXPECTED)
-        }
+    override suspend fun signOut(userId: Long): Result<Unit, Error> {
+        return request { }
     }
 }

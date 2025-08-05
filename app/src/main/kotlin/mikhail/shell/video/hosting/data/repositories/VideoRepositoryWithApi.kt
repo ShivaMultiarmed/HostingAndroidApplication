@@ -12,10 +12,11 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
-import mikhail.shell.video.hosting.domain.errors.video.VideoLoadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
 import mikhail.shell.video.hosting.domain.models.Result
@@ -29,9 +30,12 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okio.BufferedSink
+import okio.IOException
 import retrofit2.HttpException
 import java.io.File
 import java.io.InputStream
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
@@ -41,9 +45,7 @@ class VideoRepositoryWithApi @Inject constructor(
     private val gson: Gson,
     private val fileProvider: FileProvider
 ) : VideoRepository {
-    override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request (
-        httpExceptionHandler(404) { VideoLoadingError.VIDEO_NOT_FOUND }
-    ) {
+    override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request {
         videoApi.fetchVideo(videoId).toDomain()
     }
 
@@ -62,14 +64,7 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun fetchVideoDetails(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, Error> = request (
-        httpExceptionHandler(400) { e ->
-            val type = object : TypeToken<CompoundError<VideoLoadingError>>() {}.type
-            val json = e.response()?.errorBody()?.string()
-            gson.fromJson(json, type)?: VideoLoadingError.UNEXPECTED
-        },
-        httpExceptionHandler(404) { VideoLoadingError.VIDEO_NOT_FOUND }
-    ) {
+    ): Result<VideoDetails, Error> = request {
         videoApi.fetchVideoDetails(videoId, userId).toDomain()
     }
 
@@ -77,32 +72,20 @@ class VideoRepositoryWithApi @Inject constructor(
         videoId: Long,
         userId: Long,
         liking: LikingState
-    ): Result<Video, Error> {
-        return request {
-            videoApi.rateVideo(videoId, userId, liking).toDomain()
-        }
+    ): Result<Video, Error> = request {
+        videoApi.rateVideo(videoId, userId, liking).toDomain()
     }
 
     override suspend fun fetchChannelVideoList(
         channelId: Long,
-        userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, Error> {
-        return request (
-            httpExceptionHandler(400) { e -> // TODO: ensure user not specified and other errors are handled in 400
-                val type = object : TypeToken<CompoundError<VideoLoadingError>>() {}.type
-                val json = e.response()?.errorBody()?.string()
-                gson.fromJson(json, type)
-            }
-        ) {
-            videoApi.fetchVideoList(
-                channelId = channelId,
-                userId = userId,
-                partNumber = partNumber,
-                partSize = partSize
-            ).map { it.toDomain() }
-        }
+    ): Result<List<Video>, Error> = request {
+        videoApi.fetchVideoList(
+            channelId = channelId,
+            partNumber = partNumber,
+            partSize = partSize
+        ).map { it.toDomain() }
     }
 
     override suspend fun fetchVideosWithChannelsByQuery(
@@ -159,12 +142,25 @@ class VideoRepositoryWithApi @Inject constructor(
             videoApi.confirmVideoUpload(videoResponse.videoId!!)
             Result.Success(videoResponse)
         } catch (e: HttpException) {
-            val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
-            val compoundError = gson.fromJson<CompoundError<UploadVideoError>>(json, type)
-            Result.Failure(compoundError)
-        } catch (_: Exception) {
-            Result.Failure(DEFAULT_UPLOAD_ERROR)
+            val error = when (e.code()) {
+                400 -> {
+                    val json = e.response()?.errorBody()?.string()
+                    val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
+                    gson.fromJson<CompoundError<UploadVideoError>>(json, type)?: UnexpectedError
+                }
+                401 -> NetworkError.AUTHENTICATION
+                in 500 .. 599 -> NetworkError.SERVER_ERROR
+                else -> UnexpectedError
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            val error = when (e) {
+                is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
+                is ConnectException -> NetworkError.CONNECTION_ERROR
+                is IOException -> NetworkError.SERVER_NOT_AVAILABLE
+                else -> UnexpectedError
+            }
+            Result.Failure(error)
         }
     }
 
@@ -185,10 +181,8 @@ class VideoRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val json = e.response()?.errorBody()?.string()
                 val type = object : TypeToken<CompoundError<VideoEditingError>>() {}.type
-                gson.fromJson<CompoundError<VideoEditingError>>(json, type)?: VideoEditingError.UNEXPECTED
-            },
-            httpExceptionHandler(403) { VideoEditingError.FORBIDDEN },
-            httpExceptionHandler(404) { VideoEditingError.VIDEO_NOT_FOUND }
+                gson.fromJson<CompoundError<VideoEditingError>>(json, type)?: UnexpectedError
+            }
         ) {
             val compoundError = CompoundError<VideoEditingError>()
             cover?.let {
@@ -213,46 +207,59 @@ class VideoRepositoryWithApi @Inject constructor(
         videoId: Long,
         onPartitionLoaded: (String, Long, Array<Byte>) -> Unit
     ): Result<Boolean, Error> {
-        val range = 1024 * 1024 * 10
-        var start = 0
-        var end = start + range - 1
-        var size: Long? = null
-        var mime: String? = null
-        do {
-            var response = videoApi.playVideo(
+        try {
+            val range = 1024 * 1024 * 10
+            var start = 0
+            var end = start + range - 1
+            var size: Long? = null
+            var mime: String? = null
+            do {
+                var response = videoApi.downloadVideo(
                     videoId,
                     "bytes=$start-$end"
                 )
-            if (!response.isSuccessful) {
-                if (response.code() == 416) { // range not satisfiable - end of file is passed
-                    response = videoApi.downloadVideo(
-                        videoId,
-                        "bytes=$start-"
-                    )
-                    if (response.body() == null) {
-                        return Result.Failure(VideoLoadingError.UNEXPECTED)
+                if (!response.isSuccessful) {
+                    if (response.code() == 401) {
+                        return Result.Failure(NetworkError.AUTHENTICATION)
+                    } else if (response.code() == 404) {
+                        return Result.Failure(NetworkError.NOT_FOUND)
+                    } else if (response.code() == 416) { // range not satisfiable - end of file is passed
+                        response = videoApi.downloadVideo(
+                            videoId,
+                            "bytes=$start-"
+                        )
+                        if (response.body() == null) {
+                            return Result.Failure(UnexpectedError)
+                        }
+                    } else if (response.code() in 500 .. 599) {
+                        return Result.Failure(NetworkError.SERVER_ERROR)
+                    } else {
+                        return Result.Failure(UnexpectedError)
                     }
-                } else {
-                    return Result.Failure(VideoLoadingError.UNEXPECTED)
                 }
+                if (size == null) {
+                    size = response.headers()[HttpHeaders.CONTENT_RANGE]!!.parseFileSize()
+                }
+                if (mime == null) {
+                    mime = response.headers()[HttpHeaders.CONTENT_TYPE]
+                }
+                val bytes = response.body()!!.bytes()
+                onPartitionLoaded(mime!!, size, bytes.toTypedArray())
+                start = end + 1
+                end = start + range - 1
+            } while (start < size)
+            return Result.Success(true)
+        } catch (e: Exception) {
+            val error = when (e) {
+                is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
+                is ConnectException -> NetworkError.CONNECTION_ERROR
+                is IOException -> NetworkError.SERVER_NOT_AVAILABLE
+                else -> UnexpectedError
             }
-            if (size == null) {
-                size = response.headers()[HttpHeaders.CONTENT_RANGE]!!.parseFileSize()
-            }
-            if (mime == null) {
-                mime = response.headers()[HttpHeaders.CONTENT_TYPE]
-            }
-            val bytes = response.body()!!.bytes()
-            onPartitionLoaded(mime!!, size, bytes.toTypedArray())
-            start = end + 1
-            end = start + range - 1
-        } while (start < size)
-        return Result.Success(true)
+            return Result.Failure(error)
+        }
     }
 
-    private companion object {
-        val DEFAULT_UPLOAD_ERROR = CompoundError(mutableListOf(UploadVideoError.UNEXPECTED))
-    }
 }
 
 fun FileProvider.uriToPart(uriStr: String, partName: String): MultipartBody.Part {

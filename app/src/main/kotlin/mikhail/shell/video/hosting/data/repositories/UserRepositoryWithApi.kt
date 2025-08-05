@@ -11,10 +11,9 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.user.EditUserError
-import mikhail.shell.video.hosting.domain.errors.user.GetUserError
-import mikhail.shell.video.hosting.domain.errors.user.RemoveUserError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -23,7 +22,6 @@ import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.HttpException
 import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
@@ -32,12 +30,10 @@ class UserRepositoryWithApi @Inject constructor(
     private val gson: Gson
 ) : UserRepository {
     private companion object {
-        val MAX_FILE_SIZE = 10 * 1024 * 1024
+        const val MAX_FILE_SIZE = 10 * 1024 * 1024
     }
 
-    override suspend fun get(userId: Long): Result<User, Error> = request (
-        httpExceptionHandler(404) { GetUserError.NOT_FOUND }
-    ) {
+    override suspend fun get(userId: Long): Result<User, Error> = request {
         userApi.get(userId).toDomain()
     }
 
@@ -50,10 +46,7 @@ class UserRepositoryWithApi @Inject constructor(
             httpExceptionHandler(400) { e ->
                 val type = object : TypeToken<CompoundError<EditUserError>>() {}.type
                 val json = e.response()?.errorBody()?.string()
-                gson.fromJson(json, type)?: EditUserError.UNEXPECTED
-            },
-            httpExceptionHandler(404) {
-                EditUserError.USER_NOT_FOUND
+                gson.fromJson(json, type)?: UnexpectedError
             }
         ) {
             val compoundError = CompoundError<EditUserError>()
@@ -93,19 +86,7 @@ class UserRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun remove(userId: Long): Result<Unit, RemoveUserError> {
-        return try {
-            userApi.remove(userId)
-            Result.Success(Unit)
-        } catch (e: HttpException) {
-            val error = when (e.code()) {
-                401, 403 -> RemoveUserError.FORBIDDEN
-                404 -> RemoveUserError.NOT_FOUND
-                else -> RemoveUserError.UNEXPECTED
-            }
-            Result.Failure(error)
-        } catch (e: Exception) {
-            Result.Failure(RemoveUserError.UNEXPECTED)
-        }
+    override suspend fun remove(userId: Long): Result<Unit, Error> = request {
+        userApi.remove(userId)
     }
 }

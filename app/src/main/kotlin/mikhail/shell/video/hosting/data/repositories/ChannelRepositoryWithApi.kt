@@ -14,10 +14,9 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
-import mikhail.shell.video.hosting.domain.errors.channel.ChannelLoadingError
-import mikhail.shell.video.hosting.domain.errors.channel.DeleteChannelError
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
@@ -38,15 +37,10 @@ class ChannelRepositoryWithApi @Inject constructor(
     private val fileProvider: FileProvider
 ) : ChannelRepository {
 
-    private val BUFFER_SIZE = 10 * 1024 * 1024
-
     override suspend fun fetchChannelForUser(
         channelId: Long,
         userId: Long
-    ): Result<ChannelWithUser, Error> = request (
-        httpExceptionHandler(400) { ChannelLoadingError.USER_NOT_FOUND },
-        httpExceptionHandler(404) { ChannelLoadingError.NOT_FOUND }
-    ) {
+    ): Result<ChannelWithUser, Error> = request {
         _channelApi.fetchChannelDetails(channelId, userId).toDomain()
     }
 
@@ -58,7 +52,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
-            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)?: ChannelCreationError.UNEXPECTED
+            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)?: UnexpectedError
         }
     ) {
         val compoundError = CompoundError<ChannelCreationError>()
@@ -103,16 +97,12 @@ class ChannelRepositoryWithApi @Inject constructor(
         response.toDomain()
     }
 
-    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error> = request(
-        httpExceptionHandler(404) { ChannelLoadingError.USER_NOT_FOUND }
-    ) {
+    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error> = request {
         _channelApi.getChannelsByOwner(userId).map { it.toDomain() }
     }
 
     override suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, Error> =
-        request(
-            httpExceptionHandler(404) { ChannelLoadingError.USER_NOT_FOUND }
-        ) {
+        request {
             _channelApi.getChannelsBySubscriber(userId).map { it.toDomain() }
         }
 
@@ -151,10 +141,8 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
-            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)?: EditChannelError.UNEXPECTED
-        },
-        httpExceptionHandler(403) { EditChannelError.FORBIDDEN },
-        httpExceptionHandler(404) { EditChannelError.CHANNEL_NOT_EXIST }
+            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)?: UnexpectedError
+        }
     ) {
         val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(
             cover!!,
@@ -173,16 +161,11 @@ class ChannelRepositoryWithApi @Inject constructor(
         ).toDomain()
     }
 
-    override suspend fun fetchChannel(channelId: Long): Result<Channel, Error> = request (
-        httpExceptionHandler(404) { ChannelLoadingError.NOT_FOUND }
-    ) {
+    override suspend fun fetchChannel(channelId: Long): Result<Channel, Error> = request {
         _channelApi.fetchChannel(channelId).toDomain()
     }
 
-    override suspend fun removeChannel(channelId: Long): Result<Unit, Error> = request (
-        httpExceptionHandler(403) { DeleteChannelError.FORBIDDEN },
-        httpExceptionHandler(404) { DeleteChannelError.CHANNEL_NOT_EXISTS }
-    ) {
+    override suspend fun removeChannel(channelId: Long): Result<Unit, Error> = request {
         _channelApi.removeChannel(channelId)
     }
 }

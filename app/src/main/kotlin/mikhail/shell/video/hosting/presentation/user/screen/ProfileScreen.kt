@@ -62,11 +62,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.user.GetUserError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.user.UserModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
@@ -181,15 +179,12 @@ fun ProfileScreen(
     }
     LaunchedEffect(state.userError) {
         val userErrorMsg = if (state.userError is NetworkError) {
-            context.constructNetworkErrorMessage(state.userError)
-        } else {
-            constructInfoMessage(
-                state.userError,
-                mapOf(
-                    GetUserError.NOT_FOUND to context.getString(R.string.user_not_found)
-                )
-            )
-        }
+            if (state.userError == NetworkError.NOT_FOUND) {
+                context.getString(R.string.user_not_found)
+            } else {
+                context.constructNetworkErrorMessage(state.userError)
+            }
+        } else null
         userErrorMsg?.let {
             snackBarHostState.showSnackbar(
                 message = it,

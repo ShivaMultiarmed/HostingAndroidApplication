@@ -40,7 +40,6 @@ interface VideoApi {
     @GET("videos/channel/{channelId}")
     suspend fun fetchVideoList(
         @Path("channelId") channelId: Long,
-        @Query("userId") userId: Long,
         @Query("partNumber") partNumber: Long,
         @Query("partSize") partSize: Int
     ): List<VideoDto>

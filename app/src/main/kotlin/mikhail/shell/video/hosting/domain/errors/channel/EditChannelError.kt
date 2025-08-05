@@ -3,10 +3,6 @@ package mikhail.shell.video.hosting.domain.errors.channel
 import mikhail.shell.video.hosting.domain.errors.Error
 
 enum class EditChannelError: Error {
-    CHANNEL_NOT_EXIST,
-
-    FORBIDDEN,
-
     TITLE_EMPTY,
     TITLE_TOO_LARGE,
     TITLE_EXISTS,
@@ -22,7 +18,5 @@ enum class EditChannelError: Error {
 
     AVATAR_TYPE_NOT_VALID,
     AVATAR_TOO_LARGE,
-    AVATAR_NOT_FOUND,
-
-    UNEXPECTED
+    AVATAR_NOT_FOUND
 }

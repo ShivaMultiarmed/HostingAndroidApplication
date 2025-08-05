@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.authentication.SignOutError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -17,5 +16,5 @@ interface AuthRepository {
 
     suspend fun signOut(
         userId: Long
-    ): Result<Unit, SignOutError>
+    ): Result<Unit, Error>
 }

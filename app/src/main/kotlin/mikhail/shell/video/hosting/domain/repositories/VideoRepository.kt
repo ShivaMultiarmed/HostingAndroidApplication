@@ -27,7 +27,6 @@ interface VideoRepository {
 
     suspend fun fetchChannelVideoList(
         channelId: Long,
-        userId: Long,
         partNumber: Long,
         partSize: Int
     ): Result<List<Video>, Error>

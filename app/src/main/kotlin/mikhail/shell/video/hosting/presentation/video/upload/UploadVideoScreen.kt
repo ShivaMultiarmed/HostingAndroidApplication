@@ -70,9 +70,9 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.channel.ChannelLoadingError
-import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -469,7 +469,7 @@ fun UploadVideoScreen(
                 onSuccess(state.video)
             }
         }
-    } else if (state.error.equivalentTo(ChannelLoadingError.UNEXPECTED)) {
+    } else if (state.error.equivalentTo(UnexpectedError)) {
         ErrorComponent(
             modifier = Modifier
                 .fillMaxSize()

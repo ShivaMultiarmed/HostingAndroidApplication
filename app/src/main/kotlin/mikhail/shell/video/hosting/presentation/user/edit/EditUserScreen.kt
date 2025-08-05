@@ -55,9 +55,10 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.user.EditUserError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.user.EditUserError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
@@ -438,9 +439,9 @@ fun EditUserScreen(
                 constructInfoMessage(
                     state.editUserError,
                     mapOf(
-                        EditUserError.FORBIDDEN to context.getString(R.string.forbidden_error),
-                        EditUserError.USER_NOT_FOUND to context.getString(R.string.user_not_found),
-                        EditUserError.UNEXPECTED to context.getString(R.string.unexpected_error)
+                        NetworkError.FORBIDDEN to context.getString(R.string.forbidden_error),
+                        NetworkError.NOT_FOUND to context.getString(R.string.user_not_found),
+                        UnexpectedError to context.getString(R.string.unexpected_error)
                     )
                 )
             }

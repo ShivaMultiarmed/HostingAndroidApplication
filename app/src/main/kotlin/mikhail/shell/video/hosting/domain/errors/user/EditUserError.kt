@@ -3,10 +3,6 @@ package mikhail.shell.video.hosting.domain.errors.user
 import mikhail.shell.video.hosting.domain.errors.Error
 
 enum class EditUserError: Error {
-    USER_NOT_FOUND,
-
-    FORBIDDEN,
-
     NICK_EMPTY,
     NICK_TOO_LARGE,
 
@@ -21,6 +17,4 @@ enum class EditUserError: Error {
 
     AVATAR_TOO_LARGE,
     AVATAR_TYPE_NOT_VALID,
-
-    UNEXPECTED
 }

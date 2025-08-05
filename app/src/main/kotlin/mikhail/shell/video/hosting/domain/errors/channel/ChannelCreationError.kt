@@ -18,7 +18,5 @@ enum class ChannelCreationError: Error {
 
     AVATAR_NOT_FOUND,
     AVATAR_TYPE_NOT_VALID,
-    AVATAR_TOO_LARGE,
-
-    UNEXPECTED
+    AVATAR_TOO_LARGE
 }

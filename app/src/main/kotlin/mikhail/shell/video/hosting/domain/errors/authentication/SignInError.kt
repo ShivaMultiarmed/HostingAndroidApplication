@@ -8,7 +8,5 @@ enum class SignInError: Error {
     USERNAME_NOT_FOUND,
 
     PASSWORD_EMPTY,
-    PASSWORD_INCORRECT,
-
-    UNEXPECTED
+    PASSWORD_INCORRECT
 }

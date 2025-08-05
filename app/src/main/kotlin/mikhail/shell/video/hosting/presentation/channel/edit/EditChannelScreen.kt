@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.AVATAR_NOT_FOUND
@@ -63,8 +63,8 @@ import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.DESCRI
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
@@ -459,8 +459,8 @@ fun EditChannelScreen(
             constructInfoMessage(
                 state.error,
                 mapOf(
-                    EditChannelError.CHANNEL_NOT_EXIST to activity.getString(R.string.channel_not_found),
-                    EditChannelError.UNEXPECTED to activity.getString(R.string.unexpected_error)
+                    NetworkError.NOT_FOUND to activity.getString(R.string.channel_not_found),
+                    UnexpectedError to activity.getString(R.string.unexpected_error)
                 )
             )
         }

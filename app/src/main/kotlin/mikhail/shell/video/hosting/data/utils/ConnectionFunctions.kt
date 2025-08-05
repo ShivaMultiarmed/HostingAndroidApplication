@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Result
@@ -22,6 +23,7 @@ fun Context.isNetworkAvailable(): Boolean {
 
 suspend fun <D> request(
     httpExceptionHandlers: Map<Int, (HttpException) -> Error> = emptyMap(),
+    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler{ UnexpectedError },
     resultHandler: suspend () -> D
 ): Result<D, Error> {
     return try {
@@ -33,7 +35,7 @@ suspend fun <D> request(
             403 -> NetworkError.FORBIDDEN
             404 -> NetworkError.NOT_FOUND
             in 500 .. 599 -> NetworkError.SERVER_ERROR
-            else -> NetworkError.UNEXPECTED
+            else -> unexpectedExceptionHandler(e)
         }
         Result.Failure(error)
     } catch (e: ValidationException) {
@@ -43,7 +45,7 @@ suspend fun <D> request(
             is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
             is ConnectException -> NetworkError.CONNECTION_ERROR
             is IOException -> NetworkError.SERVER_NOT_AVAILABLE
-            else -> NetworkError.UNEXPECTED
+            else -> unexpectedExceptionHandler(e)
         }
         Result.Failure(error)
     }
@@ -51,10 +53,12 @@ suspend fun <D> request(
 
 suspend fun <D> request(
     vararg httpExceptionHandlers: Pair<Int, (HttpException) -> Error>,
+    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler{ UnexpectedError },
     resultHandler: suspend () -> D
 ): Result<D, Error> {
     return request(
         httpExceptionHandlers.toMap(),
+        unexpectedExceptionHandler,
         resultHandler
     )
 }
@@ -65,3 +69,7 @@ fun httpExceptionHandler(
 ): Pair<Int, (HttpException) -> Error> {
     return code to processing
 }
+
+fun unexpectedExceptionHandler(
+    processing: (Exception) -> Error
+) = processing
