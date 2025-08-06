@@ -34,8 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -98,7 +98,7 @@ fun SignInScreen(
                 mapOf(
                     SignInError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
                     SignInError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
-                    SignInError.USERNAME_NOT_FOUND to stringResource(R.string.email_not_found_error)
+                    NetworkError.NOT_FOUND to stringResource(R.string.email_not_found_error)
                 )
             )
             InputField(

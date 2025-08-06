@@ -10,10 +10,9 @@ class GetVideoRecommendations @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
     suspend operator fun invoke(
-        userId: Long,
         partIndex: Long,
         partSize: Int
     ): Result<List<VideoWithChannel>, Error> {
-        return videoRepository.fetchVideoRecommendations(userId, partIndex, partSize)
+        return videoRepository.fetchVideoRecommendations(partIndex, partSize)
     }
 }

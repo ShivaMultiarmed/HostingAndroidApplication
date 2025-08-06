@@ -21,7 +21,6 @@ interface VideoRepository {
 
     suspend fun rateVideo(
         videoId: Long,
-        userId: Long,
         liking: LikingState
     ) : Result<Video, Error>
 
@@ -64,7 +63,6 @@ interface VideoRepository {
     ): Result<Boolean, Error>
 
     suspend fun fetchVideoRecommendations(
-        userId: Long,
         partIndex: Long,
         partSize: Int
     ): Result<List<VideoWithChannel>, Error>

@@ -2,19 +2,16 @@ package mikhail.shell.video.hosting.presentation.video.recommendations
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoRecommendations
 
-@HiltViewModel(assistedFactory = VideoRecommendationsViewModel.Factory::class)
-class VideoRecommendationsViewModel @AssistedInject constructor(
-    @Assisted("userId") private val userId: Long,
+@HiltViewModel
+class VideoRecommendationsViewModel @Inject constructor(
     private val _getVideoRecommendations: GetVideoRecommendations
 ): ViewModel() {
     private val _mutableStateFlow = MutableStateFlow(VideoRecommendationsScreenState())
@@ -27,7 +24,6 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             _getVideoRecommendations(
-                userId,
                 stateFlow.value.nextVideosPartIndex,
                 PART_SIZE
             ).onSuccess { videoList ->
@@ -49,10 +45,6 @@ class VideoRecommendationsViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-    @AssistedFactory
-    interface Factory {
-        fun create(@Assisted("userId") userId: Long): VideoRecommendationsViewModel
     }
     companion object {
         const val PART_SIZE = 10

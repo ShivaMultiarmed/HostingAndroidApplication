@@ -16,9 +16,7 @@ fun NavGraphBuilder.videoRecommendationsRoute(
     userDetailsProvider: UserDetailsProvider
 ) {
     composable<Route.Video.Recommendations> {
-        val viewModel = hiltViewModel<VideoRecommendationsViewModel, VideoRecommendationsViewModel.Factory> {
-            it.create(userDetailsProvider.getUserId())
-        }
+        val viewModel = hiltViewModel<VideoRecommendationsViewModel>()
         val state by viewModel.stateFlow.collectAsStateWithLifecycle()
         VideoRecommendationsScreen(
             state = state,

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.recommendations
 
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 
 data class VideoRecommendationsScreenState(

@@ -10,7 +10,7 @@ import javax.inject.Inject
 class RateVideo @Inject constructor(
     private val repository: VideoRepository
 ) {
-    suspend operator fun invoke(videoId: Long, userId:Long, likingState: LikingState): Result<Video, Error> {
-        return repository.rateVideo(videoId, userId, likingState)
+    suspend operator fun invoke(videoId: Long, likingState: LikingState): Result<Video, Error> {
+        return repository.rateVideo(videoId, likingState)
     }
 }

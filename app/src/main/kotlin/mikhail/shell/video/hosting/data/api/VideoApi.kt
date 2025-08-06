@@ -34,7 +34,6 @@ interface VideoApi {
     @PATCH("videos/{videoId}/rate")
     suspend fun rateVideo(
         @Path("videoId") videoId: Long,
-        @Query("userId") userId: Long,
         @Query("likingState") liking: LikingState
     ) : VideoDto
     @GET("videos/channel/{channelId}")
@@ -49,13 +48,6 @@ interface VideoApi {
         @Query("partNumber") partNumber: Long,
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>
-    @Multipart
-    @POST("videos/upload")
-    suspend fun uploadVideo(
-        @Part("video") video: VideoDto,
-        @Part source: MultipartBody.Part,
-        @Part cover: MultipartBody.Part?
-    ): VideoDto
     @POST("videos/upload/details")
     suspend fun uploadVideoDetails(
         @Body video: VideoDto
@@ -65,21 +57,21 @@ interface VideoApi {
         @Path("videoId") videoId: Long,
         @Query("extension") extension: String,
         @Body cover: RequestBody
-    ): Boolean
+    )
     @POST("videos/upload/{videoId}/source")
     suspend fun uploadVideoSource(
         @Path("videoId") videoId: Long,
         @Query("extension") extension: String,
         @Body source: RequestBody
-    ): Boolean
+    )
     @POST("videos/upload/{videoId}/confirm")
     suspend fun confirmVideoUpload(
         @Path("videoId") videoId: Long
-    ): Boolean
+    )
     @PATCH("videos/{videoId}/increment-views")
     suspend fun incrementViews(
         @Path("videoId") videoId: Long
-    ): Long
+    )
     @Multipart
     @PATCH("videos/edit")
     suspend fun editVideo(
@@ -103,9 +95,8 @@ interface VideoApi {
         @Path("videoId") videoId: Long,
         @Header("Range") byteRange: String
     ): Response<ResponseBody>
-    @GET("videos/recommendations/users/{userId}")
+    @GET("videos/recommendations")
     suspend fun fetchVideoRecommendationsPart(
-        @Path("userId") userId: Long,
         @Query("partIndex") partIndex: Long,
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>

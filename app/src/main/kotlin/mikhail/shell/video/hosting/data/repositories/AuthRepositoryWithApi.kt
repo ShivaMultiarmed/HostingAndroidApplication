@@ -25,40 +25,34 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun signInWithPassword(
         email: String,
         password: String
-    ): Result<AuthModel, Error> {
-        return request(
-            httpExceptionHandler(400) { e ->
-                val json = e.response()?.errorBody()?.string()
-                val type = object : TypeToken<CompoundError<SignInError>>() {}.type
-                gson.fromJson(json, type) ?: UnexpectedError
-            }
-        ) {
-            authApi.signInWithPassword(email, password)
+    ): Result<AuthModel, Error> = request(
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<SignInError>>() {}.type
+            gson.fromJson(json, type) ?: UnexpectedError
         }
+    ) {
+        authApi.signInWithPassword(email, password)
     }
 
     override suspend fun signUpWithPassword(
         userName: String,
         password: String,
         user: User
-    ): Result<AuthModel, Error> {
-        return request (
-            httpExceptionHandler(400) { e ->
-                val json = e.response()?.errorBody()?.string()
-                val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-                gson.fromJson(json, type) ?: UnexpectedError
-            }
-        ) {
-            val signUpDto = SignUpDto(
-                userName,
-                password,
-                user.toDto()
-            )
-            authApi.signUpWithPassword(signUpDto)
+    ): Result<AuthModel, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
+            gson.fromJson(json, type) ?: UnexpectedError
         }
+    ) {
+        val signUpDto = SignUpDto(
+            userName,
+            password,
+            user.toDto()
+        )
+        authApi.signUpWithPassword(signUpDto)
     }
 
-    override suspend fun signOut(userId: Long): Result<Unit, Error> {
-        return request { }
-    }
+    override suspend fun signOut(userId: Long): Result<Unit, Error> = request { }
 }

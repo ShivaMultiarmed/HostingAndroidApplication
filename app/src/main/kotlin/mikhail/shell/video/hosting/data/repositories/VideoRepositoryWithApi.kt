@@ -50,13 +50,12 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun fetchVideoRecommendations(
-        userId: Long,
         partIndex: Long,
         partSize: Int
     ): Result<List<VideoWithChannel>, Error> {
         return request {
             videoApi
-                .fetchVideoRecommendationsPart(userId, partIndex, partSize)
+                .fetchVideoRecommendationsPart(partIndex, partSize)
                 .map { it.toDomain() }
         }
     }
@@ -70,10 +69,9 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun rateVideo(
         videoId: Long,
-        userId: Long,
         liking: LikingState
     ): Result<Video, Error> = request {
-        videoApi.rateVideo(videoId, userId, liking).toDomain()
+        videoApi.rateVideo(videoId, liking).toDomain()
     }
 
     override suspend fun fetchChannelVideoList(

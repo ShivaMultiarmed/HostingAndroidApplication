@@ -12,9 +12,9 @@ enum class ChannelCreationError: Error {
 
     DESCRIPTION_TOO_LARGE,
 
-    COVER_NOT_FOUND,
     COVER_TYPE_NOT_VALID,
     COVER_TOO_LARGE,
+    COVER_NOT_FOUND,
 
     AVATAR_NOT_FOUND,
     AVATAR_TYPE_NOT_VALID,

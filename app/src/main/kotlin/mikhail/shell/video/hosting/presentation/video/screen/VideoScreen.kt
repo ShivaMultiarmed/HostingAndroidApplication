@@ -96,9 +96,10 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -662,8 +663,7 @@ fun CommentsBottomSheet(
                             R.string.text_too_large_error,
                             ValidationRules.MAX_TEXT_LENGTH
                         )
-
-                        CommentError.NOT_FOUND -> context.getString(R.string.comment_not_found_error)
+                        NetworkError.NOT_FOUND -> context.getString(R.string.comment_not_found_error)
                         CommentError.TEXT_EMPTY -> context.getString(R.string.text_empty_error)
                         GetCommentsError.VIDEO_NOT_FOUND -> context.getString(R.string.comment_video_not_found)
                         GetCommentsError.USER_NOT_FOUND -> context.getString(R.string.comment_user_not_found)

@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -149,7 +148,6 @@ class VideoScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _rateVideo(
                 videoId,
-                userId,
                 likingState
             ).onSuccess { updVideo ->
                 _state.update { screenState ->
@@ -208,18 +206,14 @@ class VideoScreenViewModel @AssistedInject constructor(
             val now = Clock.System.now()
             viewModelScope.launch {
                 _saveComment(
-                    comment.copy(dateTime = now)
+                    comment.copy(dateTime = now) // TODO: register time on server side
                 ).onSuccess {
                     _state.update {
-                        it.copy(
-                            commentError = null
-                        )
+                        it.copy(commentError = null)
                     }
                 }.onFailure { error ->
                     _state.update {
-                        it.copy(
-                            commentError = error
-                        )
+                        it.copy(commentError = error)
                     }
                 }
             }
@@ -246,7 +240,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
-                        commentError = if (it.commentError is GetCommentsError) null else it.commentError,
+                        commentError = null,
                         comments = ((it.comments?: listOf()) + commentModels).distinct()
                     )
                 }
