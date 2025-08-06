@@ -8,7 +8,7 @@ import javax.inject.Inject
 class UnsubscribeFromChannelNotifications @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<Unit, Error> {
-        return channelRepository.unsubscribeFromNotifications(userId)
+    suspend operator fun invoke(): Result<Unit, Error> {
+        return channelRepository.unsubscribeFromNotifications()
     }
 }

@@ -8,5 +8,5 @@ import mikhail.shell.video.hosting.domain.models.User
 interface UserRepository {
     suspend fun get(userId: Long): Result<User, Error>
     suspend fun edit(user: User, avatar: String?, avatarAction: EditAction): Result<User, Error>
-    suspend fun remove(userId: Long): Result<Unit, Error>
+    suspend fun remove(): Result<Unit, Error>
 }

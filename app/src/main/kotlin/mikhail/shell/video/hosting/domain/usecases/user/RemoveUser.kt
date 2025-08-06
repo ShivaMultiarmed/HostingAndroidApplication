@@ -10,8 +10,8 @@ class RemoveUser @Inject constructor(
     private val signOut: SignOut,
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<Unit, Error> {
-        signOut(userId)
-        return userRepository.remove(userId)
+    suspend operator fun invoke(): Result<Unit, Error> {
+        signOut()
+        return userRepository.remove()
     }
 }

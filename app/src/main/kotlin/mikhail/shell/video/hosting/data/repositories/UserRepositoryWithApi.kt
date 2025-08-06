@@ -86,7 +86,7 @@ class UserRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun remove(userId: Long): Result<Unit, Error> = request {
-        userApi.remove(userId)
+    override suspend fun remove(): Result<Unit, Error> = request {
+        userApi.remove()
     }
 }

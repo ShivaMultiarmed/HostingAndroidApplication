@@ -75,7 +75,6 @@ class SignInWithPasswordViewModel @Inject constructor(
         }
     }
     suspend fun subscribeToNotifications() {
-        val userId = state.value.authModel?.userId ?: return
-        _subscribeToChannelNotifications(userId)
+        _subscribeToChannelNotifications()
     }
 }

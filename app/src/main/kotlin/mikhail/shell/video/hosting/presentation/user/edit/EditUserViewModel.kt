@@ -132,7 +132,7 @@ class EditUserViewModel @AssistedInject constructor(
             )
         }
         viewModelScope.launch {
-            _removeUser(userId).onSuccess {
+            _removeUser().onSuccess {
                 _state.value = EditUserScreenState(
                     isRemovalConfirmed = true
                 )

@@ -12,9 +12,8 @@ class Subscribe @Inject constructor(
 ) {
     suspend operator fun invoke(
         channelId: Long,
-        userId: Long,
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, Error> {
-        return channelRepository.subscribe(channelId, userId, subscriptionState)
+        return channelRepository.subscribe(channelId, subscriptionState)
     }
 }

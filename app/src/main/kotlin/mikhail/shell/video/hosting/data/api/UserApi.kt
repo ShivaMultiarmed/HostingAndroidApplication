@@ -20,6 +20,6 @@ interface UserApi {
         @Part("avatarAction") avatarAction: EditAction,
         @Part avatar: MultipartBody.Part?
     ): UserDto
-    @DELETE("users/{userId}")
-    suspend fun remove(@Path("userId") userId: Long)
+    @DELETE
+    suspend fun remove()
 }

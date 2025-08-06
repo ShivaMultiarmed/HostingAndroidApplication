@@ -37,11 +37,8 @@ class ChannelRepositoryWithApi @Inject constructor(
     private val fileProvider: FileProvider
 ) : ChannelRepository {
 
-    override suspend fun fetchChannelForUser(
-        channelId: Long,
-        userId: Long
-    ): Result<ChannelWithUser, Error> = request {
-        _channelApi.fetchChannelDetails(channelId, userId).toDomain()
+    override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelWithUser, Error> = request {
+        _channelApi.fetchChannelDetails(channelId).toDomain()
     }
 
     override suspend fun createChannel(
@@ -108,27 +105,21 @@ class ChannelRepositoryWithApi @Inject constructor(
 
     override suspend fun subscribe(
         channelId: Long,
-        userId: Long,
         subscriptionState: SubscriptionState
     ): Result<ChannelWithUser, Error> = request {
         _channelApi.subscribe(
             channelId = channelId,
-            userId = userId,
-            token = fcm.token.await(),
+            fcmToken = fcm.token.await(),
             subscriptionState = subscriptionState
         ).toDomain()
     }
 
-    override suspend fun subscribeToNotifications(
-        userId: Long
-    ): Result<Unit, Error> = request {
-        _channelApi.subscribeToChannelNotifications(userId, fcm.token.await())
+    override suspend fun subscribeToNotifications(): Result<Unit, Error> = request {
+        _channelApi.subscribeToChannelNotifications( fcm.token.await())
     }
 
-    override suspend fun unsubscribeFromNotifications(
-        userId: Long
-    ): Result<Unit, Error> = request {
-        _channelApi.unsubscribeFromChannelNotifications(userId, fcm.token.await())
+    override suspend fun unsubscribeFromNotifications(): Result<Unit, Error> = request {
+        _channelApi.unsubscribeFromChannelNotifications( fcm.token.await())
     }
 
     override suspend fun editChannel(

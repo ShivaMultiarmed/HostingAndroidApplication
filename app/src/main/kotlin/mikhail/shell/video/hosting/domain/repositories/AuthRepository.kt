@@ -14,7 +14,5 @@ interface AuthRepository {
         userName: String, password: String, user: User
     ): Result<AuthModel, Error>
 
-    suspend fun signOut(
-        userId: Long
-    ): Result<Unit, Error>
+    suspend fun signOut(): Result<Unit, Error>
 }

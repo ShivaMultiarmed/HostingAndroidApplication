@@ -120,7 +120,6 @@ class VideoScreenViewModel @AssistedInject constructor(
             val channelId = _state.value.videoDetails?.channel?.channelId!!
             _subscribe(
                 channelId = channelId,
-                userId = userId,
                 subscriptionState = subscriptionState
             ).onSuccess { channelWithUser ->
                 _state.update {

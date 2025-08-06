@@ -90,11 +90,8 @@ class NotificationService: FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        val userId = userDetailsProvider.getUserId()
-        if (userId != 0L) {
-            coroutineScope.launch {
-                subscribeToChannelNotifications(userId)
-            }
+        coroutineScope.launch {
+            subscribeToChannelNotifications()
         }
     }
 

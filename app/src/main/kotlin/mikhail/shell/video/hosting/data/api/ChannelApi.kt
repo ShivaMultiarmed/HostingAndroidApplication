@@ -17,8 +17,7 @@ import retrofit2.http.Query
 interface ChannelApi {
     @GET("channels/{channelId}/details")
     suspend fun fetchChannelDetails(
-        @Path("channelId") channelId: Long,
-        @Query("userId") userId: Long
+        @Path("channelId") channelId: Long
     ): ChannelWithUserDto
     @Multipart
     @POST("channels/create")
@@ -47,19 +46,16 @@ interface ChannelApi {
     @PATCH("channels/{channelId}/subscribe")
     suspend fun subscribe(
         @Path("channelId") channelId: Long,
-        @Query("userId") userId: Long,
-        @Query("token") token: String,
+        @Query("fcmToken") fcmToken: String,
         @Query("subscriptionState") subscriptionState: SubscriptionState
     ): ChannelWithUserDto
     @PATCH("channels/notifications/subscribe")
     suspend fun subscribeToChannelNotifications(
-        @Query("userId") userId: Long,
-        @Query("token") token: String
+        @Query("fcmToken") fcmToken: String
     )
     @PATCH("channels/notifications/unsubscribe")
     suspend fun unsubscribeFromChannelNotifications(
-        @Query("userId") userId: Long,
-        @Query("token") token: String
+        @Query("fcmToken") fcmToken: String
     )
     @GET("channels/{channelId}")
     suspend fun fetchChannel(

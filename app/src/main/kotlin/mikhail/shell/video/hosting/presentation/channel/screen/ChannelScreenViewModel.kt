@@ -41,8 +41,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             _getChannelInfo(
-                _channelId,
-                _userId
+                _channelId
             ).onSuccess { channelWithUser ->
                 _state.update {
                     it.copy(
@@ -100,7 +99,6 @@ class ChannelScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _subscribe(
                 _channelId,
-                _userId,
                 subscriptionState
             ).onSuccess { updatedChannelWithUser ->
                 _state.update {
