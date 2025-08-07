@@ -72,6 +72,12 @@ fun NavGraphBuilder.profileRoute(
             },
             onOpenSettings = {
                 navController.navigate(Route.User.Settings)
+            },
+            onAuthenticationRequired = {
+                navController.navigate(Route.Authentication.SignIn)
+            },
+            onUserNotFound = {
+                navController.popBackStack()
             }
         )
     }

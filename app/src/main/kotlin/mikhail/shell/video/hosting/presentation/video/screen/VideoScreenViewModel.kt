@@ -134,7 +134,6 @@ class VideoScreenViewModel @AssistedInject constructor(
             }.onFailure { e ->
                 _state.update {
                     it.copy(
-                        videoDetails = null,
                         isLoading = false,
                         error = e
                     )

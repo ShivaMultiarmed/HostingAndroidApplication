@@ -270,4 +270,7 @@
     <string name="server_error">Ошибка сервера</string>
     <string name="user_not_found">Пользователь не найден</string>
     <string name="channel_not_found">Канал не найден</string>
+    <string name="authentication_required">Требуется войти в аккаунт</string>
+    <string name="channels_not_found">Каналы не найдены</string>
+    <string name="video_not_found">Видео не найдено</string>
 </resources>

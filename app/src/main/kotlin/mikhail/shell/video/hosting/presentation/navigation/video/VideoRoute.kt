@@ -86,6 +86,18 @@ fun NavGraphBuilder.videoRoute(
                         Intent.createChooser(this, context.getString(R.string.video_share))
                     )
                 }
+            },
+            onVideoNotFound = {
+                coroutineScope.launch {
+                    delay(800)
+                    navController.popBackStack()
+                }
+            },
+            onAuthenticationRequired = {
+                coroutineScope.launch {
+                    delay(800)
+                    navController.navigate(Route.Authentication)
+                }
             }
         )
 

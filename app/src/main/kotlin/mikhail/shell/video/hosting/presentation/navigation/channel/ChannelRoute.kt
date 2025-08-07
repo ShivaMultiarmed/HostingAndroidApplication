@@ -51,6 +51,18 @@ fun NavGraphBuilder.channelRoute(
                     navController.navigate(Route.User.Profile(userId))
                 }
             },
+            onChannelNotFound = {
+                coroutineScope.launch {
+                    delay(800)
+                    navController.popBackStack()
+                }
+            },
+            onAuthenticationRequired = {
+                coroutineScope.launch {
+                    delay(800)
+                    navController.navigate(Route.Authentication)
+                }
+            },
             owns = userId == state.channel?.ownerId
         )
     }

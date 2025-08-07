@@ -41,7 +41,11 @@ fun NavGraphBuilder.editUserRoute(
             onRemoveSuccess = {
                 logOut(sharedPref, navController)
             },
-            onPopup = navController::popBackStack
+            onPopup = navController::popBackStack,
+            onUserNotFound = navController::popBackStack,
+            onAuthenticationRequired = {
+                navController.navigate(Route.Authentication)
+            }
         )
     }
 }

@@ -37,9 +37,9 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -50,7 +50,7 @@ fun SignInScreen(
     onSuccess: () -> Unit,
     onSigningUp: () -> Unit
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold (
         modifier = Modifier
             .fillMaxSize()
@@ -58,7 +58,7 @@ fun SignInScreen(
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState
+                hostState = snackBarHostState
             )
         }
     ) { padding ->
@@ -77,19 +77,11 @@ fun SignInScreen(
             )
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = context.getString(R.string.sign_in_success_message),
                         duration = SnackbarDuration.Short
                     )
                     onSuccess()
-                }
-            }
-            LaunchedEffect(state.error) {
-                if (state.error is NetworkError) {
-                    snackbarHostState.showSnackbar(
-                        message = context.constructNetworkErrorMessage(state.error),
-                        duration = SnackbarDuration.Short
-                    )
                 }
             }
             var email by rememberSaveable { mutableStateOf("") }
@@ -155,6 +147,10 @@ fun SignInScreen(
             }
         }
     }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState
+    )
 }
 @Composable
 @Preview

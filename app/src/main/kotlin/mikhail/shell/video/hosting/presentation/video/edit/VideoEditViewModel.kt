@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.isNotNull
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError.TITLE_EMPTY
-import mikhail.shell.video.hosting.domain.errors.isNotNull
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UpdateVideo
 
@@ -25,8 +25,7 @@ class VideoEditViewModel @AssistedInject constructor(
     private val _getVideo: GetVideo
 ): ViewModel() {
     private val _state = MutableStateFlow(VideoEditScreenState())
-    val state
-        get() = _state.asStateFlow()
+    val state = _state.asStateFlow()
 
     init {
         loadInitialVideo()
@@ -49,8 +48,8 @@ class VideoEditViewModel @AssistedInject constructor(
             }.onFailure { err ->
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = err
+                        error = err,
+                        isLoading = false
                     )
                 }
             }
@@ -59,9 +58,7 @@ class VideoEditViewModel @AssistedInject constructor(
 
     fun edit(input: VideoEditInputState) {
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         val error = validate(input)
         if (error.isNotNull()) {
@@ -72,9 +69,7 @@ class VideoEditViewModel @AssistedInject constructor(
                 )
             }
         } else {
-            val video = _state.value.initialVideo!!.copy(
-                title = input.title,
-            )
+            val video = _state.value.initialVideo!!.copy(title = input.title)
             viewModelScope.launch {
                 _editVideo(
                     video,
@@ -91,7 +86,6 @@ class VideoEditViewModel @AssistedInject constructor(
                 }.onFailure { err ->
                     _state.update {
                         it.copy(
-                            updatedVideo = null,
                             error = err,
                             isLoading = false
                         )

@@ -78,7 +78,7 @@ fun VideoEditScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     if (state.initialVideo != null) {
-        val snackbarHostState = remember { SnackbarHostState() }
+        val snackBarHostState = remember { SnackbarHostState() }
         val video = state.initialVideo
         val compoundError = state.error
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -107,7 +107,7 @@ fun VideoEditScreen(
                 )
             },
             snackbarHost = {
-                SnackbarHost(snackbarHostState)
+                SnackbarHost(snackBarHostState)
             }
         ) {
             Column(
@@ -258,7 +258,7 @@ fun VideoEditScreen(
         }
         LaunchedEffect(state.updatedVideo) {
             if (state.updatedVideo != null) {
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     message = context.getString(R.string.video_edit_success),
                     duration = SnackbarDuration.Long
                 )

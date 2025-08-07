@@ -33,15 +33,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
@@ -53,7 +52,7 @@ fun SignUpScreen(
     onSuccess: (AuthModel) -> Unit
 ) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +60,7 @@ fun SignUpScreen(
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState
+                hostState = snackBarHostState
             )
         }
     ) { padding ->
@@ -78,19 +77,11 @@ fun SignUpScreen(
             )
             LaunchedEffect(state.authModel) {
                 if (state.authModel != null) {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = context.getString(R.string.sign_up_success),
                         duration = SnackbarDuration.Short
                     )
                     onSuccess(state.authModel)
-                }
-            }
-            LaunchedEffect(state.error) {
-                if (state.error is NetworkError) {
-                    snackbarHostState.showSnackbar(
-                        message = context.constructNetworkErrorMessage(state.error),
-                        duration = SnackbarDuration.Short
-                    )
                 }
             }
             val compoundError = state.error
@@ -204,6 +195,10 @@ fun SignUpScreen(
             )
         }
     }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState
+    )
 }
 
 @Composable

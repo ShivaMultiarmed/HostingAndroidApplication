@@ -15,12 +15,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -144,6 +146,8 @@ fun Context.setLocale(locale: Locale) {
     }
 }
 
+val LocalColorScheme = staticCompositionLocalOf<ColorScheme> { error("") }
+
 @Composable
 fun VideoHostingTheme(
     content: @Composable () -> Unit
@@ -155,11 +159,13 @@ fun VideoHostingTheme(
     val selectedColorScheme = context.getColorScheme(isDark)
     var colorScheme by remember { mutableStateOf(selectedColorScheme) }
     val uiPreferences = context.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalColorScheme provides colorScheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
     val statusBarIconsColor = selectedColorScheme.onSurface
     LaunchedEffect(colorScheme) {
         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = (statusBarIconsColor != DarkColorScheme.onSurface)

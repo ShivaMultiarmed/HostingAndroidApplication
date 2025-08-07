@@ -55,6 +55,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -71,6 +72,7 @@ import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -84,7 +86,9 @@ fun EditUserScreen(
     onEditSuccess: (userId: Long) -> Unit = {},
     onRemove: () -> Unit = {},
     onRemoveSuccess: () -> Unit = {},
-    onPopup: () -> Unit = {}
+    onPopup: () -> Unit = {},
+    onAuthenticationRequired: () -> Unit,
+    onUserNotFound: () -> Unit
 ) {
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
@@ -470,6 +474,15 @@ fun EditUserScreen(
             onRemoveSuccess()
         }
     }
+
+    EditUserStandardErrorsHandler(
+        snackBarHostState = snackBarHostState,
+        getUserError = state.getUserError,
+        editUserError = state.editUserError,
+        removeUserError = state.removeUserError,
+        onUserNotFound = onUserNotFound,
+        onAuthenticationRequired = onAuthenticationRequired
+    )
 }
 
 @Composable
@@ -499,4 +512,38 @@ fun AccountRemovedScreen() {
             )
         }
     }
+}
+
+@Composable
+fun EditUserStandardErrorsHandler(
+    snackBarHostState: SnackbarHostState,
+    getUserError: Error?,
+    editUserError: Error?,
+    removeUserError: Error?,
+    onUserNotFound: () -> Unit,
+    onAuthenticationRequired: () -> Unit
+) {
+    StandardComplexErrorHandler(
+        error = getUserError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+
+    StandardComplexErrorHandler(
+        error = editUserError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+
+    StandardComplexErrorHandler(
+        error = removeUserError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }

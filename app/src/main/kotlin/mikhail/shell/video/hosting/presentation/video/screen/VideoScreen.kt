@@ -98,8 +98,6 @@ import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.comment.CommentError
-import mikhail.shell.video.hosting.domain.errors.comment.GetCommentsError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -126,6 +124,7 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -153,49 +152,55 @@ fun VideoScreen(
     onUnobserve: () -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
     onFullScreen: (Boolean) -> Unit = {},
-    onShare: (Long) -> Unit = {}
+    onShare: (Long) -> Unit = {},
+    onVideoNotFound: () -> Unit = {},
+    onAuthenticationRequired: () -> Unit = {}
 ) {
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
     var isScreenActive by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    if (state.videoDetails != null) {
-        var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-        val scrollState = rememberScrollState()
-        val video = state.videoDetails.video
-        val channel = state.videoDetails.channel
-        val orientation = LocalConfiguration.current.orientation
-        val isSmallWindow = rememberIsSmallWindow()
-        val targetOrientation = remember(isFullScreen, isSmallWindow) {
-            if (isSmallWindow) {
-                if (isFullScreen && aspectRatio >= 1f) {
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                }
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            }
+    val snackBarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
         }
-        val isFullScreenReached =
-            remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
+    ) { padding ->
+        if (state.videoDetails != null) {
+            var isFullScreen by rememberSaveable { mutableStateOf(false) }
+            var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+            val scrollState = rememberScrollState()
+            val video = state.videoDetails.video
+            val channel = state.videoDetails.channel
+            val orientation = LocalConfiguration.current.orientation
+            val isSmallWindow = rememberIsSmallWindow()
+            val targetOrientation = remember(isFullScreen, isSmallWindow) {
                 if (isSmallWindow) {
-                    isFullScreen && targetOrientation == when (orientation) {
-                        Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                        else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    if (isFullScreen && aspectRatio >= 1f) {
+                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
                 } else {
-                    isFullScreen
+                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 }
             }
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) { padding ->
+            val isFullScreenReached =
+                remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
+                    if (isSmallWindow) {
+                        isFullScreen && targetOrientation == when (orientation) {
+                            Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        }
+                    } else {
+                        isFullScreen
+                    }
+                }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -560,21 +565,28 @@ fun VideoScreen(
                 }
             }
 
+        } else if (state.isLoading) {
+            LoadingComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+        } else {
+            ErrorComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+                onRetry = onRefresh
+            )
         }
-    } else if (state.isLoading) {
-        LoadingComponent(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        )
-    } else {
-        ErrorComponent(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            onRetry = onRefresh
-        )
     }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.video_not_found),
+        notFoundHandler = onVideoNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 
@@ -654,8 +666,8 @@ fun CommentsBottomSheet(
                     )
                 }
             }
-            val snackbarHostState = remember { SnackbarHostState() }
-            SnackbarHost(snackbarHostState)
+            val snackBarHostState = remember { SnackbarHostState() }
+            SnackbarHost(snackBarHostState)
             LaunchedEffect(commentError) {
                 commentError?.let {
                     val message = when (it) {
@@ -663,16 +675,16 @@ fun CommentsBottomSheet(
                             R.string.text_too_large_error,
                             ValidationRules.MAX_TEXT_LENGTH
                         )
-                        NetworkError.NOT_FOUND -> context.getString(R.string.comment_not_found_error)
+
                         CommentError.TEXT_EMPTY -> context.getString(R.string.text_empty_error)
-                        GetCommentsError.VIDEO_NOT_FOUND -> context.getString(R.string.comment_video_not_found)
-                        GetCommentsError.USER_NOT_FOUND -> context.getString(R.string.comment_user_not_found)
-                        else -> context.getString(R.string.unexpected_error)
+                        else -> null
                     }
-                    snackbarHostState.showSnackbar(
-                        message = message,
-                        duration = SnackbarDuration.Short
-                    )
+                    message?.let {
+                        snackBarHostState.showSnackbar(
+                            message = it,
+                            duration = SnackbarDuration.Short
+                        )
+                    }
                 }
             }
             LaunchedEffect(actionComment) {
@@ -682,7 +694,7 @@ fun CommentsBottomSheet(
                         Action.REMOVE -> context.getString(R.string.comment_delete_success)
                         Action.UPDATE -> context.getString(R.string.comment_edit_success)
                     }
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         message = message,
                         duration = SnackbarDuration.Short
                     )

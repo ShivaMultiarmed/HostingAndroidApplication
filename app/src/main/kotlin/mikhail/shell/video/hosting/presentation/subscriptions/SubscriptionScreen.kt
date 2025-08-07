@@ -13,11 +13,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +31,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -36,10 +40,12 @@ fun SubscriptionsScreen(
     modifier: Modifier = Modifier,
     state: SubscriptionsScreenState,
     onRefresh: () -> Unit,
-    onChannelClick: (Long) -> Unit
+    onChannelClick: (Long) -> Unit,
+    onAuthenticationRequired: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -48,6 +54,9 @@ fun SubscriptionsScreen(
             TopBar(
                 title = stringResource(R.string.subscriptions_title)
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
         if (state.channels != null) {
@@ -116,4 +125,9 @@ fun SubscriptionsScreen(
             )
         }
     }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }

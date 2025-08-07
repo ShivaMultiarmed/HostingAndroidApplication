@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_TOO_LARGE
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.AVATAR_NOT_FOUND
@@ -63,8 +62,6 @@ import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.DESCRI
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
@@ -72,9 +69,9 @@ import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
@@ -86,7 +83,8 @@ fun EditChannelScreen(
     onSubmit: (EditChannelInputState) -> Unit,
     onSuccess: (Channel) -> Unit,
     onPopup: () -> Unit,
-    onAuthRequired: () -> Unit
+    onChannelNotFound: () -> Unit,
+    onAuthenticationRequired: () -> Unit
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
@@ -452,26 +450,11 @@ fun EditChannelScreen(
             }
         }
     }
-    LaunchedEffect(state.error) {
-        val errorMsg = if (state.error is NetworkError) {
-            activity.constructNetworkErrorMessage(state.error)
-        } else {
-            constructInfoMessage(
-                state.error,
-                mapOf(
-                    NetworkError.NOT_FOUND to activity.getString(R.string.channel_not_found),
-                    UnexpectedError to activity.getString(R.string.unexpected_error)
-                )
-            )
-        }
-        errorMsg?.let {
-            snackBarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Short
-            )
-        }
-        if (state.error.equivalentTo(NetworkError.AUTHENTICATION)) {
-            onAuthRequired()
-        }
-    }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.channel_not_found),
+        notFoundHandler = onChannelNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }

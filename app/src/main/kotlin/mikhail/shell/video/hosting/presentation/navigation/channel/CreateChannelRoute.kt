@@ -26,7 +26,7 @@ fun NavGraphBuilder.createChannelRoute(
                 navController.navigate(Route.Channel.View(it.channelId!!))
             },
             onPopup = navController::popBackStack,
-            onAuthRequired = {
+            onAuthenticationRequired = {
                 navController.navigate(Route.Authentication)
             }
         )

@@ -3,8 +3,8 @@ package mikhail.shell.video.hosting.domain.validation
 import android.content.Context
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 
 fun <T: Error> constructInfoMessage(error: T?, errorMessages: Map<T, String>): String? {
     for ((currentError, message) in errorMessages) {
@@ -23,9 +23,9 @@ fun Context.constructNetworkErrorMessage(error: NetworkError): String {
             NetworkError.TIMEOUT_EXCEEDED to getString(R.string.timeout_exceeded),
             NetworkError.SERVER_NOT_AVAILABLE to getString(R.string.server_not_available),
             NetworkError.BAD_REQUEST to getString(R.string.bad_request),
+            NetworkError.AUTHENTICATION to getString(R.string.authentication_required),
             NetworkError.FORBIDDEN to getString(R.string.forbidden_error),
-            NetworkError.SERVER_ERROR to getString(R.string.server_error),
-            NetworkError.UNEXPECTED to getString(R.string.unexpected_error)
+            NetworkError.SERVER_ERROR to getString(R.string.server_error)
         )
     )!!
 }

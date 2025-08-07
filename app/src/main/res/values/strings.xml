@@ -257,4 +257,7 @@
     <string name="server_error">Server error</string>
     <string name="user_not_found">User was not found</string>
     <string name="channel_not_found">Channel not found</string>
+    <string name="authentication_required">Authentication is required</string>
+    <string name="channels_not_found">Channels are not found</string>
+    <string name="video_not_found">Video was not found</string>
 </resources>

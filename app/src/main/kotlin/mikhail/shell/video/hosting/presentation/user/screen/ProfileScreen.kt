@@ -36,7 +36,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -62,16 +61,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.user.UserModel
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
@@ -90,9 +88,10 @@ fun ProfileScreen(
     onLogOut: () -> Unit,
     onLogOutSuccess: () -> Unit,
     onInvite: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onAuthenticationRequired: () -> Unit,
+    onUserNotFound: () -> Unit
 ) {
-    val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
     val content: @Composable () -> Unit = {
@@ -177,21 +176,19 @@ fun ProfileScreen(
             onLogOutSuccess()
         }
     }
-    LaunchedEffect(state.userError) {
-        val userErrorMsg = if (state.userError is NetworkError) {
-            if (state.userError == NetworkError.NOT_FOUND) {
-                context.getString(R.string.user_not_found)
-            } else {
-                context.constructNetworkErrorMessage(state.userError)
-            }
-        } else null
-        userErrorMsg?.let {
-            snackBarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Short
-            )
-        }
-    }
+
+    StandardComplexErrorHandler(
+        error = state.userError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+    StandardComplexErrorHandler(
+        error = state.channelError,
+        snackBarHostState = snackBarHostState,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -537,7 +534,9 @@ fun ProfileScreenPreviewDay() {
             onLogOut = {},
             onLogOutSuccess = {},
             onInvite = {},
-            onOpenSettings = {}
+            onOpenSettings = {},
+            onAuthenticationRequired = {},
+            onUserNotFound = {}
         )
     }
 }

@@ -27,6 +27,9 @@ fun NavGraphBuilder.subscriptionsRoute(
             onRefresh = viewModel::loadChannels,
             onChannelClick = {
                 navController.navigate(Route.Channel.View(it))
+            },
+            onAuthenticationRequired = {
+                navController.navigate(Route.Authentication)
             }
         )
     }

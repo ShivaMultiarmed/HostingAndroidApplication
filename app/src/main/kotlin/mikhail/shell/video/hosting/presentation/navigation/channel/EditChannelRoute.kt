@@ -25,7 +25,12 @@ fun NavGraphBuilder.editChannelRoute(
             onSuccess = {
                 navController.navigate(Route.Channel.View(it.channelId!!))
             },
-            onAuthRequired = { navController.navigate(Route.Authentication) }
+            onChannelNotFound = {
+                navController.popBackStack()
+            },
+            onAuthenticationRequired = {
+                navController.navigate(Route.Authentication)
+            }
         )
     }
 }

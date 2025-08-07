@@ -81,11 +81,18 @@ class MainActivity : ComponentActivity() {
                 var isVideoFullScreened by rememberSaveable { mutableStateOf(false) }
                 val orientation = LocalConfiguration.current.orientation
                 val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
-                LaunchedEffect (currentRoute) {
+                LaunchedEffect(currentRoute) {
                     if (Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } == true) {
-                        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = false
+                        WindowCompat.getInsetsController(
+                            activity.window,
+                            view
+                        ).isAppearanceLightStatusBars = false
                     } else {
-                        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = (statusBarIconsColor != DarkColorScheme.onSurface)
+                        WindowCompat.getInsetsController(
+                            activity.window,
+                            view
+                        ).isAppearanceLightStatusBars =
+                            (statusBarIconsColor != DarkColorScheme.onSurface)
                     }
                 }
                 Scaffold(
@@ -97,7 +104,11 @@ class MainActivity : ComponentActivity() {
                                 Route.Authentication.SignUp::class.qualifiedName,
                                 Route.Video::class.qualifiedName
                             ) && !(orientation == Configuration.ORIENTATION_LANDSCAPE
-                                    && Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } != false
+                                    && Route.Video.View::class.qualifiedName?.let {
+                                currentRoute?.contains(
+                                    it
+                                )
+                            } != false
                                     || isVideoFullScreened)
                         ) {
                             BottomNavBar(
@@ -123,7 +134,11 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                if (Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } == true) {
+                                if (Route.Video.View::class.qualifiedName?.let {
+                                        currentRoute?.contains(
+                                            it
+                                        )
+                                    } == true) {
                                     Color.Black
                                 } else {
                                     MaterialTheme.colorScheme.surface

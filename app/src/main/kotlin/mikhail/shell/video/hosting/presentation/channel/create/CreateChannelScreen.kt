@@ -57,16 +57,15 @@ import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.DE
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -79,7 +78,7 @@ fun CreateChannelScreen(
     onSubmit: (CreateChannelInputState) -> Unit,
     onSuccess: (Channel) -> Unit,
     onPopup: () -> Unit,
-    onAuthRequired: () -> Unit
+    onAuthenticationRequired: () -> Unit
 ) {
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
@@ -308,17 +307,11 @@ fun CreateChannelScreen(
             }
         }
     }
-    LaunchedEffect(state.error) {
-        if (state.error is NetworkError) {
-            snackBarHostState.showSnackbar(
-                message = context.constructNetworkErrorMessage(state.error),
-                duration = SnackbarDuration.Short
-            )
-            if (state.error == NetworkError.AUTHENTICATION) {
-                onAuthRequired()
-            }
-        }
-    }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 @Composable
@@ -330,7 +323,7 @@ fun CreateChannelScreenPreview() {
             onPopup = {},
             onSubmit = {},
             onSuccess = {},
-            onAuthRequired = {}
+            onAuthenticationRequired = {}
         )
     }
 }
