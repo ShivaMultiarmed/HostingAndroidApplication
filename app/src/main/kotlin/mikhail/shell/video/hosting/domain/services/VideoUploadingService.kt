@@ -16,14 +16,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
+import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
 @AndroidEntryPoint
@@ -33,6 +36,7 @@ class VideoUploadingService : Service() {
     private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private lateinit var uploadJob: Job
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
         videoUploadingEntryPoint = EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
@@ -48,7 +52,7 @@ class VideoUploadingService : Service() {
             }
             val sourceUri = it.getString("source")!!.toUri()
             val coverUri = it.getString("cover")?.toUri()
-            coroutineScope.launch {
+            uploadJob = coroutineScope.launch {
                 _uploadVideo(
                     video = Video(
                         channelId = it.getLong("channelId"),
@@ -114,11 +118,12 @@ class VideoUploadingService : Service() {
         notificationManager.notify(++NOTIFICATION_COUNT, notification)
     }
 
-    private fun displayFailureNotification(err: Error) {
+    private fun displayFailureNotification(error: Error) {
+        val errorMessage = if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))
-            .setContentText(getString(R.string.video_upload_failure_hint))
+            .setContentText(errorMessage)
             .setAutoCancel(true)
             .build()
         notificationManager.notify(++NOTIFICATION_COUNT, notification)

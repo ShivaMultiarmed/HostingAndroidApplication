@@ -55,9 +55,11 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.asStateFlow()
     private var _collectCommentsJob: Job? = null
+
     init {
         loadVideo()
     }
+
     @OptIn(UnstableApi::class)
     fun loadVideo() {
         _state.update {
@@ -95,6 +97,7 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
+
     fun incrementViews() {
         viewModelScope.launch {
             _incrementViews(videoId).onSuccess { newViews ->
@@ -102,7 +105,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                     it.copy(
                         videoDetails = it.videoDetails?.copy(
                             video = it.videoDetails.video.copy(
-                                views = newViews
+                                views = it.videoDetails.video.views + 1
                             )
                         )
                     )
@@ -110,11 +113,10 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
+
     fun subscribe(subscriptionState: SubscriptionState) {
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         viewModelScope.launch {
             val channelId = _state.value.videoDetails?.channel?.channelId!!
@@ -221,6 +223,15 @@ class VideoScreenViewModel @AssistedInject constructor(
     fun removeComment(commentId: Long) {
         viewModelScope.launch {
             _removeComment(commentId)
+                .onSuccess {
+                    _state.update {
+                        it.copy(commentError = null)
+                    }
+                }.onFailure { error ->
+                    _state.update {
+                        it.copy(commentError = error)
+                    }
+                }
         }
     }
 
@@ -232,14 +243,14 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             _getComments(
-                before,
-                videoId
+                before = before,
+                videoId = videoId
             ).onSuccess { commentsWithUsers ->
                 val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
                         commentError = null,
-                        comments = ((it.comments?: listOf()) + commentModels).distinct()
+                        comments = ((it.comments ?: listOf()) + commentModels).distinct()
                     )
                 }
             }.onFailure { err ->
@@ -251,11 +262,13 @@ class VideoScreenViewModel @AssistedInject constructor(
             }
         }
     }
+
     fun observeComments() {
         _collectCommentsJob = viewModelScope.launch {
             _observeComments(videoId).collect(::handleCommentAction)
         }
     }
+
     fun unobserveComments() {
         _state.update {
             it.copy(
@@ -276,14 +289,15 @@ class VideoScreenViewModel @AssistedInject constructor(
                 )
             }
         }
-        when(actionModel.action) {
+        when (actionModel.action) {
             Action.ADD -> {
                 _state.update {
                     it.copy(
-                        comments = listOf(commentModel) + (it.comments?: listOf())
+                        comments = listOf(commentModel) + (it.comments ?: listOf())
                     )
                 }
             }
+
             Action.REMOVE -> {
                 _state.update {
                     it.copy(
@@ -291,11 +305,14 @@ class VideoScreenViewModel @AssistedInject constructor(
                     )
                 }
             }
+
             Action.UPDATE -> {
                 _state.update {
-                    val currentPosition = it.comments?.indexOfFirst { it.commentId == commentModel.commentId }
+                    val currentPosition =
+                        it.comments?.indexOfFirst { it.commentId == commentModel.commentId }
                     it.copy(
-                        comments = it.comments?.toMutableList().also { it?.set(currentPosition!!, commentModel) }?.toList()
+                        comments = it.comments?.toMutableList()
+                            .also { it?.set(currentPosition!!, commentModel) }?.toList()
                     )
                 }
             }

@@ -6,7 +6,6 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import javax.inject.Inject
 
-
 class UploadVideo @Inject constructor(
     private val videoRepository: VideoRepository
 ) {

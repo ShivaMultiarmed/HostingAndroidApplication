@@ -162,7 +162,7 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun incrementViews(videoId: Long): Result<Long, Error> = request {
+    override suspend fun incrementViews(videoId: Long): Result<Unit, Error> = request {
         videoApi.incrementViews(videoId)
     }
 

@@ -603,9 +603,12 @@ fun CommentsBottomSheet(
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
     onLoad: (Instant) -> Unit = {},
-    onGoToProfile: (userId: Long) -> Unit = {}
+    onGoToProfile: (userId: Long) -> Unit = {},
+    onVideoNotFound: () -> Unit = {},
+    onAuthenticationRequired: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
     ModalBottomSheet(
         sheetState = state,
         onDismissRequest = onDismiss,
@@ -707,6 +710,7 @@ fun CommentsBottomSheet(
                 actionComment = actionComment
             )
         }
+        SnackbarHost(hostState = snackBarHostState)
     }
 
     DisposableEffect(Unit) {
@@ -715,6 +719,14 @@ fun CommentsBottomSheet(
             onUnobserve()
         }
     }
+
+    StandardComplexErrorHandler(
+        error = commentError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.video_not_found),
+        notFoundHandler = onVideoNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 @Composable

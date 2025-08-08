@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -9,6 +10,8 @@ import androidx.media3.common.Player
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.edit.EditUserScreen
@@ -25,6 +28,7 @@ fun NavGraphBuilder.editUserRoute(
         val viewModel = hiltViewModel<EditUserViewModel, EditUserViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
+        val coroutineScope = rememberCoroutineScope()
         EditUserScreen(
             userId = userId,
             state = state,
@@ -42,9 +46,17 @@ fun NavGraphBuilder.editUserRoute(
                 logOut(sharedPref, navController)
             },
             onPopup = navController::popBackStack,
-            onUserNotFound = navController::popBackStack,
+            onUserNotFound = {
+                coroutineScope.launch {
+                    delay(800)
+                    navController.popBackStack()
+                }
+            },
             onAuthenticationRequired = {
-                navController.navigate(Route.Authentication)
+                coroutineScope.launch {
+                    delay(800)
+                    navController.navigate(Route.Authentication)
+                }
             }
         )
     }

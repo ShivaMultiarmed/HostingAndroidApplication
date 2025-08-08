@@ -45,7 +45,7 @@ interface VideoRepository {
 
     suspend fun incrementViews(
         videoId: Long
-    ): Result<Long, Error>
+    ): Result<Unit, Error>
 
     suspend fun deleteVideo(
         videoId: Long

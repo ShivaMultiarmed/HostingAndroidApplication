@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -12,6 +13,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -33,6 +36,7 @@ fun NavGraphBuilder.profileRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val sharedPref =
             LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
+        val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             state = state,
             isOwner = userId == userDetailsProvider.getUserId(),
@@ -74,10 +78,16 @@ fun NavGraphBuilder.profileRoute(
                 navController.navigate(Route.User.Settings)
             },
             onAuthenticationRequired = {
-                navController.navigate(Route.Authentication.SignIn)
+                coroutineScope.launch {
+                    delay(800)
+                    navController.navigate(Route.Authentication.SignIn)
+                }
             },
             onUserNotFound = {
-                navController.popBackStack()
+                coroutineScope.launch {
+                    delay(800)
+                    navController.popBackStack()
+                }
             }
         )
     }

@@ -147,10 +147,12 @@ fun SignInScreen(
             }
         }
     }
-    StandardComplexErrorHandler(
-        error = state.error,
-        snackBarHostState = snackBarHostState
-    )
+    if (state.error != NetworkError.NOT_FOUND) {
+        StandardComplexErrorHandler(
+            error = state.error,
+            snackBarHostState = snackBarHostState
+        )
+    }
 }
 @Composable
 @Preview

@@ -203,21 +203,10 @@ fun SignUpScreen(
 
 @Composable
 @Preview
-fun SignUpScreenDayPreview() {
-    VideoHostingTheme {
-        SignUpScreen(
-            state = SignUpWithPasswordState(),
-            onSubmit = {},
-            onSuccess = {}
-        )
-    }
-}
-
 @Preview(
     uiMode = UI_MODE_NIGHT_YES
 )
-@Composable
-fun SignUpScreenNightPreview() {
+fun SignUpScreenDayPreview() {
     VideoHostingTheme {
         SignUpScreen(
             state = SignUpWithPasswordState(),

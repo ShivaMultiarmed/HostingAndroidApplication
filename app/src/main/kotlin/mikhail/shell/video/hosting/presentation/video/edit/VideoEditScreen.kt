@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
@@ -58,6 +59,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.uriToFile
@@ -71,24 +73,34 @@ fun VideoEditScreen(
     onRefresh: () -> Unit,
     onSubmit: (VideoEditInputState) -> Unit,
     onSuccess: (Video) -> Unit,
-    onCancel: (Long) -> Unit
+    onCancel: (Long) -> Unit,
+    onVideoNotFound: () -> Unit,
+    onAuthenticationRequired: () -> Unit
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    if (state.initialVideo != null) {
-        val snackBarHostState = remember { SnackbarHostState() }
-        val video = state.initialVideo
-        val compoundError = state.error
-        var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-        var title by rememberSaveable { mutableStateOf(video.title) }
-        var coverAction by rememberSaveable { mutableStateOf(KEEP) }
-        Scaffold(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            topBar = {
+    val snackBarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        snackbarHost = {
+            SnackbarHost(snackBarHostState)
+        }
+    ) { padding ->
+        if (state.initialVideo != null) {
+            val video = state.initialVideo
+            val compoundError = state.error
+            var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+            var title by rememberSaveable { mutableStateOf(video.title) }
+            var coverAction by rememberSaveable { mutableStateOf(KEEP) }
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .verticalScroll(scrollState)
+            ) {
                 TopBar(
                     title = stringResource(R.string.video_edit_title),
                     onPopup = { onCancel(state.initialVideo.videoId!!) },
@@ -105,21 +117,14 @@ fun VideoEditScreen(
                         )
                     }
                 )
-            },
-            snackbarHost = {
-                SnackbarHost(snackBarHostState)
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(it)
-                    .verticalScroll(scrollState)
-            ) {
                 val titleErrMsg = constructInfoMessage(
                     compoundError,
                     mapOf(
                         VideoEditingError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
-                        VideoEditingError.TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
+                        VideoEditingError.TITLE_TOO_LARGE to stringResource(
+                            R.string.text_too_large_error,
+                            ValidationRules.MAX_TITLE_LENGTH
+                        )
                     )
                 )
                 StandardEditField(
@@ -152,8 +157,10 @@ fun VideoEditScreen(
                     mapOf(
                         VideoEditingError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
                         VideoEditingError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                        VideoEditingError.COVER_TOO_LARGE to stringResource(R.string.file_too_large_error,
-                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB")
+                        VideoEditingError.COVER_TOO_LARGE to stringResource(
+                            R.string.file_too_large_error,
+                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB"
+                        )
                     )
                 )
                 Column {
@@ -186,10 +193,13 @@ fun VideoEditScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            30.dp,
+                            Alignment.CenterHorizontally
+                        ),
                     ) {
                         if (coverExists != false) {
-                            Column (
+                            Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
                                         Modifier.fillMaxWidth()
@@ -216,7 +226,7 @@ fun VideoEditScreen(
                             }
                         }
                         if (coverUri != null) {
-                            Column (
+                            Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
                                         Modifier.fillMaxWidth()
@@ -243,7 +253,7 @@ fun VideoEditScreen(
                         }
                     }
                     if (coverExists == true && coverAction == REMOVE) {
-                        Column (
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -255,30 +265,45 @@ fun VideoEditScreen(
                     }
                 }
             }
-        }
-        LaunchedEffect(state.updatedVideo) {
-            if (state.updatedVideo != null) {
-                snackBarHostState.showSnackbar(
-                    message = context.getString(R.string.video_edit_success),
-                    duration = SnackbarDuration.Long
-                )
-                onSuccess(state.updatedVideo)
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                if (state.isLoading) {
+                    LoadingComponent(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface)
+                    )
+                } else if (state.error != null) {
+                    ErrorComponent(
+                        modifier = modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
+                        onRetry = onRefresh
+                    )
+                }
             }
         }
-    } else if (state.isLoading) {
-        LoadingComponent(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        )
-    } else if (state.error != null) {
-        ErrorComponent(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            onRetry = onRefresh
-        )
     }
+    LaunchedEffect(state.updatedVideo) {
+        if (state.updatedVideo != null) {
+            snackBarHostState.showSnackbar(
+                message = context.getString(R.string.video_edit_success),
+                duration = SnackbarDuration.Long
+            )
+            onSuccess(state.updatedVideo)
+        }
+    }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.video_not_found),
+        notFoundHandler = onVideoNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 @Composable
@@ -296,7 +321,9 @@ fun EditVideoScreenPreview() {
             onSubmit = {},
             onSuccess = {},
             onRefresh = {},
-            onCancel = {}
+            onCancel = {},
+            onAuthenticationRequired = {},
+            onVideoNotFound = {}
         )
     }
 }

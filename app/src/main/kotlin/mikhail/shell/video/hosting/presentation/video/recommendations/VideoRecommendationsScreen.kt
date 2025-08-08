@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
@@ -36,8 +39,10 @@ import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSni
 fun VideoRecommendationsScreen(
     state: VideoRecommendationsScreenState,
     onLoadVideosPart: () -> Unit,
-    onVideoClick: (videoId: Long) -> Unit
+    onVideoClick: (videoId: Long) -> Unit,
+    onAuthenticationRequired: () -> Unit
 ) {
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -46,6 +51,9 @@ fun VideoRecommendationsScreen(
             TopBar(
                 title = stringResource(R.string.recommendations_title)
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
         val lazyGridState = rememberLazyGridState()
@@ -122,5 +130,10 @@ fun VideoRecommendationsScreen(
                 onLoadVideosPart()
             }
         }
+        StandardComplexErrorHandler(
+            error = state.videosLoadingError,
+            snackBarHostState = snackBarHostState,
+            authenticationRequiredHandler = onAuthenticationRequired
+        )
     }
 }
