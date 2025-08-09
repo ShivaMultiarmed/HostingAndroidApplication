@@ -23,7 +23,7 @@ fun Context.isNetworkAvailable(): Boolean {
 
 suspend fun <D> request(
     httpExceptionHandlers: Map<Int, (HttpException) -> Error> = emptyMap(),
-    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler{ UnexpectedError },
+    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler { UnexpectedError },
     resultHandler: suspend () -> D
 ): Result<D, Error> {
     return try {

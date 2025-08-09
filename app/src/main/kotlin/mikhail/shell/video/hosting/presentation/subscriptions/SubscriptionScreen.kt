@@ -41,6 +41,7 @@ fun SubscriptionsScreen(
     state: SubscriptionsScreenState,
     onRefresh: () -> Unit,
     onChannelClick: (Long) -> Unit,
+    onUserNotFound: () -> Unit,
     onAuthenticationRequired: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -128,6 +129,8 @@ fun SubscriptionsScreen(
     StandardComplexErrorHandler(
         error = state.error,
         snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
         authenticationRequiredHandler = onAuthenticationRequired
     )
 }

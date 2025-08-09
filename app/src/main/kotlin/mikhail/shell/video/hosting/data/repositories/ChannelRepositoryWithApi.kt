@@ -1,11 +1,9 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.content.Context
 import android.webkit.MimeTypeMap
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
@@ -22,7 +20,6 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -30,7 +27,6 @@ import java.io.File
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
-    @ApplicationContext private val appContext: Context,
     private val _channelApi: ChannelApi,
     private val gson: Gson,
     private val fcm: FirebaseMessaging,
@@ -103,14 +99,10 @@ class ChannelRepositoryWithApi @Inject constructor(
             _channelApi.getChannelsBySubscriber(userId).map { it.toDomain() }
         }
 
-    override suspend fun subscribe(
-        channelId: Long,
-        subscriptionState: SubscriptionState
-    ): Result<ChannelWithUser, Error> = request {
+    override suspend fun subscribe(channelId: Long): Result<Unit, Error> = request {
         _channelApi.subscribe(
             channelId = channelId,
-            fcmToken = fcm.token.await(),
-            subscriptionState = subscriptionState
+            fcmToken = fcm.token.await()
         ).toDomain()
     }
 

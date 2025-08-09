@@ -78,7 +78,6 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun EditChannelScreen(
-    modifier: Modifier = Modifier,
     state: EditChannelScreenState,
     onSubmit: (EditChannelInputState) -> Unit,
     onSuccess: (Channel) -> Unit,
@@ -102,7 +101,7 @@ fun EditChannelScreen(
         var coverAction by rememberSaveable { mutableStateOf(KEEP) }
         var coverExists by rememberSaveable { mutableStateOf(null as Boolean?) }
         Scaffold(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
             topBar = {
@@ -145,7 +144,7 @@ fun EditChannelScreen(
                     }
                 }
                 val titleErrMsg = constructInfoMessage(
-                    state.error,
+                    state.editedChannelError,
                     mapOf(
                         TITLE_EMPTY to stringResource(R.string.text_empty_error),
                         TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
@@ -176,7 +175,7 @@ fun EditChannelScreen(
                     )
                 }
                 val aliasErrMsg = constructInfoMessage(
-                    state.error,
+                    state.editedChannelError,
                     mapOf(
                         ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
                         ALIAS_EXISTS to stringResource(R.string.channel_alias_exists_error)
@@ -206,7 +205,7 @@ fun EditChannelScreen(
                     )
                 }
                 val descriptionErrMsg = constructInfoMessage(
-                    state.error,
+                    state.editedChannelError,
                     mapOf(
                         DESCRIPTION_TOO_LARGE to stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                     )
@@ -245,7 +244,7 @@ fun EditChannelScreen(
                         }
                     }
                 val avatarErrMsg = constructInfoMessage(
-                    state.error,
+                    state.editedChannelError,
                     mapOf(
                         AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB"),
                         AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
@@ -345,7 +344,7 @@ fun EditChannelScreen(
                         }
                     }
                 val coverErrMsg = constructInfoMessage(
-                    state.error,
+                    state.editedChannelError,
                     mapOf(
                         COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB"),
                         COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
@@ -451,7 +450,14 @@ fun EditChannelScreen(
         }
     }
     StandardComplexErrorHandler(
-        error = state.error,
+        error = state.initialChannelError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.channel_not_found),
+        notFoundHandler = onChannelNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+    StandardComplexErrorHandler(
+        error = state.editedChannelError,
         snackBarHostState = snackBarHostState,
         notFoundMessage = stringResource(R.string.channel_not_found),
         notFoundHandler = onChannelNotFound,

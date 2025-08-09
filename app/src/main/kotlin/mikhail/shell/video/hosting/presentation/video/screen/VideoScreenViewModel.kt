@@ -123,11 +123,19 @@ class VideoScreenViewModel @AssistedInject constructor(
             _subscribe(
                 channelId = channelId,
                 subscriptionState = subscriptionState
-            ).onSuccess { channelWithUser ->
+            ).onSuccess {
                 _state.update {
+                    val previousChannel = it.videoDetails?.channel?: return@update it
+                    val previousSubscriptionState = previousChannel.subscription
+                    val newSubscriptionState = when (previousSubscriptionState) {
+                        SubscriptionState.SUBSCRIBED -> SubscriptionState.NOT_SUBSCRIBED
+                        SubscriptionState.NOT_SUBSCRIBED -> SubscriptionState.SUBSCRIBED
+                    }
                     it.copy(
-                        videoDetails = it.videoDetails?.copy(
-                            channel = channelWithUser
+                        videoDetails = it.videoDetails.copy(
+                            channel = previousChannel.copy(
+                                subscription = newSubscriptionState
+                            )
                         ),
                         isLoading = false,
                         error = null

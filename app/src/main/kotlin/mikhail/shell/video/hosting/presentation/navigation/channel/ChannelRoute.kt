@@ -14,6 +14,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.channelRoute(
     navController: NavController,
@@ -47,19 +48,19 @@ fun NavGraphBuilder.channelRoute(
             onRemove = {
                 coroutineScope.launch {
                     viewModel.removeChannel(it)
-                    delay(1000)
+                    delay(800.milliseconds)
                     navController.navigate(Route.User.Profile(userId))
                 }
             },
             onChannelNotFound = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.popBackStack()
                 }
             },
             onAuthenticationRequired = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.navigate(Route.Authentication)
                 }
             },

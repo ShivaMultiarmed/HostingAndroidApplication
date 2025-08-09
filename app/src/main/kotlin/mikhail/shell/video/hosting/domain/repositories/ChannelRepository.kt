@@ -5,7 +5,6 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import java.io.File
 
 interface ChannelRepository {
@@ -21,10 +20,7 @@ interface ChannelRepository {
 
     suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, Error>
 
-    suspend fun subscribe(
-        channelId: Long,
-        subscriptionState: SubscriptionState
-    ): Result<ChannelWithUser, Error>
+    suspend fun subscribe(channelId: Long): Result<Unit, Error>
 
     suspend fun subscribeToNotifications(): Result<Unit, Error>
 

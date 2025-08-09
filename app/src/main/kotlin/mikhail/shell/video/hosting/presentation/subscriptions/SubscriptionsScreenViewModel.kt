@@ -40,7 +40,6 @@ class SubscriptionsScreenViewModel @AssistedInject constructor(
             }.onFailure { err ->
                 _state.update {
                     it.copy(
-                        channels = null,
                         error = err,
                         isLoading = false
                     )

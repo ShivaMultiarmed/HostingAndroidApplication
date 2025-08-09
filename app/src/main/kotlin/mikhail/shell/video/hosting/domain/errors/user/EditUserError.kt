@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 enum class EditUserError: Error {
     NICK_EMPTY,
     NICK_TOO_LARGE,
+    NICK_EXISTS,
 
     NAME_TOO_LARGE,
 

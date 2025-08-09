@@ -21,6 +21,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
+import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,
@@ -34,8 +35,7 @@ fun NavGraphBuilder.profileRoute(
         val viewModel =
             hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref =
-            LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
+        val sharedPref = context.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             state = state,
@@ -79,13 +79,13 @@ fun NavGraphBuilder.profileRoute(
             },
             onAuthenticationRequired = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.navigate(Route.Authentication.SignIn)
                 }
             },
             onUserNotFound = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.popBackStack()
                 }
             }

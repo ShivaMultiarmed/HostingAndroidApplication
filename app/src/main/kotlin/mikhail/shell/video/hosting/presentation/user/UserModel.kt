@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.user
 import mikhail.shell.video.hosting.domain.models.User
 
 data class UserModel(
+    val userId: Long? = null,
     val nick: String,
     val name: String? = null,
     val avatar: String? = null,
@@ -11,5 +12,5 @@ data class UserModel(
     val email: String? = null
 )
 
-fun User.toModel() = UserModel(nick, name, avatar, bio, tel?.let { "+$it" }, email)
-fun UserModel.toDomain(userId: Long) = User(userId, nick, name, avatar, bio, tel, email)
+fun User.toModel() = UserModel(userId, nick, name, avatar, bio, tel?.let { "+$it" }, email)
+fun UserModel.toDomain() = User(userId, nick, name, avatar, bio, tel, email)

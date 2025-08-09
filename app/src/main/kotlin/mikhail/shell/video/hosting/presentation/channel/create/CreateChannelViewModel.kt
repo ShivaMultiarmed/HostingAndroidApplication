@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.CompoundError
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.utils.isBlank
@@ -40,9 +40,9 @@ class CreateChannelViewModel @AssistedInject constructor(
             )
             viewModelScope.launch {
                 _createChannel(
-                    channel,
-                    input.avatar,
-                    input.cover
+                    channel = channel,
+                    avatar = input.avatar,
+                    cover = input.cover
                 ).onSuccess {
                     _state.value = CreateChannelScreenState(
                         channel = it,
@@ -51,7 +51,6 @@ class CreateChannelViewModel @AssistedInject constructor(
                     )
                 }.onFailure {
                     _state.value = CreateChannelScreenState(
-                        channel = null,
                         error = it,
                         isLoading = false
                     )

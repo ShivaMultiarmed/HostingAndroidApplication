@@ -36,7 +36,7 @@ class EditChannelViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         initialChannel = initialChannel,
-                        error = null,
+                        initialChannelError = null,
                         isLoading = false
                     )
                 }
@@ -44,7 +44,7 @@ class EditChannelViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         initialChannel = null,
-                        error = error,
+                        initialChannelError = error,
                         isLoading = false
                     )
                 }
@@ -67,7 +67,7 @@ class EditChannelViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    error = error
+                    editedChannelError = error
                 )
             }
         } else {
@@ -89,7 +89,7 @@ class EditChannelViewModel @AssistedInject constructor(
                     _state.update {
                         it.copy(
                             editedChannel = editedChannel,
-                            error = null,
+                            editedChannelError = null,
                             isLoading = false
                         )
                     }
@@ -97,7 +97,7 @@ class EditChannelViewModel @AssistedInject constructor(
                     _state.update {
                         it.copy(
                             editedChannel = null,
-                            error = error,
+                            editedChannelError = error,
                             isLoading = false
                         )
                     }

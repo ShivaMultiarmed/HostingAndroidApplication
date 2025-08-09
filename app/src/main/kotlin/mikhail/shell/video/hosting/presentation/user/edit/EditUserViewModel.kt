@@ -38,10 +38,9 @@ class EditUserViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             _getUser(userId).onSuccess { initialUser ->
-                val initialUserModel = initialUser.toModel()
                 _state.update {
                     it.copy(
-                        initialUser = initialUserModel,
+                        initialUser = initialUser.toModel(),
                         getUserError = null,
                         isInitializing = false
                     )
@@ -75,14 +74,13 @@ class EditUserViewModel @AssistedInject constructor(
             val user = getUserFromInput(input)
             viewModelScope.launch {
                 _editUser(
-                    user,
-                    input.avatar,
-                    input.avatarAction
+                    user = user,
+                    avatar = input.avatar,
+                    avatarAction = input.avatarAction
                 ).onSuccess { editedUser ->
-                    val editedUserModel = editedUser.toModel()
                     _state.update {
                         it.copy(
-                            editedUser = editedUserModel,
+                            editedUser = editedUser.toModel(),
                             isEditing = false,
                             editUserError = null
                         )

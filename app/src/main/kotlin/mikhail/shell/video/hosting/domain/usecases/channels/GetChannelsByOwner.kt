@@ -9,7 +9,5 @@ import javax.inject.Inject
 class GetChannelsByOwner @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<List<Channel>, Error> {
-        return channelRepository.fetchChannelsByOwner(userId)
-    }
+    suspend operator fun invoke(userId: Long): Result<List<Channel>, Error> = channelRepository.fetchChannelsByOwner(userId)
 }

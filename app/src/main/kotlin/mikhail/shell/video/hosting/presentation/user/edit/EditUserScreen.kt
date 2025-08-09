@@ -142,7 +142,8 @@ fun EditUserScreen(
                         EditUserError.NICK_TOO_LARGE to stringResource(
                             R.string.text_too_large_error,
                             ValidationRules.MAX_NAME_LENGTH
-                        )
+                        ),
+                        EditUserError.NICK_EXISTS to stringResource(R.string.nick_exists_error)
                     )
                 )
                 StandardEditField(

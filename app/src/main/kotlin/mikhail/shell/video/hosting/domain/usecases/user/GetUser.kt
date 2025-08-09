@@ -9,7 +9,5 @@ import javax.inject.Inject
 class GetUser @Inject constructor(
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(userId: Long): Result<User, Error> {
-        return userRepository.get(userId)
-    }
+    suspend operator fun invoke(userId: Long): Result<User, Error> = userRepository.get(userId)
 }

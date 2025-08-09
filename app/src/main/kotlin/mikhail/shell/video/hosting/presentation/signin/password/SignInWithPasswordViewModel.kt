@@ -22,7 +22,7 @@ class SignInWithPasswordViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     private companion object {
-        private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
+        val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
     }
 
     private fun validateSignInInput(email: String, password: String): CompoundError<SignInError>? {

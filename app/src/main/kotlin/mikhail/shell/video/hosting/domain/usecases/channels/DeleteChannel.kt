@@ -8,7 +8,5 @@ import javax.inject.Inject
 class DeleteChannel @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(channelId: Long): Result<Unit, Error> {
-        return channelRepository.removeChannel(channelId)
-    }
+    suspend operator fun invoke(channelId: Long): Result<Unit, Error> = channelRepository.removeChannel(channelId)
 }

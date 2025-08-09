@@ -68,7 +68,6 @@ class ProfileViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         channelError = err,
-                        channels = null,
                         isLoading = false
                     )
                 }

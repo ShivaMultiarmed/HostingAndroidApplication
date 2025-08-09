@@ -118,7 +118,10 @@ class ChannelScreenViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("channelId") channelId: Long, @Assisted("userId") userId: Long) : ChannelScreenViewModel
+        fun create(
+            @Assisted("channelId") channelId: Long,
+            @Assisted("userId") userId: Long
+        ) : ChannelScreenViewModel
     }
 
     private companion object {

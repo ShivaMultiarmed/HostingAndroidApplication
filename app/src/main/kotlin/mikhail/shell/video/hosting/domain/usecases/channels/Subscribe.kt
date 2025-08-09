@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
@@ -13,7 +12,5 @@ class Subscribe @Inject constructor(
     suspend operator fun invoke(
         channelId: Long,
         subscriptionState: SubscriptionState
-    ): Result<ChannelWithUser, Error> {
-        return channelRepository.subscribe(channelId, subscriptionState)
-    }
+    ): Result<Unit, Error> = channelRepository.subscribe(channelId)
 }

@@ -9,7 +9,6 @@ import javax.inject.Inject
 class GetChannelInfo @Inject constructor(
     private val _channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(channelId: Long): Result<ChannelWithUser, Error> {
-        return _channelRepository.fetchChannelForUser(channelId)
-    }
+    suspend operator fun invoke(channelId: Long): Result<ChannelWithUser, Error> =
+        _channelRepository.fetchChannelForUser(channelId)
 }

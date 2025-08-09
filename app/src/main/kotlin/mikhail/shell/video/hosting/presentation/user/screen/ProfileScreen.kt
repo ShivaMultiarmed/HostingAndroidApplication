@@ -187,6 +187,8 @@ fun ProfileScreen(
     StandardComplexErrorHandler(
         error = state.channelError,
         snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.user_not_found),
+        notFoundHandler = onUserNotFound,
         authenticationRequiredHandler = onAuthenticationRequired
     )
 }
@@ -518,6 +520,7 @@ fun ProfileScreenPreviewDay() {
         ProfileScreen(
             state = ProfileScreenState(
                 user = UserModel(
+                    100500,
                     "Balance Keeper",
                     "Mikhail Shell",
                     "",
