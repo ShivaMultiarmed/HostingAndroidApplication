@@ -8,7 +8,5 @@ import javax.inject.Inject
 class DeleteVideo @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
-    suspend operator fun invoke(videoId: Long): Result<Unit, Error> {
-        return videoRepository.deleteVideo(videoId)
-    }
+    suspend operator fun invoke(videoId: Long): Result<Unit, Error> = videoRepository.deleteVideo(videoId)
 }

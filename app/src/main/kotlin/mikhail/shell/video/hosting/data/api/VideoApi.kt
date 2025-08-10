@@ -35,7 +35,7 @@ interface VideoApi {
     suspend fun rateVideo(
         @Path("videoId") videoId: Long,
         @Query("likingState") liking: LikingState
-    ) : VideoDto
+    )
     @GET("videos/channel/{channelId}")
     suspend fun fetchVideoList(
         @Path("channelId") channelId: Long,

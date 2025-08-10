@@ -14,11 +14,9 @@ class GetVideoList @Inject constructor(
         userId: Long,
         partNumber: Long,
         partSize: Int
-    ): Result<List<Video>, Error> {
-        return repository.fetchChannelVideoList(
-            channelId = channelId,
-            partNumber = partNumber,
-            partSize = partSize
-        )
-    }
+    ): Result<List<Video>, Error> = repository.fetchChannelVideoList(
+        channelId = channelId,
+        partNumber = partNumber,
+        partSize = partSize
+    )
 }

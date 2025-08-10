@@ -10,19 +10,11 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import java.io.File
 
 interface VideoRepository {
-    suspend fun fetchVideoInfo(
-        videoId: Long
-    ) : Result<Video, Error>
+    suspend fun fetchVideoInfo(videoId: Long) : Result<Video, Error>
 
-    suspend fun fetchVideoDetails(
-        videoId: Long,
-        userId: Long
-    ): Result<VideoDetails, Error>
+    suspend fun fetchVideoDetails(videoId: Long, userId: Long): Result<VideoDetails, Error>
 
-    suspend fun rateVideo(
-        videoId: Long,
-        liking: LikingState
-    ) : Result<Video, Error>
+    suspend fun rateVideo(videoId: Long, liking: LikingState) : Result<Unit, Error>
 
     suspend fun fetchChannelVideoList(
         channelId: Long,
@@ -43,13 +35,9 @@ interface VideoRepository {
         onProgress: (Float) -> Unit
     ): Result<Video, Error>
 
-    suspend fun incrementViews(
-        videoId: Long
-    ): Result<Unit, Error>
+    suspend fun incrementViews(videoId: Long): Result<Unit, Error>
 
-    suspend fun deleteVideo(
-        videoId: Long
-    ): Result<Unit, Error>
+    suspend fun deleteVideo(videoId: Long): Result<Unit, Error>
 
     suspend fun editVideo(
         video: Video,
@@ -62,8 +50,5 @@ interface VideoRepository {
         onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
     ): Result<Boolean, Error>
 
-    suspend fun fetchVideoRecommendations(
-        partIndex: Long,
-        partSize: Int
-    ): Result<List<VideoWithChannel>, Error>
+    suspend fun fetchVideoRecommendations(partIndex: Long, partSize: Int): Result<List<VideoWithChannel>, Error>
 }

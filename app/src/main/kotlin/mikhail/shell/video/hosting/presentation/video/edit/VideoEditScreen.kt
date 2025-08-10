@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
@@ -92,7 +93,7 @@ fun VideoEditScreen(
     ) { padding ->
         if (state.initialVideo != null) {
             val video = state.initialVideo
-            val compoundError = state.error
+            val editError = state.updateVideoError
             var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
             var title by rememberSaveable { mutableStateOf(video.title) }
             var coverAction by rememberSaveable { mutableStateOf(KEEP) }
@@ -118,7 +119,7 @@ fun VideoEditScreen(
                     }
                 )
                 val titleErrMsg = constructInfoMessage(
-                    compoundError,
+                    editError,
                     mapOf(
                         VideoEditingError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
                         VideoEditingError.TITLE_TOO_LARGE to stringResource(
@@ -153,7 +154,7 @@ fun VideoEditScreen(
                 }
                 var coverExists by rememberSaveable { mutableStateOf<Boolean?>(null) }
                 val coverErrMsg = constructInfoMessage(
-                    compoundError,
+                    editError,
                     mapOf(
                         VideoEditingError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
                         VideoEditingError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
@@ -277,7 +278,7 @@ fun VideoEditScreen(
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface)
                     )
-                } else if (state.error != null) {
+                } else if (state.initialVideoError != null && state.initialVideoError != NetworkError.NOT_FOUND) {
                     ErrorComponent(
                         modifier = modifier
                             .fillMaxSize()
@@ -298,7 +299,14 @@ fun VideoEditScreen(
         }
     }
     StandardComplexErrorHandler(
-        error = state.error,
+        error = state.initialVideoError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.video_not_found),
+        notFoundHandler = onVideoNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+    StandardComplexErrorHandler(
+        error = state.updateVideoError,
         snackBarHostState = snackBarHostState,
         notFoundMessage = stringResource(R.string.video_not_found),
         notFoundHandler = onVideoNotFound,

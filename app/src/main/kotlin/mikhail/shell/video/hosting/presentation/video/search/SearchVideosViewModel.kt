@@ -31,9 +31,9 @@ class SearchVideosViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             _searchForVideos(
-                _state.value.query!!,
-                _state.value.nextPartNumber,
-                PART_SIZE
+                query = _state.value.query!!,
+                partNumber = _state.value.nextPartNumber,
+                partSize = PART_SIZE
             ).onSuccess { list ->
                 _state.update {
                     it.copy(
@@ -47,7 +47,6 @@ class SearchVideosViewModel @Inject constructor(
             }.onFailure { e ->
                 _state.update {
                     it.copy(
-                        videos = null,
                         error = e,
                         isLoading = false
                     )

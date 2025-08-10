@@ -75,7 +75,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.value = VideoScreenState(
                     videoDetails = it,
                     isLoading = false,
-                    error = null,
+                    loadingError = null,
                     isViewed = true
                 )
                 val url = _state.value.videoDetails?.video?.sourceUrl
@@ -92,7 +92,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.value = VideoScreenState(
                     videoDetails = null,
                     isLoading = false,
-                    error = it
+                    loadingError = it
                 )
             }
         }
@@ -138,14 +138,14 @@ class VideoScreenViewModel @AssistedInject constructor(
                             )
                         ),
                         isLoading = false,
-                        error = null
+                        loadingError = null
                     )
                 }
             }.onFailure { e ->
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = e
+                        loadingError = e
                     )
                 }
             }
@@ -155,19 +155,20 @@ class VideoScreenViewModel @AssistedInject constructor(
     fun rate(likingState: LikingState) {
         viewModelScope.launch {
             _rateVideo(
-                videoId,
-                likingState
+                video = state.value.videoDetails!!.video,
+                likingState = likingState
             ).onSuccess { updVideo ->
                 _state.update { screenState ->
                     screenState.copy(
-                        videoDetails = screenState.videoDetails?.copy(
-                            video = screenState.videoDetails.video.copy(
-                                likes = updVideo.likes,
-                                dislikes = updVideo.dislikes,
-                                liking = likingState
-                            )
-                        )
+                        videoDetails = screenState.videoDetails!!.copy(
+                            video = updVideo
+                        ),
+                        likingError = null
                     )
+                }
+            }.onFailure { error ->
+                _state.update { screenState ->
+                    screenState.copy(likingError = error)
                 }
             }
         }

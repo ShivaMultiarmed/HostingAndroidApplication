@@ -13,11 +13,9 @@ class SearchForVideos @Inject constructor(
         query: String,
         partNumber: Long = 0,
         partSize: Int = 10
-    ): Result<List<VideoWithChannel>, Error> {
-        return videoRepository.fetchVideosWithChannelsByQuery(
-            query = query,
-            partNumber = partNumber,
-            partSize = partSize
-        )
-    }
+    ): Result<List<VideoWithChannel>, Error> = videoRepository.fetchVideosWithChannelsByQuery(
+        query = query,
+        partNumber = partNumber,
+        partSize = partSize
+    )
 }

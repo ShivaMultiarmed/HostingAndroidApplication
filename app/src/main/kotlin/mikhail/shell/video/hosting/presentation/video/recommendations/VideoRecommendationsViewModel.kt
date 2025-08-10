@@ -18,9 +18,7 @@ class VideoRecommendationsViewModel @Inject constructor(
     val stateFlow = _mutableStateFlow.asStateFlow()
     fun loadNextVideosPart() {
         _mutableStateFlow.update {
-            it.copy(
-                areVideosLoading = true
-            )
+            it.copy(areVideosLoading = true)
         }
         viewModelScope.launch {
             _getVideoRecommendations(
@@ -46,7 +44,7 @@ class VideoRecommendationsViewModel @Inject constructor(
             }
         }
     }
-    companion object {
+    private companion object {
         const val PART_SIZE = 10
     }
 }

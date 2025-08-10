@@ -25,6 +25,8 @@ import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -57,6 +59,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -68,13 +71,15 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 fun SearchVideosScreen(
     modifier: Modifier = Modifier,
     state: SearchVideosScreenState,
-    onSubmit: (String) -> Unit,
-    onScrollToBottom: () -> Unit,
-    onVideoClick: (Long) -> Unit
+    onSubmit: (String) -> Unit = {},
+    onScrollToBottom: () -> Unit = {},
+    onVideoClick: (Long) -> Unit = {},
+    onAuthenticationRequired: () -> Unit = {}
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     var query by rememberSaveable { mutableStateOf("") }
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -114,6 +119,9 @@ fun SearchVideosScreen(
                     icon = Icons.Rounded.Send
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
         Column(
@@ -163,7 +171,7 @@ fun SearchVideosScreen(
                         }
                     }
                     LaunchedEffect(reachedBottom) {
-                        if (reachedBottom) {
+                        if (reachedBottom && !state.areAllVideosLoaded) {
                             onScrollToBottom()
                         }
                     }
@@ -201,6 +209,11 @@ fun SearchVideosScreen(
             }
         }
     }
+    StandardComplexErrorHandler(
+        error = state.error,
+        snackBarHostState = snackBarHostState,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

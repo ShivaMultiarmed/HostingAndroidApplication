@@ -70,8 +70,8 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun rateVideo(
         videoId: Long,
         liking: LikingState
-    ): Result<Video, Error> = request {
-        videoApi.rateVideo(videoId, liking).toDomain()
+    ): Result<Unit, Error> = request {
+        videoApi.rateVideo(videoId, liking)
     }
 
     override suspend fun fetchChannelVideoList(
@@ -90,14 +90,12 @@ class VideoRepositoryWithApi @Inject constructor(
         query: String,
         partNumber: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, Error> {
-        return request {
-            videoApi.fetchVideoListByQuery(
-                query = query,
-                partNumber = partNumber,
-                partSize = partSize
-            ).map { it.toDomain() }
-        }
+    ): Result<List<VideoWithChannel>, Error> = request {
+        videoApi.fetchVideoListByQuery(
+            query = query,
+            partNumber = partNumber,
+            partSize = partSize
+        ).map { it.toDomain() }
     }
 
     override suspend fun uploadVideo(
@@ -174,31 +172,29 @@ class VideoRepositoryWithApi @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: File?
-    ): Result<Video, Error> {
-        return request (
-            httpExceptionHandler(400) { e ->
-                val json = e.response()?.errorBody()?.string()
-                val type = object : TypeToken<CompoundError<VideoEditingError>>() {}.type
-                gson.fromJson<CompoundError<VideoEditingError>>(json, type)?: UnexpectedError
-            }
-        ) {
-            val compoundError = CompoundError<VideoEditingError>()
-            cover?.let {
-                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-                if (!it.exists()) {
-                    compoundError.add(VideoEditingError.COVER_NOT_FOUND)
-                } else if (!mime!!.contains("image")) {
-                    compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
-                } else if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
-                    compoundError.add(VideoEditingError.COVER_TOO_LARGE)
-                }
-            }
-            if (compoundError.isNotNull()) {
-                throw ValidationException(compoundError)
-            }
-            val coverPart = cover?.toPart("cover")
-            videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain()
+    ): Result<Video, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<VideoEditingError>>() {}.type
+            gson.fromJson<CompoundError<VideoEditingError>>(json, type)?: UnexpectedError
         }
+    ) {
+        val compoundError = CompoundError<VideoEditingError>()
+        cover?.let {
+            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+            if (!it.exists()) {
+                compoundError.add(VideoEditingError.COVER_NOT_FOUND)
+            } else if (!mime!!.contains("image")) {
+                compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
+            } else if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+                compoundError.add(VideoEditingError.COVER_TOO_LARGE)
+            }
+        }
+        if (compoundError.isNotNull()) {
+            throw ValidationException(compoundError)
+        }
+        val coverPart = cover?.toPart("cover")
+        videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain()
     }
 
     override suspend fun downloadVideo(

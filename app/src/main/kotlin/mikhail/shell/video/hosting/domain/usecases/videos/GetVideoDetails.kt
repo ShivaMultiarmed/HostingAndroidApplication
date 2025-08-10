@@ -12,7 +12,8 @@ class GetVideoDetails @Inject constructor(
     suspend operator fun invoke(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, Error> {
-        return repository.fetchVideoDetails(videoId, userId)
-    }
+    ): Result<VideoDetails, Error> = repository.fetchVideoDetails(
+        videoId = videoId,
+        userId = userId
+    )
 }

@@ -8,7 +8,5 @@ import javax.inject.Inject
 class IncrementViews @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
-    suspend operator fun invoke(videoId: Long): Result<Unit, Error> {
-        return videoRepository.incrementViews(videoId)
-    }
+    suspend operator fun invoke(videoId: Long): Result<Unit, Error> = videoRepository.incrementViews(videoId)
 }

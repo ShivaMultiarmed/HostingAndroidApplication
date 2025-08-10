@@ -22,6 +22,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(UnstableApi::class)
 fun NavGraphBuilder.videoRoute(
@@ -32,9 +33,7 @@ fun NavGraphBuilder.videoRoute(
 ) {
     composable<Route.Video.View>(
         deepLinks = listOf(
-            navDeepLink<Route.Video.View>(
-                basePath = "https://$HOST/videos"
-            )
+            navDeepLink<Route.Video.View>(basePath = "https://$HOST/videos")
         )
     ) {
         val context = LocalContext.current
@@ -89,13 +88,13 @@ fun NavGraphBuilder.videoRoute(
             },
             onVideoNotFound = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.popBackStack()
                 }
             },
             onAuthenticationRequired = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.navigate(Route.Authentication)
                 }
             }

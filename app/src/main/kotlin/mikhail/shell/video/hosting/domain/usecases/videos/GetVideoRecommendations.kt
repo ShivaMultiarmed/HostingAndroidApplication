@@ -12,7 +12,9 @@ class GetVideoRecommendations @Inject constructor(
     suspend operator fun invoke(
         partIndex: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, Error> {
-        return videoRepository.fetchVideoRecommendations(partIndex, partSize)
-    }
+    ): Result<List<VideoWithChannel>, Error> =
+        videoRepository.fetchVideoRecommendations(
+            partIndex = partIndex,
+            partSize = partSize
+        )
 }

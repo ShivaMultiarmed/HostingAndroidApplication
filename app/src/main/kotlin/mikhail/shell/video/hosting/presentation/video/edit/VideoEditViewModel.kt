@@ -42,13 +42,14 @@ class VideoEditViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         initialVideo = initialVideo,
+                        initialVideoError = null,
                         isLoading = false
                     )
                 }
             }.onFailure { err ->
                 _state.update {
                     it.copy(
-                        error = err,
+                        initialVideoError = err,
                         isLoading = false
                     )
                 }
@@ -65,7 +66,7 @@ class VideoEditViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    error = error
+                    updateVideoError = error
                 )
             }
         } else {
@@ -79,14 +80,14 @@ class VideoEditViewModel @AssistedInject constructor(
                     _state.update {
                         it.copy(
                             updatedVideo = updatedVideo,
-                            error = null,
+                            updateVideoError = null,
                             isLoading = false
                         )
                     }
                 }.onFailure { err ->
                     _state.update {
                         it.copy(
-                            error = err,
+                            updateVideoError = err,
                             isLoading = false
                         )
                     }

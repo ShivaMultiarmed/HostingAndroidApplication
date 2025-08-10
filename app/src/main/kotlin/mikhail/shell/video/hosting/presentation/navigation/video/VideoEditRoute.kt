@@ -13,15 +13,14 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditScreen
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.videoEditRoute(
     navController: NavController,
 ) {
     composable<Route.Video.Edit> {
         val input = it.toRoute<Route.Video.Edit>()
-        val viewModel = hiltViewModel<VideoEditViewModel, VideoEditViewModel.Factory> {
-            it.create(input.videoId)
-        }
+        val viewModel = hiltViewModel<VideoEditViewModel, VideoEditViewModel.Factory> { it.create(input.videoId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         VideoEditScreen(
@@ -36,13 +35,13 @@ fun NavGraphBuilder.videoEditRoute(
             },
             onVideoNotFound = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.popBackStack()
                 }
             },
             onAuthenticationRequired = {
                 coroutineScope.launch {
-                    delay(800)
+                    delay(800.milliseconds)
                     navController.navigate(Route.Authentication)
                 }
             }

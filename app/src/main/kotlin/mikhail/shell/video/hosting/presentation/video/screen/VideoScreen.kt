@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package mikhail.shell.video.hosting.presentation.video.screen
 
 import android.content.Context
@@ -134,6 +132,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoScreen(
     userId: Long,
@@ -581,7 +580,14 @@ fun VideoScreen(
         }
     }
     StandardComplexErrorHandler(
-        error = state.error,
+        error = state.loadingError,
+        snackBarHostState = snackBarHostState,
+        notFoundMessage = stringResource(R.string.video_not_found),
+        notFoundHandler = onVideoNotFound,
+        authenticationRequiredHandler = onAuthenticationRequired
+    )
+    StandardComplexErrorHandler(
+        error = state.likingError,
         snackBarHostState = snackBarHostState,
         notFoundMessage = stringResource(R.string.video_not_found),
         notFoundHandler = onVideoNotFound,
@@ -590,6 +596,7 @@ fun VideoScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentsBottomSheet(
     userId: Long,

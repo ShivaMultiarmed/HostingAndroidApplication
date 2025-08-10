@@ -9,8 +9,10 @@ data class VideoScreenState(
     val videoDetails: VideoDetails? = null,
     val isLoading: Boolean = false,
     val isViewed: Boolean = false,
-    val error: Error? = null,
+    val loadingError: Error? = null,
     val comments: List<CommentModel>? = null,
     val actionComment: ActionModel<CommentModel>? = null,
-    val commentError: Error? = null
+    val commentError: Error? = null,
+    val likingError: Error? = null,
+    val subscriptionError: Error? = null
 )
