@@ -32,7 +32,8 @@ interface VideoRepository {
         video: Video,
         source: String,
         cover: String?,
-        onProgress: (Float) -> Unit
+        onVideoCreated: (Video) -> Unit = {},
+        onProgress: (Float) -> Unit = {}
     ): Result<Video, Error>
 
     suspend fun incrementViews(videoId: Long): Result<Unit, Error>
@@ -48,7 +49,7 @@ interface VideoRepository {
     suspend fun downloadVideo(
         videoId: Long,
         onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
-    ): Result<Boolean, Error>
+    ): Result<Unit, Error>
 
     suspend fun fetchVideoRecommendations(partIndex: Long, partSize: Int): Result<List<VideoWithChannel>, Error>
 }

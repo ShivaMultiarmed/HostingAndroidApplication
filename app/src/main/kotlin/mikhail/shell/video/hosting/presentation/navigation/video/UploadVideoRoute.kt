@@ -19,6 +19,7 @@ import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoScreen
 import mikhail.shell.video.hosting.presentation.video.upload.UploadVideoViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.uploadVideoRoute(
     navController: NavController,
@@ -40,37 +41,37 @@ fun NavGraphBuilder.uploadVideoRoute(
         UploadVideoScreen(
             state = state,
             player = viewModel.player,
-            onSubmit = { input ->
-                if (viewModel.validateVideoInput(input) == null) {
-                    val sourceUri = input.source!!
-                    if (!sourceUri.toString().contains(context.packageName + ".fileprovider")) {
-                        context.contentResolver.takePersistableUriPermission(sourceUri, FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    val coverUri = input.cover
-                    coverUri?.let {
-                        context.contentResolver.takePersistableUriPermission(it, FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    coroutineScope.launch {
-                        delay(1000)
-                        context.startService(
-                            Intent(
-                                context,
-                                VideoUploadingService::class.java
-                            ).also {
-                                it.putExtra("channelId", input.channelId)
-                                it.putExtra("title", input.title)
-                                it.putExtra("source", input.source.toString())
-                                it.putExtra("cover", input.cover?.toString())
-                            }
-                        )
-                        navController.navigate(Route.Channel.View(input.channelId!!))
-                    }
+            onValidate = viewModel::validateVideoInput,
+            onUpload = { input ->
+                val sourceUri = input.source!!
+                if (!sourceUri.toString().contains(context.packageName + ".fileprovider")) {
+                    context.contentResolver.takePersistableUriPermission(
+                        sourceUri,
+                        FLAG_GRANT_READ_URI_PERMISSION
+                    )
                 }
-            },
-            onSuccess = {
+                val coverUri = input.cover
+                coverUri?.let {
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
                 coroutineScope.launch {
-                    delay(1000)
-                    navController.navigate(Route.Video.View(it.videoId!!))
+                    delay(1000.milliseconds)
+                    context.startService(
+                        Intent(
+                            context,
+                            VideoUploadingService::class.java
+                        ).also {
+                            it.action = VideoUploadingService.ACTION_LAUNCH_UPLOADING
+                            it.putExtra("channelId", input.channelId)
+                            it.putExtra("title", input.title)
+                            it.putExtra("source", input.source.toString())
+                            it.putExtra("cover", input.cover?.toString())
+                        }
+                    )
+                    navController.navigate(Route.Channel.View(input.channelId!!))
                 }
             },
             onRefresh = viewModel::loadChannels,

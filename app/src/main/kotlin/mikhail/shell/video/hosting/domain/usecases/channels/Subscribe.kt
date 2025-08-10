@@ -12,5 +12,5 @@ class Subscribe @Inject constructor(
     suspend operator fun invoke(
         channelId: Long,
         subscriptionState: SubscriptionState
-    ): Result<Unit, Error> = channelRepository.subscribe(channelId)
+    ): Result<Unit, Error> = channelRepository.subscribe(channelId) // TODO: move business logic here
 }

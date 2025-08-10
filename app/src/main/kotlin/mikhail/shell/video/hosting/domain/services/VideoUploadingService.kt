@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
@@ -14,10 +15,13 @@ import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
@@ -25,6 +29,7 @@ import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
@@ -33,61 +38,77 @@ import mikhail.shell.video.hosting.presentation.activities.MainActivity
 class VideoUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
     private lateinit var _uploadVideo: UploadVideo
+    private lateinit var _removeVideo: DeleteVideo
     private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private lateinit var uploadJob: Job
+    private var uploadJob: Job? = null
+
+    private val videoIdState = MutableStateFlow<Long?>(null)
+    private var sourceUri: Uri? = null
+    private var coverUri: Uri? = null
+
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
-        videoUploadingEntryPoint = EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
+        videoUploadingEntryPoint =
+            EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
         _uploadVideo = videoUploadingEntryPoint.getUploadVideo()
+        _removeVideo = videoUploadingEntryPoint.getRemoveVideo()
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val input = intent?.extras
-        input?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                startForeground(++NOTIFICATION_COUNT, createProgressNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-            } else {
-                startForeground(++NOTIFICATION_COUNT, createProgressNotification())
-            }
-            val sourceUri = it.getString("source")!!.toUri()
-            val coverUri = it.getString("cover")?.toUri()
-            uploadJob = coroutineScope.launch {
-                _uploadVideo(
-                    video = Video(
-                        channelId = it.getLong("channelId"),
-                        title = it.getString("title")!!
-                    ),
-                    source = it.getString("source")!!,
-                    cover = it.getString("cover"),
-                ) {
-                    val progress = (it * 100).toInt()
-                    updateProgressNotification(progress)
-                }.onSuccess { vid ->
-                    contentResolver.apply {
-                        if (!sourceUri.toString().contains("$packageName.fileprovider")) {
-                            releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        coverUri?.let {
-                            releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
+        intent?.let { notNullIntent ->
+            if (notNullIntent.action == ACTION_LAUNCH_UPLOADING) {
+                notNullIntent.extras?.let { bundle ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        startForeground(
+                            ++NOTIFICATION_COUNT,
+                            createProgressNotification(),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                        )
+                    } else {
+                        startForeground(++NOTIFICATION_COUNT, createProgressNotification())
                     }
-                    displaySuccessNotification(vid)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                }.onFailure { err ->
-                    contentResolver.apply {
-                        if (!sourceUri.toString().contains("$packageName.fileprovider")) {
-                            releasePersistableUriPermission(sourceUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        coverUri?.let {
-                            releasePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
+                    val video = Video(
+                        channelId = bundle.getLong("channelId"),
+                        title = bundle.getString("title")!!
+                    )
+                    sourceUri = bundle.getString("source")!!.toUri()
+                    coverUri = bundle.getString("cover")?.toUri()
+                    uploadJob = coroutineScope.launch {
+                        try {
+                            _uploadVideo(
+                                video = video,
+                                source = bundle.getString("source")!!,
+                                cover = bundle.getString("cover"),
+                                onVideoCreated = { createdVideo ->
+                                    videoIdState.value = createdVideo.videoId
+                                }
+                            ) {
+                                updateProgressNotification((it * 100).toInt())
+                            }.onSuccess { vid ->
+                                stopUploading()
+                                displaySuccessNotification(vid)
+                            }.onFailure { err ->
+                                stopUploading()
+                                displayFailureNotification(err)
+                            }
+                        } catch (_: CancellationException) { }
                     }
-                    displayFailureNotification(err)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
                 }
+            } else if (notNullIntent.action == ACTION_CANCEL_UPLOADING) {
+                coroutineScope.launch {
+                    videoIdState
+                        .mapNotNull { it }
+                        .collect { newVideoId ->
+                            _removeVideo(newVideoId)
+                            if (uploadJob?.isCancelled != true) {
+                                uploadJob?.cancel()
+                            }
+                            uploadJob = null
+                        }
+                }
+
             }
         }
         return START_REDELIVER_INTENT
@@ -98,9 +119,9 @@ class VideoUploadingService : Service() {
     }
 
     @OptIn(UnstableApi::class)
-    private fun displaySuccessNotification(vid: Video) {
+    private fun displaySuccessNotification(video: Video) {
         val deepLinkIntent = Intent(this, MainActivity::class.java).apply {
-            data = "https://$HOST/videos/${vid.videoId!!}".toUri()
+            data = "https://$HOST/videos/${video.videoId!!}".toUri()
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -119,7 +140,8 @@ class VideoUploadingService : Service() {
     }
 
     private fun displayFailureNotification(error: Error) {
-        val errorMessage = if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
+        val errorMessage =
+            if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))
@@ -133,6 +155,7 @@ class VideoUploadingService : Service() {
         val notification = createProgressNotification(progress)
         notificationManager.notify(NOTIFICATION_COUNT, notification)
     }
+
     private fun createProgressNotification(progress: Int = 0): Notification {
         return NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -141,6 +164,45 @@ class VideoUploadingService : Service() {
             .setSilent(true)
             .setProgress(100, progress, false)
             .setOngoing(true)
+            .addAction(createCancelAction())
             .build()
+    }
+
+    private fun createCancelAction(): NotificationCompat.Action = NotificationCompat.Action(
+        R.drawable.ic_launcher_monochrome,
+        getString(R.string.cancel_button),
+        PendingIntent.getService(
+            this,
+            0,
+            Intent(this, VideoUploadingService::class.java).also {
+                it.action = ACTION_CANCEL_UPLOADING
+            },
+            PendingIntent.FLAG_IMMUTABLE
+        )
+    )
+
+    private fun stopUploading() {
+        contentResolver.apply {
+            if (!sourceUri.toString().contains("$packageName.fileprovider")) {
+                releasePersistableUriPermission(
+                    sourceUri!!,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            coverUri?.let {
+                releasePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    companion object {
+        private const val PACKAGE_NAME = "mikhail.shell.video.hosting"
+        const val ACTION_LAUNCH_UPLOADING = "$PACKAGE_NAME.ACTION_LAUNCH_UPLOADING"
+        const val ACTION_CANCEL_UPLOADING = "$PACKAGE_NAME.ACTION_STOP_UPLOADING"
     }
 }

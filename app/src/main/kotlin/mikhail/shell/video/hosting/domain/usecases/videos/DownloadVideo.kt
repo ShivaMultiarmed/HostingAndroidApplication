@@ -10,8 +10,13 @@ class DownloadVideo @Inject constructor(
 ) {
     suspend operator fun invoke(
         videoId: Long,
-        onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
-    ): Result<Boolean, Error> {
-        return videoRepository.downloadVideo(videoId, onPartitionLoaded)
-    }
+        onPartitionLoaded: (
+            mime: String,
+            fileSize: Long,
+            bytes: Array<Byte>
+        ) -> Unit
+    ): Result<Unit, Error> = videoRepository.downloadVideo(
+        videoId = videoId,
+        onPartitionLoaded = onPartitionLoaded
+    )
 }

@@ -5,6 +5,7 @@ import androidx.core.net.toUri
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CancellationException
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
@@ -15,7 +16,6 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.LikingState
@@ -102,6 +102,7 @@ class VideoRepositoryWithApi @Inject constructor(
         video: Video,
         source: String,
         cover: String?,
+        onVideoCreated: (Video) -> Unit,
         onProgress: (Float) -> Unit
     ): Result<Video, Error> {
         return try {
@@ -110,13 +111,14 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(sourceUri)!!
             val videoResponse = videoApi.uploadVideoDetails(video.toDto()).toDomain()
+            onVideoCreated(videoResponse)
             var bytesTransferred = 0
             val sourceInputStream = fileProvider.getFileAsInputStream(sourceUri)
             sourceInputStream!!.process { bytesRead, buffer ->
                 videoApi.uploadVideoSource(
-                    videoResponse.videoId!!,
-                    sourceExtension!!,
-                    buffer.toOctetStream(bytesRead)
+                    videoId = videoResponse.videoId!!,
+                    extension = sourceExtension!!,
+                    source = buffer.toOctetStream(bytesRead)
                 )
                 bytesTransferred += bytesRead
                 val progress = bytesTransferred.toFloat() / sourceSize
@@ -139,17 +141,14 @@ class VideoRepositoryWithApi @Inject constructor(
             Result.Success(videoResponse)
         } catch (e: HttpException) {
             val error = when (e.code()) {
-                400 -> {
-                    val json = e.response()?.errorBody()?.string()
-                    val type = object : TypeToken<CompoundError<UploadVideoError>>() {}.type
-                    gson.fromJson<CompoundError<UploadVideoError>>(json, type)?: UnexpectedError
-                }
                 401 -> NetworkError.AUTHENTICATION
-                in 500 .. 599 -> NetworkError.SERVER_ERROR
+                404 -> NetworkError.NOT_FOUND
+                500 -> NetworkError.SERVER_ERROR
                 else -> UnexpectedError
             }
             Result.Failure(error)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             val error = when (e) {
                 is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
                 is ConnectException -> NetworkError.CONNECTION_ERROR
@@ -200,32 +199,32 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun downloadVideo(
         videoId: Long,
         onPartitionLoaded: (String, Long, Array<Byte>) -> Unit
-    ): Result<Boolean, Error> {
+    ): Result<Unit, Error> {
         try {
             val range = 1024 * 1024 * 10
             var start = 0
-            var end = start + range - 1
+            var end = range - 1
             var size: Long? = null
             var mime: String? = null
             do {
                 var response = videoApi.downloadVideo(
-                    videoId,
-                    "bytes=$start-$end"
+                    videoId = videoId,
+                    byteRange = "bytes=$start-$end"
                 )
                 if (!response.isSuccessful) {
                     if (response.code() == 401) {
                         return Result.Failure(NetworkError.AUTHENTICATION)
                     } else if (response.code() == 404) {
                         return Result.Failure(NetworkError.NOT_FOUND)
-                    } else if (response.code() == 416) { // range not satisfiable - end of file is passed
+                    } else if (response.code() == 416) { // 416 status code: range not satisfiable - end of file is passed
                         response = videoApi.downloadVideo(
-                            videoId,
-                            "bytes=$start-"
+                            videoId = videoId,
+                            byteRange = "bytes=$start-"
                         )
                         if (response.body() == null) {
                             return Result.Failure(UnexpectedError)
                         }
-                    } else if (response.code() in 500 .. 599) {
+                    } else if (response.code() == 500) {
                         return Result.Failure(NetworkError.SERVER_ERROR)
                     } else {
                         return Result.Failure(UnexpectedError)
@@ -242,8 +241,9 @@ class VideoRepositoryWithApi @Inject constructor(
                 start = end + 1
                 end = start + range - 1
             } while (start < size)
-            return Result.Success(true)
+            return Result.Success(Unit)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             val error = when (e) {
                 is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
                 is ConnectException -> NetworkError.CONNECTION_ERROR

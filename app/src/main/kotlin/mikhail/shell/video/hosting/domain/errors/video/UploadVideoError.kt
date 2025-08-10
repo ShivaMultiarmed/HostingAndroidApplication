@@ -15,6 +15,6 @@ enum class UploadVideoError: Error {
     SOURCE_METADATA_NOT_VALID,
 
     COVER_NOT_FOUND,
-    COVER_TYPE_NOT_VALID,
     COVER_TOO_LARGE,
+    COVER_TYPE_NOT_VALID,
 }

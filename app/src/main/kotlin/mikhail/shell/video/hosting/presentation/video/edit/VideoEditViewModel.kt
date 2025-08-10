@@ -84,10 +84,10 @@ class VideoEditViewModel @AssistedInject constructor(
                             isLoading = false
                         )
                     }
-                }.onFailure { err ->
+                }.onFailure { error ->
                     _state.update {
                         it.copy(
-                            updateVideoError = err,
+                            updateVideoError = error,
                             isLoading = false
                         )
                     }

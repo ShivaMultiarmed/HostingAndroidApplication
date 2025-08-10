@@ -15,6 +15,7 @@ import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,15 +33,15 @@ class VideoDownloadingService : Service() {
 
     companion object {
         private var NOTIFICATION_COUNT = 0
-        val ROOT_PACKAGE = "mikhail.shell.video.hosting"
-        val ACTION_LAUNCH_DOWNLOADING = "$ROOT_PACKAGE.ACTION_LAUNCH_DOWNLOADING"
-        val ACTION_CANCEL_DOWNLOADING = "$ROOT_PACKAGE.ACTION_CANCEL_DOWNLOADING"
+        private const val ROOT_PACKAGE = "mikhail.shell.video.hosting"
+        const val ACTION_LAUNCH_DOWNLOADING = "$ROOT_PACKAGE.ACTION_LAUNCH_DOWNLOADING"
+        const val ACTION_CANCEL_DOWNLOADING = "$ROOT_PACKAGE.ACTION_CANCEL_DOWNLOADING"
     }
 
     @Inject
     lateinit var downloadVideo: DownloadVideo
     private lateinit var notificationManager: NotificationManager
-    private var process: Job? = null
+    private var downloadJob: Job? = null
     private var uri: Uri? = null
     override fun onCreate() {
         super.onCreate()
@@ -70,46 +71,48 @@ class VideoDownloadingService : Service() {
             }
             var output: OutputStream? = null
             var progress = 0
-            process = coroutineScope.launch {
-                downloadVideo(videoId) { mime, size, bytePartition ->
-                    if (uri == null) {
-                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
-                        val fileName = "$videoId.$extension"
-                        val contentValues = ContentValues().apply {
-                            put(
-                                MediaStore.Video.Media.RELATIVE_PATH,
-                                Environment.DIRECTORY_MOVIES + "/" + getString(R.string.app_name)
+            downloadJob = coroutineScope.launch {
+                try {
+                    downloadVideo(videoId) { mime, size, bytePartition ->
+                        if (uri == null) {
+                            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
+                            val fileName = "$videoId.$extension"
+                            val contentValues = ContentValues().apply {
+                                put(
+                                    MediaStore.Video.Media.RELATIVE_PATH,
+                                    Environment.DIRECTORY_MOVIES + "/" + getString(R.string.app_name)
+                                )
+                                put(
+                                    MediaStore.Video.Media.DISPLAY_NAME,
+                                    fileName
+                                )
+                            }
+                            uri = contentResolver.insert(
+                                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                                contentValues
                             )
-                            put(
-                                MediaStore.Video.Media.DISPLAY_NAME,
-                                fileName
-                            )
+                            output = uri?.let { contentResolver.openOutputStream(it) }
                         }
-                        uri = contentResolver.insert(
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                            contentValues
-                        )
-                        output = uri?.let { contentResolver.openOutputStream(it) }
+                        output?.write(bytePartition.toByteArray())
+                        progress += ((bytePartition.size.toFloat() / size) * 100).roundToInt()
+                        val updatedNotification = createProcessNotification(progress)
+                        notificationManager.notify(NOTIFICATION_COUNT, updatedNotification)
+                    }.onSuccess { _ ->
+                        onResult(createSuccessNotification())
+                        output?.close()
+                    }.onFailure { _ ->
+                        onResult(createFailureNotification())
+                        output?.close()
                     }
-                    output?.write(bytePartition.toByteArray())
-                    progress += ((bytePartition.size.toFloat() / size) * 100).roundToInt()
-                    val updatedNotification = createProcessNotification(progress)
-                    notificationManager.notify(NOTIFICATION_COUNT, updatedNotification)
-                }.onSuccess { _ ->
-                    onResult(createSuccessNotification())
-                    output?.close()
-                }.onFailure { _ ->
-                    onResult(createFailureNotification())
-                    output?.close()
-                }
+                } catch (_: CancellationException) { }
             }
         }
     }
 
     private fun cancelDownloading() {
-        if (process?.isCancelled != true) {
-            process?.cancel()
-            process = null
+        if (downloadJob?.isCancelled != true) {
+            downloadJob?.cancel()
+            downloadJob = null
         }
         contentResolver.delete(uri!!, null,  null)
         onResult()
@@ -151,20 +154,18 @@ class VideoDownloadingService : Service() {
             .build()
     }
 
-    private fun createCancelAction(): NotificationCompat.Action {
-        return NotificationCompat.Action(
-            R.drawable.ic_launcher_monochrome,
-            getString(R.string.cancel_button),
-            PendingIntent.getService(
-                this,
-                0,
-                Intent(this, VideoDownloadingService::class.java).also {
-                    it.action = ACTION_CANCEL_DOWNLOADING
-                },
-                PendingIntent.FLAG_IMMUTABLE
-            )
+    private fun createCancelAction(): NotificationCompat.Action = NotificationCompat.Action(
+        R.drawable.ic_launcher_monochrome,
+        getString(R.string.cancel_button),
+        PendingIntent.getService(
+            this,
+            0,
+            Intent(this, VideoDownloadingService::class.java).also {
+                it.action = ACTION_CANCEL_DOWNLOADING
+            },
+            PendingIntent.FLAG_IMMUTABLE
         )
-    }
+    )
 
     override fun onBind(intent: Intent?): IBinder? {
         return null

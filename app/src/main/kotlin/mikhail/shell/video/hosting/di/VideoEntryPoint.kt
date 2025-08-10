@@ -9,12 +9,14 @@ import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
+import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface VideoUploadingEntryPoint {
     fun getUploadVideo(): UploadVideo
+    fun getRemoveVideo(): DeleteVideo
 }
 
 @EntryPoint

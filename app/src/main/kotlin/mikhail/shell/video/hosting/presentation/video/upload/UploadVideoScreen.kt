@@ -70,11 +70,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
@@ -97,9 +94,9 @@ fun UploadVideoScreen(
     modifier: Modifier = Modifier,
     state: UploadVideoScreenState,
     player: Player,
-    onSubmit: (UploadVideoInput) -> Unit,
+    onValidate: (UploadVideoInput) -> Unit,
+    onUpload: (UploadVideoInput) -> Unit,
     onRefresh: () -> Unit,
-    onSuccess: (Video) -> Unit,
     onPopup: () -> Unit = {},
     onFullScreen: (Boolean) -> Unit
 ) {
@@ -115,11 +112,11 @@ fun UploadVideoScreen(
         )
     }
     val scrollState = rememberScrollState()
-    val compoundError = state.error
+    val validationError = state.videoEditingError
     if (state.channels != null) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        val snackbarHostState = remember { SnackbarHostState() }
+        val snackBarHostState = remember { SnackbarHostState() }
         var title by rememberSaveable { mutableStateOf("") }
         var sourceUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -130,8 +127,8 @@ fun UploadVideoScreen(
                     TopBar(
                         onPopup = onPopup,
                         title = stringResource(R.string.video_upload_title),
-                        inProgress = state.isLoading,
-                        complete = state.video != null,
+                        inProgress = state.areChannelsLoading,
+                        complete = state.videoValidationSuccess,
                         onSubmit = {
                             val input = UploadVideoInput(
                                 channelId = channelId,
@@ -140,13 +137,13 @@ fun UploadVideoScreen(
                                 duration = player.duration,
                                 cover = coverUri,
                             )
-                            onSubmit(input)
+                            onValidate(input)
                         }
                     )
                 }
             },
             snackbarHost = {
-                SnackbarHost(snackbarHostState)
+                SnackbarHost(snackBarHostState)
             },
             modifier = modifier
                 .fillMaxSize()
@@ -186,13 +183,16 @@ fun UploadVideoScreen(
                         }
                     }
                     val sourceErrMsg = constructInfoMessage(
-                        error = compoundError,
+                        error = validationError,
                         errorMessages = mapOf(
                             UploadVideoError.SOURCE_EMPTY to stringResource(R.string.video_upload_source_empty),
                             UploadVideoError.SOURCE_NOT_FOUND to stringResource(R.string.file_not_found_error),
                             UploadVideoError.SOURCE_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
                             UploadVideoError.SOURCE_METADATA_NOT_VALID to stringResource(R.string.source_metadata_not_valid_error),
-                            UploadVideoError.SOURCE_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB")
+                            UploadVideoError.SOURCE_TOO_LARGE to stringResource(
+                                R.string.file_too_large_error,
+                                "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB"
+                            )
                         )
                     )
                     val sourceActionItems = if (sourceUri == null) listOf()
@@ -219,7 +219,8 @@ fun UploadVideoScreen(
                                 errorMsg = sourceErrMsg
                             )
                         }
-                        val recordedVideoDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                        val recordedVideoDir =
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
                         val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
@@ -251,7 +252,7 @@ fun UploadVideoScreen(
                                                 )
                                             ) {
                                                 coroutineScope.launch {
-                                                    snackbarHostState.showSnackbar(
+                                                    snackBarHostState.showSnackbar(
                                                         message = context.getString(R.string.video_upload_camera_permission_rationale),
                                                         duration = SnackbarDuration.Short
                                                     )
@@ -303,7 +304,9 @@ fun UploadVideoScreen(
                                     } else {
                                         try {
                                             Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                        } catch (_: IllegalArgumentException) { Modifier.aspectRatio(16f / 9) }
+                                        } catch (_: IllegalArgumentException) {
+                                            Modifier.aspectRatio(16f / 9)
+                                        }
                                     }
                                 ),
                             player = player,
@@ -336,10 +339,13 @@ fun UploadVideoScreen(
                 }
                 if (!isFullScreen) {
                     val titleErrMsg = constructInfoMessage(
-                        compoundError,
+                        validationError,
                         mapOf(
                             UploadVideoError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
-                            UploadVideoError.TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
+                            UploadVideoError.TITLE_TOO_LARGE to stringResource(
+                                R.string.text_too_large_error,
+                                ValidationRules.MAX_TITLE_LENGTH
+                            )
                         )
                     )
                     val titleActionItems = if (title.isBlank()) emptyList() else listOf(
@@ -366,7 +372,7 @@ fun UploadVideoScreen(
                     }
 
                     val channelErrMsg = constructInfoMessage(
-                        compoundError,
+                        validationError,
                         mapOf(
                             UploadVideoError.CHANNEL_NOT_VALID to stringResource(R.string.video_upload_channel_not_valid_error)
                         )
@@ -402,11 +408,14 @@ fun UploadVideoScreen(
                         }
                     }
                     val coverErrMsg = constructInfoMessage(
-                        compoundError,
+                        validationError,
                         mapOf(
                             UploadVideoError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
                             UploadVideoError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                            UploadVideoError.COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB")
+                            UploadVideoError.COVER_TOO_LARGE to stringResource(
+                                R.string.file_too_large_error,
+                                "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB"
+                            )
                         )
                     )
                     EditField(
@@ -431,7 +440,7 @@ fun UploadVideoScreen(
                         )
                     }
                     if (coverUri != null) {
-                        Column (
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(10.dp),
@@ -460,25 +469,26 @@ fun UploadVideoScreen(
                 }
             }
         }
-        LaunchedEffect(state.video) {
-            if (state.video != null) {
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.video_upload_progress_hint),
-                    duration = SnackbarDuration.Long
+        LaunchedEffect(state.videoValidationSuccess) {
+            if (state.videoValidationSuccess) {
+                val input = UploadVideoInput(
+                    channelId = channelId,
+                    title = title,
+                    source = sourceUri,
+                    duration = player.duration,
+                    cover = coverUri,
                 )
-                onSuccess(state.video)
+                onUpload(input)
             }
         }
-    } else if (state.error.equivalentTo(UnexpectedError)) {
+    } else if (state.channelsLoadingError != null) {
         ErrorComponent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
-            onRetry = {
-                onRefresh()
-            }
+            onRetry = onRefresh
         )
-    } else if (state.isLoading) {
+    } else if (state.areChannelsLoading) {
         LoadingComponent(
             modifier = Modifier
                 .fillMaxSize()
@@ -506,9 +516,9 @@ fun UploadVideoScreenPreview() {
             ),
         ),
         player = player,
-        onSubmit = {},
+        onValidate = {},
         onRefresh = {},
-        onSuccess = {},
+        onUpload = {},
         onPopup = {},
         onFullScreen = {},
     )
