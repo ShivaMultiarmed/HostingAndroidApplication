@@ -23,8 +23,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.uploadVideoRoute(
     navController: NavController,
-    userDetailsProvider: UserDetailsProvider,
-    onFullScreen: (Boolean) -> Unit
+    userDetailsProvider: UserDetailsProvider
 ) {
     composable<Route.Video.Upload> {
         val userId = userDetailsProvider.getUserId()
@@ -75,8 +74,7 @@ fun NavGraphBuilder.uploadVideoRoute(
                 }
             },
             onRefresh = viewModel::loadChannels,
-            onPopup = navController::popBackStack,
-            onFullScreen = onFullScreen
+            onPopup = navController::popBackStack
         )
 
     }

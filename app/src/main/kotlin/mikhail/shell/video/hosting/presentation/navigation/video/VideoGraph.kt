@@ -10,8 +10,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 fun NavGraphBuilder.videoGraph(
     navController: NavController,
     player: Player,
-    userDetailsProvider: UserDetailsProvider,
-    onFullScreen: (Boolean) -> Unit = {}
+    userDetailsProvider: UserDetailsProvider
 ) {
     navigation<Route.Video>(
         startDestination = Route.Video.Recommendations
@@ -19,14 +18,12 @@ fun NavGraphBuilder.videoGraph(
         videoRoute(
             navController = navController,
             player = player,
-            userDetailsProvider = userDetailsProvider,
-            onFullScreen = onFullScreen
+            userDetailsProvider = userDetailsProvider
         )
         videoEditRoute(navController)
         uploadVideoRoute(
             navController = navController,
-            userDetailsProvider = userDetailsProvider,
-            onFullScreen = onFullScreen
+            userDetailsProvider = userDetailsProvider
         )
         searchRoute(navController)
         videoRecommendationsRoute(navController)

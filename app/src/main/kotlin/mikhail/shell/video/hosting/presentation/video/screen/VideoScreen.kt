@@ -110,6 +110,7 @@ import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.models.CommentModel
 import mikhail.shell.video.hosting.presentation.models.toModel
@@ -150,7 +151,6 @@ fun VideoScreen(
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
-    onFullScreen: (Boolean) -> Unit = {},
     onShare: (Long) -> Unit = {},
     onVideoNotFound: () -> Unit = {},
     onAuthenticationRequired: () -> Unit = {}
@@ -158,6 +158,7 @@ fun VideoScreen(
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
     var isScreenActive by rememberSaveable { mutableStateOf(false) }
+    val playerState = LocalPlayerState.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -248,7 +249,7 @@ fun VideoScreen(
                     )
                 }
                 LaunchedEffect(isFullScreenReached) {
-                    onFullScreen(isFullScreenReached)
+                    playerState.value = playerState.value.copy(fullScreen = isFullScreenReached)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         val window = activity.window
                         WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
@@ -272,8 +273,7 @@ fun VideoScreen(
                     val observer = LifecycleEventObserver { _, event ->
                         if (event == Lifecycle.Event.ON_STOP) {
                             isScreenActive = false
-                            activity.requestedOrientation =
-                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else if (event == Lifecycle.Event.ON_START) {
                             isScreenActive = true
                         }

@@ -2,8 +2,6 @@ package mikhail.shell.video.hosting.ui.theme
 
 import android.app.LocaleManager
 import android.content.Context
-import android.content.SharedPreferences
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.content.res.Configuration
 import android.os.Build
 import android.os.LocaleList
@@ -15,25 +13,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.content.edit
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
-import mikhail.shell.video.hosting.domain.utils.SharedPreferencesUtils.Ui
+import androidx.datastore.core.Serializer
+import androidx.datastore.dataStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.presentation.settings.Locale
 import mikhail.shell.video.hosting.ui.theme.Theme.DARK
 import mikhail.shell.video.hosting.ui.theme.Theme.LIGHT
 import mikhail.shell.video.hosting.ui.theme.Theme.SYSTEM
+import java.io.InputStream
+import java.io.OutputStream
 
 val DarkColorScheme = darkColorScheme(
     primary = Blue500,
@@ -105,18 +101,16 @@ enum class Theme {
     DARK, LIGHT, SYSTEM
 }
 
-fun Context.getCurrentTheme(): Theme {
-    val str = getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-        .getString(Ui.theme, SYSTEM.name) ?: SYSTEM.name
-    return Theme.valueOf(str)
+@Composable
+fun getCurrentTheme(): Theme {
+    return LocalContext.current.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences()).value.theme
 }
 
-fun Context.getColorScheme(
-    isSystemDarkTheme: Boolean
-): ColorScheme {
+@Composable
+fun getColorScheme(): ColorScheme {
     return when (getCurrentTheme()) {
         SYSTEM -> when {
-            isSystemDarkTheme -> DarkColorScheme
+            isSystemInDarkTheme() -> DarkColorScheme
             else -> LightColorScheme
         }
         DARK -> DarkColorScheme
@@ -124,29 +118,63 @@ fun Context.getColorScheme(
     }
 }
 
-fun Context.setTheme(theme: Theme) {
-    getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
-        putString(Ui.theme, theme.name)
-        commit()
+suspend fun Context.setTheme(theme: Theme) {
+    uiPreferences.updateData {
+        it.copy(theme = theme)
     }
 }
 
-fun Context.getLocale(): Locale {
-    return getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-        .getString(Ui.language, Locale.ENGLISH.iso)!!
-        .let { Locale.ofTag(it) }
+@Composable
+fun getLocale(): Locale {
+    return LocalContext.current.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences()).value.locale
 }
 
-fun Context.setLocale(locale: Locale) {
+suspend fun Context.setLocale(locale: Locale) {
     val config = Configuration(resources.configuration)
     config.setLocales(LocaleList.forLanguageTags(locale.iso))
-    getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE).edit {
-        putString(Ui.language, locale.iso)
-        commit()
+    uiPreferences.updateData {
+        it.copy(locale = locale)
     }
 }
 
-val LocalColorScheme = staticCompositionLocalOf<ColorScheme> { error("") }
+@Serializable
+data class UiPreferences(
+    val theme: Theme = Theme.SYSTEM,
+    val locale: Locale = Locale.ENGLISH
+)
+
+val Context.uiPreferences by dataStore("ui_preferences.json", UiPreferencesSerializer())
+
+class UiPreferencesSerializer : Serializer<UiPreferences> {
+    override suspend fun readFrom(input: InputStream): UiPreferences = input.use {
+        it
+            .readBytes()
+            .decodeToString()
+            .let {
+                Json.decodeFromString(deserializer = UiPreferences.serializer(), string = it)
+            }
+    }
+
+    override suspend fun writeTo(
+        t: UiPreferences,
+        output: OutputStream
+    ) {
+        Json.encodeToString(
+            serializer = UiPreferences.serializer(),
+            value = t
+        ).let {
+            it
+                .encodeToByteArray()
+                .let { bytes ->
+                    output.use {
+                        it.write(bytes)
+                    }
+                }
+        }
+    }
+
+    override val defaultValue = UiPreferences()
+}
 
 @Composable
 fun VideoHostingTheme(
@@ -155,43 +183,28 @@ fun VideoHostingTheme(
     val activity = LocalActivity.current!!
     val view = LocalView.current
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
-    val selectedColorScheme = context.getColorScheme(isDark)
-    var colorScheme by remember { mutableStateOf(selectedColorScheme) }
-    val uiPreferences = context.getSharedPreferences(Ui.fileName, Context.MODE_PRIVATE)
-    CompositionLocalProvider(LocalColorScheme provides colorScheme) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            content = content
-        )
-    }
-    val statusBarIconsColor = selectedColorScheme.onSurface
+
+    val colorScheme = getColorScheme()
+    val statusBarIconsColor = colorScheme.onSurface
     LaunchedEffect(colorScheme) {
         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = (statusBarIconsColor != DarkColorScheme.onSurface)
     }
-    DisposableEffect(Unit) {
-        val uiPreferencesListener = object : OnSharedPreferenceChangeListener {
-            override fun onSharedPreferenceChanged(
-                sharedPreferences: SharedPreferences?,
-                key: String?
-            ) {
-                if (key == Ui.theme) {
-                    colorScheme = context.getColorScheme(isDark)
-                } else if (key == Ui.language) {
-                    val localeTag = context.getLocale().iso
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        context.getSystemService(LocaleManager::class.java).applicationLocales =
-                            LocaleList.forLanguageTags(localeTag)
-                    } else {
-                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(localeTag))
-                    }
-                }
-            }
-        }
-        uiPreferences.registerOnSharedPreferenceChangeListener(uiPreferencesListener)
-        onDispose {
-            uiPreferences.unregisterOnSharedPreferenceChangeListener(uiPreferencesListener)
+
+    val locale = getLocale()
+    LaunchedEffect(locale) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.getSystemService(LocaleManager::class.java).applicationLocales =
+                LocaleList.forLanguageTags(locale.iso)
+        } else {
+            AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags(locale.iso)
+            )
         }
     }
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
 }

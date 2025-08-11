@@ -74,6 +74,7 @@ import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
@@ -97,10 +98,10 @@ fun UploadVideoScreen(
     onValidate: (UploadVideoInput) -> Unit,
     onUpload: (UploadVideoInput) -> Unit,
     onRefresh: () -> Unit,
-    onPopup: () -> Unit = {},
-    onFullScreen: (Boolean) -> Unit
+    onPopup: () -> Unit = {}
 ) {
     val activity = LocalActivity.current!!
+    val playerState = LocalPlayerState.current
     val windowSize = calculateWindowSizeClass(activity)
     val context = activity as Context
     val coroutineScope = rememberCoroutineScope()
@@ -316,12 +317,12 @@ fun UploadVideoScreen(
                             isFullScreen = isFullScreen,
                             onFullscreen = {
                                 isFullScreen = it
-                                onFullScreen(isFullScreen)
+                                playerState.value = playerState.value.copy(fullScreen = it)
                             }
                         )
                     }
                     LaunchedEffect(isFullScreen) {
-                        onFullScreen(isFullScreen)
+                        playerState.value = playerState.value.copy(fullScreen = isFullScreen)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             val window = activity.window!!
                             WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)
@@ -519,8 +520,7 @@ fun UploadVideoScreenPreview() {
         onValidate = {},
         onRefresh = {},
         onUpload = {},
-        onPopup = {},
-        onFullScreen = {},
+        onPopup = {}
     )
 
 }

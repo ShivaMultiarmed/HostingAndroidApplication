@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
-import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,10 +31,8 @@ fun NavGraphBuilder.profileRoute(
         val context = LocalContext.current
         val bundle = it.toRoute<Route.User.Profile>()
         val userId = bundle.userId
-        val viewModel =
-            hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
+        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref = context.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             state = state,
@@ -64,7 +61,7 @@ fun NavGraphBuilder.profileRoute(
                 viewModel.signOut()
             },
             onLogOutSuccess = {
-                logOut(sharedPref, navController)
+                logOut(userDetailsProvider, navController)
             },
             onInvite = {
                 context.startActivity(

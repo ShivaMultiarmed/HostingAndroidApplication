@@ -20,24 +20,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.Toggle
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.ui.theme.Theme
+import mikhail.shell.video.hosting.ui.theme.UiPreferences
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import mikhail.shell.video.hosting.ui.theme.getCurrentTheme
-import mikhail.shell.video.hosting.ui.theme.getLocale
 import mikhail.shell.video.hosting.ui.theme.setLocale
 import mikhail.shell.video.hosting.ui.theme.setTheme
+import mikhail.shell.video.hosting.ui.theme.uiPreferences
 
 @Composable
 fun SettingsScreen(
@@ -46,6 +46,7 @@ fun SettingsScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -78,11 +79,12 @@ fun SettingsScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val uiPreferences by context.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences())
             Text(
                 modifier = Modifier.padding(10.dp),
                 text = stringResource(R.string.theme_title)
             )
-            var selectedTheme by rememberSaveable { mutableStateOf(context.getCurrentTheme()) }
+            var selectedTheme = uiPreferences.theme
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -96,7 +98,9 @@ fun SettingsScreen(
                         Theme.DARK to Icons.Rounded.ModeNight
                     ),
                     onValueChanged = {
-                        context.setTheme(it)
+                        coroutineScope.launch {
+                            context.setTheme(it)
+                        }
                         selectedTheme = it
                     }
                 )
@@ -105,7 +109,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(10.dp),
                 text = stringResource(R.string.language_title)
             )
-            var selectedLocale by rememberSaveable { mutableStateOf(context.getLocale()) }
+            var selectedLocale = uiPreferences.locale
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -118,7 +122,9 @@ fun SettingsScreen(
                         Locale.ENGLISH to Locale.ENGLISH.label
                     ),
                     onValueChanged = {
-                        context.setLocale(it)
+                        coroutineScope.launch {
+                            context.setLocale(it)
+                        }
                         selectedLocale = it
                     }
                 )
@@ -133,7 +139,8 @@ enum class Locale(val label: String, val iso: String) {
 
     companion object {
         fun ofTag(tag: String): Locale {
-            return Locale.entries.find { it.iso == tag }?: throw IllegalArgumentException("Invalid locale tag")
+            return Locale.entries.find { it.iso == tag }
+                ?: throw IllegalArgumentException("Invalid locale tag")
         }
     }
 }

@@ -1,6 +1,17 @@
 package mikhail.shell.video.hosting.domain.providers
 
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class UserDetails(
+    val userId: Long = 0,
+    val token: String = ""
+)
+
 interface UserDetailsProvider {
+    fun get(): UserDetails
     fun getUserId(): Long
     fun getJwt(): String
+    fun save(userDetails: UserDetails)
+    fun remove()
 }

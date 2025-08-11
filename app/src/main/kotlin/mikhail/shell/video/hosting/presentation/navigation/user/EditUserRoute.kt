@@ -1,9 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -27,7 +25,6 @@ fun NavGraphBuilder.editUserRoute(
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<EditUserViewModel, EditUserViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val sharedPref = LocalContext.current.getSharedPreferences("user_details", Context.MODE_PRIVATE)
         val coroutineScope = rememberCoroutineScope()
         EditUserScreen(
             userId = userId,
@@ -43,7 +40,7 @@ fun NavGraphBuilder.editUserRoute(
                 viewModel.removeUser()
             },
             onRemoveSuccess = {
-                logOut(sharedPref, navController)
+                logOut(userDetailsProvider, navController)
             },
             onPopup = navController::popBackStack,
             onUserNotFound = {

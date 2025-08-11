@@ -74,7 +74,9 @@ class SignInWithPasswordViewModel @Inject constructor(
             }
         }
     }
-    suspend fun subscribeToNotifications() {
-        _subscribeToChannelNotifications()
+    fun subscribeToNotifications() {
+        viewModelScope.launch {
+            _subscribeToChannelNotifications()
+        }
     }
 }

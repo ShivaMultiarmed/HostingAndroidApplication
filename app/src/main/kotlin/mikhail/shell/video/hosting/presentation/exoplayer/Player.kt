@@ -43,6 +43,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +52,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,8 +82,34 @@ import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+
+@Serializable
+data class PlayerState(
+    val fullScreen: Boolean = false
+)
+
+val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
+    override fun restore(value: String): MutableState<PlayerState>? {
+        return mutableStateOf(
+            Json.decodeFromString(
+                deserializer = PlayerState.serializer(),
+                string = value
+            )
+        )
+    }
+    override fun SaverScope.save(value: MutableState<PlayerState>): String? {
+        return Json.encodeToString(
+            serializer = PlayerState.serializer(),
+            value = value.value
+        )
+    }
+}
+
+val LocalPlayerState = compositionLocalOf { mutableStateOf(PlayerState()) }
 
 @OptIn(UnstableApi::class)
 @Composable

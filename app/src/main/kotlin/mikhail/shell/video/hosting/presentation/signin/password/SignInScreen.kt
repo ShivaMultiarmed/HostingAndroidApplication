@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -47,7 +48,7 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 fun SignInScreen(
     state: SignInWithPasswordState,
     onSubmit: (String, String) -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (AuthModel) -> Unit,
     onSigningUp: () -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
@@ -81,7 +82,7 @@ fun SignInScreen(
                         message = context.getString(R.string.sign_in_success_message),
                         duration = SnackbarDuration.Short
                     )
-                    onSuccess()
+                    onSuccess(state.authModel)
                 }
             }
             var email by rememberSaveable { mutableStateOf("") }

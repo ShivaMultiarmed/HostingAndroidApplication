@@ -1,18 +1,14 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import androidx.navigation.NavController
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun logOut(
-    sharedPref: SharedPreferences,
+    userDetailsProvider: UserDetailsProvider,
     navController: NavController
 ) {
-    sharedPref.edit {
-        clear()
-        commit()
-    }
+    userDetailsProvider.remove()
     navController.navigate(Route.Authentication) {
         popUpTo<Route.Authentication> {
             inclusive = true

@@ -28,8 +28,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun NavGraphBuilder.videoRoute(
     navController: NavController,
     player: Player,
-    userDetailsProvider: UserDetailsProvider,
-    onFullScreen: (Boolean) -> Unit = {}
+    userDetailsProvider: UserDetailsProvider
 ) {
     composable<Route.Video.View>(
         deepLinks = listOf(
@@ -76,7 +75,6 @@ fun NavGraphBuilder.videoRoute(
             onGoToProfile = {
                 navController.navigate(Route.User.Profile(it))
             },
-            onFullScreen = onFullScreen,
             onShare = { videoId ->
                 Intent(Intent.ACTION_SEND).apply {
                     setType("text/plain")

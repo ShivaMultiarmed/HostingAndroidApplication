@@ -3,15 +3,23 @@ package mikhail.shell.video.hosting.presentation.navigation.authentication
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.authenticationGraph(
-    navController: NavController
+    navController: NavController,
+    userDetailsProvider: UserDetailsProvider
 ) {
     navigation<Route.Authentication>(
         startDestination = Route.Authentication.SignIn
     ) {
-        signInRoute(navController)
-        signUpRoute(navController)
+        signInRoute(
+            navController = navController,
+            userDetailsProvider = userDetailsProvider
+        )
+        signUpRoute(
+            navController = navController,
+            userDetailsProvider = userDetailsProvider
+        )
     }
 }
