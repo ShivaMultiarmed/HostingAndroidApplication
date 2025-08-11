@@ -54,5 +54,7 @@ class AuthRepositoryWithApi @Inject constructor(
         authApi.signUpWithPassword(signUpDto)
     }
 
-    override suspend fun signOut(): Result<Unit, Error> = request { }
+    override suspend fun signOut(): Result<Unit, Error> = request {
+        authApi.signOut()
+    }
 }

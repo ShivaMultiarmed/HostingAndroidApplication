@@ -16,4 +16,6 @@ interface AuthApi {
     suspend fun signUpWithPassword(
         @Body signUpDto: SignUpDto
     ): AuthModel
+    @POST("auth/signout")
+    suspend fun signOut()
 }
