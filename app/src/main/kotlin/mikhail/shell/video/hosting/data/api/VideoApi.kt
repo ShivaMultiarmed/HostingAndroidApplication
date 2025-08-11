@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -34,7 +34,7 @@ interface VideoApi {
     @PATCH("videos/{videoId}/rate")
     suspend fun rateVideo(
         @Path("videoId") videoId: Long,
-        @Query("likingState") liking: LikingState
+        @Query("liking") liking: Liking
     )
     @GET("videos/channel/{channelId}")
     suspend fun fetchVideoList(

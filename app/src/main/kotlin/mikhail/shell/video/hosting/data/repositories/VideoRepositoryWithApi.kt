@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoDetails
@@ -69,7 +69,7 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun rateVideo(
         videoId: Long,
-        liking: LikingState
+        liking: Liking
     ): Result<Unit, Error> = request {
         videoApi.rateVideo(videoId, liking)
     }

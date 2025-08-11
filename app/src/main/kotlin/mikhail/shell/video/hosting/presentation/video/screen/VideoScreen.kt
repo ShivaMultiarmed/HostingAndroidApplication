@@ -100,10 +100,10 @@ import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
-import mikhail.shell.video.hosting.domain.models.LikingState
-import mikhail.shell.video.hosting.domain.models.LikingState.DISLIKED
-import mikhail.shell.video.hosting.domain.models.LikingState.LIKED
-import mikhail.shell.video.hosting.domain.models.LikingState.NONE
+import mikhail.shell.video.hosting.domain.models.Liking
+import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
+import mikhail.shell.video.hosting.domain.models.Liking.LIKED
+import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
@@ -139,7 +139,7 @@ fun VideoScreen(
     userId: Long,
     state: VideoScreenState,
     onRefresh: () -> Unit,
-    onRate: (LikingState) -> Unit,
+    onRate: (Liking) -> Unit,
     onSubscribe: (SubscriptionState) -> Unit,
     player: Player,
     onChannelLinkClick: (Long) -> Unit,

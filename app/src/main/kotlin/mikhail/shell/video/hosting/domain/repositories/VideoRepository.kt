@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoDetails
@@ -14,7 +14,7 @@ interface VideoRepository {
 
     suspend fun fetchVideoDetails(videoId: Long, userId: Long): Result<VideoDetails, Error>
 
-    suspend fun rateVideo(videoId: Long, liking: LikingState) : Result<Unit, Error>
+    suspend fun rateVideo(videoId: Long, liking: Liking) : Result<Unit, Error>
 
     suspend fun fetchChannelVideoList(
         channelId: Long,

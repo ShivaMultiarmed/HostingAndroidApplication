@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.data.dto
 
-import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithUser
@@ -50,7 +49,7 @@ data class VideoWithUserDto(
     val dateTime: LocalDateTime? = null,
     val views: Long = 0,
     val likes: Long = 0,
-    val liking: LikingState = LikingState.NONE,
+    val liking: Liking = Liking.NONE,
     val dislikes: Long,
     val sourceUrl: String? = null,
     val coverUrl: String? = null

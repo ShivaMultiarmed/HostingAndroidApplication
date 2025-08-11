@@ -22,7 +22,7 @@ data class VideoWithUser(
     val views: Long = 0,
     val likes: Long = 0,
     val dislikes: Long = 0,
-    val liking: LikingState = LikingState.NONE,
+    val liking: Liking = Liking.NONE,
     val sourceUrl: String? = null,
     val coverUrl: String? = null,
 )

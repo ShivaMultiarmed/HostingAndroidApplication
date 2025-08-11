@@ -21,7 +21,7 @@ import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
-import mikhail.shell.video.hosting.domain.models.LikingState
+import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.SubscriptionState
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
@@ -151,11 +151,11 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun rate(likingState: LikingState) {
+    fun rate(liking: Liking) {
         viewModelScope.launch {
             _rateVideo(
                 video = state.value.videoDetails!!.video,
-                likingState = likingState
+                likingState = liking
             ).onSuccess { updVideo ->
                 _state.update { screenState ->
                     screenState.copy(
