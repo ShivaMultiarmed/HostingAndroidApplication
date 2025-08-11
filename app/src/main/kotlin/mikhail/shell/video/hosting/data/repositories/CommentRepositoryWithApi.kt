@@ -22,19 +22,16 @@ class CommentRepositoryWithApi @Inject constructor(
     private val fcm: FirebaseMessaging
 ): CommentRepository {
     private val _commentFlow = MutableSharedFlow<ActionModel<CommentWithUser>>()
+
     override suspend fun send(comment: Comment): Result<Unit, Error> = request {
-        val commentDto = comment.toDto()
-        commentApi.save(commentDto)
+        commentApi.save(comment.toDto())
     }
 
     override suspend fun remove(commentId: Long): Result<Unit, Error> = request {
         commentApi.remove(commentId)
     }
 
-    override suspend fun getPart(
-        before: Instant,
-        videoId: Long
-    ): Result<List<CommentWithUser>, Error> = request {
+    override suspend fun getPart(before: Instant, videoId: Long): Result<List<CommentWithUser>, Error> = request {
         commentApi
             .fetch(videoId, before)
             .map { it.toDomain() }

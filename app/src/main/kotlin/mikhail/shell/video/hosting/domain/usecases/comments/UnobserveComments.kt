@@ -6,7 +6,5 @@ import javax.inject.Inject
 class UnobserveComments @Inject constructor(
     private val commentRepository: CommentRepository
 ) {
-    operator fun invoke(videoId: Long) {
-        commentRepository.stopReceiving(videoId)
-    }
+    operator fun invoke(videoId: Long) = commentRepository.stopReceiving(videoId)
 }

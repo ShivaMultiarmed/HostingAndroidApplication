@@ -171,8 +171,8 @@ fun ProfileScreen(
             )
         }
     }
-    LaunchedEffect(state.isLoggedOut) {
-        if (state.isLoggedOut == true) {
+    LaunchedEffect(state.isSignedOut) {
+        if (state.isSignedOut == true) {
             onLogOutSuccess()
         }
     }

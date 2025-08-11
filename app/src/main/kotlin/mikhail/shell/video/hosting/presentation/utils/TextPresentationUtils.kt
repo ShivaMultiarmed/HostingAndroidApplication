@@ -5,42 +5,6 @@ import mikhail.shell.video.hosting.R
 import kotlin.math.floor
 import kotlin.math.round
 
-fun Int.toCorrectRussianWordForm(
-    f1: String,
-    f2: String = f1,
-    f3: String = f2
-) = this.toLong().toCorrectRussianWordForm(f1, f2, f3)
-
-fun Long.toCorrectRussianWordForm(
-    f1: String,
-    f2: String = f1,
-    f3: String = f2
-): String {
-    return when {
-        this >= 1_000 -> f3
-        this % 10 == 1L && this != 11L -> f1
-        this in 11..14 || this % 10 in 5..9 || this % 10 == 0L -> f3
-        else -> f2
-    }
-}
-
-fun Int.toCorrectEnglishWordForm(
-    singular: String,
-    plural: String
-): String {
-    return this.toLong().toCorrectEnglishWordForm(singular, plural)
-}
-
-fun Long.toCorrectEnglishWordForm(
-    singular: String,
-    plural: String
-): String {
-    return when {
-        this == 1L -> singular
-        else -> plural
-    }
-}
-
 fun Long.toCorrectSuffix(): String {
     return when {
         this < 1_000 -> ""
@@ -69,12 +33,12 @@ fun Long.toViews(): String {
 
 fun Long.toRoundString(): String {
     val roundedNumber: Double = when {
-        this < 1_000 -> this.toDouble()
-        this < 1_000_000 -> this.toDouble() / 1_000
-        this < 1_000_000_000 -> this.toDouble() / 1_000_000
-        else -> this.toDouble() / 1_000_000_000
+        this < 1_000 -> toDouble()
+        this < 1_000_000 -> toDouble() / 1_000
+        this < 1_000_000_000 -> toDouble() / 1_000_000
+        else -> toDouble() / 1_000_000_000
     }.round(2)
-    return if (roundedNumber == this.toDouble()){
+    return if (roundedNumber == toDouble()){
         roundedNumber.toLong().toString()
     }
     else {

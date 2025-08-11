@@ -124,16 +124,17 @@ class EditUserViewModel @AssistedInject constructor(
     }
     fun removeUser() {
         _state.update {
-            it.copy(
-                isRemoving = true,
-                isRemovalConfirmed = false
-            )
+            it.copy(isRemoving = true)
         }
         viewModelScope.launch {
             _removeUser().onSuccess {
-                _state.value = EditUserScreenState(
-                    isRemovalConfirmed = true
-                )
+                _state.update {
+                    it.copy(
+                        isRemoving = false,
+                        isRemovalConfirmed = true,
+                        removeUserError = null
+                    )
+                }
             }.onFailure { error ->
                 _state.update {
                     it.copy(

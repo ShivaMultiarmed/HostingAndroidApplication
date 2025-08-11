@@ -10,5 +10,5 @@ data class ProfileScreenState(
     val userError: Error? = null,
     val channelError: Error? = null,
     val isLoading: Boolean = false,
-    val isLoggedOut: Boolean? = null
+    val isSignedOut: Boolean? = null
 )

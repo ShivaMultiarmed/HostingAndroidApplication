@@ -10,7 +10,6 @@ import javax.inject.Inject
 class GetComments @Inject constructor(
     private val repository: CommentRepository
 ) {
-    suspend operator fun invoke(before: Instant, videoId: Long): Result<List<CommentWithUser>, Error> {
-        return repository.getPart(before, videoId)
-    }
+    suspend operator fun invoke(before: Instant, videoId: Long): Result<List<CommentWithUser>, Error> =
+        repository.getPart(before, videoId)
 }

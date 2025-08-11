@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
@@ -212,11 +211,8 @@ class VideoScreenViewModel @AssistedInject constructor(
                     isLoading = true
                 )
             }
-            val now = Clock.System.now()
             viewModelScope.launch {
-                _saveComment(
-                    comment.copy(dateTime = now) // TODO: register time on server side
-                ).onSuccess {
+                _saveComment(comment).onSuccess {
                     _state.update {
                         it.copy(commentError = null)
                     }
@@ -246,9 +242,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     fun getComments(before: Instant) {
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         viewModelScope.launch {
             _getComments(
@@ -301,17 +295,13 @@ class VideoScreenViewModel @AssistedInject constructor(
         when (actionModel.action) {
             Action.ADD -> {
                 _state.update {
-                    it.copy(
-                        comments = listOf(commentModel) + (it.comments ?: listOf())
-                    )
+                    it.copy(comments = listOf(commentModel) + (it.comments ?: listOf()))
                 }
             }
 
             Action.REMOVE -> {
                 _state.update {
-                    it.copy(
-                        comments = it.comments?.filter { it.commentId != commentModel.commentId }
-                    )
+                    it.copy(comments = it.comments?.filter { it.commentId != commentModel.commentId })
                 }
             }
 

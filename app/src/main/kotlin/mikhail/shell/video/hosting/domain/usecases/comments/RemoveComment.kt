@@ -8,7 +8,5 @@ import javax.inject.Inject
 class RemoveComment @Inject constructor(
     private val commentRepository: CommentRepository
 ) {
-    suspend operator fun invoke(commentId: Long): Result<Unit, Error> {
-        return commentRepository.remove(commentId)
-    }
+    suspend operator fun invoke(commentId: Long): Result<Unit, Error> = commentRepository.remove(commentId)
 }

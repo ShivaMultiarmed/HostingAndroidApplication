@@ -9,7 +9,5 @@ import javax.inject.Inject
 class ObserveComments @Inject constructor(
     private val repository: CommentRepository
 ) {
-    operator fun invoke(videoId: Long): Flow<ActionModel<CommentWithUser>> {
-        return repository.startReceiving(videoId)
-    }
+    operator fun invoke(videoId: Long): Flow<ActionModel<CommentWithUser>> = repository.startReceiving(videoId)
 }
