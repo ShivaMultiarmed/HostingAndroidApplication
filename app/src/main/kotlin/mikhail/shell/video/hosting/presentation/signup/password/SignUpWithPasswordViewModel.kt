@@ -45,7 +45,7 @@ class SignUpWithPasswordViewModel @Inject constructor(
         if (inputState.nick.isEmpty()) {
             error.add(NICK_EMPTY)
         }
-        return error.takeIf { it.isNotNull() }
+        return error.takeIf { it.isNotEmpty() }
     }
 
     fun signUp(signUpInputState: SignUpInputState) {

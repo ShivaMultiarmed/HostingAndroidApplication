@@ -37,6 +37,6 @@ class ValidateUploadingVideo @Inject constructor(
                 compoundError.add(UploadVideoError.COVER_TOO_LARGE)
             }
         }
-        return compoundError.takeIf { it.isNotNull() }
+        return compoundError.takeIf { it.isNotEmpty() }
     }
 }

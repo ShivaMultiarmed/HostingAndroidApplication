@@ -67,7 +67,7 @@ class UploadVideoViewModel @AssistedInject constructor(
         if (input.channelId == null) {
             compoundError.add(UploadVideoError.CHANNEL_NOT_VALID)
         }
-        val validationError = if (compoundError.isNotNull()) compoundError else _validateVideo(
+        val validationError = if (compoundError.isNotEmpty()) compoundError else _validateVideo(
             video = Video(
                 channelId = input.channelId!!,
                 title = input.title

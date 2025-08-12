@@ -28,7 +28,7 @@ class CreateChannel @Inject constructor(
         if ((channel.description?.length ?: 0) > ValidationRules.MAX_TEXT_LENGTH) {
             compoundError.add(ChannelCreationError.DESCRIPTION_TOO_LARGE)
         }
-        return if (compoundError.isNotNull()) {
+        return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
             channelRepository.createChannel(channel,avatar,cover)

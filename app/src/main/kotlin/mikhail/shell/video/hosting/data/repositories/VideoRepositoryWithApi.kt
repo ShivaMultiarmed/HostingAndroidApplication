@@ -189,7 +189,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 compoundError.add(VideoEditingError.COVER_TOO_LARGE)
             }
         }
-        if (compoundError.isNotNull()) {
+        if (compoundError.isNotEmpty()) {
             throw ValidationException(compoundError)
         }
         val coverPart = cover?.toPart("cover")

@@ -6,7 +6,7 @@ class ValidationException(val error: Error): RuntimeException()
 
 interface Error
 
-object UnexpectedError: Error
+data object UnexpectedError: Error
 
 class CompoundError<T: Error>(): Error {
     @SerializedName("errors") private val _errors: MutableList<T> = mutableListOf()
@@ -16,19 +16,17 @@ class CompoundError<T: Error>(): Error {
     constructor(vararg errors: T): this() {
         _errors.addAll(errors)
     }
-    val errors: List<T>
-        get() = _errors.toList()
+    val errors = _errors.toList()
     fun add(error: T) {
         _errors.add(error)
     }
-    operator fun plus(compoundError: CompoundError<T>): CompoundError<T> {
-        _errors.addAll(compoundError.errors)
-        return this
+    operator fun plus(otherCompoundError: CompoundError<T>): CompoundError<T> {
+        return CompoundError(errors + otherCompoundError.errors)
     }
-    fun isNull(): Boolean {
+    fun isEmpty(): Boolean {
         return _errors.isEmpty()
     }
-    fun isNotNull(): Boolean {
+    fun isNotEmpty(): Boolean {
         return _errors.isNotEmpty()
     }
     fun contains(error: Error): Boolean {
@@ -42,16 +40,15 @@ fun <T: Error> Error?.equivalentTo(error: T): Boolean {
     else
         this == error
 }
-fun Error?.isNull(): Boolean {
+fun Error?.isEmpty(): Boolean {
     return if (this is CompoundError<*>)
-        this.isNull()
+        this.isEmpty()
     else
         this == null
 }
 
 fun Error.toCompound(): CompoundError<Error> {
-    val error = this
-    return CompoundError<Error>().apply { add(error) }
+    return CompoundError<Error>().also { it.add(this) }
 }
 
-fun Error?.isNotNull(): Boolean = !this.isNull()
+fun Error?.isNotEmpty(): Boolean = !isEmpty()

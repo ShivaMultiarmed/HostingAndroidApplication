@@ -31,7 +31,7 @@ class EditUser @Inject constructor(
         if ((user.email?.length ?: 0) > ValidationRules.MAX_USERNAME_LENGTH) {
             compoundError.add(EditUserError.EMAIL_TOO_LARGE)
         }
-        return if (compoundError.isNotNull()) {
+        return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
             userRepository.edit(user, avatar, avatarAction)

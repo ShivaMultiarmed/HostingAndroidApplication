@@ -59,7 +59,7 @@ class EditChannel @Inject constructor(
                 error.add(EditChannelError.AVATAR_NOT_FOUND)
             }
         }
-        return if (error.isNotNull()) {
+        return if (error.isNotEmpty()) {
             Result.Failure(error)
         } else {
             channelRepository.editChannel(

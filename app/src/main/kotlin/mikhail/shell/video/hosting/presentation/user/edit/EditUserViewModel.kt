@@ -120,7 +120,7 @@ class EditUserViewModel @AssistedInject constructor(
         if (!emailRegex.matches(input.email) && input.email.isNotEmpty()) {
             compoundError.add(EditUserError.EMAIL_MALFORMED)
         }
-        return if (compoundError.isNotNull()) compoundError else null
+        return if (compoundError.isNotEmpty()) compoundError else null
     }
     fun removeUser() {
         _state.update {

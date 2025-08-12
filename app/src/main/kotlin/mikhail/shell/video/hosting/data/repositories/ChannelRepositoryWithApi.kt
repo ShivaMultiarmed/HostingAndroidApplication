@@ -77,7 +77,7 @@ class ChannelRepositoryWithApi @Inject constructor(
                 }
             }
         }
-        if (compoundError.isNotNull()) {
+        if (compoundError.isNotEmpty()) {
             throw ValidationException(compoundError)
         }
         val avatarPart = avatar?.toPart("avatar")

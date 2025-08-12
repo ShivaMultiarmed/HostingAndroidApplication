@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.isNotNull
+import mikhail.shell.video.hosting.domain.errors.isNotEmpty
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
@@ -62,7 +62,7 @@ class VideoEditViewModel @AssistedInject constructor(
             it.copy(isLoading = true)
         }
         val error = validate(input)
-        if (error.isNotNull()) {
+        if (error.isNotEmpty()) {
             _state.update {
                 it.copy(
                     isLoading = false,

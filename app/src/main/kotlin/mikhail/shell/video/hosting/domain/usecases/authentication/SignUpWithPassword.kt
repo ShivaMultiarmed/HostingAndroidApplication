@@ -30,7 +30,7 @@ class SignUpWithPassword @Inject constructor(
         if (user.nick.length > ValidationRules.MAX_NAME_LENGTH) {
             compoundError.add(SignUpError.NICK_TOO_LARGE)
         }
-        return if (compoundError.isNotNull()) {
+        return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
             authRepository.signUpWithPassword(

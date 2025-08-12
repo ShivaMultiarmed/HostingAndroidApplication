@@ -56,7 +56,7 @@ class EditChannelViewModel @AssistedInject constructor(
         if (inputState.title.isBlank()) {
             compoundError.add(EditChannelError.TITLE_EMPTY)
         }
-        return if (compoundError.isNotNull()) compoundError else null
+        return if (compoundError.isNotEmpty()) compoundError else null
     }
     fun editChannel(inputState: EditChannelInputState) {
         _state.update {

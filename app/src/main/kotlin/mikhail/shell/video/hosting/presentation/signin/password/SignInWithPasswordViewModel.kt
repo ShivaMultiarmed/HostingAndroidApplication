@@ -36,7 +36,7 @@ class SignInWithPasswordViewModel @Inject constructor(
         if (password.isEmpty()) {
             compoundError.add(SignInError.PASSWORD_EMPTY)
         }
-        return compoundError.takeIf { it.isNotNull() }
+        return compoundError.takeIf { it.isNotEmpty() }
     }
 
     fun signIn(email: String, password: String) {

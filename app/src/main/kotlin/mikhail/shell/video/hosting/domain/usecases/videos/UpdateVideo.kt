@@ -23,7 +23,7 @@ class UpdateVideo @Inject constructor(
         if (video.title.length > ValidationRules.MAX_TITLE_LENGTH) {
             compoundError.add(VideoEditingError.TITLE_TOO_LARGE)
         }
-        return if (compoundError.isNotNull()) {
+        return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
             videoRepository.editVideo(video, coverAction, cover)

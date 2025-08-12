@@ -74,7 +74,7 @@ class UserRepositoryWithApi @Inject constructor(
                     )
                 }
             }
-            if (compoundError.isNotNull()) {
+            if (compoundError.isNotEmpty()) {
                 throw ValidationException(compoundError)
             } else {
                 userApi.edit(

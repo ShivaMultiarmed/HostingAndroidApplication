@@ -70,7 +70,7 @@ class CreateChannelViewModel @AssistedInject constructor(
         if (input.title.isBlank()) {
             error.add(ChannelCreationError.TITLE_EMPTY)
         }
-        return error.takeIf { it.isNotNull() }
+        return error.takeIf { it.isNotEmpty() }
     }
     @AssistedFactory
     interface Factory {
