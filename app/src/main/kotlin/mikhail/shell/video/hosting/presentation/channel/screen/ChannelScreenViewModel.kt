@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.DeleteChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelInfo
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
@@ -95,15 +95,15 @@ class ChannelScreenViewModel @AssistedInject constructor(
             }
         }
     }
-    fun subscribe(subscriptionState: SubscriptionState) {
+    fun subscribe(subscription: Subscription) {
         viewModelScope.launch {
             _subscribe(
-                _channelId,
-                subscriptionState
-            ).onSuccess { updatedChannelWithUser ->
+                channel = _state.value.channel!!,
+                subscription = subscription
+            ).onSuccess { updatedChannel ->
                 _state.update {
                     it.copy(
-                        channel = updatedChannelWithUser
+                        channel = updatedChannel
                     )
                 }
             }

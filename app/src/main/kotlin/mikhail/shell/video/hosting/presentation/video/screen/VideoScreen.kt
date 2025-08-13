@@ -104,9 +104,9 @@ import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
 import mikhail.shell.video.hosting.domain.models.Liking.NONE
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
-import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
-import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.Subscription
+import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -140,7 +140,7 @@ fun VideoScreen(
     state: VideoScreenState,
     onRefresh: () -> Unit,
     onRate: (Liking) -> Unit,
-    onSubscribe: (SubscriptionState) -> Unit,
+    onSubscribe: (Subscription) -> Unit,
     player: Player,
     onChannelLinkClick: (Long) -> Unit,
     onDelete: () -> Unit,

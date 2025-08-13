@@ -22,7 +22,7 @@ import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.Liking
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.ObserveComments
@@ -113,28 +113,19 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun subscribe(subscriptionState: SubscriptionState) {
+    fun subscribe(subscription: Subscription) {
         _state.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            val channelId = _state.value.videoDetails?.channel?.channelId!!
             _subscribe(
-                channelId = channelId,
-                subscriptionState = subscriptionState
-            ).onSuccess {
+                channel = state.value.videoDetails?.channel!!,
+                subscription = subscription
+            ).onSuccess { updatedChannel ->
                 _state.update {
-                    val previousChannel = it.videoDetails?.channel?: return@update it
-                    val previousSubscriptionState = previousChannel.subscription
-                    val newSubscriptionState = when (previousSubscriptionState) {
-                        SubscriptionState.SUBSCRIBED -> SubscriptionState.NOT_SUBSCRIBED
-                        SubscriptionState.NOT_SUBSCRIBED -> SubscriptionState.SUBSCRIBED
-                    }
                     it.copy(
-                        videoDetails = it.videoDetails.copy(
-                            channel = previousChannel.copy(
-                                subscription = newSubscriptionState
-                            )
+                        videoDetails = it.videoDetails?.copy(
+                            channel = updatedChannel
                         ),
                         isLoading = false,
                         loadingError = null
@@ -155,7 +146,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _rateVideo(
                 video = state.value.videoDetails!!.video,
-                likingState = liking
+                liking = liking
             ).onSuccess { updVideo ->
                 _state.update { screenState ->
                     screenState.copy(

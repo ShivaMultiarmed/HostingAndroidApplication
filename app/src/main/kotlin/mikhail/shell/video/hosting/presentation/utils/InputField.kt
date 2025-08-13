@@ -2,11 +2,14 @@ package mikhail.shell.video.hosting.presentation.utils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -19,25 +22,41 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key.Companion.Backspace
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -305,5 +324,107 @@ fun InputFieldPreview() {
             icon = Icons.Outlined.Person,
             errorMsg = "Ошибка"
         )
+    }
+}
+
+@Composable
+fun CodeInputField(
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit,
+    isValid: Boolean? = null,
+    length: Int = 4
+) {
+    val focusRequesters = remember { List(length) { FocusRequester() } }
+    val inputStates = rememberSaveable(
+        saver = listSaver(
+            save = { it.toList() },
+            restore = { it.toMutableStateList() }
+        )
+    ) {
+        mutableStateListOf<String>().apply {
+            repeat(length) { add("") }
+        }
+    }
+    val code by remember {
+        derivedStateOf {
+            inputStates.joinToString("")
+        }
+    }
+    LaunchedEffect(code) {
+        onValueChange(code)
+    }
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        repeat(length) { i ->
+            OutlinedTextField(
+                modifier = Modifier
+                    .width(50.dp)
+                    .focusRequester(focusRequesters[i])
+                    .onPreviewKeyEvent {
+                        if (it.type == KeyEventType.KeyDown) {
+                            if (it.key == Backspace && inputStates[i].isEmpty() && i > 0) {
+                                focusRequesters[i - 1].requestFocus()
+                                inputStates[i - 1] = ""
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    },
+                colors = TextFieldDefaults.colors(
+                    errorIndicatorColor = MaterialTheme.colorScheme.error,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.tertiary,
+                    errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    focusedContainerColor = MaterialTheme.colorScheme.secondary
+                ),
+                isError = isValid == false,
+                shape = RoundedCornerShape(5.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Ascii
+                ),
+                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                value = inputStates[i],
+                onValueChange = {
+                    val filteredCharacter = it.filter { ch -> ch.isLetterOrDigit() }
+                    if (filteredCharacter.length <= 1) {
+                        inputStates[i] = it
+                        if (filteredCharacter.isNotEmpty() && i < length - 1) {
+                            focusRequesters[i + 1].requestFocus()
+                        }
+                    }
+                },
+                singleLine = true
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun CodeInputPreview() {
+    var value by rememberSaveable { mutableStateOf("") }
+    VideoHostingTheme {
+        Scaffold { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Text(
+                    text = value,
+                    color = Color.Black
+                )
+                CodeInputField(
+                    onValueChange = {
+                        value = it
+                    }
+                )
+            }
+        }
     }
 }

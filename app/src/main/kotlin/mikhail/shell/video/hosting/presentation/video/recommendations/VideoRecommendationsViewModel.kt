@@ -3,7 +3,7 @@ package mikhail.shell.video.hosting.presentation.video.recommendations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,8 +22,8 @@ class VideoRecommendationsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _getVideoRecommendations(
-                stateFlow.value.nextVideosPartIndex,
-                PART_SIZE
+                partIndex = stateFlow.value.nextVideosPartIndex,
+                partSize = PART_SIZE
             ).onSuccess { videoList ->
                 _mutableStateFlow.update {
                     it.copy(

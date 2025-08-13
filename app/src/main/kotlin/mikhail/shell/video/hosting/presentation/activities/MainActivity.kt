@@ -31,7 +31,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
@@ -56,18 +55,15 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    private lateinit var gson: Gson
+    lateinit var userDetailsProvider: UserDetailsProvider
 
     @Inject
-    private lateinit var userDetailsProvider: UserDetailsProvider
-
-    @Inject
-    private lateinit var player: Player
-    private lateinit var mediaReceiver: MediaBroadcastReceiver
+    lateinit var player: Player
+    lateinit var mediaReceiver: MediaBroadcastReceiver
 
     @Inject
     lateinit var mediaHandler: MediaHandler
-    private lateinit var mediaSession: MediaSession
+    lateinit var mediaSession: MediaSession
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

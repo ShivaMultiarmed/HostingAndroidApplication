@@ -5,7 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.di.ApiModule
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
-import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 

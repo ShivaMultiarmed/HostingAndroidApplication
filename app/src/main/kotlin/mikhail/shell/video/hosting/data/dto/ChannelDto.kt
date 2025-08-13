@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.data.dto
 
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.Subscription
 
 data class ChannelDto(
     val channelId: Long? = null,
@@ -44,7 +44,7 @@ data class ChannelWithUserDto(
     val alias: String? = null,
     val description: String? = null,
     val subscribers: Long = 0,
-    val subscription: SubscriptionState = SubscriptionState.NOT_SUBSCRIBED,
+    val subscription: Subscription = Subscription.NOT_SUBSCRIBED,
     val coverUrl: String? = null,
     val avatarUrl: String? = null
 )

@@ -23,7 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
+import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -36,7 +36,7 @@ import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandle
 fun ChannelScreen(
     state: ChannelScreenState,
     onRefresh: () -> Unit,
-    onSubscription: (SubscriptionState) -> Unit,
+    onSubscription: (Subscription) -> Unit,
     onVideoClick: (Long) -> Unit,
     onScrollToBottom: () -> Unit,
     onEdit: (channelId: Long) -> Unit = {},

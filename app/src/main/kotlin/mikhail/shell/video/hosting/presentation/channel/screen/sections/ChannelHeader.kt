@@ -52,9 +52,9 @@ import coil.compose.AsyncImagePainter.State.Success
 import coil.request.ImageRequest
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.ChannelWithUser
-import mikhail.shell.video.hosting.domain.models.SubscriptionState
-import mikhail.shell.video.hosting.domain.models.SubscriptionState.NOT_SUBSCRIBED
-import mikhail.shell.video.hosting.domain.models.SubscriptionState.SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.Subscription
+import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
+import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -68,7 +68,7 @@ import kotlin.math.roundToInt
 fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit,
+    onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
     owns: Boolean = false,
@@ -120,7 +120,7 @@ fun ChannelHeaderCompact(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit,
+    onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
     owns: Boolean = false,
@@ -186,7 +186,7 @@ fun ChannelHeaderCompact(
 fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit,
+    onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
     owns: Boolean = false,
@@ -245,7 +245,7 @@ fun ChannelHeaderExpanded(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelWithUser,
-    onSubscription: (SubscriptionState) -> Unit,
+    onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
     owns: Boolean = false,
@@ -413,8 +413,8 @@ fun ChannelDescription(
 @Composable
 fun SubscriptionButton(
     modifier: Modifier = Modifier,
-    state: SubscriptionState,
-    onSubscription: (SubscriptionState) -> Unit
+    state: Subscription,
+    onSubscription: (Subscription) -> Unit
 ) {
     PrimaryToggleButton(
         modifier = modifier,
