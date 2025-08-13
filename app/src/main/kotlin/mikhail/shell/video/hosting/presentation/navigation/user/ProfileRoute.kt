@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -65,9 +64,9 @@ fun NavGraphBuilder.profileRoute(
             },
             onInvite = {
                 context.startActivity(
-                    Intent(Intent.ACTION_VIEW).apply {
-                        data = "sms:".toUri()
-                        putExtra("sms_body", context.getString(R.string.invitation_text))
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
                     }
                 )
             },
