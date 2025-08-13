@@ -115,10 +115,7 @@ fun SignUpScreen(
                 state.error,
                 mapOf(
                     SignUpError.PASSWORD_EMPTY to stringResource(R.string.password_empty_error),
-                    SignUpError.PASSWORD_NOT_VALID to stringResource(
-                        R.string.password_not_valid_error,
-                        ValidationRules.MIN_PASSWORD_LENGTH, ValidationRules.MAX_PASSWORD_LENGTH
-                    )
+                    SignUpError.PASSWORD_NOT_VALID to stringResource(R.string.password_not_valid_error) // TODO: adjust message
                 )
             )
             InputField(

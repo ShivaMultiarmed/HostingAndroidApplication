@@ -23,8 +23,7 @@ class SignUpWithPassword @Inject constructor(
         if (userName.length > ValidationRules.MAX_USERNAME_LENGTH) {
             compoundError.add(SignUpError.USERNAME_TOO_LARGE)
         }
-        val passwordLengthRange = ValidationRules.MIN_PASSWORD_LENGTH .. ValidationRules.MAX_PASSWORD_LENGTH
-        if (password.length !in passwordLengthRange) {
+        if (ValidationRules.PASSWORD_REGEX.matches(password)) {
             compoundError.add(PASSWORD_NOT_VALID)
         }
         if (user.nick.length > ValidationRules.MAX_NAME_LENGTH) {

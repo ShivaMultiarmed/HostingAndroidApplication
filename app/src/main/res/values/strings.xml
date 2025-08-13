@@ -128,7 +128,13 @@
     <string name="sign_up_link_label">Sign up</string>
     <string name="sign_up_title">Sign up</string>
     <string name="email_exists_msg_error">The email is already taken</string>
-    <string name="password_not_valid_error">Password length should be from %d to %d</string>
+    <string name="password_not_valid_error">
+        Password should:\n
+        - be of length from 8 to 20\n
+        - not contain whitespaces\n
+        - contain at least one digit\n
+        - contain at least one special character: &amp;, *, /, …
+    </string>
     <string name="nick_empty_error">Enter your nickname</string>
     <string name="nick_exists_error">The nickname is already taken</string>
     <string name="nick_label">Nickname</string>
