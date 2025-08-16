@@ -24,9 +24,7 @@ import retrofit2.http.Streaming
 
 interface VideoApi {
     @GET("videos/{videoId}")
-    suspend fun fetchVideo(
-        @Path("videoId") videoId: Long
-    ) : VideoDto
+    suspend fun fetchVideo(@Path("videoId") videoId: Long) : VideoDto
     @GET("videos/{videoId}/details")
     suspend fun fetchVideoDetails(
         @Path("videoId") videoId: Long,
@@ -50,9 +48,7 @@ interface VideoApi {
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>
     @POST("videos/upload/details")
-    suspend fun uploadVideoDetails(
-        @Body video: VideoDto
-    ): VideoDto
+    suspend fun uploadVideoDetails(@Body video: VideoDto): VideoDto
     @POST("videos/upload/{videoId}/cover")
     suspend fun uploadVideoCover(
         @Path("videoId") videoId: Long,
@@ -70,9 +66,7 @@ interface VideoApi {
         @Path("videoId") videoId: Long
     )
     @PATCH("videos/{videoId}/increment-views")
-    suspend fun incrementViews(
-        @Path("videoId") videoId: Long
-    ): VideoWithUserDto
+    suspend fun incrementViews(@Path("videoId") videoId: Long): VideoDto
     @Multipart
     @PATCH("videos/edit")
     suspend fun editVideo(
@@ -81,9 +75,7 @@ interface VideoApi {
         @Part cover: MultipartBody.Part?
     ): VideoDto
     @DELETE("videos/{videoId}")
-    suspend fun deleteVideo(
-        @Path("videoId") videoId: Long
-    )
+    suspend fun deleteVideo(@Path("videoId") videoId: Long)
     @GET("videos/{videoId}/play")
     @Streaming
     suspend fun playVideo(

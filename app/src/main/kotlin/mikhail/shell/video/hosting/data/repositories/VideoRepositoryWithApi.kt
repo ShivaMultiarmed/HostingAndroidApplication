@@ -25,9 +25,9 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
-import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
+import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -157,7 +157,7 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun incrementViews(videoId: Long): Result<VideoForUser, Error> = request {
+    override suspend fun incrementViews(videoId: Long): Result<Video, Error> = request {
         videoApi.incrementViews(videoId).toDomain()
     }
 

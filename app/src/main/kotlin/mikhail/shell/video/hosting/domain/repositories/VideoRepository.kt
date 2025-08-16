@@ -5,9 +5,9 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
-import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
+import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 import java.io.File
 
 interface VideoRepository {
@@ -37,7 +37,7 @@ interface VideoRepository {
         onProgress: (Float) -> Unit = {}
     ): Result<Video, Error>
 
-    suspend fun incrementViews(videoId: Long): Result<VideoForUser, Error>
+    suspend fun incrementViews(videoId: Long): Result<Video, Error>
 
     suspend fun deleteVideo(videoId: Long): Result<Unit, Error>
 

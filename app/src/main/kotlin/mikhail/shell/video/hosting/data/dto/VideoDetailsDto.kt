@@ -7,16 +7,13 @@ data class VideoDetailsDto(
     val channel: ChannelWithUserDto,
 )
 
-fun VideoDetailsDto.toDomain(): VideoWithChannelForUser {
-    return VideoWithChannelForUser(
-        video.toDomain(),
-        channel.toDomain()
-    )
-}
+fun VideoDetailsDto.toDomain() = VideoWithChannelForUser(
+    video = video.toDomain(),
+    channel = channel.toDomain()
+)
 
-fun VideoWithChannelForUser.toDto(): VideoDetailsDto {
-    return VideoDetailsDto(
-        video.toDto(),
-        channel.toDto()
-    )
-}
+
+fun VideoWithChannelForUser.toDto() = VideoDetailsDto(
+    video.toDto(),
+    channel.toDto()
+)
