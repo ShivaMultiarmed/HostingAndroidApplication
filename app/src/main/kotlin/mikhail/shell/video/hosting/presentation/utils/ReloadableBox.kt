@@ -11,8 +11,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,7 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -39,7 +38,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
@@ -52,26 +50,30 @@ fun ReloadableBox(
     isLoading: Boolean,
     content: @Composable () -> Unit
 ) {
-    val reloadThumbSize = 25
+    val reloadIndicatorSize = 30
+    val reloadThumbSize = 1.5f * reloadIndicatorSize
+    val shadowBaseDiameter = 1.2f * reloadThumbSize
+    val shadowWidth = 5
     val resistance = 0.2f
-    val initialPosition = -reloadThumbSize
-    val maxPosition = 2 * reloadThumbSize
+    val topPosition = -(shadowBaseDiameter + shadowWidth)
+    val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
     val density = LocalDensity.current.density
-    var height by rememberSaveable { mutableIntStateOf(initialPosition) }
+    var height by rememberSaveable { mutableFloatStateOf(topPosition) }
     val animatedHeight by animateDpAsState(height.dp, tween(200))
     var isDragged by rememberSaveable { mutableStateOf(false) }
     Box(
         modifier = modifier
+            .clipToBounds()
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { change, offset ->
                         if (!isLoading) {
                             change.consume()
-                            if (height < maxPosition) {
+                            if (height < bottomPosition) {
                                 height =
                                     (height + (offset.y * density * resistance).toInt()).coerceIn(
-                                        initialPosition,
-                                        maxPosition
+                                        topPosition,
+                                        bottomPosition
                                     )
                             }
                         }
@@ -80,15 +82,15 @@ fun ReloadableBox(
                         isDragged = true
                     },
                     onDragCancel = {
-                        height = initialPosition
+                        height = topPosition
                         isDragged = false
                     },
                     onDragEnd = {
-                        if (height == maxPosition && !isLoading) {
+                        if (height == bottomPosition && !isLoading) {
                             onLaunch()
                         }
-                        if (isLoading || height < maxPosition) {
-                            height = initialPosition
+                        if (isLoading || height < bottomPosition) {
+                            height = topPosition
                         }
                         isDragged = false
                     }
@@ -99,23 +101,27 @@ fun ReloadableBox(
         content()
         Box(
             modifier = Modifier
-                .size(reloadThumbSize.dp)
                 .offset(
                     y = if (isDragged) height.dp else animatedHeight
                 )
-                .clip(CircleShape)
-                .background(Color.White)
-                .size(1.2 * reloadThumbSize.dp)
+                .size(shadowBaseDiameter.dp)
                 .background(Color.Transparent)
                 .shadow(
-                    elevation = 25.dp,
+                    elevation = shadowWidth.dp,
                     shape = CircleShape
-                ),
+                )
+                .size(reloadThumbSize.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.secondary)
+                .size(reloadIndicatorSize.dp)
+                .clip(CircleShape)
+                .background(Color.Transparent)
+            ,
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
                 modifier = Modifier
-                    .matchParentSize()
+                    .size(reloadIndicatorSize.dp)
                     .rotate(
                         if (isLoading) {
                             val infiniteRotation = rememberInfiniteTransition()
@@ -136,7 +142,7 @@ fun ReloadableBox(
     }
     LaunchedEffect(isLoading) {
         if (!isLoading) {
-            height = initialPosition
+            height = topPosition
         }
     }
 }
@@ -153,12 +159,6 @@ fun ReloadableBoxPreview() {
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .background(Color.Blue)
-                )
                 ReloadableBox(
                     modifier = Modifier
                         .fillMaxSize(),
