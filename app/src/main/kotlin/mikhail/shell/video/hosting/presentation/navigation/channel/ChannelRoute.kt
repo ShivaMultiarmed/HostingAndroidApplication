@@ -37,11 +37,7 @@ fun NavGraphBuilder.channelRoute(
             onVideoClick = {
                 navController.navigate(Route.Video.View(it))
             },
-            onScrollToBottom = {
-                if (!viewModel.areAllVideosLoaded()) {
-                    viewModel.loadVideosPart()
-                }
-            },
+            onScrollToBottom = viewModel::loadVideosPart,
             onEdit = {
                 navController.navigate(Route.Channel.Edit(it))
             },

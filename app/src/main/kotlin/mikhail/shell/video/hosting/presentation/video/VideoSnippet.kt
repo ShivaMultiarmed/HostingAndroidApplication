@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,14 +23,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.toViews
-import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
+import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
 @Composable
 fun VideoSnippet(
     modifier: Modifier = Modifier,
-    video: Video,
+    video: VideoUi,
     onClick: (Long) -> Unit
 ) {
     val context = LocalContext.current
@@ -34,7 +37,7 @@ fun VideoSnippet(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-                onClick(video.videoId!!)
+                onClick(video.videoId)
             }
             .padding(10.dp)
     ) {
@@ -62,15 +65,23 @@ fun VideoSnippet(
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                modifier = Modifier.padding(top = 7.dp),
-                maxLines = 2,
-                fontSize = 12.sp,
-                lineHeight = 14.sp,
-                text = video.views.toViews() + " - " + video.dateTime!!.toPresentation(context),
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row {
+                Text(
+                    modifier = Modifier.padding(top = 7.dp, end = 3.dp),
+                    maxLines = 2,
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
+                    text = video.views.toViews(),
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Icon(
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    imageVector = Icons.Rounded.Visibility,
+                    contentDescription = video.views.toViews()
+                )
+            }
         }
     }
 

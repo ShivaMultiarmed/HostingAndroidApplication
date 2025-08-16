@@ -1,23 +1,24 @@
 package mikhail.shell.video.hosting.presentation.models
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 
-data class CommentModel(
+data class CommentUi(
     val userId: Long,
     val commentId: Long,
     val nick: String,
     val avatar: String?,
     val text: String,
-    val dateTime: Instant
+    val dateTime: LocalDateTime
 )
 
-fun CommentWithUser.toModel() = CommentModel(
+fun CommentWithUser.toUi() = CommentUi(
     userId = user.userId!!,
     commentId = comment.commentId!!,
     nick = user.nick,
     avatar = user.avatar,
     text = comment.text,
-    dateTime = comment.dateTime?: Clock.System.now()
+    dateTime = comment.dateTime!!.toLocalDateTime(TimeZone.currentSystemDefault())
 )

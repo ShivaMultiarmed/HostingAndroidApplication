@@ -10,7 +10,11 @@ import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
+import mikhail.shell.video.hosting.data.utils.parseFileSize
+import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
+import mikhail.shell.video.hosting.data.utils.toOctetStream
+import mikhail.shell.video.hosting.data.utils.toPart
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
@@ -21,24 +25,18 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.models.VideoDetails
+import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import mikhail.shell.video.hosting.domain.models.VideoForUser
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okio.BufferedSink
 import okio.IOException
 import retrofit2.HttpException
 import java.io.File
-import java.io.InputStream
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-
-const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
@@ -63,15 +61,15 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun fetchVideoDetails(
         videoId: Long,
         userId: Long
-    ): Result<VideoDetails, Error> = request {
+    ): Result<VideoWithChannelForUser, Error> = request {
         videoApi.fetchVideoDetails(videoId, userId).toDomain()
     }
 
     override suspend fun rateVideo(
         videoId: Long,
         liking: Liking
-    ): Result<Unit, Error> = request {
-        videoApi.rateVideo(videoId, liking)
+    ): Result<VideoForUser, Error> = request {
+        videoApi.rateVideo(videoId, liking).toDomain()
     }
 
     override suspend fun fetchChannelVideoList(
@@ -132,9 +130,9 @@ class VideoRepositoryWithApi @Inject constructor(
                     it.readBytes().toOctetStream()
                 }
                 videoApi.uploadVideoCover(
-                    videoResponse.videoId!!,
-                    coverExtension,
-                    coverContent!!
+                    videoId = videoResponse.videoId!!,
+                    extension = coverExtension,
+                    cover = coverContent!!
                 )
             }
             videoApi.confirmVideoUpload(videoResponse.videoId!!)
@@ -159,8 +157,8 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-    override suspend fun incrementViews(videoId: Long): Result<Unit, Error> = request {
-        videoApi.incrementViews(videoId)
+    override suspend fun incrementViews(videoId: Long): Result<VideoForUser, Error> = request {
+        videoApi.incrementViews(videoId).toDomain()
     }
 
     override suspend fun deleteVideo(videoId: Long): Result<Unit, Error> = request {
@@ -254,73 +252,4 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     }
 
-}
-
-fun FileProvider.uriToPart(uriStr: String, partName: String): MultipartBody.Part {
-    val uri = uriStr.toUri()
-    val mimeType = getFileMimeType(uri)
-    val extension = MimeTypeMap
-        .getSingleton()
-        .getExtensionFromMimeType(mimeType)
-    val bytes = getFileAsInputStream(uri)!!.use {
-        it.readBytes()
-    }
-    val fileName = "$partName.$extension"
-    val requestBody = RequestBody.create(
-        mimeType?.toMediaTypeOrNull(),
-        bytes
-    )
-    return MultipartBody.Part.createFormData(partName, fileName, requestBody)
-}
-
-fun File.toPart(partName: String): MultipartBody.Part {
-    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(this.extension)!!
-    val requestBody = StreamedRequestBody(this, mimeType)
-    return MultipartBody.Part.createFormData(partName, this.name, requestBody)
-}
-
-fun ByteArray.toOctetStream(nonNullBytesNumber: Int = this.size): RequestBody {
-    return RequestBody.create(
-        "application/octet-stream".toMediaTypeOrNull(),
-        this,
-        0,
-        nonNullBytesNumber
-    )
-}
-
-class StreamedRequestBody(
-    val file: File,
-    val mimeType: String = "application/octet-stream"
-) : RequestBody() {
-
-    override fun contentType() = mimeType.toMediaTypeOrNull()
-
-    override fun writeTo(sink: BufferedSink) {
-        val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
-        var bytesRead: Int
-        file.inputStream().buffered(TRANSFER_BUFFER_SIZE).use { input ->
-            while (input.read(buffer).also { bytesRead = it } != -1) {
-                sink.outputStream().write(buffer)
-                sink.flush()
-            }
-        }
-    }
-}
-
-suspend fun InputStream.process(
-    onChunkRead: suspend (bytesRead: Int, buffer: ByteArray) -> Unit
-) {
-    this.use {
-        val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
-        var curChunkNumber = 0
-        var bytesRead: Int
-        while (it.read(buffer).also { bytesRead = it } != -1) {
-            onChunkRead(bytesRead, buffer)
-            curChunkNumber++
-        }
-    }
-}
-
-fun String.parseFileSize(): Long { // from HTTP-header
-    return this.substringAfter("/").toLong()
 }

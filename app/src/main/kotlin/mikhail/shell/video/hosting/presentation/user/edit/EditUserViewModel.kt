@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUser
-import mikhail.shell.video.hosting.presentation.user.toModel
+import mikhail.shell.video.hosting.presentation.user.models.toUi
 
 @HiltViewModel(assistedFactory = EditUserViewModel.Factory::class)
 class EditUserViewModel @AssistedInject constructor(
@@ -40,7 +40,7 @@ class EditUserViewModel @AssistedInject constructor(
             _getUser(userId).onSuccess { initialUser ->
                 _state.update {
                     it.copy(
-                        initialUser = initialUser.toModel(),
+                        initialUser = initialUser.toUi(),
                         getUserError = null,
                         isInitializing = false
                     )
@@ -80,7 +80,7 @@ class EditUserViewModel @AssistedInject constructor(
                 ).onSuccess { editedUser ->
                     _state.update {
                         it.copy(
-                            editedUser = editedUser.toModel(),
+                            editedUser = editedUser.toUi(),
                             isEditing = false,
                             editUserError = null
                         )

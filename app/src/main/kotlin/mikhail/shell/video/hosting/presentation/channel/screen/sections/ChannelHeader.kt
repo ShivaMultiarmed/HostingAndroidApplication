@@ -51,11 +51,11 @@ import coil.compose.AsyncImagePainter
 import coil.compose.AsyncImagePainter.State.Success
 import coil.request.ImageRequest
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
+import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
@@ -67,7 +67,7 @@ import kotlin.math.roundToInt
 @Composable
 fun ChannelHeader(
     modifier: Modifier = Modifier,
-    channel: ChannelWithUser,
+    channel: ChannelForUserUi,
     onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
@@ -119,7 +119,7 @@ fun ChannelHeaderCompact(
     modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
-    channel: ChannelWithUser,
+    channel: ChannelForUserUi,
     onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
@@ -161,7 +161,7 @@ fun ChannelHeaderCompact(
                 }
                 if (owns) {
                     ChannelActionsButton(
-                        channelId = channel.channelId!!,
+                        channelId = channel.channelId,
                         onEdit = onEdit,
                         onRemove = onRemove
                     )
@@ -185,7 +185,7 @@ fun ChannelHeaderCompact(
 @Composable
 fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
-    channel: ChannelWithUser,
+    channel: ChannelForUserUi,
     onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},
@@ -244,7 +244,7 @@ fun ChannelHeaderExpanded(
     modifier: Modifier = Modifier,
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
-    channel: ChannelWithUser,
+    channel: ChannelForUserUi,
     onSubscription: (Subscription) -> Unit,
     onEdit: (channelId: Long) -> Unit = {},
     onRemove: (channelId: Long) -> Unit = {},

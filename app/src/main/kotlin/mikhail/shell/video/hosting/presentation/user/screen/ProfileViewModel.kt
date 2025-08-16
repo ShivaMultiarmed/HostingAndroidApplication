@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
-import mikhail.shell.video.hosting.presentation.user.toModel
+import mikhail.shell.video.hosting.presentation.channel.models.toUi
+import mikhail.shell.video.hosting.presentation.user.models.toUi
 
 @HiltViewModel(assistedFactory = ProfileViewModel.Factory::class)
 class ProfileViewModel @AssistedInject constructor(
@@ -21,13 +22,15 @@ class ProfileViewModel @AssistedInject constructor(
     private val _getUser: GetUser,
     private val _getChannelsByOwner: GetChannelsByOwner,
     private val _signOut: SignOut
-): ViewModel() {
+) : ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
     val state = _state.asStateFlow()
+
     init {
         loadProfile()
         loadChannels()
     }
+
     fun loadProfile() {
         _state.update {
             it.copy(isLoading = true)
@@ -37,7 +40,7 @@ class ProfileViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        user = user.toModel(),
+                        user = user.toUi(),
                         userError = null
                     )
                 }
@@ -51,29 +54,32 @@ class ProfileViewModel @AssistedInject constructor(
             }
         }
     }
+
     fun loadChannels() {
         _state.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            _getChannelsByOwner(userId).onSuccess { gotList ->
-                _state.update {
-                    it.copy(
-                        channelError = null,
-                        channels = gotList,
-                        isLoading = false
-                    )
+            _getChannelsByOwner(userId)
+                .onSuccess { gotList ->
+                    _state.update {
+                        it.copy(
+                            channelError = null,
+                            channels = gotList.map { it.toUi() },
+                            isLoading = false
+                        )
+                    }
+                }.onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            channelError = err,
+                            isLoading = false
+                        )
+                    }
                 }
-            }.onFailure { err ->
-                _state.update {
-                    it.copy(
-                        channelError = err,
-                        isLoading = false
-                    )
-                }
-            }
         }
     }
+
     fun signOut() {
         viewModelScope.launch {
             _signOut().onSuccess {
@@ -81,6 +87,7 @@ class ProfileViewModel @AssistedInject constructor(
             }
         }
     }
+
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("userId") userId: Long): ProfileViewModel

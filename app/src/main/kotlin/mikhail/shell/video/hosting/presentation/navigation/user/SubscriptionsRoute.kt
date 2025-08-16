@@ -21,10 +21,7 @@ fun NavGraphBuilder.subscriptionsRoute(
 ) {
     composable<Route.User.Subscriptions> {
         val userId = userDetailsProvider.getUserId()
-        val viewModel =
-            hiltViewModel<SubscriptionsScreenViewModel, SubscriptionsScreenViewModel.Factory> {
-                it.create(userId)
-            }
+        val viewModel = hiltViewModel<SubscriptionsScreenViewModel, SubscriptionsScreenViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         SubscriptionsScreen(

@@ -1,20 +1,20 @@
 package mikhail.shell.video.hosting.data.dto
 
-import mikhail.shell.video.hosting.domain.models.VideoDetails
+import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 
 data class VideoDetailsDto(
     val video: VideoWithUserDto,
     val channel: ChannelWithUserDto,
 )
 
-fun VideoDetailsDto.toDomain(): VideoDetails {
-    return VideoDetails(
+fun VideoDetailsDto.toDomain(): VideoWithChannelForUser {
+    return VideoWithChannelForUser(
         video.toDomain(),
         channel.toDomain()
     )
 }
 
-fun VideoDetails.toDto(): VideoDetailsDto {
+fun VideoWithChannelForUser.toDto(): VideoDetailsDto {
     return VideoDetailsDto(
         video.toDto(),
         channel.toDto()

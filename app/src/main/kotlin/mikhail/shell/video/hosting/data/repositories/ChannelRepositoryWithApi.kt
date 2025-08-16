@@ -10,6 +10,8 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
+import mikhail.shell.video.hosting.data.utils.toPart
+import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
@@ -17,7 +19,7 @@ import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.FileProvider
@@ -33,7 +35,7 @@ class ChannelRepositoryWithApi @Inject constructor(
     private val fileProvider: FileProvider
 ) : ChannelRepository {
 
-    override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelWithUser, Error> = request {
+    override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error> = request {
         _channelApi.fetchChannelDetails(channelId).toDomain()
     }
 
@@ -99,7 +101,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             _channelApi.getChannelsBySubscriber(userId).map { it.toDomain() }
         }
 
-    override suspend fun subscribe(channelId: Long): Result<Unit, Error> = request {
+    override suspend fun subscribe(channelId: Long): Result<ChannelForUser, Error> = request {
         _channelApi.subscribe(
             channelId = channelId,
             fcmToken = fcm.token.await()

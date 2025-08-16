@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.data.dto
 
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.Subscription
 
 data class ChannelDto(
@@ -16,25 +16,25 @@ data class ChannelDto(
 )
 
 fun Channel.toDto() = ChannelDto(
-    channelId,
-    ownerId,
-    title,
-    alias,
-    description,
-    subscribers,
-    coverUrl,
-    avatarUrl
+    channelId = channelId,
+    ownerId = ownerId,
+    title = title,
+    alias = alias,
+    description = description,
+    subscribers = subscribers,
+    coverUrl = coverUrl,
+    avatarUrl = avatarUrl
 )
 
 fun ChannelDto.toDomain() = Channel(
-    channelId,
-    ownerId,
-    title,
-    alias,
-    description,
-    subscribers,
-    coverUrl,
-    avatarUrl
+    channelId = channelId,
+    ownerId = ownerId,
+    title = title,
+    alias = alias,
+    description = description,
+    subscribers = subscribers,
+    coverUrl = coverUrl,
+    avatarUrl = avatarUrl
 )
 
 data class ChannelWithUserDto(
@@ -49,26 +49,26 @@ data class ChannelWithUserDto(
     val avatarUrl: String? = null
 )
 
-fun ChannelWithUser.toDto() = ChannelWithUserDto(
-    channelId,
-    ownerId,
-    title,
-    alias,
-    description,
-    subscribers,
-    subscription,
-    coverUrl,
-    avatarUrl
+fun ChannelForUser.toDto() = ChannelWithUserDto(
+    channelId = channelId,
+    ownerId = ownerId,
+    title = title,
+    alias = alias,
+    description = description,
+    subscribers = subscribers,
+    subscription = subscription,
+    coverUrl = coverUrl,
+    avatarUrl = avatarUrl
 )
 
-fun ChannelWithUserDto.toDomain() = ChannelWithUser(
-    channelId,
-    ownerId,
-    title,
-    alias,
-    description,
-    subscribers,
-    subscription,
-    coverUrl,
-    avatarUrl
+fun ChannelWithUserDto.toDomain() = ChannelForUser(
+    channelId = channelId,
+    ownerId = ownerId,
+    title = title,
+    alias = alias,
+    description = description,
+    subscribers = subscribers,
+    subscription = subscription,
+    coverUrl = coverUrl,
+    avatarUrl = avatarUrl
 )

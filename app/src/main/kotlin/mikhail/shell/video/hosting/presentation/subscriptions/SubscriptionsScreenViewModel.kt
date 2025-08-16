@@ -11,17 +11,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.channels.LoadSubscriptionChannels
+import mikhail.shell.video.hosting.presentation.channel.models.toUi
 
 @HiltViewModel(assistedFactory = SubscriptionsScreenViewModel.Factory::class)
 class SubscriptionsScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val _loadSubscriptionChannels: LoadSubscriptionChannels
-): ViewModel() {
+) : ViewModel() {
     private val _state = MutableStateFlow(SubscriptionsScreenState())
     val state get() = _state.asStateFlow()
+
     init {
         loadChannels()
     }
+
     fun loadChannels() {
         _state.update {
             it.copy(
@@ -29,24 +32,26 @@ class SubscriptionsScreenViewModel @AssistedInject constructor(
             )
         }
         viewModelScope.launch {
-            _loadSubscriptionChannels(userId).onSuccess { fetchedChannels ->
-                _state.update {
-                    it.copy(
-                        channels = fetchedChannels,
-                        error = null,
-                        isLoading = false
-                    )
+            _loadSubscriptionChannels(userId)
+                .onSuccess { fetchedChannels ->
+                    _state.update {
+                        it.copy(
+                            channels = fetchedChannels.map { it.toUi() },
+                            error = null,
+                            isLoading = false
+                        )
+                    }
+                }.onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            error = err,
+                            isLoading = false
+                        )
+                    }
                 }
-            }.onFailure { err ->
-                _state.update {
-                    it.copy(
-                        error = err,
-                        isLoading = false
-                    )
-                }
-            }
         }
     }
+
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("userId") userId: Long): SubscriptionsScreenViewModel

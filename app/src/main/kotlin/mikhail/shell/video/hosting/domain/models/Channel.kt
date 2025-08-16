@@ -10,7 +10,7 @@ data class Channel(
     val coverUrl: String? = null,
     val avatarUrl: String? = null
 )
-data class ChannelWithUser(
+data class ChannelForUser(
     val channelId: Long? = null,
     val ownerId: Long,
     val title: String,

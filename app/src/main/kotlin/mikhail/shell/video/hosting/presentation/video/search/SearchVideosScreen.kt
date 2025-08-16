@@ -19,10 +19,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,15 +49,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -63,8 +68,8 @@ import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandle
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
+import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -116,7 +121,7 @@ fun SearchVideosScreen(
                         errorMsg = null
                         onSubmit(query)
                     },
-                    icon = Icons.Rounded.Send
+                    icon = Icons.AutoMirrored.Rounded.Send
                 )
             }
         },
@@ -220,20 +225,18 @@ fun SearchVideosScreen(
 @Composable
 fun VideoWithChannelSnippet(
     modifier: Modifier = Modifier,
-    videoWithChannel: VideoWithChannel,
+    videoWithChannel: VideoWithChannelUi,
     onClick: (Long) -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
-    val video = videoWithChannel.video
-    val channel = videoWithChannel.channel
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
-                onClick(video.videoId!!)
+                onClick(videoWithChannel.videoId)
             }
             .then(
                 if (isWidthCompact) {
@@ -255,8 +258,8 @@ fun VideoWithChannelSnippet(
                             .clip(RoundedCornerShape(10.dp))
                 )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
-            model = video.coverUrl,
-            contentDescription = video.title,
+            model = videoWithChannel.videoCoverUrl,
+            contentDescription = videoWithChannel.videoTitle,
             contentScale = ContentScale.Crop
         )
         Row(
@@ -269,8 +272,8 @@ fun VideoWithChannelSnippet(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape),
-                model = channel.avatarUrl,
-                contentDescription = channel.title,
+                model = videoWithChannel.channelAvatarUrl,
+                contentDescription = videoWithChannel.channelTitle,
                 contentScale = ContentScale.Crop
             )
             Column(
@@ -279,37 +282,50 @@ fun VideoWithChannelSnippet(
                     .padding(start = 10.dp)
             ) {
                 Text(
-                    text = video.title,
+                    text = videoWithChannel.videoTitle,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2
                 )
+                val modId = "view_icon"
+                val videoLabel = remember {
+                    buildAnnotatedString {
+                        append(videoWithChannel.channelTitle)
+                        append(" - ")
+                        append(videoWithChannel.views.toViews())
+                        append(" ")
+                        appendInlineContent(modId, "[view_icon]")
+                        append(" - ")
+                        videoWithChannel.dateTime.toPresentation(context)
+                    }
+                }
+                val inlineContent = mapOf(
+                    modId to InlineTextContent(
+                        placeholder = Placeholder(
+                            width = 13.sp,
+                            height = 13.sp,
+                            placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                        )
+                    ) {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Rounded.Visibility,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = videoWithChannel.views.toString()
+                        )
+                    }
+                )
                 Text(
-                    text = channel.title + " - " + video.views.toViews() + " - " + video.dateTime!!.toPresentation(
-                        context
-                    ),
+                    text = videoLabel,
+                    inlineContent = inlineContent,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 13.sp,
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 2
+                    maxLines = 2,
                 )
             }
         }
-    }
-}
-
-
-@Composable
-@Preview
-fun SearchVideosScreenPreview() {
-    VideoHostingTheme {
-        SearchVideosScreen(
-            state = SearchVideosScreenState(),
-            onSubmit = {},
-            onScrollToBottom = {},
-            onVideoClick = {}
-        )
     }
 }

@@ -1,12 +1,12 @@
 package mikhail.shell.video.hosting.presentation.channel.screen
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
-import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
+import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
 data class ChannelScreenState(
-    val channel: ChannelWithUser? = null,
-    val videos: List<Video>? = null,
+    val channel: ChannelForUserUi? = null,
+    val videos: List<VideoUi>? = null,
     val isChannelLoading: Boolean = false,
     val areVideosLoading: Boolean = false,
     val channelLoadingError: Error? = null,

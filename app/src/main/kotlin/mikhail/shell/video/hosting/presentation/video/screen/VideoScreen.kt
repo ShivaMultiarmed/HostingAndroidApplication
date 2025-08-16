@@ -30,11 +30,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
@@ -75,7 +75,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -88,18 +87,15 @@ import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
-import mikhail.shell.video.hosting.domain.models.Comment
-import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
@@ -107,13 +103,11 @@ import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
-import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
-import mikhail.shell.video.hosting.presentation.models.CommentModel
-import mikhail.shell.video.hosting.presentation.models.toModel
+import mikhail.shell.video.hosting.presentation.models.CommentUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -125,13 +119,12 @@ import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
-import mikhail.shell.video.hosting.presentation.utils.toSubscribers
+import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,7 +140,7 @@ fun VideoScreen(
     onUpdate: (Long) -> Unit,
     onComment: (commentId: Long?, text: String) -> Unit = { _, _ -> },
     onRemoveComment: (commentId: Long) -> Unit = {},
-    onLoadComments: (before: Instant) -> Unit = {},
+    onLoadComments: (before: LocalDateTime) -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
@@ -174,8 +167,6 @@ fun VideoScreen(
             var isFullScreen by rememberSaveable { mutableStateOf(false) }
             var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
             val scrollState = rememberScrollState()
-            val video = state.videoDetails.video
-            val channel = state.videoDetails.channel
             val orientation = LocalConfiguration.current.orientation
             val isSmallWindow = rememberIsSmallWindow()
             val targetOrientation = remember(isFullScreen, isSmallWindow) {
@@ -273,7 +264,8 @@ fun VideoScreen(
                     val observer = LifecycleEventObserver { _, event ->
                         if (event == Lifecycle.Event.ON_STOP) {
                             isScreenActive = false
-                            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            activity.requestedOrientation =
+                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else if (event == Lifecycle.Event.ON_START) {
                             isScreenActive = true
                         }
@@ -286,8 +278,7 @@ fun VideoScreen(
                 if (!isFullScreenReached) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
+                            .fillMaxSize()
                             .background(Black)
                             .clip(
                                 RoundedCornerShape(
@@ -304,7 +295,7 @@ fun VideoScreen(
                                 .fillMaxWidth()
                         ) {
                             Text(
-                                text = video.title,
+                                text = state.videoDetails.videoTitle,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = 20.sp,
                                 maxLines = 2,
@@ -320,17 +311,17 @@ fun VideoScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = video.views.toViews(),
+                                text = state.videoDetails.videoTitle,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = video.dateTime!!.toPresentation(context),
+                                text = state.videoDetails.dateTime.toPresentation(context),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
                             )
-                            if (channel.ownerId == userId) {
+                            if (state.videoDetails.ownerId == userId) {
                                 var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
                                 var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
                                 Box {
@@ -349,7 +340,7 @@ fun VideoScreen(
                                                 MenuItem(
                                                     title = stringResource(R.string.video_edit_button),
                                                     onClick = {
-                                                        onUpdate(video.videoId!!)
+                                                        onUpdate(state.videoDetails.videoId)
                                                     }
                                                 ),
                                                 MenuItem(
@@ -386,12 +377,12 @@ fun VideoScreen(
                         ) {
                             Row(
                                 modifier = Modifier
-                                    .clickable { onChannelLinkClick(channel.channelId!!) }
+                                    .clickable { onChannelLinkClick(state.videoDetails.channelId) }
                                     .weight(1f),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AsyncImage(
-                                    model = channel.avatarUrl,
+                                    model = state.videoDetails.avatarUrl,
                                     contentDescription = stringResource(R.string.channel_link),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
@@ -400,7 +391,7 @@ fun VideoScreen(
                                         .background(MaterialTheme.colorScheme.secondaryContainer)
                                 )
                                 Text(
-                                    text = channel.title,
+                                    text = state.videoDetails.videoTitle,
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(start = 13.dp),
@@ -411,14 +402,14 @@ fun VideoScreen(
                                 )
                             }
                             Text(
-                                text = channel.subscribers.toSubscribers() + " \uD83D\uDC64",
+                                text = state.videoDetails.views.toViews(),
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(end = 5.dp)
                             )
                             PrimaryToggleButton(
-                                toggled = channel.subscription == SUBSCRIBED,
+                                toggled = state.videoDetails.subscription == SUBSCRIBED,
                                 onClick = {
-                                    val subscriptionState = when (channel.subscription) {
+                                    val subscriptionState = when (state.videoDetails.subscription) {
                                         SUBSCRIBED -> NOT_SUBSCRIBED
                                         else -> SUBSCRIBED
                                     }
@@ -434,42 +425,33 @@ fun VideoScreen(
                                 .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            val likeVector =
-                                when (video.liking) {
-                                    LIKED -> Icons.Rounded.ThumbUp
-                                    else -> Icons.Outlined.ThumbUp
-                                }
-
+                            val likeVector = when (state.videoDetails.liking) {
+                                LIKED -> Icons.Rounded.ThumbUp
+                                else -> Icons.Outlined.ThumbUp
+                            }
                             ActionButton(
                                 icon = likeVector,
-                                text = video.likes.toString(),
+                                text = state.videoDetails.likes.toRoundString(), // TODO rounded to 2 digits after a point and with suffix
                                 onClick = {
-                                    if (video.liking != LIKED)
-                                        onRate(LIKED)
-                                    else
-                                        onRate(NONE)
+                                    onRate(if (state.videoDetails.liking != LIKED) LIKED else NONE)
                                 }
                             )
-                            val dislikeVector =
-                                when (video.liking) {
-                                    DISLIKED -> Icons.Rounded.ThumbDown
-                                    else -> Icons.Outlined.ThumbDown
-                                }
+                            val dislikeVector = when (state.videoDetails.liking) {
+                                DISLIKED -> Icons.Rounded.ThumbDown
+                                else -> Icons.Outlined.ThumbDown
+                            }
                             ActionButton(
                                 icon = dislikeVector,
-                                text = video.dislikes.toString(),
+                                text = state.videoDetails.dislikes.toRoundString(), // TODO rounded to 2 digits after a point and with suffix
                                 onClick = {
-                                    if (video.liking != DISLIKED)
-                                        onRate(DISLIKED)
-                                    else
-                                        onRate(NONE)
+                                    onRate(if (state.videoDetails.liking != DISLIKED) DISLIKED else NONE)
                                 }
                             )
                             ActionButton(
                                 icon = Icons.Rounded.Share,
                                 text = stringResource(R.string.video_share),
                                 onClick = {
-                                    onShare(video.videoId!!)
+                                    onShare(state.videoDetails.videoId)
                                 }
                             )
                             ActionButton(
@@ -479,7 +461,7 @@ fun VideoScreen(
                                     Intent(context, VideoDownloadingService::class.java).also {
                                         it.action =
                                             "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
-                                        it.putExtra("videoId", state.videoDetails.video.videoId!!)
+                                        it.putExtra("videoId", state.videoDetails.videoId)
                                         context.startService(it)
                                     }
                                 }
@@ -536,8 +518,8 @@ fun VideoScreen(
                             }
                             if (commentsVisible) {
                                 LaunchedEffect(Unit) {
-                                    val now = Clock.System.now()
-                                    onLoadComments(now)
+                                    val dateTimeThreshold = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                                    onLoadComments(dateTimeThreshold)
                                 }
                                 if (state.comments != null) {
                                     CommentsBottomSheet(
@@ -601,15 +583,15 @@ fun VideoScreen(
 fun CommentsBottomSheet(
     userId: Long,
     state: SheetState,
-    comments: List<CommentModel>,
+    comments: List<CommentUi>,
     commentError: Error? = null,
-    actionComment: ActionModel<CommentModel>? = null,
+    actionComment: ActionModel<CommentUi>? = null,
     onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
     onRemoveComment: (commentId: Long) -> Unit = {},
     onDismiss: () -> Unit = {},
     onObserve: () -> Unit = {},
     onUnobserve: () -> Unit = {},
-    onLoad: (Instant) -> Unit = {},
+    onLoad: (LocalDateTime) -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {},
     onVideoNotFound: () -> Unit = {},
     onAuthenticationRequired: () -> Unit = {}
@@ -628,7 +610,7 @@ fun CommentsBottomSheet(
                 .fillMaxHeight(0.4f)
                 .padding(10.dp),
         ) {
-            var initialCommentModel by remember { mutableStateOf(null as CommentModel?) }
+            var initialCommentUi by remember { mutableStateOf(null as CommentUi?) }
             if (comments.isNotEmpty()) {
                 val lazyListState = rememberLazyListState()
                 val reachedBottom by remember { derivedStateOf { lazyListState.reachedBottom(4) } }
@@ -646,7 +628,7 @@ fun CommentsBottomSheet(
                             own = comment.userId == userId,
                             comment = comment,
                             onEdit = { _, _ ->
-                                initialCommentModel = comment
+                                initialCommentUi = comment
                             },
                             onRemove = onRemoveComment,
                             onGoToProfile = onGoToProfile
@@ -654,12 +636,11 @@ fun CommentsBottomSheet(
                     }
                 }
                 LaunchedEffect(comments) {
-                    initialCommentModel = null
+                    initialCommentUi = null
                 }
                 LaunchedEffect(reachedBottom) {
                     if (reachedBottom) {
-                        val earliestCommentDateTime =
-                            comments.lastOrNull()?.dateTime ?: Clock.System.now()
+                        val earliestCommentDateTime = comments.lastOrNull()?.dateTime ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                         onLoad(earliestCommentDateTime)
                     }
                 }
@@ -711,7 +692,7 @@ fun CommentsBottomSheet(
                 }
             }
             CommentForm(
-                initialCommentModel = initialCommentModel,
+                initialCommentUi = initialCommentUi,
                 onSubmit = onSubmit,
                 commentError = commentError,
                 actionComment = actionComment
@@ -740,7 +721,7 @@ fun CommentsBottomSheet(
 fun CommentBox(
     modifier: Modifier = Modifier,
     own: Boolean = false,
-    comment: CommentModel,
+    comment: CommentUi,
     onEdit: (commentId: Long, text: String) -> Unit = { _, _ -> },
     onRemove: (commentId: Long) -> Unit = {},
     onGoToProfile: (userId: Long) -> Unit = {}
@@ -823,42 +804,16 @@ fun CommentBox(
     }
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun CommentPreview() {
-    VideoHostingTheme {
-        val comment = Comment(
-            1,
-            100500,
-            userId = 100500,
-            Clock.System.now(),
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."
-        )
-        val user = User(
-            100500,
-            nick = "Иван Васильевич"
-        )
-        val commentWithUser = CommentWithUser(comment, user)
-        val commentModel = commentWithUser.toModel()
-        CommentBox(
-            modifier = Modifier.fillMaxWidth(),
-            comment = commentModel,
-            own = true
-        )
-    }
-}
-
 @Composable
 fun CommentForm(
-    initialCommentModel: CommentModel? = null,
+    initialCommentUi: CommentUi? = null,
     onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
-    actionComment: ActionModel<CommentModel>? = null,
+    actionComment: ActionModel<CommentUi>? = null,
     commentError: Error? = null
 ) {
     var text by rememberSaveable { mutableStateOf("") }
-    LaunchedEffect(initialCommentModel) {
-        initialCommentModel?.let { text = it.text }
+    LaunchedEffect(initialCommentUi) {
+        initialCommentUi?.let { text = it.text }
     }
     Row(
         modifier = Modifier
@@ -907,9 +862,9 @@ fun CommentForm(
         PrimaryProgressButton(
             enabled = text.isNotEmpty(),
             onClick = {
-                onSubmit(initialCommentModel?.commentId, text)
+                onSubmit(initialCommentUi?.commentId, text)
             },
-            icon = Icons.Rounded.Send
+            icon = Icons.AutoMirrored.Rounded.Send
         )
         LaunchedEffect(actionComment) {
             if (actionComment?.action != Action.REMOVE) {
@@ -919,26 +874,17 @@ fun CommentForm(
     }
 }
 
-fun Instant.toPresentation(context: Context): String {
-    val dateTime = this.toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()
-    return dateTime.toPresentation(context)
-}
-
 fun LocalDateTime.toPresentation(
     context: Context,
     timeZone: TimeZone = TimeZone.currentSystemDefault()
 ): String {
-    val now = LocalDateTime.now()
-    val currentDateTime = this
-        .toInstant(ZoneOffset.UTC)
-        .toKotlinInstant()
-        .toLocalDateTime(timeZone)
-        .toJavaLocalDateTime()
+    val now = Clock.System.now()
+    val currentInstant = this.toInstant(timeZone)
     val stringBuilder = StringBuilder()
-    if (now.minusMinutes(10) < currentDateTime) {
+    if (now - 5.minutes < currentInstant) {
         stringBuilder.append(context.getString(R.string.date_time_just_now_message))
-    } else if (now.minusMinutes(60) < currentDateTime) {
-        val diff = Duration.between(currentDateTime, now).toMinutes().toInt()
+    } else if (now - 60.minutes < currentInstant) {
+        val diff = (currentInstant - now).inWholeMinutes.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.minutes_presentation,
@@ -946,8 +892,8 @@ fun LocalDateTime.toPresentation(
                 diff
             )
         )
-    } else if (now.minusHours(24) < currentDateTime) {
-        val diff = Duration.between(currentDateTime, now).toHours().toInt()
+    } else if (now - 24.hours < currentInstant) {
+        val diff = (currentInstant - now).inWholeHours.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.hours_presentation,
@@ -955,8 +901,8 @@ fun LocalDateTime.toPresentation(
                 diff
             )
         )
-    } else if (now.minusDays(30) < currentDateTime) {
-        val diff = Duration.between(currentDateTime, now).toDays().toInt()
+    } else if (now - 30.days < currentInstant) {
+        val diff = (currentInstant - now).inWholeDays.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.days_presentation,
@@ -964,8 +910,8 @@ fun LocalDateTime.toPresentation(
                 diff
             )
         )
-    } else if (now.minusMonths(12) < this) {
-        val diff = Duration.between(currentDateTime, now).toDays().div(30).toInt()
+    } else if (now - 30.days * 12 < currentInstant) {
+        val diff = ((currentInstant - now).inWholeDays / 30).toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.months_presentation,
@@ -974,7 +920,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     } else {
-        val diff = Duration.between(currentDateTime, now).toDays().div(30).div(12).toInt()
+        val diff = ((currentInstant - now).inWholeDays / (30 * 12)).toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.years_presentation,
@@ -983,7 +929,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     }
-    if (now.minusMinutes(10) >= currentDateTime) {
+    if (now - 5.minutes >= currentInstant) {
         stringBuilder.append(" ").append(context.getString(R.string.date_time_ago_message))
     }
     return stringBuilder.toString()

@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.api
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
+import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
@@ -35,7 +36,7 @@ interface VideoApi {
     suspend fun rateVideo(
         @Path("videoId") videoId: Long,
         @Query("liking") liking: Liking
-    )
+    ): VideoWithUserDto
     @GET("videos/channel/{channelId}")
     suspend fun fetchVideoList(
         @Path("channelId") channelId: Long,
@@ -71,7 +72,7 @@ interface VideoApi {
     @PATCH("videos/{videoId}/increment-views")
     suspend fun incrementViews(
         @Path("videoId") videoId: Long
-    )
+    ): VideoWithUserDto
     @Multipart
     @PATCH("videos/edit")
     suspend fun editVideo(

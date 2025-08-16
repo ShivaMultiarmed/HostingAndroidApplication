@@ -61,9 +61,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.utils.isBlank
-import mikhail.shell.video.hosting.presentation.user.UserModel
+import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
+import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -284,9 +284,9 @@ fun ProfileScreenContent(
                                 } else {
                                     Modifier.clip(RoundedCornerShape(15.dp))
                                 }
-                            ), channel = channel, onClick = {
-                                onGoToChannel(channel.channelId!!)
-                            }
+                            ),
+                            channel = channel,
+                            onClick = onGoToChannel
                         )
                     }
                 }
@@ -303,7 +303,8 @@ fun ProfileScreenContent(
         }
     } else if (state.channelError != null || state.userError != null) {
         ErrorComponent(
-            modifier = modifier.fillMaxSize(), onRetry = onRefresh
+            modifier = modifier.fillMaxSize(),
+            onRetry = onRefresh
         )
     } else {
         LoadingComponent(
@@ -316,7 +317,7 @@ fun ProfileScreenContent(
 @Composable
 fun UserDetailsSection(
     modifier: Modifier = Modifier,
-    user: UserModel,
+    user: UserUi,
     onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -352,31 +353,22 @@ fun UserDetailsSection(
             fontSize = 16.sp
         )
     }
-    val userTextDetails: @Composable () -> Unit = {
+    Column(
+        modifier = modifier
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (isCompact) {
+            avatar()
+            nick()
+        } else {
+            nick()
+            avatar()
+        }
         UserTextDetails(
             modifier = Modifier,
             user = user
         )
-    }
-    if (isCompact) {
-        Column(
-            modifier = modifier
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            avatar()
-            nick()
-            userTextDetails()
-        }
-    } else {
-        Column(
-            modifier = modifier.padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            nick()
-            avatar()
-            userTextDetails()
-        }
     }
 }
 
@@ -384,7 +376,7 @@ fun UserDetailsSection(
 @Composable
 fun UserTextDetails(
     modifier: Modifier = Modifier,
-    user: UserModel,
+    user: UserUi,
 ) {
     var showMore by rememberSaveable { mutableStateOf(false) }
     val showMoreButton: @Composable () -> Unit = {
@@ -519,7 +511,7 @@ fun ProfileScreenPreviewDay() {
     VideoHostingTheme {
         ProfileScreen(
             state = ProfileScreenState(
-                user = UserModel(
+                user = UserUi(
                     100500,
                     "Balance Keeper",
                     "Mikhail Shell",
@@ -546,7 +538,9 @@ fun ProfileScreenPreviewDay() {
 
 @Composable
 fun ChannelSnippet(
-    modifier: Modifier = Modifier, channel: Channel, onClick: (Long) -> Unit
+    modifier: Modifier = Modifier,
+    channel: ChannelUi,
+    onClick: (Long) -> Unit
 ) {
     val context = LocalContext.current
     Box(

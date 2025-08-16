@@ -2,13 +2,13 @@ package mikhail.shell.video.hosting.domain.repositories
 
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.domain.models.ChannelWithUser
+import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import java.io.File
 
 interface ChannelRepository {
-    suspend fun fetchChannelForUser(channelId: Long): Result<ChannelWithUser, Error>
+    suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error>
 
     suspend fun createChannel(
         channel: Channel,
@@ -20,7 +20,7 @@ interface ChannelRepository {
 
     suspend fun fetchChannelsBySubscriber(userId: Long): Result<List<Channel>, Error>
 
-    suspend fun subscribe(channelId: Long): Result<Unit, Error>
+    suspend fun subscribe(channelId: Long): Result<ChannelForUser, Error>
 
     suspend fun subscribeToNotifications(): Result<Unit, Error>
 

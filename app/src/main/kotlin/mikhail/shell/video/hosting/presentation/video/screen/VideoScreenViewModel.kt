@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -33,7 +35,8 @@ import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
-import mikhail.shell.video.hosting.presentation.models.toModel
+import mikhail.shell.video.hosting.presentation.models.toUi
+import mikhail.shell.video.hosting.presentation.video.models.toUi
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
@@ -70,14 +73,16 @@ class VideoScreenViewModel @AssistedInject constructor(
             _getVideoDetails(
                 videoId,
                 userId
-            ).onSuccess {
-                _state.value = VideoScreenState(
-                    videoDetails = it,
-                    isLoading = false,
-                    loadingError = null,
-                    isViewed = true
-                )
-                val url = _state.value.videoDetails?.video?.sourceUrl
+            ).onSuccess { videoDetails ->
+                _state.update {
+                    it.copy(
+                        videoDetails = videoDetails.toUi(),
+                        isLoading = false,
+                        loadingError = null,
+                        isViewed = true
+                    )
+                }
+                val url = _state.value.videoDetails?.sourceUrl
                 val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
                 if (url != previousUri) {
                     val uri = url!!.toUri()
@@ -87,29 +92,29 @@ class VideoScreenViewModel @AssistedInject constructor(
                     player.play()
                     incrementViews()
                 }
-            }.onFailure {
-                _state.value = VideoScreenState(
-                    videoDetails = null,
-                    isLoading = false,
-                    loadingError = it
-                )
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        loadingError = error
+                    )
+                }
             }
         }
     }
 
     fun incrementViews() {
         viewModelScope.launch {
-            _incrementViews(videoId).onSuccess { newViews ->
-                _state.update {
-                    it.copy(
-                        videoDetails = it.videoDetails?.copy(
-                            video = it.videoDetails.video.copy(
-                                views = it.videoDetails.video.views + 1
+            _incrementViews(videoId)
+                .onSuccess { video ->
+                    _state.update {
+                        it.copy(
+                            videoDetails = it.videoDetails!!.copy(
+                                views = video.views
                             )
                         )
-                    )
+                    }
                 }
-            }
         }
     }
 
@@ -119,23 +124,24 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             _subscribe(
-                channel = state.value.videoDetails?.channel!!,
+                channelId = state.value.videoDetails!!.channelId,
                 subscription = subscription
-            ).onSuccess { updatedChannel ->
+            ).onSuccess { channel ->
                 _state.update {
                     it.copy(
                         videoDetails = it.videoDetails?.copy(
-                            channel = updatedChannel
+                            subscription = subscription,
+                            subscribers = channel.subscribers
                         ),
                         isLoading = false,
                         loadingError = null
                     )
                 }
-            }.onFailure { e ->
+            }.onFailure { error ->
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        loadingError = e
+                        loadingError = error
                     )
                 }
             }
@@ -145,13 +151,15 @@ class VideoScreenViewModel @AssistedInject constructor(
     fun rate(liking: Liking) {
         viewModelScope.launch {
             _rateVideo(
-                video = state.value.videoDetails!!.video,
+                videoId = state.value.videoDetails!!.videoId,
                 liking = liking
-            ).onSuccess { updVideo ->
+            ).onSuccess { video ->
                 _state.update { screenState ->
                     screenState.copy(
                         videoDetails = screenState.videoDetails!!.copy(
-                            video = updVideo
+                            likes = video.likes,
+                            dislikes = video.dislikes,
+                            liking = liking
                         ),
                         likingError = null
                     )
@@ -231,20 +239,19 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun getComments(before: Instant) {
+    fun getComments(before: LocalDateTime) {
         _state.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
             _getComments(
-                before = before,
+                before = before.toInstant(TimeZone.currentSystemDefault()),
                 videoId = videoId
             ).onSuccess { commentsWithUsers ->
-                val commentModels = commentsWithUsers.map { it.toModel() }
                 _state.update {
                     it.copy(
                         commentError = null,
-                        comments = ((it.comments ?: listOf()) + commentModels).distinct()
+                        comments = ((it.comments ?: listOf()) + commentsWithUsers.map { it.toUi() }).distinct()
                     )
                 }
             }.onFailure { err ->
@@ -275,7 +282,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun handleCommentAction(actionModel: ActionModel<CommentWithUser>) {
         val action = actionModel.action
-        val commentModel = actionModel.model.toModel()
+        val commentModel = actionModel.model.toUi()
         if (commentModel.userId == userId) {
             _state.update {
                 it.copy(

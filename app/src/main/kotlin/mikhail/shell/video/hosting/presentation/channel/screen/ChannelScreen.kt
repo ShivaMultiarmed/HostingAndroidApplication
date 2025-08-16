@@ -83,7 +83,8 @@ fun ChannelScreen(
                             modifier = Modifier,
                             videos = state.videos,
                             onVideoClick = onVideoClick,
-                            onScrollToBottom = onScrollToBottom
+                            onScrollToBottom = onScrollToBottom,
+                            areAllVideosLoaded = state.areAllVideosLoaded
                         )
                     }
                     if (shouldShowAvatar) {

@@ -18,21 +18,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
+import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoGridSection(
     modifier: Modifier = Modifier,
-    videos: List<Video>,
+    videos: List<VideoUi>,
     onVideoClick: (videoId: Long) -> Unit,
-    onScrollToBottom: () -> Unit
+    onScrollToBottom: () -> Unit,
+    areAllVideosLoaded: Boolean
 ) {
     val gridState = rememberLazyGridState()
-    val buffer = 4
-    val reachedEnd by remember { derivedStateOf { gridState.reachedBottom(buffer) } }
+    val reachedEnd by remember { derivedStateOf { gridState.reachedBottom(4) } }
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     LazyVerticalGrid(
@@ -56,8 +56,7 @@ fun VideoGridSection(
                         if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
                             Modifier
                         } else {
-                            Modifier
-                                .clip(RoundedCornerShape(15.dp))
+                            Modifier.clip(RoundedCornerShape(15.dp))
                         }
                     ),
                 video = it,
@@ -66,7 +65,7 @@ fun VideoGridSection(
         }
     }
     LaunchedEffect(reachedEnd) {
-        if (reachedEnd) {
+        if (reachedEnd && !areAllVideosLoaded) {
             onScrollToBottom()
         }
     }

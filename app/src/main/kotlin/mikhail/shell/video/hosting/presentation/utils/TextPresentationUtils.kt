@@ -28,7 +28,7 @@ fun Long.toFullSubscribers(context: Context): String {
 }
 
 fun Long.toViews(): String {
-    return this.toRoundString() + this.toCorrectSuffix() + " " +  "\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8\uFE0F"
+    return this.toRoundString() + this.toCorrectSuffix()
 }
 
 fun Long.toRoundString(): String {
@@ -42,10 +42,12 @@ fun Long.toRoundString(): String {
         roundedNumber.toLong().toString()
     }
     else {
-        if (roundedNumber.hasPortion())
+        if (roundedNumber.hasPortion()) {
             String.format("%.2f", roundedNumber)
-        else
+        }
+        else {
             roundedNumber.toLong().toString()
+        }
     }
 }
 

@@ -15,6 +15,8 @@ import mikhail.shell.video.hosting.domain.usecases.channels.DeleteChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelInfo
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
+import mikhail.shell.video.hosting.presentation.channel.models.toUi
+import mikhail.shell.video.hosting.presentation.video.models.toUi
 
 @HiltViewModel(assistedFactory = ChannelScreenViewModel.Factory::class)
 class ChannelScreenViewModel @AssistedInject constructor(
@@ -35,29 +37,26 @@ class ChannelScreenViewModel @AssistedInject constructor(
 
     fun loadChannelInfo() {
         _state.update {
-            it.copy(
-                isChannelLoading = true
-            )
+            it.copy(isChannelLoading = true)
         }
         viewModelScope.launch {
-            _getChannelInfo(
-                _channelId
-            ).onSuccess { channelWithUser ->
-                _state.update {
-                    it.copy(
-                        channel = channelWithUser,
-                        isChannelLoading = false,
-                        channelLoadingError = null
-                    )
+            _getChannelInfo(_channelId)
+                .onSuccess { channelWithUser ->
+                    _state.update {
+                        it.copy(
+                            channel = channelWithUser.toUi(),
+                            isChannelLoading = false,
+                            channelLoadingError = null
+                        )
+                    }
+                }.onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            isChannelLoading = false,
+                            channelLoadingError = error
+                        )
+                    }
                 }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        isChannelLoading = false,
-                        channelLoadingError = error
-                    )
-                }
-            }
         }
     }
 
@@ -79,7 +78,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         areVideosLoading = false,
-                        videos = (it.videos ?: listOf()) + videos,
+                        videos = (it.videos ?: listOf()) + videos.map { it.toUi() },
                         videosLoadingError = null,
                         areAllVideosLoaded = videos.size < PART_SIZE,
                         nextPartNumber = it.nextPartNumber + 1
@@ -95,16 +94,15 @@ class ChannelScreenViewModel @AssistedInject constructor(
             }
         }
     }
+
     fun subscribe(subscription: Subscription) {
         viewModelScope.launch {
             _subscribe(
-                channel = _state.value.channel!!,
+                channelId = _state.value.channel?.channelId!!,
                 subscription = subscription
             ).onSuccess { updatedChannel ->
                 _state.update {
-                    it.copy(
-                        channel = updatedChannel
-                    )
+                    it.copy(channel = updatedChannel.toUi())
                 }
             }
         }
@@ -121,7 +119,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
         fun create(
             @Assisted("channelId") channelId: Long,
             @Assisted("userId") userId: Long
-        ) : ChannelScreenViewModel
+        ): ChannelScreenViewModel
     }
 
     private companion object {

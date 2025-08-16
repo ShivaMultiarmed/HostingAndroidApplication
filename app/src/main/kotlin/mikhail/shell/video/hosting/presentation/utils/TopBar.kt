@@ -2,8 +2,8 @@ package mikhail.shell.video.hosting.presentation.utils
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +42,7 @@ fun TopBar(
                     onClick = onPopup
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                         tint = MaterialTheme.colorScheme.onSurface,
                         contentDescription = stringResource(R.string.go_back_button)
                     )
@@ -73,7 +73,7 @@ fun TopBar(
                         inProgress = inProgress,
                         complete = complete,
                         onClick = onSubmit,
-                        icon = Icons.Rounded.Send
+                        icon = Icons.AutoMirrored.Rounded.Send
                     )
                 }
             }

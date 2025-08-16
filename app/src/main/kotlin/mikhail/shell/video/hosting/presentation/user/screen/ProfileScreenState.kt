@@ -1,12 +1,12 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.models.Channel
-import mikhail.shell.video.hosting.presentation.user.UserModel
+import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
+import mikhail.shell.video.hosting.presentation.user.models.UserUi
 
 data class ProfileScreenState(
-    val user: UserModel? = null,
-    val channels: List<Channel>? = null,
+    val user: UserUi? = null,
+    val channels: List<ChannelUi>? = null,
     val userError: Error? = null,
     val channelError: Error? = null,
     val isLoading: Boolean = false,

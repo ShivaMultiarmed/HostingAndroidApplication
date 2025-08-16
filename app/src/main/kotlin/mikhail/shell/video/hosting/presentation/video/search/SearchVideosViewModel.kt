@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.videos.SearchForVideos
+import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,17 +38,17 @@ class SearchVideosViewModel @Inject constructor(
             ).onSuccess { list ->
                 _state.update {
                     it.copy(
-                        videos = (it.videos ?: emptyList()) + list,
+                        videos = (it.videos ?: emptyList()) + list.map { it.toUi() },
                         error = null,
                         isLoading = false,
                         nextPartNumber = it.nextPartNumber + 1,
                         areAllVideosLoaded = list.size < PART_SIZE
                     )
                 }
-            }.onFailure { e ->
+            }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        error = e,
+                        error = error,
                         isLoading = false
                     )
                 }
