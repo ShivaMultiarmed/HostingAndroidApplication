@@ -33,7 +33,7 @@ class CreateChannelViewModel @AssistedInject constructor(
             val channel = Channel(
                 ownerId = userId,
                 description = input.description,
-                title = input.title!!,
+                title = input.title,
                 alias = input.alias
             )
             viewModelScope.launch {

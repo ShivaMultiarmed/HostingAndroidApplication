@@ -22,6 +22,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
@@ -35,9 +36,10 @@ class ChannelRepositoryWithApi @Inject constructor(
     private val fileProvider: FileProvider
 ) : ChannelRepository {
 
-    override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error> = request {
-        _channelApi.fetchChannelDetails(channelId).toDomain()
-    }
+    override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error> =
+        request {
+            _channelApi.fetchChannelDetails(channelId).toDomain()
+        }
 
     override suspend fun createChannel(
         channel: Channel,
@@ -47,7 +49,8 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<ChannelCreationError>>() {}.type
-            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)?: UnexpectedError
+            gson.fromJson<CompoundError<ChannelCreationError>>(responseBody, type)
+                ?: UnexpectedError
         }
     ) {
         val compoundError = CompoundError<ChannelCreationError>()
@@ -55,8 +58,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             if (!it.exists()) {
                 compoundError.add(ChannelCreationError.AVATAR_NOT_FOUND)
             } else {
-                val mimeType =
-                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
                 if (!mimeType!!.contains("image")) {
                     compoundError.add(ChannelCreationError.AVATAR_TYPE_NOT_VALID)
                 }
@@ -69,8 +71,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             if (!it.exists()) {
                 compoundError.add(ChannelCreationError.COVER_NOT_FOUND)
             } else {
-                val mimeType =
-                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
+                val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
                 if (!mimeType!!.contains("image")) {
                     compoundError.add(ChannelCreationError.COVER_TYPE_NOT_VALID)
                 }
@@ -85,35 +86,36 @@ class ChannelRepositoryWithApi @Inject constructor(
         val avatarPart = avatar?.toPart("avatar")
         val coverPart = cover?.toPart("cover")
         val response = _channelApi.createChannel(
-            channel.toDto(),
-            avatarPart,
-            coverPart
+            channelDto = channel.toDto(),
+            avatar = avatarPart,
+            cover = coverPart
         )
         response.toDomain()
     }
 
-    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error> = request {
-        _channelApi.getChannelsByOwner(userId).map { it.toDomain() }
-    }
-
-    override suspend fun fetchChannelsBySubscriber(): Result<List<Channel>, Error> =
+    override suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error> =
         request {
-            _channelApi.getChannelsBySubscriber().map { it.toDomain() }
+            _channelApi.getChannelsByOwner(userId).map { it.toDomain() }
         }
 
-    override suspend fun subscribe(channelId: Long): Result<ChannelForUser, Error> = request {
+    override suspend fun fetchChannelsBySubscriber(): Result<List<Channel>, Error> = request {
+        _channelApi.getChannelsBySubscriber().map { it.toDomain() }
+    }
+
+    override suspend fun subscribe(channelId: Long, subscription: Subscription): Result<ChannelForUser, Error> = request {
         _channelApi.subscribe(
             channelId = channelId,
+            subscription = subscription,
             fcmToken = fcm.token.await()
         ).toDomain()
     }
 
     override suspend fun subscribeToNotifications(): Result<Unit, Error> = request {
-        _channelApi.subscribeToChannelNotifications( fcm.token.await())
+        _channelApi.subscribeToChannelNotifications(fcm.token.await())
     }
 
     override suspend fun unsubscribeFromNotifications(): Result<Unit, Error> = request {
-        _channelApi.unsubscribeFromChannelNotifications( fcm.token.await())
+        _channelApi.unsubscribeFromChannelNotifications(fcm.token.await())
     }
 
     override suspend fun editChannel(
@@ -126,7 +128,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         httpExceptionHandler(400) { e ->
             val responseBody = e.response()?.errorBody()?.string()
             val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
-            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type)?: UnexpectedError
+            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type) ?: UnexpectedError
         }
     ) {
         val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(

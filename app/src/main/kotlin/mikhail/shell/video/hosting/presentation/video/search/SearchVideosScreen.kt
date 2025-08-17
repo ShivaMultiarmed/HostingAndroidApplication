@@ -297,7 +297,7 @@ fun VideoWithChannelSnippet(
                         append(" ")
                         appendInlineContent(modId, "[view_icon]")
                         append(" - ")
-                        videoWithChannel.dateTime.toPresentation(context)
+                        append(videoWithChannel.dateTime.toPresentation(context))
                     }
                 }
                 val inlineContent = mapOf(

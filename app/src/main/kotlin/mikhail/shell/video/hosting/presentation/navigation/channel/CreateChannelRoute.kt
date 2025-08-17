@@ -28,7 +28,7 @@ fun NavGraphBuilder.createChannelRoute(
             state = state,
             onSubmit = viewModel::createChannel,
             onSuccess = {
-                navController.navigate(Route.Channel.View(it.channelId!!))
+                navController.navigate(Route.Channel.View(it))
             },
             onPopup = navController::popBackStack,
             onAuthenticationRequired = {

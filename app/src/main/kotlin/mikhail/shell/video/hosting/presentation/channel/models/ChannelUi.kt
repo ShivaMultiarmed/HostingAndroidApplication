@@ -14,7 +14,7 @@ data class ChannelUi(
 
 fun Channel.toUi() = ChannelUi(
     channelId = channelId!!,
-    avatarUrl = avatarUrl!!,
+    avatarUrl = avatar!!,
     title = title,
     alias = alias,
     subscribers = subscribers

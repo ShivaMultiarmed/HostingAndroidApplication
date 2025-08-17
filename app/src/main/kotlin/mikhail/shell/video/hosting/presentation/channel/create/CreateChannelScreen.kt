@@ -100,7 +100,13 @@ fun CreateChannelScreen(
                 onSubmit = {
                     val coverFile = coverUri?.let { context.uriToFile(it) }
                     val avatarFile = avatarUri?.let { context.uriToFile(it) }
-                    val input = CreateChannelInputState(title, alias, description, coverFile, avatarFile)
+                    val input = CreateChannelInputState(
+                        title = title,
+                        alias = alias,
+                        description = description,
+                        cover = coverFile,
+                        avatar = avatarFile
+                    )
                     onSubmit(input)
                 }
             )

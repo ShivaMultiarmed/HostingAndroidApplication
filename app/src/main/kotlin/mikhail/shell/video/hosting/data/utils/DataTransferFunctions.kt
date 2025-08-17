@@ -105,8 +105,11 @@ fun FileProvider.uriToPart(uriString: String, partName: String): MultipartBody.P
 }
 
 fun File.toPart(partName: String): MultipartBody.Part {
+    val mimeType = MimeTypeMap.getSingleton()
+        .getMimeTypeFromExtension(extension.lowercase())
+        ?: "application/octet-stream"
     val requestBody = asRequestBody(
-        contentType = extension.toMediaTypeOrNull()
+        contentType = mimeType.toMediaTypeOrNull()
     )
     return MultipartBody.Part.createFormData(
         name = partName,

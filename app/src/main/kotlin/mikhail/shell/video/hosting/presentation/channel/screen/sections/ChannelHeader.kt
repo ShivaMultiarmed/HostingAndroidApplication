@@ -140,7 +140,10 @@ fun ChannelHeaderCompact(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(top = 13.dp, bottom = 7.dp)
+                .padding(
+                    top = 13.dp,
+                    bottom = 7.dp
+                )
         ) {
             ChannelAvatar(
                 modifier = Modifier,

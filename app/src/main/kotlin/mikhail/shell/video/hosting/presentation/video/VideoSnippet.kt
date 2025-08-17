@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.video
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
+import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 
 @Composable
 fun VideoSnippet(
@@ -65,10 +68,16 @@ fun VideoSnippet(
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Row {
+            Row (
+                modifier = Modifier
+                    .padding(
+                        top = 7.dp,
+                        end = 3.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
                 Text(
-                    modifier = Modifier.padding(top = 7.dp, end = 3.dp),
-                    maxLines = 2,
                     fontSize = 12.sp,
                     lineHeight = 14.sp,
                     text = video.views.toViews(),
@@ -76,10 +85,17 @@ fun VideoSnippet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier.size(13.dp),
                     tint = MaterialTheme.colorScheme.onSurface,
                     imageVector = Icons.Rounded.Visibility,
                     contentDescription = video.views.toViews()
+                )
+                Text(
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
+                    text = video.dateTime.toPresentation(context),
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

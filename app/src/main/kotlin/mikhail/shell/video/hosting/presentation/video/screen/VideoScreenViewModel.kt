@@ -130,7 +130,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         videoDetails = it.videoDetails?.copy(
-                            subscription = subscription,
+                            subscription = channel.subscription,
                             subscribers = channel.subscribers
                         ),
                         isLoading = false,

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
+import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.utils.isBlank
@@ -35,7 +36,15 @@ class EditChannelViewModel @AssistedInject constructor(
             _getChannel(channelId).onSuccess { initialChannel ->
                 _state.update {
                     it.copy(
-                        initialChannel = initialChannel,
+                        initialChannel = EditedChannelUi(
+                            channelId = channelId,
+                            ownerId = initialChannel.ownerId,
+                            title = initialChannel.title,
+                            alias = initialChannel.alias?: "",
+                            description = initialChannel.description?: "",
+                            avatar = initialChannel.avatar!!,
+                            cover = initialChannel.cover!!
+                        ),
                         initialChannelError = null,
                         isLoading = false
                     )
@@ -72,23 +81,25 @@ class EditChannelViewModel @AssistedInject constructor(
             }
         } else {
             viewModelScope.launch {
-                val channel = _state.value.initialChannel!!.copy(
+                val channel = Channel(
+                    channelId = channelId,
+                    ownerId = _state.value.initialChannel!!.ownerId,
                     title = inputState.title,
                     alias = inputState.alias.ifEmpty { null },
                     description = inputState.description.ifEmpty { null },
-                    coverUrl = inputState.cover,
-                    avatarUrl = inputState.avatar
+                    cover = inputState.cover,
+                    avatar = inputState.avatar
                 )
                 _editChannel(
-                    channel,
-                    inputState.editCoverAction,
-                    inputState.cover.takeIf { it != "null" },
-                    inputState.editAvatarAction,
-                    inputState.avatar.takeIf { it != "null" }
+                    channel = channel,
+                    coverAction = inputState.editCoverAction,
+                    coverUri = inputState.cover,
+                    avatarAction = inputState.editAvatarAction,
+                    avatarUri = inputState.avatar
                 ).onSuccess { editedChannel ->
                     _state.update {
                         it.copy(
-                            editedChannel = editedChannel,
+                            editChannelSuccess = true,
                             editedChannelError = null,
                             isLoading = false
                         )
@@ -96,7 +107,6 @@ class EditChannelViewModel @AssistedInject constructor(
                 }.onFailure { error ->
                     _state.update {
                         it.copy(
-                            editedChannel = null,
                             editedChannelError = error,
                             isLoading = false
                         )
@@ -104,7 +114,6 @@ class EditChannelViewModel @AssistedInject constructor(
                 }
             }
         }
-
     }
     @AssistedFactory
     interface Factory {

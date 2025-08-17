@@ -13,5 +13,5 @@ class Subscribe @Inject constructor(
     suspend operator fun invoke(
         channelId: Long,
         subscription: Subscription
-    ): Result<ChannelForUser, Error> = channelRepository.subscribe(channelId)
+    ): Result<ChannelForUser, Error> = channelRepository.subscribe(channelId, subscription)
 }

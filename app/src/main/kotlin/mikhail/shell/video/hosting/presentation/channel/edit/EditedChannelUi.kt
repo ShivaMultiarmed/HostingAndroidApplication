@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.channel.edit
 
 data class EditedChannelUi(
     val channelId: Long,
+    val ownerId: Long,
     val title: String,
     val alias: String,
     val description: String,

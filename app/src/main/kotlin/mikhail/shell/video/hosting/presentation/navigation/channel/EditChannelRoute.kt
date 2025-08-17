@@ -28,7 +28,7 @@ fun NavGraphBuilder.editChannelRoute(
             onPopup = navController::popBackStack,
             onSubmit = viewModel::editChannel,
             onSuccess = {
-                navController.navigate(Route.Channel.View(it.channelId!!))
+                navController.navigate(Route.Channel.View(it))
             },
             onChannelNotFound = {
                 coroutineScope.launch {

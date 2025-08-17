@@ -35,9 +35,11 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -120,6 +122,7 @@ import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
+import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.ui.theme.Black
 import kotlin.time.Duration.Companion.days
@@ -311,9 +314,15 @@ fun VideoScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = state.videoDetails.videoTitle,
+                                text = state.videoDetails.views.toViews(),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Icon(
+                                modifier = Modifier.size(12.dp),
+                                imageVector = Icons.Rounded.Visibility,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                contentDescription = state.videoDetails.views.toViews()
                             )
                             Text(
                                 text = state.videoDetails.dateTime.toPresentation(context),
@@ -391,7 +400,7 @@ fun VideoScreen(
                                         .background(MaterialTheme.colorScheme.secondaryContainer)
                                 )
                                 Text(
-                                    text = state.videoDetails.videoTitle,
+                                    text = state.videoDetails.channelTitle,
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(start = 13.dp),
@@ -401,11 +410,22 @@ fun VideoScreen(
                                     maxLines = 1
                                 )
                             }
-                            Text(
-                                text = state.videoDetails.views.toViews(),
-                                fontSize = 13.sp,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Text(
+                                    text = state.videoDetails.subscribers.toSubscribers(),
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(end = 5.dp)
+                                )
+                                Icon(
+                                    modifier = Modifier.size(14.dp),
+                                    imageVector = Icons.Rounded.Person,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    contentDescription = state.videoDetails.subscribers.toSubscribers()
+                                )
+                            }
                             PrimaryToggleButton(
                                 toggled = state.videoDetails.subscription == SUBSCRIBED,
                                 onClick = {
@@ -884,7 +904,7 @@ fun LocalDateTime.toPresentation(
     if (now - 5.minutes < currentInstant) {
         stringBuilder.append(context.getString(R.string.date_time_just_now_message))
     } else if (now - 60.minutes < currentInstant) {
-        val diff = (currentInstant - now).inWholeMinutes.toInt()
+        val diff = (now - currentInstant).inWholeMinutes.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.minutes_presentation,
@@ -893,7 +913,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     } else if (now - 24.hours < currentInstant) {
-        val diff = (currentInstant - now).inWholeHours.toInt()
+        val diff = (now - currentInstant).inWholeHours.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.hours_presentation,
@@ -902,7 +922,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     } else if (now - 30.days < currentInstant) {
-        val diff = (currentInstant - now).inWholeDays.toInt()
+        val diff = (now - currentInstant).inWholeDays.toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.days_presentation,
@@ -911,7 +931,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     } else if (now - 30.days * 12 < currentInstant) {
-        val diff = ((currentInstant - now).inWholeDays / 30).toInt()
+        val diff = ((now - currentInstant).inWholeDays / 30).toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.months_presentation,
@@ -920,7 +940,7 @@ fun LocalDateTime.toPresentation(
             )
         )
     } else {
-        val diff = ((currentInstant - now).inWholeDays / (30 * 12)).toInt()
+        val diff = ((now - currentInstant).inWholeDays / (30 * 12)).toInt()
         stringBuilder.append(
             context.resources.getQuantityString(
                 R.plurals.years_presentation,
