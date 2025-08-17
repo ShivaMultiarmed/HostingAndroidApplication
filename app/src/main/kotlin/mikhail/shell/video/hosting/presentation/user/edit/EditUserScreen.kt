@@ -94,12 +94,12 @@ fun EditUserScreen(
     val snackBarHostState = remember { SnackbarHostState() }
     if (state.initialUser != null) {
         var nick by rememberSaveable { mutableStateOf(state.initialUser.nick) }
-        var name by rememberSaveable { mutableStateOf(state.initialUser.name ?: "") }
+        var name by rememberSaveable { mutableStateOf(state.initialUser.name) }
         var avatarUri by rememberSaveable { mutableStateOf(null as Uri?) }
         var avatarAction by rememberSaveable { mutableStateOf(KEEP) }
-        var bio by rememberSaveable { mutableStateOf(state.initialUser.bio ?: "") }
-        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel ?: "") }
-        var email by rememberSaveable { mutableStateOf(state.initialUser.email ?: "") }
+        var bio by rememberSaveable { mutableStateOf(state.initialUser.bio) }
+        var tel by rememberSaveable { mutableStateOf(state.initialUser.tel) }
+        var email by rememberSaveable { mutableStateOf(state.initialUser.email) }
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -124,7 +124,7 @@ fun EditUserScreen(
                         onEdit(input)
                     },
                     inProgress = state.isEditing,
-                    complete = state.editedUser != null
+                    complete = state.editUserSuccess
                 )
             }
         ) { padding ->
@@ -181,10 +181,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = name != (state.initialUser.name ?: ""),
+                    updated = name != (state.initialUser.name),
                     empty = name.isEmpty(),
                     onRevert = {
-                        name = state.initialUser.name ?: ""
+                        name = state.initialUser.name
                     },
                     onDelete = {
                         name = ""
@@ -312,10 +312,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = tel != (state.initialUser.tel ?: ""),
+                    updated = tel != (state.initialUser.tel),
                     empty = tel.isEmpty(),
                     onRevert = {
-                        tel = state.initialUser.tel?.toString() ?: ""
+                        tel = state.initialUser.tel
                     },
                     onDelete = {
                         tel = ""
@@ -346,10 +346,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = email != (state.initialUser.email ?: ""),
+                    updated = email != (state.initialUser.email),
                     empty = email.isEmpty(),
                     onRevert = {
-                        email = state.initialUser.email ?: ""
+                        email = state.initialUser.email
                     },
                     onDelete = {
                         email = ""
@@ -373,10 +373,10 @@ fun EditUserScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = bio != (state.initialUser.bio ?: ""),
+                    updated = bio != (state.initialUser.bio),
                     empty = bio.isEmpty(),
                     onRevert = {
-                        bio = state.initialUser.bio ?: ""
+                        bio = state.initialUser.bio
                     },
                     onDelete = {
                         bio = ""
@@ -426,9 +426,8 @@ fun EditUserScreen(
                 }
             }
         }
-        LaunchedEffect(state.editedUser) {
-            state.editedUser?.let {
-                delay(1000)
+        LaunchedEffect(state.editUserSuccess) {
+            if (state.editUserSuccess) {
                 snackBarHostState.showSnackbar(
                     message = context.getString(R.string.profile_edit_success),
                     withDismissAction = true,

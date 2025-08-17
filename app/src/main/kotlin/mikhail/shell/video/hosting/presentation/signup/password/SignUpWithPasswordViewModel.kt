@@ -61,9 +61,9 @@ class SignUpWithPasswordViewModel @Inject constructor(
             )
             viewModelScope.launch {
                 _signUpWithPassword(
-                    signUpInputState.userName,
-                    signUpInputState.password,
-                    user
+                    userName = signUpInputState.userName,
+                    password = signUpInputState.password,
+                    user = user
                 ).onSuccess {
                     _state.value = SignUpWithPasswordState(
                         authModel = it,
