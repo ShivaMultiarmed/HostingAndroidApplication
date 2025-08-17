@@ -191,7 +191,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 compoundError.add(VideoEditingError.COVER_TOO_LARGE)
             }
             file
-                .takeIf { compoundError.isNotEmpty() }
+                .takeIf { compoundError.isEmpty() }
                 ?.toRequestBody(mimeType = mime)
                 ?.let {
                     val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
