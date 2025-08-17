@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.webkit.MimeTypeMap
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
@@ -33,7 +34,6 @@ import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import okio.IOException
 import retrofit2.HttpException
-import java.io.File
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
@@ -168,7 +168,7 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun editVideo(
         video: Video,
         coverAction: EditAction,
-        cover: File?
+        cover: String?
     ): Result<Video, Error> = request (
         httpExceptionHandler(400) { e ->
             val json = e.response()?.errorBody()?.string()
@@ -177,21 +177,26 @@ class VideoRepositoryWithApi @Inject constructor(
         }
     ) {
         val compoundError = CompoundError<VideoEditingError>()
-        cover?.let {
-            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.extension)
-            if (!it.exists()) {
+        val coverPart = cover?.let {
+            val file = it.toUri().toFile()
+            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
+            if (!file.exists()) {
                 compoundError.add(VideoEditingError.COVER_NOT_FOUND)
             } else if (!mime!!.contains("image")) {
                 compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
-            } else if (it.length() > ValidationRules.MAX_IMAGE_SIZE) {
+            } else if (file.length() > ValidationRules.MAX_IMAGE_SIZE) {
                 compoundError.add(VideoEditingError.COVER_TOO_LARGE)
             }
+            file.toPart("cover")
         }
         if (compoundError.isNotEmpty()) {
             throw ValidationException(compoundError)
         }
-        val coverPart = cover?.toPart("cover")
-        videoApi.editVideo(video.toDto(), coverAction, coverPart).toDomain()
+        videoApi.editVideo(
+            video = video.toDto(),
+            coverAction = coverAction,
+            cover = coverPart
+        ).toDomain()
     }
 
     override suspend fun downloadVideo(

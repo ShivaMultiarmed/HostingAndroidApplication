@@ -62,7 +62,6 @@ import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.DESCRI
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
@@ -80,7 +79,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 fun EditChannelScreen(
     state: EditChannelScreenState,
     onSubmit: (EditChannelInputState) -> Unit,
-    onSuccess: (Channel) -> Unit,
+    onSuccess: (Long) -> Unit,
     onPopup: () -> Unit,
     onChannelNotFound: () -> Unit,
     onAuthenticationRequired: () -> Unit
@@ -88,12 +87,11 @@ fun EditChannelScreen(
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
     val snackBarHostState = remember { SnackbarHostState() }
-    val initialChannel = state.initialChannel
-    if (initialChannel != null) {
-        var title by rememberSaveable { mutableStateOf(initialChannel.title) }
-        var alias by rememberSaveable { mutableStateOf(initialChannel.alias ?: "") }
+    if (state.initialChannel != null) {
         val scrollState = rememberScrollState()
-        var description by rememberSaveable { mutableStateOf(initialChannel.description ?: "") }
+        var title by rememberSaveable { mutableStateOf(state.initialChannel.title) }
+        var alias by rememberSaveable { mutableStateOf(state.initialChannel.alias) }
+        var description by rememberSaveable { mutableStateOf(state.initialChannel.description) }
         var avatarUri by rememberSaveable { mutableStateOf<Uri?>(null) }
         var avatarAction by rememberSaveable { mutableStateOf(KEEP) }
         var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
@@ -109,7 +107,7 @@ fun EditChannelScreen(
                     title = stringResource(R.string.channel_edit_title),
                     onPopup = onPopup,
                     inProgress = state.isLoading,
-                    complete = state.editedChannel != null,
+                    complete = state.editChannelSuccess,
                     onSubmit = {
                         val input = EditChannelInputState(
                             title = title,
@@ -134,13 +132,13 @@ fun EditChannelScreen(
                     .padding(it)
                     .verticalScroll(scrollState)
             ) {
-                LaunchedEffect(state.editedChannel) {
-                    if (state.editedChannel != null) {
+                LaunchedEffect(state.editChannelSuccess) {
+                    if (state.editChannelSuccess) {
                         snackBarHostState.showSnackbar(
                             message = activity.resources.getString(R.string.channel_edit_success),
                             duration = SnackbarDuration.Long
                         )
-                        onSuccess(state.editedChannel)
+                        onSuccess(state.initialChannel.channelId)
                     }
                 }
                 val titleErrMsg = constructInfoMessage(
@@ -154,10 +152,10 @@ fun EditChannelScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = title != (initialChannel.title),
+                    updated = title != (state.initialChannel.title),
                     empty = title.isEmpty(),
                     onRevert = {
-                        title = initialChannel.title
+                        title = state.initialChannel.title
                     },
                     onDelete = {
                         title = ""
@@ -184,10 +182,10 @@ fun EditChannelScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = alias != (initialChannel.alias ?: ""),
+                    updated = alias != (state.initialChannel.alias),
                     empty = alias.isEmpty(),
                     onRevert = {
-                        alias = initialChannel.alias ?: ""
+                        alias = state.initialChannel.alias
                     },
                     onDelete = {
                         alias = ""
@@ -213,10 +211,10 @@ fun EditChannelScreen(
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = description != (initialChannel.description ?: ""),
+                    updated = description != (state.initialChannel.description),
                     empty = description.isEmpty(),
                     onRevert = {
-                        description = initialChannel.description ?: ""
+                        description = state.initialChannel.description
                     },
                     onDelete = {
                         description = ""
@@ -294,7 +292,7 @@ fun EditChannelScreen(
                                         .size(100.dp)
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop,
-                                    model = initialChannel.avatarUrl,
+                                    model = state.initialChannel.avatar,
                                     contentDescription = title,
                                     onSuccess = {
                                         avatarExists = true
@@ -406,7 +404,7 @@ fun EditChannelScreen(
                                         .height(100.dp)
                                         .clip(RoundedCornerShape(10.dp)),
                                     contentScale = ContentScale.Crop,
-                                    model = initialChannel.coverUrl,
+                                    model = state.initialChannel.cover,
                                     contentDescription = title,
                                     onSuccess = { coverExists = true },
                                     onError = { coverExists = false }

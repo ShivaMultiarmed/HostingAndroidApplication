@@ -11,7 +11,7 @@ data class Video(
     val likes: Long = 0,
     val dislikes: Long = 0,
     val sourceUrl: String? = null,
-    val coverUrl: String? = null
+    val cover: String? = null
 )
 
 data class VideoWithChannel(

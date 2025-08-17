@@ -26,9 +26,7 @@ class CreateChannelViewModel @AssistedInject constructor(
 
     fun createChannel(input: CreateChannelInputState) {
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         val compoundError = validateChannelInput(input)
         if (compoundError == null) {
@@ -43,17 +41,21 @@ class CreateChannelViewModel @AssistedInject constructor(
                     channel = channel,
                     avatar = input.avatar,
                     cover = input.cover
-                ).onSuccess {
-                    _state.value = CreateChannelScreenState(
-                        channel = it,
-                        error = null,
-                        isLoading = false
-                    )
-                }.onFailure {
-                    _state.value = CreateChannelScreenState(
-                        error = it,
-                        isLoading = false
-                    )
+                ).onSuccess { createdChannel ->
+                    _state.update {
+                        it.copy(
+                            channelId = createdChannel.channelId,
+                            error = null,
+                            isLoading = false
+                        )
+                    }
+                }.onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            error = error,
+                            isLoading = false
+                        )
+                    }
                 }
             }
         } else {

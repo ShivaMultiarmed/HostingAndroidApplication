@@ -8,7 +8,6 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoForUser
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
-import java.io.File
 
 interface VideoRepository {
     suspend fun fetchVideoInfo(videoId: Long) : Result<Video, Error>
@@ -44,7 +43,7 @@ interface VideoRepository {
     suspend fun editVideo(
         video: Video,
         coverAction: EditAction,
-        cover: File?
+        cover: String?
     ): Result<Video, Error>
 
     suspend fun downloadVideo(

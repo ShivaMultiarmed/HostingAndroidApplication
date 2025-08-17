@@ -43,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -53,7 +52,6 @@ import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -63,17 +61,15 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.utils.uriToFile
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun VideoEditScreen(
+fun EditVideoScreen(
     modifier: Modifier = Modifier,
-    state: VideoEditScreenState,
+    state: EditVideoScreenState,
     onRefresh: () -> Unit,
     onSubmit: (VideoEditInputState) -> Unit,
-    onSuccess: (Video) -> Unit,
+    onSuccess: (Long) -> Unit,
     onCancel: (Long) -> Unit,
     onVideoNotFound: () -> Unit,
     onAuthenticationRequired: () -> Unit
@@ -92,10 +88,9 @@ fun VideoEditScreen(
         }
     ) { padding ->
         if (state.initialVideo != null) {
-            val video = state.initialVideo
-            val editError = state.updateVideoError
+            val editError = state.editVideoError
             var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-            var title by rememberSaveable { mutableStateOf(video.title) }
+            var title by rememberSaveable { mutableStateOf(state.initialVideo.title) }
             var coverAction by rememberSaveable { mutableStateOf(KEEP) }
             Column(
                 modifier = Modifier
@@ -104,16 +99,17 @@ fun VideoEditScreen(
             ) {
                 TopBar(
                     title = stringResource(R.string.video_edit_title),
-                    onPopup = { onCancel(state.initialVideo.videoId!!) },
+                    onPopup = {
+                        onCancel(state.initialVideo.videoId)
+                    },
                     inProgress = state.isLoading,
-                    complete = state.updatedVideo != null,
+                    complete = state.editConfirmed,
                     onSubmit = {
-                        val coverFile = coverUri?.let { context.uriToFile(it) }
                         onSubmit(
                             VideoEditInputState(
                                 title = title,
                                 coverAction = coverAction,
-                                cover = coverFile
+                                cover = coverUri?.toString()
                             )
                         )
                     }
@@ -219,8 +215,8 @@ fun VideoEditScreen(
                                         .aspectRatio(16f / 9)
                                         .clip(RoundedCornerShape(10.dp)),
                                     contentScale = ContentScale.Crop,
-                                    model = video.coverUrl,
-                                    contentDescription = video.title,
+                                    model = state.initialVideo.cover,
+                                    contentDescription = state.initialVideo.title,
                                     onSuccess = { coverExists = true },
                                     onError = { coverExists = false }
                                 )
@@ -243,7 +239,7 @@ fun VideoEditScreen(
                                 val painter = rememberAsyncImagePainter(model = coverUri)
                                 Image(
                                     painter = painter,
-                                    contentDescription = video.title,
+                                    contentDescription = state.initialVideo.title,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .aspectRatio(16f / 9)
@@ -289,13 +285,13 @@ fun VideoEditScreen(
             }
         }
     }
-    LaunchedEffect(state.updatedVideo) {
-        if (state.updatedVideo != null) {
+    LaunchedEffect(state.editConfirmed) {
+        if (state.editConfirmed) {
             snackBarHostState.showSnackbar(
                 message = context.getString(R.string.video_edit_success),
                 duration = SnackbarDuration.Long
             )
-            onSuccess(state.updatedVideo)
+            onSuccess(state.initialVideo!!.videoId)
         }
     }
     StandardComplexErrorHandler(
@@ -306,32 +302,10 @@ fun VideoEditScreen(
         authenticationRequiredHandler = onAuthenticationRequired
     )
     StandardComplexErrorHandler(
-        error = state.updateVideoError,
+        error = state.editVideoError,
         snackBarHostState = snackBarHostState,
         notFoundMessage = stringResource(R.string.video_not_found),
         notFoundHandler = onVideoNotFound,
         authenticationRequiredHandler = onAuthenticationRequired
     )
-}
-
-@Composable
-@Preview
-fun EditVideoScreenPreview() {
-    VideoHostingTheme {
-        VideoEditScreen(
-            state = VideoEditScreenState(
-                initialVideo = Video(
-                    100500L,
-                    1981L,
-                    "Some video"
-                )
-            ),
-            onSubmit = {},
-            onSuccess = {},
-            onRefresh = {},
-            onCancel = {},
-            onAuthenticationRequired = {},
-            onVideoNotFound = {}
-        )
-    }
 }

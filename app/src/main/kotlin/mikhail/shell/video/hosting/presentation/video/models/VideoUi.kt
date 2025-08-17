@@ -19,7 +19,7 @@ data class VideoUi(
 
 fun Video.toUi() = VideoUi(
     videoId = videoId!!,
-    coverUrl = coverUrl!!,
+    coverUrl = cover!!,
     title = title,
     views = views,
     dateTime = dateTime?.toLocalDateTime(TimeZone.currentSystemDefault())!!
@@ -39,7 +39,7 @@ data class VideoWithChannelUi(
 fun VideoWithChannel.toUi() = VideoWithChannelUi(
     videoId = video.videoId!!,
     videoTitle = video.title,
-    videoCoverUrl = video.coverUrl!!,
+    videoCoverUrl = video.cover!!,
     channelAvatarUrl = channel.avatarUrl!!,
     channelId = channel.channelId!!,
     views = video.views,

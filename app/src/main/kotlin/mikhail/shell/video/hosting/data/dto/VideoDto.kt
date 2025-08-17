@@ -27,7 +27,7 @@ fun Video.toDto() = VideoDto(
     likes = likes,
     dislikes = dislikes,
     sourceUrl = sourceUrl,
-    coverUrl = coverUrl
+    coverUrl = cover
 )
 
 fun VideoDto.toDomain() = Video(
@@ -39,7 +39,7 @@ fun VideoDto.toDomain() = Video(
     likes = likes,
     dislikes = dislikes,
     sourceUrl = sourceUrl,
-    coverUrl = coverUrl
+    cover = coverUrl
 )
 
 data class VideoWithUserDto(

@@ -39,14 +39,19 @@ class UploadVideoViewModel @AssistedInject constructor(
             _getChannelsByOwner(userId).onSuccess { fetchedList ->
                 _state.update {
                     it.copy(
-                        channels = fetchedList,
+                        channels = fetchedList.map {
+                            ChannelOptionUi(
+                                channelId = it.channelId!!,
+                                title = it.title
+                            )
+                        },
                         areChannelsLoading = false
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        channelsLoadingError = error,
+                        loadingChannelsError = error,
                         areChannelsLoading = false
                     )
                 }
@@ -78,7 +83,7 @@ class UploadVideoViewModel @AssistedInject constructor(
         _state.update {
             it.copy(
                 videoValidationSuccess = validationError == null,
-                videoEditingError = validationError
+                videoValidationError = validationError
             )
         }
     }

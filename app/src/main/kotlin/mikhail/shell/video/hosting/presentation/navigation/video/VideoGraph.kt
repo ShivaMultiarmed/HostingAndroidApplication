@@ -20,7 +20,7 @@ fun NavGraphBuilder.videoGraph(
             player = player,
             userDetailsProvider = userDetailsProvider
         )
-        videoEditRoute(navController)
+        editVideoRoute(navController)
         uploadVideoRoute(
             navController = navController,
             userDetailsProvider = userDetailsProvider

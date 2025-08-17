@@ -57,7 +57,6 @@ import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.DE
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_EMPTY
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_EXISTS
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError.TITLE_TOO_LARGE
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
@@ -76,7 +75,7 @@ fun CreateChannelScreen(
     modifier: Modifier = Modifier,
     state: CreateChannelScreenState,
     onSubmit: (CreateChannelInputState) -> Unit,
-    onSuccess: (Channel) -> Unit,
+    onSuccess: (Long) -> Unit,
     onPopup: () -> Unit,
     onAuthenticationRequired: () -> Unit
 ) {
@@ -97,7 +96,7 @@ fun CreateChannelScreen(
                 title = stringResource(R.string.channel_create_title),
                 onPopup = onPopup,
                 inProgress = state.isLoading,
-                complete = state.channel != null,
+                complete = state.channelId != null,
                 onSubmit = {
                     val coverFile = coverUri?.let { context.uriToFile(it) }
                     val avatarFile = avatarUri?.let { context.uriToFile(it) }
@@ -116,13 +115,13 @@ fun CreateChannelScreen(
                 .padding(it)
                 .verticalScroll(scrollState)
         ) {
-            LaunchedEffect(state.channel) {
-                if (state.channel != null) {
+            LaunchedEffect(state.channelId) {
+                if (state.channelId != null) {
                     snackBarHostState.showSnackbar(
                         message = context.getString(R.string.channel_create_success),
                         duration = SnackbarDuration.Long
                     )
-                    onSuccess(state.channel)
+                    onSuccess(state.channelId)
                 }
             }
             val titleErrMsg = constructInfoMessage(

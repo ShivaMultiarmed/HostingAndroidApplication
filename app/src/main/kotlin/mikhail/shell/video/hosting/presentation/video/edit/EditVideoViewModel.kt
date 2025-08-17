@@ -15,16 +15,17 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.isNotEmpty
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError.TITLE_EMPTY
+import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.usecases.videos.EditVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
-import mikhail.shell.video.hosting.domain.usecases.videos.UpdateVideo
 
-@HiltViewModel(assistedFactory = VideoEditViewModel.Factory::class)
-class VideoEditViewModel @AssistedInject constructor(
+@HiltViewModel(assistedFactory = EditVideoViewModel.Factory::class)
+class EditVideoViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
-    private val _editVideo: UpdateVideo,
-    private val _getVideo: GetVideo
+    private val _getVideo: GetVideo,
+    private val _editVideo: EditVideo
 ): ViewModel() {
-    private val _state = MutableStateFlow(VideoEditScreenState())
+    private val _state = MutableStateFlow(EditVideoScreenState())
     val state = _state.asStateFlow()
 
     init {
@@ -33,23 +34,26 @@ class VideoEditViewModel @AssistedInject constructor(
 
     fun loadInitialVideo() {
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         viewModelScope.launch {
             _getVideo(videoId).onSuccess { initialVideo ->
                 _state.update {
                     it.copy(
-                        initialVideo = initialVideo,
+                        initialVideo = EditVideoUi(
+                            videoId = videoId,
+                            title = initialVideo.title,
+                            cover = initialVideo.cover,
+                            channelId = initialVideo.channelId
+                        ),
                         initialVideoError = null,
                         isLoading = false
                     )
                 }
-            }.onFailure { err ->
+            }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        initialVideoError = err,
+                        initialVideoError = error,
                         isLoading = false
                     )
                 }
@@ -66,28 +70,32 @@ class VideoEditViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    updateVideoError = error
+                    editVideoError = error
                 )
             }
         } else {
-            val video = _state.value.initialVideo!!.copy(title = input.title)
+            val video = Video(
+                videoId = videoId,
+                channelId = _state.value.initialVideo!!.channelId,
+                title = input.title
+            )
             viewModelScope.launch {
                 _editVideo(
-                    video,
-                    input.coverAction,
-                    input.cover
+                    video = video,
+                    coverAction = input.coverAction,
+                    cover = input.cover
                 ).onSuccess { updatedVideo ->
                     _state.update {
                         it.copy(
-                            updatedVideo = updatedVideo,
-                            updateVideoError = null,
+                            editConfirmed = true,
+                            editVideoError = null,
                             isLoading = false
                         )
                     }
                 }.onFailure { error ->
                     _state.update {
                         it.copy(
-                            updateVideoError = error,
+                            editVideoError = error,
                             isLoading = false
                         )
                     }
@@ -104,6 +112,6 @@ class VideoEditViewModel @AssistedInject constructor(
     }
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("videoId") videoId: Long): VideoEditViewModel
+        fun create(@Assisted("videoId") videoId: Long): EditVideoViewModel
     }
 }

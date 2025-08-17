@@ -53,9 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
@@ -63,7 +61,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -71,7 +68,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.video.UploadVideoError
-import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
@@ -113,7 +109,7 @@ fun UploadVideoScreen(
         )
     }
     val scrollState = rememberScrollState()
-    val validationError = state.videoEditingError
+    val validationError = state.videoValidationError
     if (state.channels != null) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
@@ -393,7 +389,7 @@ fun UploadVideoScreen(
                             selected = channelId,
                             modifier = Modifier.fillMaxWidth(),
                             placeHolder = stringResource(R.string.video_upload_channel_label),
-                            values = state.channels.associate { it.channelId!! to it.title },
+                            values = state.channels.associate { it.channelId to it.title },
                             onValueChange = {
                                 channelId = it
                             },
@@ -482,7 +478,7 @@ fun UploadVideoScreen(
                 onUpload(input)
             }
         }
-    } else if (state.channelsLoadingError != null) {
+    } else if (state.loadingChannelsError != null) {
         ErrorComponent(
             modifier = Modifier
                 .fillMaxSize()
@@ -497,31 +493,3 @@ fun UploadVideoScreen(
         )
     }
 }
-
-@Composable
-@Preview(
-    name = "Day Theme Upload Video Screen",
-    showBackground = true
-)
-fun UploadVideoScreenPreview() {
-    val player = ExoPlayer.Builder(LocalContext.current)
-        .build()
-    UploadVideoScreen(
-        state = UploadVideoScreenState(
-            channels = listOf(
-                Channel(
-                    channelId = 100500,
-                    ownerId = 100,
-                    title = "Канал №1"
-                )
-            ),
-        ),
-        player = player,
-        onValidate = {},
-        onRefresh = {},
-        onUpload = {},
-        onPopup = {}
-    )
-
-}
-
