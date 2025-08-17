@@ -118,9 +118,12 @@ fun File.toPart(partName: String): MultipartBody.Part {
     )
 }
 
-fun ByteArray.toOctetStream(bytesNumber: Int = this.size): RequestBody {
+fun ByteArray.toRequestBody(
+    bytesNumber: Int = this.size,
+    mimeType: String = "application/octet-stream"
+): RequestBody {
     return toRequestBody(
-        contentType = "application/octet-stream".toMediaTypeOrNull(),
+        contentType = mimeType.toMediaTypeOrNull(),
         byteCount = bytesNumber
     )
 }

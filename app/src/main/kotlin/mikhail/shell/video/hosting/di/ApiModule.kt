@@ -18,7 +18,6 @@ import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.converters.InstantConverter
-import mikhail.shell.video.hosting.data.converters.LocalDateTimeDeserializer
 import mikhail.shell.video.hosting.data.player.TokenInterceptor
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
@@ -29,7 +28,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
-import java.time.LocalDateTime
 import javax.inject.Singleton
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
@@ -83,9 +81,14 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideGson() = GsonBuilder()
-        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
-        .registerTypeAdapter(Instant::class.java, InstantConverter())
+    fun provideInstantConverter() = InstantConverter()
+
+    @Provides
+    @Singleton
+    fun provideGson(
+        instantConverter: InstantConverter
+    ) = GsonBuilder()
+        .registerTypeAdapter(Instant::class.java, instantConverter)
         .create()
 
     @Provides

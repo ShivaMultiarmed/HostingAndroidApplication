@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.webkit.MimeTypeMap
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
@@ -14,8 +13,7 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
-import mikhail.shell.video.hosting.data.utils.toOctetStream
-import mikhail.shell.video.hosting.data.utils.toPart
+import mikhail.shell.video.hosting.data.utils.toRequestBody
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
@@ -32,6 +30,7 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import okhttp3.MultipartBody
 import okio.IOException
 import retrofit2.HttpException
 import java.net.ConnectException
@@ -116,7 +115,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 videoApi.uploadVideoSource(
                     videoId = videoResponse.videoId!!,
                     extension = sourceExtension!!,
-                    source = buffer.toOctetStream(bytesRead)
+                    source = buffer.toRequestBody(bytesNumber = bytesRead)
                 )
                 bytesTransferred += bytesRead
                 val progress = bytesTransferred.toFloat() / sourceSize
@@ -127,7 +126,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 val coverMime = fileProvider.getFileMimeType(coverUri)!!
                 val coverExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(coverMime)!!
                 val coverContent = fileProvider.getFileAsInputStream(coverUri)?.use {
-                    it.readBytes().toOctetStream()
+                    it.readBytes().toRequestBody()
                 }
                 videoApi.uploadVideoCover(
                     videoId = videoResponse.videoId!!,
@@ -178,16 +177,30 @@ class VideoRepositoryWithApi @Inject constructor(
     ) {
         val compoundError = CompoundError<VideoEditingError>()
         val coverPart = cover?.let {
-            val file = it.toUri().toFile()
-            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
-            if (!file.exists()) {
+            val uri = it.toUri()
+            if (!fileProvider.exists(uri)) {
                 compoundError.add(VideoEditingError.COVER_NOT_FOUND)
-            } else if (!mime!!.contains("image")) {
+                return@let null
+            }
+            val mime = fileProvider.getFileMimeType(uri)!!
+            if (!mime.contains("image")) {
                 compoundError.add(VideoEditingError.COVER_TYPE_NOT_VALID)
-            } else if (file.length() > ValidationRules.MAX_IMAGE_SIZE) {
+            }
+            val file = fileProvider.getFileAsInputStream(uri)?.use { it.readBytes() }!!
+            if (file.size > ValidationRules.MAX_IMAGE_SIZE) {
                 compoundError.add(VideoEditingError.COVER_TOO_LARGE)
             }
-            file.toPart("cover")
+            file
+                .takeIf { compoundError.isNotEmpty() }
+                ?.toRequestBody(mimeType = mime)
+                ?.let {
+                    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
+                    MultipartBody.Part.createFormData(
+                        name = "cover",
+                        filename = "cover.$extension",
+                        body = it
+                    )
+                }
         }
         if (compoundError.isNotEmpty()) {
             throw ValidationException(compoundError)
