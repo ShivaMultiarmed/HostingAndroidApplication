@@ -35,8 +35,31 @@ class AuthRepositoryWithApi @Inject constructor(
         authApi.signInWithPassword(email, password)
     }
 
-    override suspend fun signUpWithPassword(
+    override suspend fun requestSignUpWithPassword(userName: String): Result<Unit, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
+            gson.fromJson(json, type) ?: UnexpectedError
+        }
+    ) {
+        authApi.requestSignUpWithPassword(userName)
+    }
+
+    override suspend fun verifySignUpWithPassword(
         userName: String,
+        code: String
+    ): Result<String, Error> = request(
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
+            gson.fromJson(json, type) ?: UnexpectedError
+        }
+    ) {
+        authApi.verifySignUpWithPassword(userName, code)
+    }
+
+    override suspend fun confirmSignUpWithPassword(
+        token: String,
         password: String,
         user: User
     ): Result<AuthModel, Error> = request (
@@ -47,11 +70,11 @@ class AuthRepositoryWithApi @Inject constructor(
         }
     ) {
         val signUpDto = SignUpDto(
-            userName,
-            password,
-            user.toDto()
+            token = token,
+            password = password,
+            userDto = user.toDto()
         )
-        authApi.signUpWithPassword(signUpDto)
+        authApi.confirmSignUpWithPassword(signUpDto)
     }
 
     override suspend fun signOut(): Result<Unit, Error> = request {

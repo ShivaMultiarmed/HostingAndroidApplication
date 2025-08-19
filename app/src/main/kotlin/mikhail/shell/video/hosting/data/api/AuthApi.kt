@@ -12,10 +12,15 @@ interface AuthApi {
         @Query("username") email: String,
         @Query("password") password: String
     ): AuthModel
-    @POST("auth/signup/password")
-    suspend fun signUpWithPassword(
-        @Body signUpDto: SignUpDto
-    ): AuthModel
+    @POST("auth/signup/password/request")
+    suspend fun requestSignUpWithPassword(@Query("userName") userName: String)
+    @POST("auth/signup/password/verify")
+    suspend fun verifySignUpWithPassword(
+        @Query("userName") userName: String,
+        @Query("code") code: String
+    ): String
+    @POST("auth/signup/password/confirm")
+    suspend fun confirmSignUpWithPassword(@Body signUpDto: SignUpDto): AuthModel
     @POST("auth/signout")
     suspend fun signOut()
 }

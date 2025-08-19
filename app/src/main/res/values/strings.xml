@@ -266,4 +266,6 @@
     <string name="authentication_required">Authentication is required</string>
     <string name="channels_not_found">Channels are not found</string>
     <string name="video_not_found">Video was not found</string>
+    <string name="code_not_correct">The code is not correct</string>
+    <string name="code_not_valid">A new code is required</string>
 </resources>

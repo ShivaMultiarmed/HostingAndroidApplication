@@ -3,40 +3,23 @@ package mikhail.shell.video.hosting.domain.usecases.authentication
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError.PASSWORD_NOT_VALID
-import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import javax.inject.Inject
 
-class SignUpWithPassword @Inject constructor(
+class RequestSignUpWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(
-        userName: String,
-        password: String,
-        user: User
-    ): Result<AuthModel, Error> {
+    suspend operator fun invoke(userName: String): Result<Unit, Error> {
         val compoundError = CompoundError<SignUpError>()
         if (userName.length > ValidationRules.MAX_USERNAME_LENGTH) {
             compoundError.add(SignUpError.USERNAME_TOO_LARGE)
         }
-        if (ValidationRules.PASSWORD_REGEX.matches(password)) {
-            compoundError.add(PASSWORD_NOT_VALID)
-        }
-        if (user.nick.length > ValidationRules.MAX_NAME_LENGTH) {
-            compoundError.add(SignUpError.NICK_TOO_LARGE)
-        }
         return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
-            authRepository.signUpWithPassword(
-                userName = userName,
-                password = password,
-                user = user
-            )
+            authRepository.requestSignUpWithPassword(userName)
         }
     }
 }

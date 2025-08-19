@@ -14,5 +14,8 @@ enum class SignUpError: Error {
 
     NICK_EMPTY,
     NICK_TOO_LARGE,
-    NICK_EXISTS
+    NICK_EXISTS,
+
+    CODE_NOT_CORRECT,
+    CODE_NOT_VALID
 }

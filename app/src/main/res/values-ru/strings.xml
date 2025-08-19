@@ -279,4 +279,6 @@
     <string name="authentication_required">Требуется войти в аккаунт</string>
     <string name="channels_not_found">Каналы не найдены</string>
     <string name="video_not_found">Видео не найдено</string>
+    <string name="code_not_correct">Не корректный код</string>
+    <string name="code_not_valid">Нужен новый код</string>
 </resources>

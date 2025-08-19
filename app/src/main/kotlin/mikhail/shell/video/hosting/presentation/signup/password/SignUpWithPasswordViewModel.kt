@@ -15,20 +15,16 @@ import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError.PASS
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError.USERNAME_EMPTY
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError.USERNAME_MALFORMED
 import mikhail.shell.video.hosting.domain.models.User
-import mikhail.shell.video.hosting.domain.usecases.authentication.SignUpWithPassword
+import mikhail.shell.video.hosting.domain.usecases.authentication.RequestSignUpWithPassword
 import mikhail.shell.video.hosting.presentation.signin.password.SignUpInputState
 import javax.inject.Inject
 
 @HiltViewModel
 class SignUpWithPasswordViewModel @Inject constructor(
-    private val _signUpWithPassword: SignUpWithPassword
+    private val _requestSignUpWithPassword: RequestSignUpWithPassword
 ) : ViewModel() {
     private val _state = MutableStateFlow(SignUpWithPasswordState())
     val state = _state.asStateFlow()
-
-    private companion object {
-        private val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
-    }
 
     private fun validateSignUpInput(inputState: SignUpInputState): CompoundError<SignUpError>? {
         val error = CompoundError<SignUpError>()
@@ -60,19 +56,17 @@ class SignUpWithPasswordViewModel @Inject constructor(
                 nick = signUpInputState.nick
             )
             viewModelScope.launch {
-                _signUpWithPassword(
+                _requestSignUpWithPassword(
                     userName = signUpInputState.userName,
                     password = signUpInputState.password,
                     user = user
                 ).onSuccess {
                     _state.value = SignUpWithPasswordState(
-                        authModel = it,
                         error = null,
                         isLoading = false
                     )
                 }.onFailure {
                     _state.value = SignUpWithPasswordState(
-                        authModel = null,
                         error = it,
                         isLoading = false
                     )
@@ -86,5 +80,9 @@ class SignUpWithPasswordViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private companion object {
+        val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
     }
 }

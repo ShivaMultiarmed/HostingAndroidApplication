@@ -9,7 +9,19 @@ sealed class Route {
         @Serializable
         data object SignIn: Route()
         @Serializable
-        data object SignUp: Route()
+        data object SignUp: Route() {
+            @Serializable
+            data object Request: Route()
+            @Serializable
+            data class Verification(val userName: String): Route()
+            @Serializable
+            data class Confirmation(
+                val token: String,
+                val userName: String
+            ): Route()
+        }
+        @Serializable
+        data object ResetPassword: Route()
     }
     @Serializable
     data object User: Route() {
