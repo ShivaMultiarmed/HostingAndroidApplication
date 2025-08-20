@@ -10,6 +10,7 @@ import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
+import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
@@ -70,14 +71,55 @@ class AuthRepositoryWithApi @Inject constructor(
         }
     ) {
         val signUpDto = SignUpDto(
-            token = token,
             password = password,
             userDto = user.toDto()
         )
-        authApi.confirmSignUpWithPassword(signUpDto)
+        authApi.confirmSignUpWithPassword(
+            token = "Bearer $token",
+            signUpDto = signUpDto
+        )
     }
 
     override suspend fun signOut(): Result<Unit, Error> = request {
         authApi.signOut()
+    }
+
+    override suspend fun requestResetPassword(userName: String): Result<Unit, Error> = request(
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+        }
+    ) {
+        authApi.requestResetPassword(userName)
+    }
+
+    override suspend fun verifyResetPassword(
+        userName: String,
+        code: String
+    ): Result<String, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+        }
+    ) {
+        authApi.verifyResetPassword(
+            userName = userName,
+            code = code
+        )
+    }
+
+    override suspend fun confirmResetPassword(
+        token: String,
+        password: String
+    ): Result<Unit, Error> = request (
+        httpExceptionHandler(400) { e ->
+            val json = e.response()?.errorBody()?.string()
+            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+        }
+    ) {
+        authApi.confirmResetPassword(
+            token = token,
+            password = password
+        )
     }
 }

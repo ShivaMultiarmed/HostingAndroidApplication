@@ -4,6 +4,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.resetGraph
+import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signUpGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun NavGraphBuilder.authenticationGraph(
@@ -17,9 +19,10 @@ fun NavGraphBuilder.authenticationGraph(
             navController = navController,
             userDetailsProvider = userDetailsProvider
         )
-        signUpRoute(
+        signUpGraph(
             navController = navController,
             userDetailsProvider = userDetailsProvider
         )
+        resetGraph(navController)
     }
 }

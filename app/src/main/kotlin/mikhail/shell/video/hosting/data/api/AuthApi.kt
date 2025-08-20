@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.api
 import mikhail.shell.video.hosting.data.dto.SignUpDto
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -20,7 +21,22 @@ interface AuthApi {
         @Query("code") code: String
     ): String
     @POST("auth/signup/password/confirm")
-    suspend fun confirmSignUpWithPassword(@Body signUpDto: SignUpDto): AuthModel
+    suspend fun confirmSignUpWithPassword(
+        @Header("Authorization") token: String,
+        @Body signUpDto: SignUpDto
+    ): AuthModel
     @POST("auth/signout")
     suspend fun signOut()
+    @POST("auth/reset/password/request")
+    suspend fun requestResetPassword(@Query("userName") userName: String)
+    @POST("auth/reset/password/verify")
+    suspend fun verifyResetPassword(
+        @Query("userName") userName: String,
+        @Query("code") code: String
+    ): String
+    @POST("auth/reset/password/confirm")
+    suspend fun confirmResetPassword(
+        @Header("Authorization") token: String,
+        @Query("password") password: String
+    )
 }

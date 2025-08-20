@@ -17,5 +17,7 @@ enum class SignUpError: Error {
     NICK_EXISTS,
 
     CODE_NOT_CORRECT,
-    CODE_NOT_VALID
+    CODE_NOT_VALID,
+
+    TOKEN_NOT_VALID
 }

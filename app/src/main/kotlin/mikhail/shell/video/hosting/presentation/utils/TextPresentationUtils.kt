@@ -40,8 +40,7 @@ fun Long.toRoundString(): String {
     }.round(2)
     return if (roundedNumber == toDouble()){
         roundedNumber.toLong().toString()
-    }
-    else {
+    } else {
         if (roundedNumber.hasPortion()) {
             String.format("%.2f", roundedNumber)
         }

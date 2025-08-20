@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password
+package mikhail.shell.video.hosting.presentation.navigation.authentication.reset
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -11,28 +11,27 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpScreen
-import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpViewModel
+import mikhail.shell.video.hosting.presentation.reset.VerifyResetScreen
+import mikhail.shell.video.hosting.presentation.reset.VerifyResetViewModel
 import kotlin.time.Duration.Companion.seconds
 
-fun NavGraphBuilder.verifySignUpRoute(
+fun NavGraphBuilder.verifyResetRoute(
     navController: NavController
 ) {
-    composable<Route.Authentication.SignUp.Verification> {
-        val bundle = it.toRoute<Route.Authentication.SignUp.Verification>()
-        val userName = bundle.userName
-        val viewModel = hiltViewModel<VerifySignUpViewModel>()
+    composable<Route.Authentication.Reset.Verification> {
+        val bundle = it.toRoute<Route.Authentication.Reset.Verification>()
+        val viewModel = hiltViewModel<VerifyResetViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
-        VerifySignUpScreen(
+        VerifyResetScreen(
             state = state,
             onVerify = { code ->
-                viewModel.verify(userName, code)
+                viewModel.verify(bundle.userName, code)
             },
             onSuccess = { token ->
                 coroutineScope.launch {
-                    delay(0.5.seconds)
-                    navController.navigate(Route.Authentication.SignUp.Confirmation(token))
+                    delay(0.8.seconds)
+                    navController.navigate(Route.Authentication.Reset.Confirmation(token))
                 }
             },
             onExpiration = {

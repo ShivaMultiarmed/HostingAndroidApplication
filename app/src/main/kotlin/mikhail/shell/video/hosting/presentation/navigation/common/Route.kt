@@ -15,13 +15,14 @@ sealed class Route {
             @Serializable
             data class Verification(val userName: String): Route()
             @Serializable
-            data class Confirmation(
-                val token: String,
-                val userName: String
-            ): Route()
+            data class Confirmation(val token: String): Route()
         }
         @Serializable
-        data object ResetPassword: Route()
+        data object Reset: Route() {
+            data object Request: Route()
+            data class Verification(val userName: String): Route()
+            data class Confirmation(val token: String): Route()
+        }
     }
     @Serializable
     data object User: Route() {

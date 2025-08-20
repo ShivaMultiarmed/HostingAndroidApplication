@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.signup.password
+package mikhail.shell.video.hosting.presentation.reset
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,8 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -36,8 +35,8 @@ import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandle
 import mikhail.shell.video.hosting.presentation.utils.Title
 
 @Composable
-fun RequestSignUpScreen(
-    state: RequestSignUpScreenState,
+fun RequestResetScreen(
+    state: RequestResetScreenState,
     onRequest: (userName: String) -> Unit,
     onSuccess: (userName: String) -> Unit
 ) {
@@ -62,19 +61,15 @@ fun RequestSignUpScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
             Title(
-                text = stringResource(R.string.sign_up_title)
+                text = stringResource(R.string.reset_password_title)
             )
             var userName by rememberSaveable { mutableStateOf("") }
             val userNameErrorMsg = constructInfoMessage(
-                state.error,
-                mapOf(
-                    SignUpError.USERNAME_EMPTY to stringResource(R.string.user_name_empty_error),
-                    SignUpError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
-                    SignUpError.USERNAME_EXISTS to stringResource(R.string.email_exists_msg_error),
-                    SignUpError.USERNAME_TOO_LARGE to stringResource(
-                        R.string.text_too_large_error,
-                        ValidationRules.MAX_USERNAME_LENGTH
-                    )
+                error = state.error,
+                errorMessages = mapOf(
+                    ResetError.USERNAME_EMPTY to stringResource(R.string.user_name_empty_error),
+                    ResetError.USERNAME_MALFORMED to stringResource(R.string.user_name_malformed),
+                    ResetError.USERNAME_NOT_FOUND to stringResource(R.string.user_name_exists)
                 )
             )
             InputField(
@@ -95,7 +90,7 @@ fun RequestSignUpScreen(
                 onClick = {
                     onRequest(userName)
                 },
-                text = stringResource(R.string.sign_up_main_button)
+                text = stringResource(R.string.go_forward_button)
             )
             StandardComplexErrorHandler(
                 error = state.error,

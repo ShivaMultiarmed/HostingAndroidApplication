@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.signup.password
+package mikhail.shell.video.hosting.presentation.reset
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
+import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.errors.equivalentTo
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
@@ -32,11 +32,11 @@ import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandle
 import mikhail.shell.video.hosting.presentation.utils.Title
 
 @Composable
-fun VerifySignUpScreen(
-    state: VerifySignUpScreenState,
+fun VerifyResetScreen(
+    state: VerifyResetScreenState,
     onVerify: (code: String) -> Unit,
-    onExpiration: () -> Unit,
     onSuccess: (token: String) -> Unit,
+    onExpiration: () -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -45,9 +45,7 @@ fun VerifySignUpScreen(
             .imePadding()
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState
-            )
+            SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
         Column(
@@ -59,18 +57,18 @@ fun VerifySignUpScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
         ) {
             Title(
-                text = stringResource(R.string.sign_up_title)
+                text = stringResource(R.string.reset_password_title)
             )
             var code by rememberSaveable { mutableStateOf("") }
             val codeErrorMsg = constructInfoMessage(
                 error = state.error,
                 errorMessages = mapOf(
-                    SignUpError.CODE_NOT_VALID to stringResource(R.string.code_not_valid)
+                    ResetError.CODE_NOT_VALID to stringResource(R.string.code_not_valid)
                 )
             )
             CodeInputField(
                 isValid = when {
-                    state.error in arrayOf(SignUpError.CODE_NOT_VALID, SignUpError.CODE_NOT_CORRECT) -> false
+                    state.error in arrayOf(ResetError.CODE_NOT_VALID, ResetError.CODE_NOT_CORRECT) -> false
                     state.token != null -> true
                     else -> null
                 },
@@ -96,13 +94,13 @@ fun VerifySignUpScreen(
             }
         }
     }
-    LaunchedEffect(state.error) {
-        if (state.error.equivalentTo(SignUpError.CODE_NOT_VALID)) {
-            onExpiration()
-        }
-    }
     StandardComplexErrorHandler(
         error = state.error,
         snackBarHostState = snackBarHostState
     )
+    LaunchedEffect(state.error) {
+        if (state.error.equivalentTo(ResetError.CODE_NOT_VALID)) {
+            onExpiration()
+        }
+    }
 }

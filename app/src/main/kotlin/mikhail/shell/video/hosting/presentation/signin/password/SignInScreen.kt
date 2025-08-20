@@ -89,7 +89,7 @@ fun SignInScreen(
             val emailErrorMsg = constructInfoMessage(
                 error,
                 mapOf(
-                    SignInError.USERNAME_EMPTY to stringResource(R.string.email_empty_error),
+                    SignInError.USERNAME_EMPTY to stringResource(R.string.user_name_empty_error),
                     SignInError.USERNAME_MALFORMED to stringResource(R.string.email_malformed_error),
                     NetworkError.NOT_FOUND to stringResource(R.string.email_not_found_error)
                 )

@@ -117,7 +117,7 @@
 
     <string name="sign_in_title">Sign in</string>
     <string name="sign_in_success_message">You successfully signed in</string>
-    <string name="email_empty_error">Enter your e-mail</string>
+    <string name="user_name_empty_error">Enter your e-mail</string>
     <string name="email_label">E-mail</string>
     <string name="email_malformed_error">E-mail is malformed</string>
     <string name="email_not_found_error">E-mail is not found</string>
@@ -268,4 +268,10 @@
     <string name="video_not_found">Video was not found</string>
     <string name="code_not_correct">The code is not correct</string>
     <string name="code_not_valid">A new code is required</string>
+    <string name="reset_password_title">Reset password</string>
+    <string name="user_name_malformed">User name is malformed</string>
+    <string name="user_name_exists">User name is already taken</string>
+    <string name="go_forward_button">Next</string>
+    <string name="reset_password_button">OK</string>
+    <string name="reset_password_success">The new password is set</string>
 </resources>

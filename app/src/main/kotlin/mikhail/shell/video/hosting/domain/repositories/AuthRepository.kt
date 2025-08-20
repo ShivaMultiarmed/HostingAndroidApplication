@@ -22,4 +22,10 @@ interface AuthRepository {
     ): Result<AuthModel, Error>
 
     suspend fun signOut(): Result<Unit, Error>
+
+    suspend fun requestResetPassword(userName: String): Result<Unit, Error>
+
+    suspend fun verifyResetPassword(userName: String, code: String): Result<String, Error>
+
+    suspend fun confirmResetPassword(token: String, password: String): Result<Unit, Error>
 }

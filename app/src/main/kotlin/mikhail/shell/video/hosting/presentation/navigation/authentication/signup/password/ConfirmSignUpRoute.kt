@@ -27,9 +27,10 @@ fun NavGraphBuilder.confirmSignUpRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         ConfirmSignUpScreen(
-            token = bundle.token,
             state = state,
-            onConfirm = viewModel::confirm,
+            onConfirm = { input ->
+                viewModel.confirm(bundle.token, input)
+            },
             onSuccess = {
                 coroutineScope.launch {
                     userDetailsProvider.save(
@@ -40,6 +41,13 @@ fun NavGraphBuilder.confirmSignUpRoute(
                     )
                     delay(1.seconds)
                     navController.navigate(Route.Video.Recommendations)
+                }
+            },
+            onExpiration = {
+                coroutineScope.launch {
+                    delay(1.seconds)
+                    navController.popBackStack()
+                    navController.popBackStack()
                 }
             }
         )

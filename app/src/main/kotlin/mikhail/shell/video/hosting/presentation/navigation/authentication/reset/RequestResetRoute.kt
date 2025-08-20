@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password
+package mikhail.shell.video.hosting.presentation.navigation.authentication.reset
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -10,24 +10,24 @@ import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpScreen
-import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpViewModel
+import mikhail.shell.video.hosting.presentation.reset.RequestResetScreen
+import mikhail.shell.video.hosting.presentation.reset.RequestResetViewModel
 import kotlin.time.Duration.Companion.seconds
 
-fun NavGraphBuilder.requestSignUpRoute(
+fun NavGraphBuilder.requestResetRoute(
     navController: NavController
 ) {
-    composable<Route.Authentication.SignUp.Request> {
-        val viewModel = hiltViewModel<RequestSignUpViewModel>()
+    composable<Route.Authentication.Reset.Request> {
+        val viewModel = hiltViewModel<RequestResetViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
-        RequestSignUpScreen(
+        RequestResetScreen(
             state = state,
             onRequest = viewModel::request,
             onSuccess = { userName ->
                 coroutineScope.launch {
-                    delay(0.5.seconds)
-                    navController.navigate(Route.Authentication.SignUp.Verification(userName))
+                    delay(0.8.seconds)
+                    navController.navigate(Route.Authentication.Reset.Verification(userName))
                 }
             }
         )
