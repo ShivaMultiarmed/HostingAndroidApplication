@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.webkit.MimeTypeMap
-import androidx.core.net.toUri
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.ValidationException
@@ -86,8 +85,7 @@ fun unexpectedExceptionHandler(
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
-fun FileProvider.uriToPart(uriString: String, partName: String): MultipartBody.Part {
-    val uri = uriString.toUri()
+fun FileProvider.uriToPart(uri: String, partName: String): MultipartBody.Part {
     val mimeType = getFileMimeType(uri)
     val extension = MimeTypeMap
         .getSingleton()

@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.domain.validation
 
+import kotlin.math.floor
+
 object ValidationRules {
     const val MAX_TITLE_LENGTH = 100
     const val MAX_NAME_LENGTH = 50
@@ -11,3 +13,6 @@ object ValidationRules {
     val PASSWORD_REGEX = Regex("^(?=.*[0-9])(?=.*[^a-zA-Z0-9])\\S{8,20}$")
     val EMAIL_REGEX = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
 }
+
+val Int.mb
+    get() = floor(this.toDouble() / 1024 / 1024).toInt()

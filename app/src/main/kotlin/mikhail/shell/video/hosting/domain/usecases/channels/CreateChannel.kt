@@ -31,7 +31,7 @@ class CreateChannel @Inject constructor(
         return if (compoundError.isNotEmpty()) {
             Result.Failure(compoundError)
         } else {
-            channelRepository.createChannel(channel,avatar,cover)
+            channelRepository.create(channel)
         }
     }
 }

@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.ChannelDto
 import mikhail.shell.video.hosting.data.dto.ChannelWithUserDto
+import mikhail.shell.video.hosting.data.repositories.ChannelCreationRequest
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Subscription
 import okhttp3.MultipartBody
@@ -20,11 +21,11 @@ interface ChannelApi {
         @Path("channelId") channelId: Long
     ): ChannelWithUserDto
     @Multipart
-    @POST("channels/create")
+    @POST("channels")
     suspend fun createChannel(
-        @Part("channel") channelDto: ChannelDto,
-        @Part avatar: MultipartBody.Part?,
-        @Part cover: MultipartBody.Part?
+        @Part("channel") channel: ChannelCreationRequest,
+        @Part logo: MultipartBody.Part?,
+        @Part header: MultipartBody.Part?
     ): ChannelDto
     @Multipart
     @PATCH("channels/edit")
@@ -63,4 +64,8 @@ interface ChannelApi {
     suspend fun removeChannel(
         @Path("channelId") channelId: Long
     )
+    @GET("channels/existence/title")
+    fun existsByTitle(@Query("title") title: String): Boolean
+    @GET("channels/existence/alias")
+    fun existsByAlias(@Query("alias") alias: String): Boolean
 }

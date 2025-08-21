@@ -6,16 +6,11 @@ import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Subscription
-import java.io.File
 
 interface ChannelRepository {
-    suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error>
+    suspend fun existsByTitle(title: String): Result<Boolean, Error>
 
-    suspend fun createChannel(
-        channel: Channel,
-        avatar: File?,
-        cover: File?
-    ): Result<Channel, Error>
+    suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error>
 
     suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error>
 
@@ -38,4 +33,6 @@ interface ChannelRepository {
     suspend fun fetchChannel(channelId: Long): Result<Channel, Error>
 
     suspend fun removeChannel(channelId: Long): Result<Unit, Error>
+    suspend fun existsByAlias(alias: String): Result<Boolean, Error>
+    suspend fun create(channel: Channel, logo: String?, header: String?): Result<Channel, Error>
 }
