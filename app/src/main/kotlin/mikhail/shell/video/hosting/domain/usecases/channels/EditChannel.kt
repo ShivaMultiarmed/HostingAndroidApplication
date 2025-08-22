@@ -1,74 +1,28 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
-import androidx.core.net.toUri
-import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import javax.inject.Inject
 
 class EditChannel @Inject constructor(
-    private val channelRepository: ChannelRepository,
-    private val fileProvider: FileProvider
+    private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(
         channel: Channel,
-        coverAction: EditAction,
-        coverUri: String?,
-        avatarAction: EditAction,
-        avatarUri: String?
+        headerAction: EditAction,
+        header: String?,
+        logoAction: EditAction,
+        logo: String?
     ): Result<Channel, Error> {
-        val error = CompoundError<EditChannelError>()
-        if (channel.title.length > ValidationRules.MAX_TITLE_LENGTH) {
-            error.add(EditChannelError.TITLE_TOO_LARGE)
-        }
-        if ((channel.alias?.length?: 0) > ValidationRules.MAX_TITLE_LENGTH) {
-            error.add(EditChannelError.ALIAS_TOO_LARGE)
-        }
-        if ((channel.description?.length?:0) > ValidationRules.MAX_TEXT_LENGTH) {
-            error.add(EditChannelError.DESCRIPTION_TOO_LARGE)
-        }
-        coverUri?.let {
-            val uri = it.toUri()
-            if (fileProvider.exists(uri)) {
-                if (fileProvider.getFileMimeType(uri)?.contains("image") != true) {
-                    error.add(EditChannelError.COVER_TYPE_NOT_VALID)
-                }
-                if (fileProvider.getFileSize(uri)!! > ValidationRules.MAX_IMAGE_SIZE) {
-                    error.add(EditChannelError.COVER_TOO_LARGE)
-                }
-            } else {
-                error.add(EditChannelError.COVER_NOT_FOUND)
-            }
-        }
-        avatarUri?.let {
-            val uri = it.toUri()
-            if (fileProvider.exists(uri)) {
-                if (fileProvider.getFileMimeType(uri)?.contains("image") != true) {
-                    error.add(EditChannelError.AVATAR_TYPE_NOT_VALID)
-                }
-                if (fileProvider.getFileSize(uri)!! > ValidationRules.MAX_IMAGE_SIZE) {
-                    error.add(EditChannelError.AVATAR_TOO_LARGE)
-                }
-            } else {
-                error.add(EditChannelError.AVATAR_NOT_FOUND)
-            }
-        }
-        return if (error.isNotEmpty()) {
-            Result.Failure(error)
-        } else {
-            channelRepository.editChannel(
-                channel = channel,
-                editCoverAction = coverAction,
-                cover = coverUri,
-                editAvatarAction = avatarAction,
-                avatar = avatarUri
-            )
-        }
+        return channelRepository.editChannel(
+            channel = channel,
+            headerAction = headerAction,
+            header = header,
+            logoAction = logoAction,
+            logo = logo
+        )
     }
 }

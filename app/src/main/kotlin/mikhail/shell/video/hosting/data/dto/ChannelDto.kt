@@ -22,8 +22,8 @@ fun Channel.toDto() = ChannelDto(
     alias = alias,
     description = description,
     subscribers = subscribers,
-    coverUrl = cover,
-    avatarUrl = avatar
+    coverUrl = header,
+    avatarUrl = logo
 )
 
 fun ChannelDto.toDomain() = Channel(
@@ -33,8 +33,8 @@ fun ChannelDto.toDomain() = Channel(
     alias = alias,
     description = description,
     subscribers = subscribers,
-    cover = coverUrl,
-    avatar = avatarUrl
+    header = coverUrl,
+    logo = avatarUrl
 )
 
 data class ChannelWithUserDto(

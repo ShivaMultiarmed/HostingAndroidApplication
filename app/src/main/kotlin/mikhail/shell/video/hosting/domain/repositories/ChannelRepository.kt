@@ -24,15 +24,19 @@ interface ChannelRepository {
 
     suspend fun editChannel(
         channel: Channel,
-        editCoverAction: EditAction,
-        cover: String?,
-        editAvatarAction: EditAction,
-        avatar: String?
+        headerAction: EditAction,
+        header: String?,
+        logoAction: EditAction,
+        logo: String?
     ): Result<Channel, Error>
 
     suspend fun fetchChannel(channelId: Long): Result<Channel, Error>
 
     suspend fun removeChannel(channelId: Long): Result<Unit, Error>
     suspend fun existsByAlias(alias: String): Result<Boolean, Error>
-    suspend fun create(channel: Channel, logo: String?, header: String?): Result<Channel, Error>
+    suspend fun create(
+        channel: Channel,
+        logo: String?,
+        header: String?
+    ): Result<Channel, Error>
 }

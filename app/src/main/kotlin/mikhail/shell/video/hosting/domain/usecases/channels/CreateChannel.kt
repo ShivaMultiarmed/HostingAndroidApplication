@@ -1,37 +1,25 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
-import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
-import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import java.io.File
 import javax.inject.Inject
 
 class CreateChannel @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(
-        channel: Channel,
-        avatar: File?,
-        cover: File?
-    ): Result<Channel, Error> {
-        val compoundError = CompoundError<ChannelCreationError>()
-        if (channel.title.length > ValidationRules.MAX_TITLE_LENGTH) {
-            compoundError.add(ChannelCreationError.TITLE_TOO_LARGE)
-        }
-        if ((channel.alias?.length ?: 0) > ValidationRules.MAX_TITLE_LENGTH) {
-            compoundError.add(ChannelCreationError.ALIAS_TOO_LARGE)
-        }
-        if ((channel.description?.length ?: 0) > ValidationRules.MAX_TEXT_LENGTH) {
-            compoundError.add(ChannelCreationError.DESCRIPTION_TOO_LARGE)
-        }
-        return if (compoundError.isNotEmpty()) {
-            Result.Failure(compoundError)
+    suspend operator fun invoke(channel: Channel, logo: String?, header: String?): Result<Long, Error> {
+        val creationResult = channelRepository.create(
+            channel = channel,
+            logo = logo,
+            header = header
+        )
+        return if (creationResult is Result.Success) {
+            Result.Success(creationResult.data.channelId!!)
         } else {
-            channelRepository.create(channel)
+            creationResult as Result.Failure
+            Result.Failure(creationResult.error)
         }
     }
 }

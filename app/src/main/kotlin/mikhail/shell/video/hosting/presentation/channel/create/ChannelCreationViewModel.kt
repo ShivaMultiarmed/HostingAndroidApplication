@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.channel
+package mikhail.shell.video.hosting.presentation.channel.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,18 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.FileError
-import mikhail.shell.video.hosting.domain.errors.OptionError
-import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.usecases.CreateChannelUseCase
-import mikhail.shell.video.hosting.domain.usecases.ValidateChannelAlias
-import mikhail.shell.video.hosting.domain.usecases.ValidateChannelDescription
-import mikhail.shell.video.hosting.domain.usecases.ValidateChannelTitle
-import mikhail.shell.video.hosting.domain.usecases.ValidateImage
+import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
+import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
+import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelDescription
+import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
+import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
 
 @HiltViewModel
 class ChannelCreationViewModel(
@@ -26,7 +22,7 @@ class ChannelCreationViewModel(
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
     private val validateChannelDescription: ValidateChannelDescription,
-    private val createChannelUseCase: CreateChannelUseCase,
+    private val createChannel: CreateChannel,
     userDetailsProvider: UserDetailsProvider
 ) : ViewModel() {
 
@@ -50,67 +46,64 @@ class ChannelCreationViewModel(
     }
     private suspend fun onAliasChanged(alias: String) {
         _state.update {
-            it.copy(alias = alias)
-        }
-        val validationResult = validateChannelAlias(alias)
-        if (validationResult is Result.Failure) {
-            _state.update {
-                it.copy(aliasError = validationResult.error)
-            }
+            it.copy(
+                alias = alias,
+                aliasError = alias.takeIf { it.isNotEmpty() }?.let {
+                    val validationResult = validateChannelAlias(alias)
+                    if (validationResult is Result.Failure) validationResult.error else null
+                }
+            )
         }
     }
+
     private suspend fun onHeaderChanged(header: String?) {
         _state.update {
-            it.copy(header = header)
-        }
-        if (header != null) {
-            val validationResult = validateImage(header)
-            if (validationResult is Result.Failure) {
-                _state.update {
-                    it.copy(headerError = validationResult.error)
+            it.copy(
+                header = header,
+                headerError = header?.let {
+                    val validationResult = validateImage(header)
+                    if (validationResult is Result.Failure) validationResult.error else null
                 }
-            }
+            )
         }
     }
     private suspend fun onLogoChanged(logo: String?) {
         _state.update {
-            it.copy(logo = logo)
-        }
-        if (logo != null) {
-            val validationResult = validateImage(logo)
-            if (validationResult is Result.Failure) {
-                _state.update {
-                    it.copy(logoError = validationResult.error)
+            it.copy(
+                logo = logo,
+                logoError = logo?.let {
+                    val validationResult = validateImage(logo)
+                    if (validationResult is Result.Failure) validationResult.error else null
                 }
-            }
+            )
         }
     }
     private suspend fun onTitleChanged(title: String) {
         _state.update {
-            it.copy(title = title)
+            it.copy(
+                title = title,
+                titleError = title.let {
+                    val validationResult = validateChannelTitle(title)
+                    if (validationResult is Result.Failure) validationResult.error else null
+                }
+            )
         }
-        val validationResult = validateChannelTitle(title)
-        if (validationResult is Result.Failure) {
-            _state.update {
-                it.copy(titleError = validationResult.error)
-            }
-        }
+
     }
     private suspend fun onDescriptionChanged(description: String) {
         _state.update {
-            it.copy(description = description)
-        }
-        val validationResult = validateChannelDescription(description)
-        if (validationResult is Result.Failure) {
-            _state.update {
-                it.copy(descriptionError = validationResult.error)
-            }
+            it.copy(
+                description = description,
+                descriptionError = description.takeIf { it.isNotEmpty() }?.let {
+                    val validationResult = validateChannelDescription(description)
+                    if (validationResult is Result.Failure) validationResult.error else null
+                }
+            )
         }
     }
     private suspend fun onSubmit() {
         if (_state.value.titleError != null
             || _state.value.aliasError != null
-            || _state.value.ownerError != null
             || _state.value.logoError != null
             || _state.value.headerError != null
             ) {
@@ -119,7 +112,7 @@ class ChannelCreationViewModel(
         _state.update {
             it.copy(isCreating = true)
         }
-        createChannelUseCase(
+        createChannel(
             channel = Channel(
                 title = _state.value.title,
                 alias = _state.value.alias,
@@ -146,33 +139,3 @@ class ChannelCreationViewModel(
             }
     }
 }
-
-sealed class ChannelCreationUiEvent {
-    data class TitleChanged(val title: String) : ChannelCreationUiEvent()
-    data class AliasChanged(val alias: String) : ChannelCreationUiEvent()
-    data class HeaderChanged(val header: String?) : ChannelCreationUiEvent()
-    data class LogoChanged(val logo: String?) : ChannelCreationUiEvent()
-    data class DescriptionChanged(val description: String) : ChannelCreationUiEvent()
-    data object Submit : ChannelCreationUiEvent()
-    data object Cancel: ChannelCreationUiEvent()
-    data class Success(val channelId: Long): ChannelCreationUiEvent()
-    data object AuthenticationRequired: ChannelCreationUiEvent()
-}
-
-data class ChannelCreationScreenState(
-    val title: String = "",
-    val titleError: Error? = null,
-    val owner: Long,
-    val ownerError: OptionError? = null,
-    val alias: String = "",
-    val aliasError: Error? = null,
-    val logo: String? = null,
-    val logoError: FileError? = null,
-    val header: String? = null,
-    val headerError: FileError? = null,
-    val description: String = "",
-    val descriptionError: TextError? = null,
-    val channelId: Long? = null,
-    val isCreating: Boolean = false,
-    val creationError: Error? = null,
-)

@@ -7,8 +7,8 @@ data class Channel(
     val alias: String? = null,
     val description: String? = null,
     val subscribers: Long = 0,
-    val cover: String? = null,
-    val avatar: String? = null
+    val header: String? = null,
+    val logo: String? = null
 )
 data class ChannelForUser(
     val channelId: Long? = null,

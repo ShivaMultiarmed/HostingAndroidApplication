@@ -9,9 +9,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.presentation.channel.ChannelCreationUiEvent
-import mikhail.shell.video.hosting.presentation.channel.ChannelCreationViewModel
-import mikhail.shell.video.hosting.presentation.channel.create.CreateChannelScreen
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationUiEvent
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -22,7 +22,7 @@ fun NavGraphBuilder.createChannelRoute(
         val viewModel = hiltViewModel<ChannelCreationViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
-        CreateChannelScreen(
+        ChannelCreationScreen(
             state = state,
             onEvent = { event ->
                 when (event) {

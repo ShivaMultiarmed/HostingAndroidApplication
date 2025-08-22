@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.channel.edit
 
-import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,11 +35,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,54 +45,39 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_EXISTS
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.ALIAS_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.AVATAR_NOT_FOUND
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.AVATAR_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.AVATAR_TYPE_NOT_VALID
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.COVER_NOT_FOUND
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.COVER_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.COVER_TYPE_NOT_VALID
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.DESCRIPTION_TOO_LARGE
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EMPTY
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_EXISTS
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError.TITLE_TOO_LARGE
+import mikhail.shell.video.hosting.domain.errors.FileError
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_VIDEO_SIZE
+import mikhail.shell.video.hosting.domain.validation.mb
+import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
+import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun EditChannelScreen(
-    state: EditChannelScreenState,
-    onSubmit: (EditChannelInputState) -> Unit,
-    onSuccess: (Long) -> Unit,
-    onPopup: () -> Unit,
-    onChannelNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit
+fun ChannelEditingScreen(
+    state: ChannelEditingScreenState,
+    onEvent: (ChannelEditingUiEvent) -> Unit
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
     val snackBarHostState = remember { SnackbarHostState() }
-    if (state.initialChannel != null) {
+    if (state is ChannelEditingScreenState.Editing) {
         val scrollState = rememberScrollState()
-        var title by rememberSaveable { mutableStateOf(state.initialChannel.title) }
-        var alias by rememberSaveable { mutableStateOf(state.initialChannel.alias) }
-        var description by rememberSaveable { mutableStateOf(state.initialChannel.description) }
-        var avatarUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-        var avatarAction by rememberSaveable { mutableStateOf(KEEP) }
-        var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
-        var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-        var coverAction by rememberSaveable { mutableStateOf(KEEP) }
-        var coverExists by rememberSaveable { mutableStateOf(null as Boolean?) }
+
+        val initial = state.initialChannel
+        val current = state.editedChannel
+
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,20 +85,13 @@ fun EditChannelScreen(
             topBar = {
                 TopBar(
                     title = stringResource(R.string.channel_edit_title),
-                    onPopup = onPopup,
+                    onPopup = {
+                        onEvent(ChannelEditingUiEvent.Cancel)
+                    },
                     inProgress = state.isLoading,
-                    complete = state.editChannelSuccess,
+                    complete = !state.isLoading && state.error == null,
                     onSubmit = {
-                        val input = EditChannelInputState(
-                            title = title,
-                            alias = alias,
-                            description = description,
-                            cover = coverUri.toString(),
-                            editCoverAction = coverAction,
-                            avatar = avatarUri.toString(),
-                            editAvatarAction = avatarAction
-                        )
-                        onSubmit(input)
+                        onEvent(ChannelEditingUiEvent.Submit)
                     }
                 )
             },
@@ -132,92 +105,86 @@ fun EditChannelScreen(
                     .padding(it)
                     .verticalScroll(scrollState)
             ) {
-                LaunchedEffect(state.editChannelSuccess) {
-                    if (state.editChannelSuccess) {
+                LaunchedEffect(state.error, state.isLoading) {
+                    if (state.error == null && !state.isLoading) {
                         snackBarHostState.showSnackbar(
                             message = activity.resources.getString(R.string.channel_edit_success),
                             duration = SnackbarDuration.Long
                         )
-                        onSuccess(state.initialChannel.channelId)
+                        onEvent(ChannelEditingUiEvent.Success)
                     }
                 }
-                val titleErrMsg = constructInfoMessage(
-                    state.editedChannelError,
-                    mapOf(
-                        TITLE_EMPTY to stringResource(R.string.text_empty_error),
-                        TITLE_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
-                        TITLE_EXISTS to stringResource(R.string.channel_title_exists_error)
-                    )
-                )
+                val titleErrMsg = when(current.titleError) {
+                    TextError.EMPTY -> stringResource(R.string.text_empty_error)
+                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
+                    else -> null
+                }
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = title != (state.initialChannel.title),
-                    empty = title.isEmpty(),
+                    updated = current.title != (initial.title),
+                    empty = current.title.isEmpty(),
                     onRevert = {
-                        title = state.initialChannel.title
+                        onEvent(ChannelEditingUiEvent.TitleChanged(initial.title))
                     },
                     onDelete = {
-                        title = ""
+                        onEvent(ChannelEditingUiEvent.TitleChanged(""))
                     }
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
                         icon = Icons.Rounded.Title,
-                        value = title,
+                        value = current.title,
                         onValueChange = {
-                            title = it
+                            onEvent(ChannelEditingUiEvent.TitleChanged(it))
                         },
                         placeholder = stringResource(R.string.channel_title_label),
                         errorMsg = titleErrMsg
                     )
                 }
-                val aliasErrMsg = constructInfoMessage(
-                    state.editedChannelError,
-                    mapOf(
-                        ALIAS_TOO_LARGE to stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH),
-                        ALIAS_EXISTS to stringResource(R.string.channel_alias_exists_error)
-                    )
-                )
+                val aliasErrMsg = when (current.aliasError) {
+                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
+                    else -> null
+                }
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = alias != (state.initialChannel.alias),
-                    empty = alias.isEmpty(),
+                    updated = current.alias != (initial.alias),
+                    empty = current.alias.isEmpty(),
                     onRevert = {
-                        alias = state.initialChannel.alias
+                        onEvent(ChannelEditingUiEvent.AliasChanged(initial.alias))
                     },
                     onDelete = {
-                        alias = ""
+                        onEvent(ChannelEditingUiEvent.AliasChanged(""))
                     },
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
                         icon = Icons.Rounded.AlternateEmail,
-                        value = alias,
+                        value = current.alias,
                         onValueChange = {
-                            alias = it
+                            onEvent(ChannelEditingUiEvent.AliasChanged(it))
                         },
                         placeholder = stringResource(R.string.channel_alias_label),
                         errorMsg = aliasErrMsg
                     )
                 }
-                val descriptionErrMsg = constructInfoMessage(
-                    state.editedChannelError,
-                    mapOf(
-                        DESCRIPTION_TOO_LARGE to stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
-                    )
-                )
+                val descriptionErrMsg = when (current.descriptionError) {
+                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
+                    else -> null
+                }
                 StandardEditField(
                     modifier = Modifier,
                     firstTime = false,
-                    updated = description != (state.initialChannel.description),
-                    empty = description.isEmpty(),
+                    updated = current.description != initial.description,
+                    empty = current.description.isEmpty(),
                     onRevert = {
-                        description = state.initialChannel.description
+                        onEvent(ChannelEditingUiEvent.DescriptionChanged(initial.description))
                     },
                     onDelete = {
-                        description = ""
+                        onEvent(ChannelEditingUiEvent.DescriptionChanged(""))
                     }
                 ) {
                     InputField(
@@ -225,54 +192,49 @@ fun EditChannelScreen(
                             .fillMaxWidth()
                             .height(300.dp),
                         icon = Icons.Rounded.DensityMedium,
-                        value = description,
+                        value = current.description,
                         onValueChange = {
-                            description = it
+                            onEvent(ChannelEditingUiEvent.DescriptionChanged(it))
                         },
                         placeholder = stringResource(R.string.channel_description_label),
                         maxLines = 50,
                         errorMsg = descriptionErrMsg
                     )
                 }
-                val avatarPicker =
+                val logoPicker =
                     rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                         if (it != null) {
-                            avatarUri = it
-                            avatarAction = UPDATE
+                            onEvent(ChannelEditingUiEvent.LogoChanged(it.toString(), UPDATE))
                         }
                     }
-                val avatarErrMsg = constructInfoMessage(
-                    state.editedChannelError,
-                    mapOf(
-                        AVATAR_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_VIDEO_SIZE / 1024 / 1024} MB"),
-                        AVATAR_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                        AVATAR_NOT_FOUND to stringResource(R.string.file_not_found_error)
-                    )
-                )
+                val logoErrMsg = when(current.logoError) {
+                    FileError.EMPTY -> stringResource(R.string.file_not_found_error)
+                    FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_VIDEO_SIZE.mb} MB")
+                    FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                    else -> null
+                }
                 Column {
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = avatarAction == UPDATE || avatarAction == REMOVE && avatarExists == true,
-                        empty = !(avatarUri != null || avatarExists == true && avatarAction != REMOVE),
+                        updated = current.logoAction == UPDATE || current.logoAction == REMOVE && initial.logoExists == true,
+                        empty = !(current.logo != null || initial.logoExists == true && current.logoAction != REMOVE),
                         onRevert = {
-                            avatarUri = null
-                            avatarAction = KEEP
+                            onEvent(ChannelEditingUiEvent.LogoChanged(null, KEEP))
                         },
                         onDelete = {
-                            avatarUri = null
-                            avatarAction = REMOVE
+                            onEvent(ChannelEditingUiEvent.LogoChanged(null, REMOVE))
                         }
                     ) {
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Person,
-                            placeholder = if (avatarUri == null) stringResource(R.string.channel_avatar_choose_label)
+                            placeholder = if (current.logo == null) stringResource(R.string.channel_avatar_choose_label)
                             else stringResource(R.string.channel_avatar_choose_another_label),
                             onClick = {
-                                avatarPicker.launch("image/*")
+                                logoPicker.launch("image/*")
                             },
-                            errorMsg = avatarErrMsg
+                            errorMsg = logoErrMsg
                         )
                     }
                     FlowRow(
@@ -280,7 +242,7 @@ fun EditChannelScreen(
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterHorizontally)
                     ) {
-                        if (avatarExists != false) {
+                        if (initial.logoExists != false) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -292,28 +254,28 @@ fun EditChannelScreen(
                                         .size(100.dp)
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop,
-                                    model = state.initialChannel.avatar,
-                                    contentDescription = title,
+                                    model = state.initialChannel.logo,
+                                    contentDescription = current.title,
                                     onSuccess = {
-                                        avatarExists = true
+                                        onEvent(ChannelEditingUiEvent.LogoExists(true))
                                     },
                                     onError = {
-                                        avatarExists = false
+                                        onEvent(ChannelEditingUiEvent.LogoExists(false))
                                     }
                                 )
                             }
                         }
-                        if (avatarUri != null) {
+                        if (current.logo != null) {
                             Column (
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
                                     text = stringResource(R.string.channel_chosen_avatar_message)
                                 )
-                                val painter = rememberAsyncImagePainter(model = avatarUri)
+                                val painter = rememberAsyncImagePainter(model = current.logo)
                                 Image(
                                     painter = painter,
-                                    contentDescription = title,
+                                    contentDescription = current.title,
                                     modifier = Modifier
                                         .size(100.dp)
                                         .clip(CircleShape),
@@ -322,7 +284,7 @@ fun EditChannelScreen(
                             }
                         }
                     }
-                    if (avatarExists == true && avatarAction == REMOVE) {
+                    if (initial.logoExists == true && current.logoAction == REMOVE) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -334,45 +296,40 @@ fun EditChannelScreen(
                     }
                 }
 
-                val coverPicker =
+                val headerPicker =
                     rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                         if (it != null) {
-                            coverUri = it
-                            coverAction = UPDATE
+                            onEvent(ChannelEditingUiEvent.HeaderChanged(it.toString(), UPDATE))
                         }
                     }
-                val coverErrMsg = constructInfoMessage(
-                    state.editedChannelError,
-                    mapOf(
-                        COVER_TOO_LARGE to stringResource(R.string.file_too_large_error, "${ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024} MB"),
-                        COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                        COVER_NOT_FOUND to stringResource(R.string.file_not_found_error)
-                    )
-                )
+                val headerErrMsg = when(current.headerError) {
+                    FileError.EMPTY -> stringResource(R.string.file_not_found_error)
+                    FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
+                    FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                    else -> null
+                }
                 Column {
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = coverAction == UPDATE || coverAction == REMOVE && coverExists == true,
-                        empty = !(coverUri != null || coverExists == true && coverAction != REMOVE),
+                        updated = current.headerAction == UPDATE || current.headerAction == REMOVE && initial.headerExists == true,
+                        empty = !(current.header != null || initial.headerExists == true && current.headerAction != REMOVE),
                         onRevert = {
-                            coverUri = null
-                            coverAction = KEEP
+                            onEvent(ChannelEditingUiEvent.LogoChanged(null, KEEP))
                         },
                         onDelete = {
-                            coverUri = null
-                            coverAction = REMOVE
+                            onEvent(ChannelEditingUiEvent.LogoChanged(null, REMOVE))
                         }
                     ) {
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Wallpaper,
-                            placeholder = if (coverUri == null) stringResource(R.string.channel_choose_cover_label)
+                            placeholder = if (current.header == null) stringResource(R.string.channel_choose_cover_label)
                             else stringResource(R.string.channel_choose_another_cover_label),
                             onClick = {
-                                coverPicker.launch("image/*")
+                                headerPicker.launch("image/*")
                             },
-                            errorMsg = coverErrMsg
+                            errorMsg = headerErrMsg
                         )
                     }
                     FlowRow(
@@ -384,7 +341,7 @@ fun EditChannelScreen(
                             Alignment.CenterHorizontally
                         ),
                     ) {
-                        if (coverExists != false) {
+                        if (initial.headerExists != false) {
                             Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -404,14 +361,18 @@ fun EditChannelScreen(
                                         .height(100.dp)
                                         .clip(RoundedCornerShape(10.dp)),
                                     contentScale = ContentScale.Crop,
-                                    model = state.initialChannel.cover,
-                                    contentDescription = title,
-                                    onSuccess = { coverExists = true },
-                                    onError = { coverExists = false }
+                                    model = state.initialChannel.header,
+                                    contentDescription = current.title,
+                                    onSuccess = {
+                                        onEvent(ChannelEditingUiEvent.HeaderExists(true))
+                                    },
+                                    onError = {
+                                        onEvent(ChannelEditingUiEvent.HeaderExists(true))
+                                    }
                                 )
                             }
                         }
-                        if (coverUri != null) {
+                        if (current.header != null) {
                             Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -425,10 +386,10 @@ fun EditChannelScreen(
                                 Text(
                                     text = stringResource(R.string.channel_chosen_cover_message)
                                 )
-                                val painter = rememberAsyncImagePainter(model = coverUri)
+                                val painter = rememberAsyncImagePainter(model = current.header)
                                 Image(
                                     painter = painter,
-                                    contentDescription = title,
+                                    contentDescription = current.title,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(100.dp)
@@ -437,7 +398,7 @@ fun EditChannelScreen(
                                 )
                             }
                         }
-                        if (coverExists == true && coverAction == REMOVE) {
+                        if (initial.headerExists == true && current.headerAction == REMOVE) {
                             Text(
                                 text = stringResource(R.string.channel_delete_cover_warning)
                             )
@@ -446,19 +407,29 @@ fun EditChannelScreen(
                 }
             }
         }
+    } else if (state is ChannelEditingScreenState.Initializing) {
+        if (state.error != null) {
+            ErrorComponent(
+                modifier = Modifier.fillMaxSize(),
+                onRetry = {
+                    onEvent(ChannelEditingUiEvent.Retry)
+                }
+            )
+            StandardComplexErrorHandler(
+                error = state.error,
+                snackBarHostState = snackBarHostState,
+                notFoundMessage = stringResource(R.string.channel_not_found),
+                notFoundHandler = {
+                    onEvent(ChannelEditingUiEvent.Cancel)
+                },
+                authenticationRequiredHandler = {
+                    onEvent(ChannelEditingUiEvent.AuthenticationRequired)
+                }
+            )
+        } else {
+            LoadingComponent(
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
-    StandardComplexErrorHandler(
-        error = state.initialChannelError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.channel_not_found),
-        notFoundHandler = onChannelNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
-    StandardComplexErrorHandler(
-        error = state.editedChannelError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.channel_not_found),
-        notFoundHandler = onChannelNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
 }

@@ -46,8 +46,6 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.mb
-import mikhail.shell.video.hosting.presentation.channel.ChannelCreationScreenState
-import mikhail.shell.video.hosting.presentation.channel.ChannelCreationUiEvent
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
@@ -57,16 +55,15 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(UnstableApi::class)
 @Composable
-fun CreateChannelScreen(
-    modifier: Modifier = Modifier,
+fun ChannelCreationScreen(
     state: ChannelCreationScreenState,
     onEvent: (ChannelCreationUiEvent) -> Unit
 ) {
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-    Scaffold (
-        modifier = modifier
+    Scaffold(
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
@@ -101,15 +98,19 @@ fun CreateChannelScreen(
                     onEvent(ChannelCreationUiEvent.Success(state.channelId))
                 }
             }
-            val titleErrMsg = when(state.titleError) {
+            val titleErrMsg = when (state.titleError) {
                 TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                TextError.LARGE -> stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
+                TextError.LARGE -> stringResource(
+                    R.string.text_too_large_error,
+                    ValidationRules.MAX_TITLE_LENGTH
+                )
+
                 TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
                 else -> null
             }
-            EditField (
+            EditField(
                 actionItems = if (state.title.isNotEmpty()) listOf(
-                    DeletingItem (
+                    DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.TitleChanged("")) }
                     )
                 ) else emptyList()
@@ -126,13 +127,17 @@ fun CreateChannelScreen(
                 )
             }
             val aliasErrMsg = when (state.aliasError) {
-                TextError.LARGE -> stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
+                TextError.LARGE -> stringResource(
+                    R.string.text_too_large_error,
+                    ValidationRules.MAX_TITLE_LENGTH
+                )
+
                 TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
                 else -> null
             }
-            EditField (
+            EditField(
                 actionItems = if (state.alias.isNotEmpty()) listOf(
-                    DeletingItem (
+                    DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.AliasChanged("")) }
                     )
                 ) else emptyList()
@@ -152,9 +157,9 @@ fun CreateChannelScreen(
                 TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                 else -> null
             }
-            EditField (
+            EditField(
                 actionItems = if (state.description.isNotEmpty()) listOf(
-                    DeletingItem (
+                    DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.DescriptionChanged("")) }
                     )
                 ) else emptyList()
@@ -173,20 +178,25 @@ fun CreateChannelScreen(
                     errorMsg = descriptionErrMsg
                 )
             }
-            val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                if (it != null) {
-                    onEvent(ChannelCreationUiEvent.LogoChanged(it.toString()))
+            val logoPicker =
+                rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+                    if (it != null) {
+                        onEvent(ChannelCreationUiEvent.LogoChanged(it.toString()))
+                    }
                 }
-            }
-            val logoErrorMsg = when(state.logoError) {
+            val logoErrorMsg = when (state.logoError) {
                 FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error, (MAX_IMAGE_SIZE.mb).toString() + " MB")
+                FileError.LARGE -> stringResource(
+                    R.string.file_too_large_error,
+                    (MAX_IMAGE_SIZE.mb).toString() + " MB"
+                )
+
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 else -> null
             }
-            EditField (
+            EditField(
                 actionItems = if (state.logo != null) listOf(
-                    DeletingItem (
+                    DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.LogoChanged(null)) }
                     )
                 ) else emptyList()
@@ -203,7 +213,7 @@ fun CreateChannelScreen(
                 )
             }
             if (state.logo != null) {
-                Column (
+                Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -221,20 +231,25 @@ fun CreateChannelScreen(
                     )
                 }
             }
-            val headerPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                if (it != null) {
-                    onEvent(ChannelCreationUiEvent.HeaderChanged(it.toString()))
+            val headerPicker =
+                rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+                    if (it != null) {
+                        onEvent(ChannelCreationUiEvent.HeaderChanged(it.toString()))
+                    }
                 }
-            }
-            val headerErrorMsg = when(state.headerError) {
+            val headerErrorMsg = when (state.headerError) {
                 FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
+                FileError.LARGE -> stringResource(
+                    R.string.file_too_large_error,
+                    "${MAX_IMAGE_SIZE.mb} MB"
+                )
+
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 else -> null
             }
-            EditField (
+            EditField(
                 actionItems = if (state.header != null) listOf(
-                    DeletingItem (
+                    DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.HeaderChanged(null)) }
                     )
                 ) else emptyList()
@@ -253,7 +268,7 @@ fun CreateChannelScreen(
                 )
             }
             if (state.header != null) {
-                Column (
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp),
@@ -275,12 +290,12 @@ fun CreateChannelScreen(
                 }
             }
         }
+        StandardComplexErrorHandler(
+            error = state.creationError,
+            snackBarHostState = snackBarHostState,
+            authenticationRequiredHandler = {
+                onEvent(ChannelCreationUiEvent.AuthenticationRequired)
+            }
+        )
     }
-    StandardComplexErrorHandler(
-        error = state.creationError,
-        snackBarHostState = snackBarHostState,
-        authenticationRequiredHandler = {
-            onEvent(ChannelCreationUiEvent.AuthenticationRequired)
-        }
-    )
 }

@@ -1,19 +1,12 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.toDomain
-import mikhail.shell.video.hosting.data.dto.toDto
-import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
-import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.channel.EditChannelError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -25,7 +18,6 @@ import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
     private val channelApi: ChannelApi,
-    private val gson: Gson,
     private val fcm: FirebaseMessaging,
     private val fileProvider: FileProvider
 ) : ChannelRepository {
@@ -94,31 +86,33 @@ class ChannelRepositoryWithApi @Inject constructor(
 
     override suspend fun editChannel(
         channel: Channel,
-        editCoverAction: EditAction,
-        cover: String?,
-        editAvatarAction: EditAction,
-        avatar: String?
-    ): Result<Channel, Error> = request(
-        httpExceptionHandler(400) { e ->
-            val responseBody = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<EditChannelError>>() {}.type
-            gson.fromJson<CompoundError<EditChannelError>>(responseBody, type) ?: UnexpectedError
+        headerAction: EditAction,
+        header: String?,
+        logoAction: EditAction,
+        logo: String?
+    ): Result<Channel, Error> = request {
+        val coverPart = header?.let {
+            fileProvider.uriToPart(
+                uri = it,
+                partName = "cover"
+            )
         }
-    ) {
-        val coverPart = if (editCoverAction == EditAction.UPDATE) fileProvider.uriToPart(
-            cover!!,
-            "cover"
-        ) else null
-        val avatarPart = if (editAvatarAction == EditAction.UPDATE) fileProvider.uriToPart(
-            avatar!!,
-            "avatar"
-        ) else null
+        val avatarPart = logo?.let {
+            fileProvider.uriToPart(
+                uri = it,
+                partName = "avatar"
+            )
+        }
         channelApi.editChannel(
-            channelDto = channel.toDto(),
+            channel = ChannelEditingRequest(
+                title = channel.title,
+                alias = channel.alias,
+                description = channel.description,
+                headerAction = headerAction,
+                logoAction = logoAction
+            ),
             avatar = avatarPart,
-            cover = coverPart,
-            editCoverAction = editCoverAction,
-            editAvatarAction = editAvatarAction
+            cover = coverPart
         ).toDomain()
     }
 
@@ -135,4 +129,12 @@ data class ChannelCreationRequest(
     val title: String,
     val alias: String?,
     val description: String?
+)
+
+data class ChannelEditingRequest(
+    val title: String,
+    val alias: String?,
+    val description: String?,
+    val headerAction: EditAction,
+    val logoAction: EditAction
 )

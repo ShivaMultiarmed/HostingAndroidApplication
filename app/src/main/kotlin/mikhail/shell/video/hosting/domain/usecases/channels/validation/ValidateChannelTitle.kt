@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain.usecases
+package mikhail.shell.video.hosting.domain.usecases.channels.validation
 
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
