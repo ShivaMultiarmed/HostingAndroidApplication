@@ -5,8 +5,10 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 
-class UnsubscribeFromChannelNotifications @Inject constructor(
+class SubscribeToNotifications @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(): Result<Unit, Error> = channelRepository.unsubscribeFromNotifications()
+    suspend operator fun invoke(): Result<Unit, Error> {
+        return channelRepository.subscribeToNotifications()
+    }
 }

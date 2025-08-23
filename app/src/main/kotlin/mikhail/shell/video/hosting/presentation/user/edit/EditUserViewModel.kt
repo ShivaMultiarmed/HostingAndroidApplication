@@ -24,7 +24,7 @@ class EditUserViewModel @AssistedInject constructor(
     private val _editUser: EditUser,
     private val _removeUser: RemoveUser
 ) : ViewModel() {
-    private val _state = MutableStateFlow(EditUserScreenState())
+    private val _state = MutableStateFlow(UserEditingScreenState())
     val state = _state.asStateFlow()
 
     init {

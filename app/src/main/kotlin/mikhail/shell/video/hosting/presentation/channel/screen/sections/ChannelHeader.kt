@@ -56,6 +56,7 @@ import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenUiEvent
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
@@ -68,9 +69,7 @@ import kotlin.math.roundToInt
 fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onSubscription: (Subscription) -> Unit,
-    onEdit: (channelId: Long) -> Unit = {},
-    onRemove: (channelId: Long) -> Unit = {},
+    onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
     onShowAvatar: () -> Unit
 ) {
@@ -83,9 +82,7 @@ fun ChannelHeader(
             hasCover = hasCover,
             coverUrlAssignment = { hasCover = it },
             channel = channel,
-            onSubscription = onSubscription,
-            onEdit = onEdit,
-            onRemove = onRemove,
+            onEvent = onEvent,
             owns = owns,
             onShowAvatar = onShowAvatar
         )
@@ -93,9 +90,7 @@ fun ChannelHeader(
         ChannelHeaderMedium(
             modifier = modifier,
             channel = channel,
-            onSubscription = onSubscription,
-            onEdit = onEdit,
-            onRemove = onRemove,
+            onEvent = onEvent,
             owns = owns,
             onShowAvatar = onShowAvatar
         )
@@ -105,9 +100,7 @@ fun ChannelHeader(
             hasCover = hasCover,
             coverUrlAssignment = { hasCover = it },
             channel = channel,
-            onSubscription = onSubscription,
-            onEdit = onEdit,
-            onRemove = onRemove,
+            onEvent = onEvent,
             owns = owns,
             onShowAvatar = onShowAvatar
         )
@@ -120,9 +113,7 @@ fun ChannelHeaderCompact(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onSubscription: (Subscription) -> Unit,
-    onEdit: (channelId: Long) -> Unit = {},
-    onRemove: (channelId: Long) -> Unit = {},
+    onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
     onShowAvatar: () -> Unit = {}
 ) {
@@ -165,8 +156,12 @@ fun ChannelHeaderCompact(
                 if (owns) {
                     ChannelActionsButton(
                         channelId = channel.channelId,
-                        onEdit = onEdit,
-                        onRemove = onRemove
+                        onEdit = {
+                            onEvent(ChannelScreenUiEvent.Edit)
+                        },
+                        onRemove = {
+                            onEvent(ChannelScreenUiEvent.Remove)
+                        }
                     )
                 }
             }
@@ -179,7 +174,9 @@ fun ChannelHeaderCompact(
         SubscriptionButton(
             modifier = Modifier.fillMaxWidth(),
             state = channel.subscription,
-            onSubscription = onSubscription
+            onSubscription = {
+                onEvent(ChannelScreenUiEvent.Subscribe(it))
+            }
         )
     }
 }
@@ -189,9 +186,7 @@ fun ChannelHeaderCompact(
 fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onSubscription: (Subscription) -> Unit,
-    onEdit: (channelId: Long) -> Unit = {},
-    onRemove: (channelId: Long) -> Unit = {},
+    onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
     onShowAvatar: () -> Unit = {}
 ) {
@@ -223,8 +218,12 @@ fun ChannelHeaderMedium(
                 if (owns) {
                     ChannelActionsButton(
                         channelId = channel.channelId!!,
-                        onEdit = onEdit,
-                        onRemove = onRemove
+                        onEdit = {
+                            onEvent(ChannelScreenUiEvent.Edit)
+                        },
+                        onRemove = {
+                            onEvent(ChannelScreenUiEvent.Remove)
+                        }
                     )
                 }
             }
@@ -237,7 +236,9 @@ fun ChannelHeaderMedium(
                 bottom.linkTo(parent.bottom)
             },
             state = channel.subscription,
-            onSubscription = onSubscription
+            onSubscription = {
+                onEvent(ChannelScreenUiEvent.Subscribe(it))
+            }
         )
     }
 }
@@ -248,11 +249,9 @@ fun ChannelHeaderExpanded(
     hasCover: Boolean?,
     coverUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onSubscription: (Subscription) -> Unit,
-    onEdit: (channelId: Long) -> Unit = {},
-    onRemove: (channelId: Long) -> Unit = {},
+    onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
-    onShowAvatar: () -> Unit = {}
+    onShowAvatar: () -> Unit
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
@@ -306,14 +305,20 @@ fun ChannelHeaderExpanded(
                 ChannelAlias(alias = channel.alias)
                 SubscriptionButton(
                     state = channel.subscription,
-                    onSubscription = onSubscription
+                    onSubscription = {
+                        onEvent(ChannelScreenUiEvent.Subscribe(it))
+                    }
                 )
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
                     ChannelActionsButton(
                         channelId = channel.channelId!!,
-                        onEdit = onEdit,
-                        onRemove = onRemove
+                        onEdit = {
+                            onEvent(ChannelScreenUiEvent.Edit)
+                        },
+                        onRemove = {
+                            onEvent(ChannelScreenUiEvent.Remove)
+                        }
                     )
                 }
             }

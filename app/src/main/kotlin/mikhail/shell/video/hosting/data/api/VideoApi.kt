@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
+import mikhail.shell.video.hosting.data.repositories.VideoUploadingRequest
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
@@ -26,10 +27,7 @@ interface VideoApi {
     @GET("videos/{videoId}")
     suspend fun fetchVideo(@Path("videoId") videoId: Long) : VideoDto
     @GET("videos/{videoId}/details")
-    suspend fun fetchVideoDetails(
-        @Path("videoId") videoId: Long,
-        @Query("userId") userId: Long
-    ) : VideoDetailsDto
+    suspend fun fetchVideoDetails(@Path("videoId") videoId: Long) : VideoDetailsDto
     @PATCH("videos/{videoId}/rate")
     suspend fun rateVideo(
         @Path("videoId") videoId: Long,
@@ -47,14 +45,12 @@ interface VideoApi {
         @Query("partNumber") partNumber: Long,
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>
-    @POST("videos/upload/details")
-    suspend fun uploadVideoDetails(@Body video: VideoDto): VideoDto
-    @POST("videos/upload/{videoId}/cover")
-    suspend fun uploadVideoCover(
-        @Path("videoId") videoId: Long,
-        @Query("extension") extension: String,
-        @Body cover: RequestBody
-    )
+    @Multipart
+    @POST("videos/upload")
+    suspend fun uploadVideoDetails(
+        @Part("video") video: VideoUploadingRequest,
+        @Part cover: MultipartBody.Part?
+    ): VideoDto
     @POST("videos/upload/{videoId}/source")
     suspend fun uploadVideoSource(
         @Path("videoId") videoId: Long,

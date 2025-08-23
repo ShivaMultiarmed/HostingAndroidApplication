@@ -4,11 +4,17 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 
-data class ProfileScreenState(
-    val user: UserUi? = null,
+sealed class ProfileScreenState {
+    data object Loading: ProfileScreenState()
+    data class Success(
+        val user: UserUi,
+        val channelState: OwnedChannelsState
+    ): ProfileScreenState()
+    data class Failure(val error: Error): ProfileScreenState()
+}
+
+data class OwnedChannelsState(
     val channels: List<ChannelUi>? = null,
-    val userError: Error? = null,
     val channelError: Error? = null,
-    val isLoading: Boolean = false,
-    val isSignedOut: Boolean? = null
+    val hasMore: Boolean = true
 )

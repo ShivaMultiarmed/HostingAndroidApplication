@@ -13,12 +13,16 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.models.Action
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment
@@ -40,7 +44,6 @@ import mikhail.shell.video.hosting.presentation.video.models.toUi
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
-    @Assisted("userId") private val userId: Long,
     @Assisted("videoId") private val videoId: Long,
     @Assisted("player") val player: Player,
     private val _getVideoDetails: GetVideoDetails,
@@ -54,62 +57,74 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val _observeComments: ObserveComments,
     private val _unobserveComments: UnobserveComments
 ) : ViewModel() {
-    private val _state = MutableStateFlow(VideoScreenState())
-    val state = _state.asStateFlow()
+    private val _state = MutableStateFlow<VideoScreenState>(VideoScreenState.Loading)
+    val state = _state
+        .onStart {
+            load()
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(3000),
+            initialValue = _state.value
+        )
+
     private var _collectCommentsJob: Job? = null
 
-    init {
-        loadVideo()
+    fun onEvent(event: VideoScreenUiEvent) {
+        when (event) {
+            VideoScreenUiEvent.CloseComments -> unobserve()
+            is VideoScreenUiEvent.Like -> rate(event.liking)
+            VideoScreenUiEvent.OpenComments -> {
+                getComments(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()))
+                observe()
+            }
+            VideoScreenUiEvent.Reload -> load()
+            VideoScreenUiEvent.Remove -> remove()
+            is VideoScreenUiEvent.SaveComment -> saveComment(
+                commentId = event.commentId,
+                text = event.text
+            )
+            is VideoScreenUiEvent.Subscribe -> subscribe(event.subscription)
+            else -> Unit
+        }
     }
 
     @OptIn(UnstableApi::class)
-    fun loadVideo() {
-        _state.update {
-            it.copy(
-                isLoading = true
-            )
-        }
+    private fun load() {
         viewModelScope.launch {
-            _getVideoDetails(
-                videoId,
-                userId
-            ).onSuccess { videoDetails ->
-                _state.update {
-                    it.copy(
-                        videoDetails = videoDetails.toUi(),
-                        isLoading = false,
-                        loadingError = null,
-                        isViewed = true
-                    )
+            _getVideoDetails(videoId)
+                .onSuccess { videoDetails ->
+                    _state.update {
+                        VideoScreenState.Success(
+                            video = videoDetails.toUi(),
+                            isViewed = false
+                        )
+                    }
+                    val url = videoDetails.video.sourceUrl
+                    val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
+                    if (url != previousUri) {
+                        val uri = url!!.toUri()
+                        val mediaItem = MediaItem.fromUri(uri)
+                        player.setMediaItem(mediaItem)
+                        player.prepare()
+                        player.play()
+                        incrementViews()
+                    }
+                }.onFailure { error ->
+                    _state.update {
+                        VideoScreenState.Failure(error)
+                    }
                 }
-                val url = _state.value.videoDetails?.sourceUrl
-                val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
-                if (url != previousUri) {
-                    val uri = url!!.toUri()
-                    val mediaItem = MediaItem.fromUri(uri)
-                    player.setMediaItem(mediaItem)
-                    player.prepare()
-                    player.play()
-                    incrementViews()
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        loadingError = error
-                    )
-                }
-            }
         }
     }
 
-    fun incrementViews() {
+    private fun incrementViews() {
         viewModelScope.launch {
             _incrementViews(videoId)
                 .onSuccess { video ->
                     _state.update {
+                        it as VideoScreenState.Success
                         it.copy(
-                            videoDetails = it.videoDetails!!.copy(
+                            video = it.video?.copy(
                                 views = video.views
                             )
                         )
@@ -118,45 +133,40 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun subscribe(subscription: Subscription) {
-        _state.update {
-            it.copy(isLoading = true)
-        }
+    private fun subscribe(subscription: Subscription) {
         viewModelScope.launch {
             _subscribe(
-                channelId = state.value.videoDetails!!.channelId,
+                channelId = (_state.value as VideoScreenState.Success).video!!.videoId,
                 subscription = subscription
             ).onSuccess { channel ->
                 _state.update {
+                    it as VideoScreenState.Success
                     it.copy(
-                        videoDetails = it.videoDetails?.copy(
+                        video = it.video!!.copy(
                             subscription = channel.subscription,
                             subscribers = channel.subscribers
                         ),
-                        isLoading = false,
-                        loadingError = null
+                        subscriptionError = null
                     )
                 }
             }.onFailure { error ->
                 _state.update {
-                    it.copy(
-                        isLoading = false,
-                        loadingError = error
-                    )
+                    (it as VideoScreenState.Success).copy(subscriptionError = error)
                 }
             }
         }
     }
 
-    fun rate(liking: Liking) {
+    private fun rate(liking: Liking) {
         viewModelScope.launch {
             _rateVideo(
-                videoId = state.value.videoDetails!!.videoId,
+                videoId = (_state.value as VideoScreenState.Success).video!!.videoId,
                 liking = liking
             ).onSuccess { video ->
-                _state.update { screenState ->
-                    screenState.copy(
-                        videoDetails = screenState.videoDetails!!.copy(
+                _state.update {
+                    it as VideoScreenState.Success
+                    it.copy(
+                        video = it.video!!.copy(
                             likes = video.likes,
                             dislikes = video.dislikes,
                             liking = liking
@@ -165,163 +175,153 @@ class VideoScreenViewModel @AssistedInject constructor(
                     )
                 }
             }.onFailure { error ->
-                _state.update { screenState ->
-                    screenState.copy(likingError = error)
+                _state.update {
+                    it as VideoScreenState.Success
+                    it.copy(likingError = error)
                 }
             }
         }
     }
 
-    fun deleteVideo() {
-        _state.update {
-            it.copy(
-                isLoading = true
-            )
-        }
+    private fun remove() {
         viewModelScope.launch {
-            _deleteVideo(videoId).onSuccess {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        videoDetails = null
-                    )
+            _deleteVideo(videoId)
+                .onSuccess {
+                    _state.update {
+                        VideoScreenState.Removed
+                    }
                 }
-            }.onFailure {
-                _state.update {
-                    it.copy(
-                        isLoading = false
-                    )
-                }
-            }
         }
     }
 
-    fun saveComment(commentId: Long?, text: String) {
-        if (text.isNotEmpty()) {
-            val comment = Comment(
-                commentId = commentId,
-                videoId = videoId,
-                userId = userId,
-                dateTime = null,
-                text = text
-            )
-            _state.update {
-                it.copy(
-                    isLoading = true
+    private fun saveComment(
+        commentId: Long? = null,
+        text: String
+    ) {
+        viewModelScope.launch {
+            _saveComment(
+                Comment(
+                    commentId = commentId,
+                    videoId = videoId,
+                    userId = 0,
+                    text = text
                 )
-            }
-            viewModelScope.launch {
-                _saveComment(comment).onSuccess {
+            )
+                .onSuccess {
                     _state.update {
-                        it.copy(commentError = null)
-                    }
-                }.onFailure { error ->
-                    _state.update {
-                        it.copy(commentError = error)
+                        it as VideoScreenState.Success
+                        it.copy(commentsState = it.commentsState!!.copy(error = null))
                     }
                 }
-            }
+                .onFailure { error ->
+                    _state.update {
+                        it as VideoScreenState.Success
+                        it.copy(commentsState = it.commentsState!!.copy(error = error))
+                    }
+                }
         }
+
     }
 
-    fun removeComment(commentId: Long) {
+    private fun removeComment(commentId: Long) {
         viewModelScope.launch {
             _removeComment(commentId)
                 .onSuccess {
                     _state.update {
-                        it.copy(commentError = null)
+                        it as VideoScreenState.Success
+                        it.copy(commentsState = it.commentsState!!.copy(error = null))
                     }
                 }.onFailure { error ->
                     _state.update {
-                        it.copy(commentError = error)
+                        it as VideoScreenState.Success
+                        it.copy(commentsState = it.commentsState!!.copy(error = error))
                     }
                 }
         }
     }
 
-    fun getComments(before: LocalDateTime) {
-        _state.update {
-            it.copy(isLoading = true)
-        }
+    private fun getComments(before: LocalDateTime) {
         viewModelScope.launch {
             _getComments(
                 before = before.toInstant(TimeZone.currentSystemDefault()),
                 videoId = videoId
-            ).onSuccess { commentsWithUsers ->
+            ).onSuccess { comments ->
                 _state.update {
+                    it as VideoScreenState.Success
                     it.copy(
-                        commentError = null,
-                        comments = ((it.comments ?: listOf()) + commentsWithUsers.map { it.toUi() }).distinct()
+                        commentsState = it.commentsState!!.copy(
+                            error = null,
+                            comments = ((it.commentsState.comments ?: listOf()) + comments.map { it.toUi() }).distinct()
+                        ),
                     )
                 }
-            }.onFailure { err ->
+            }.onFailure { error ->
                 _state.update {
+                    it as VideoScreenState.Success
                     it.copy(
-                        commentError = err
+                        commentsState = it.commentsState!!.copy(
+                            error = error
+                        )
                     )
                 }
             }
         }
     }
 
-    fun observeComments() {
+    private fun observe() {
         _collectCommentsJob = viewModelScope.launch {
-            _observeComments(videoId).collect(::handleCommentAction)
+            _observeComments(videoId).collect(::handleComment)
         }
     }
 
-    fun unobserveComments() {
+    private fun unobserve() {
         _state.update {
-            it.copy(
-                comments = null
-            )
+            (it as VideoScreenState.Success).copy(commentsState = null)
         }
         _collectCommentsJob?.cancel()
         _unobserveComments(videoId)
     }
 
-    private fun handleCommentAction(actionModel: ActionModel<CommentWithUser>) {
-        val action = actionModel.action
+    private fun handleComment(actionModel: ActionModel<CommentWithUser>) {
         val commentModel = actionModel.model.toUi()
-        if (commentModel.userId == userId) {
-            _state.update {
-                it.copy(
-                    actionComment = ActionModel(action, commentModel)
+        _state.update {
+            it as VideoScreenState.Success
+            it.copy(
+                commentsState = it.commentsState!!.copy(
+                    comments = when (actionModel.action) {
+                        Action.ADD -> listOf(commentModel) + (it.commentsState.comments ?: listOf())
+                        Action.REMOVE -> it.commentsState.comments?.filter { it.commentId != commentModel.commentId }
+                        Action.UPDATE -> {
+                            val currentPosition = it.commentsState.comments?.indexOfFirst { it.commentId == commentModel.commentId }
+                            it.commentsState.comments?.toMutableList().also { it?.set(currentPosition!!, commentModel) }?.toList()
+                        }
+                    }
                 )
-            }
-        }
-        when (actionModel.action) {
-            Action.ADD -> {
-                _state.update {
-                    it.copy(comments = listOf(commentModel) + (it.comments ?: listOf()))
-                }
-            }
-
-            Action.REMOVE -> {
-                _state.update {
-                    it.copy(comments = it.comments?.filter { it.commentId != commentModel.commentId })
-                }
-            }
-
-            Action.UPDATE -> {
-                _state.update {
-                    val currentPosition =
-                        it.comments?.indexOfFirst { it.commentId == commentModel.commentId }
-                    it.copy(
-                        comments = it.comments?.toMutableList()
-                            .also { it?.set(currentPosition!!, commentModel) }?.toList()
-                    )
-                }
-            }
+            )
         }
     }
-
     @AssistedFactory
     interface Factory {
         fun create(
-            @Assisted("userId") userId: Long,
             @Assisted("videoId") videoId: Long,
             @Assisted("player") player: Player
         ): VideoScreenViewModel
     }
+}
+
+sealed class VideoScreenUiEvent {
+    data object Reload: VideoScreenUiEvent()
+    data class Like(val liking: Liking): VideoScreenUiEvent()
+    data class Subscribe(val subscription: Subscription): VideoScreenUiEvent()
+    data object DownLoad: VideoScreenUiEvent()
+    data object Share: VideoScreenUiEvent()
+    data object Remove: VideoScreenUiEvent()
+    data object Edit: VideoScreenUiEvent()
+    data object OpenChannel: VideoScreenUiEvent()
+    data object OpenComments: VideoScreenUiEvent()
+    data object CloseComments: VideoScreenUiEvent()
+    data class OpenProfile(val userId: Long): VideoScreenUiEvent()
+    data class SaveComment(val commentId: Long?, val text: String): VideoScreenUiEvent()
+    data class RemoveComment(val commentId: Long): VideoScreenUiEvent()
+    data object ReachedBottom: VideoScreenUiEvent()
 }

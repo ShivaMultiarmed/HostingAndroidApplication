@@ -4,13 +4,18 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
-data class ChannelScreenState(
-    val channel: ChannelForUserUi? = null,
+sealed class ChannelScreenState {
+    data object Loading: ChannelScreenState()
+    data class Success(
+        val channel: ChannelForUserUi,
+        val videoState: VideoListState
+    ): ChannelScreenState()
+    data class Failure(val error: Error): ChannelScreenState()
+    data object Removed: ChannelScreenState()
+}
+data class VideoListState(
     val videos: List<VideoUi>? = null,
-    val isChannelLoading: Boolean = false,
-    val areVideosLoading: Boolean = false,
-    val channelLoadingError: Error? = null,
-    val videosLoadingError: Error? = null,
-    val areAllVideosLoaded: Boolean = false,
-    val nextPartNumber: Long = 0
+    val hasMore: Boolean = true,
+    val isLoading: Boolean = true,
+    val error: Error? = null
 )

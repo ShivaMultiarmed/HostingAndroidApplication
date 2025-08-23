@@ -1,21 +1,13 @@
 package mikhail.shell.video.hosting.domain.usecases.comments
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.comment.CommentError
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import javax.inject.Inject
 
 class SaveComment @Inject constructor(
     private val commentRepository: CommentRepository
 ) {
-    suspend operator fun invoke(comment: Comment): Result<Unit, Error> {
-        return if (comment.text.length > ValidationRules.MAX_TEXT_LENGTH) {
-            Result.Failure(CommentError.TEXT_TOO_LARGE)
-        } else {
-            commentRepository.send(comment)
-        }
-    }
+    suspend operator fun invoke(comment: Comment): Result<Unit, Error> = commentRepository.send(comment)
 }

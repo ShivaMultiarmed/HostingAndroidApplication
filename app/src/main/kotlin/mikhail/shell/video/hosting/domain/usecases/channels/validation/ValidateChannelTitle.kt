@@ -4,17 +4,17 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 import javax.inject.Inject
 
 class ValidateChannelTitle @Inject constructor(
+    private val validateTitle: ValidateTitle,
     private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(title: String): Result<Unit, Error> {
-        return if (title.isEmpty()) {
-            Result.Failure(TextError.EMPTY)
-        } else if (title.length > ValidationRules.MAX_TITLE_LENGTH) {
-            Result.Failure(TextError.LARGE)
+        val localResult = validateTitle(title)
+        return if (localResult is Result.Failure) {
+            Result.Failure(localResult.error)
         } else {
             val exists = channelRepository.existsByTitle(title)
             if (exists is Result.Success) {

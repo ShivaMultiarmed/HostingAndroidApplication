@@ -10,13 +10,13 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
+import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
     private val _signInWithPassword: SignInWithPassword,
-    private val _subscribeToChannelNotifications: SubscribeToChannelNotifications
+    private val _subscribeToNotifications: SubscribeToNotifications
 ) : ViewModel() {
     private val _state = MutableStateFlow(SignInWithPasswordState())
     val state = _state.asStateFlow()
@@ -76,7 +76,7 @@ class SignInWithPasswordViewModel @Inject constructor(
     }
     fun subscribeToNotifications() {
         viewModelScope.launch {
-            _subscribeToChannelNotifications()
+            _subscribeToNotifications()
         }
     }
 }

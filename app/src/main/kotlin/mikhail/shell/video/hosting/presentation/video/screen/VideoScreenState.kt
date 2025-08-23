@@ -5,14 +5,21 @@ import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.presentation.models.CommentUi
 import mikhail.shell.video.hosting.presentation.video.models.VideoDetailsUi
 
-data class VideoScreenState(
-    val videoDetails: VideoDetailsUi? = null,
-    val isLoading: Boolean = false,
-    val isViewed: Boolean = false,
-    val loadingError: Error? = null,
+sealed class VideoScreenState {
+    data object Loading: VideoScreenState()
+    data class Success(
+        val video: VideoDetailsUi,
+        val isViewed: Boolean = false,
+        val likingError: Error? = null,
+        val subscriptionError: Error? = null,
+        val commentsState: CommentsState? = null
+    ): VideoScreenState()
+    data class Failure(val error: Error): VideoScreenState()
+    data object Removed: VideoScreenState()
+}
+
+data class CommentsState(
     val comments: List<CommentUi>? = null,
-    val actionComment: ActionModel<CommentUi>? = null,
-    val commentError: Error? = null,
-    val likingError: Error? = null,
-    val subscriptionError: Error? = null
+    val action: ActionModel<CommentUi>? = null,
+    val error: Error? = null
 )

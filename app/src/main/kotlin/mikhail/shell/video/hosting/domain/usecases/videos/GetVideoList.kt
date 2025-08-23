@@ -11,7 +11,6 @@ class GetVideoList @Inject constructor(
 ) {
     suspend operator fun invoke(
         channelId: Long,
-        userId: Long,
         partNumber: Long,
         partSize: Int
     ): Result<List<Video>, Error> = repository.fetchChannelVideoList(

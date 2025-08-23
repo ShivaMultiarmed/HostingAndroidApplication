@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 interface VideoRepository {
     suspend fun fetchVideoInfo(videoId: Long) : Result<Video, Error>
 
-    suspend fun fetchVideoDetails(videoId: Long, userId: Long): Result<VideoWithChannelForUser, Error>
+    suspend fun fetchVideoDetails(videoId: Long): Result<VideoWithChannelForUser, Error>
 
     suspend fun rateVideo(videoId: Long, liking: Liking) : Result<VideoForUser, Error>
 
@@ -32,8 +32,8 @@ interface VideoRepository {
         video: Video,
         source: String,
         cover: String?,
-        onVideoCreated: (Video) -> Unit = {},
-        onProgress: (Float) -> Unit = {}
+        onVideoCreated: (Video) -> Unit,
+        onProgress: (Float) -> Unit
     ): Result<Video, Error>
 
     suspend fun incrementViews(videoId: Long): Result<Video, Error>

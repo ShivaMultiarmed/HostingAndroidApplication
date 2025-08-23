@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
-import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelDescription
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
 
@@ -21,7 +21,7 @@ class ChannelCreationViewModel(
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
-    private val validateChannelDescription: ValidateChannelDescription,
+    private val validateDescription: ValidateDescription,
     private val createChannel: CreateChannel,
     userDetailsProvider: UserDetailsProvider
 ) : ViewModel() {
@@ -95,7 +95,7 @@ class ChannelCreationViewModel(
             it.copy(
                 description = description,
                 descriptionError = description.takeIf { it.isNotEmpty() }?.let {
-                    val validationResult = validateChannelDescription(description)
+                    val validationResult = validateDescription(description)
                     if (validationResult is Result.Failure) validationResult.error else null
                 }
             )

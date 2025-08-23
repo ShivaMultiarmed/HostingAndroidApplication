@@ -13,8 +13,8 @@ class UploadVideo @Inject constructor(
         video: Video,
         source: String,
         cover: String?,
-        onVideoCreated: (Video) -> Unit = {},
-        onProgress: (Float) -> Unit = {}
+        onVideoCreated: (Video) -> Unit,
+        onProgress: (Float) -> Unit
     ): Result<Video, Error> = videoRepository.uploadVideo(
         video = video,
         source = source,

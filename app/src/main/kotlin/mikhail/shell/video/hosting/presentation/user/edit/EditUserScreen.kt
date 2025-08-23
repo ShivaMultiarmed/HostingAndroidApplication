@@ -79,7 +79,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @Composable
 fun EditUserScreen(
-    state: EditUserScreenState,
+    state: UserEditingScreenState,
     userId: Long,
     onInitialize: () -> Unit = {},
     onEdit: (EditUserInputState) -> Unit = {},

@@ -7,13 +7,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.usecases.channels.LoadSubscriptionChannels
+import mikhail.shell.video.hosting.domain.usecases.channels.GetSubscriptions
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import javax.inject.Inject
 
 @HiltViewModel
 class SubscriptionsScreenViewModel @Inject constructor(
-    private val _loadSubscriptionChannels: LoadSubscriptionChannels
+    private val _getSubscriptions: GetSubscriptions
 ) : ViewModel() {
     private val _state = MutableStateFlow(SubscriptionsScreenState())
     val state get() = _state.asStateFlow()
@@ -27,7 +27,7 @@ class SubscriptionsScreenViewModel @Inject constructor(
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            _loadSubscriptionChannels()
+            _getSubscriptions()
                 .onSuccess { fetchedChannels ->
                     _state.update {
                         it.copy(

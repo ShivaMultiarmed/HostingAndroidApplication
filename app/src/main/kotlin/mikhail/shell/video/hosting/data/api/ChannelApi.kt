@@ -39,7 +39,7 @@ interface ChannelApi {
         @Path("userId") userId: Long
     ): List<ChannelDto>
     @GET("channels/subscriptions")
-    suspend fun getChannelsBySubscriber(): List<ChannelDto>
+    suspend fun getSubscriptions(): List<ChannelDto>
     @PATCH("channels/{channelId}/subscribe")
     suspend fun subscribe(
         @Path("channelId") channelId: Long,

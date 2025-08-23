@@ -17,7 +17,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
-import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelDescription
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
 
@@ -28,7 +28,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
-    private val validateChannelDescription: ValidateChannelDescription,
+    private val validateDescription: ValidateDescription,
     private val editChannel: EditChannel
 ) : ViewModel() {
 
@@ -150,7 +150,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                 editedChannel = it.editedChannel.copy(
                     description = description,
                     descriptionError = description.takeIf { it.isNotEmpty() }?.let {
-                        val validationResult = validateChannelDescription(it)
+                        val validationResult = validateDescription(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
                 )

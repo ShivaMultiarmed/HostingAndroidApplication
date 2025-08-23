@@ -4,15 +4,15 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.UnsubscribeFromChannelNotifications
+import mikhail.shell.video.hosting.domain.usecases.channels.UnsubscribeFromNotifications
 import javax.inject.Inject
 
 class SignOut @Inject constructor(
     private val authRepository: AuthRepository,
-    private val unsubscribeFromChannelNotifications: UnsubscribeFromChannelNotifications
+    private val unsubscribeFromNotifications: UnsubscribeFromNotifications
 ) {
     suspend operator fun invoke(): Result<Unit, Error> {
-        val unsubscribeSuccess = unsubscribeFromChannelNotifications() is Result.Success
+        val unsubscribeSuccess = unsubscribeFromNotifications() is Result.Success
         val signOutSuccess = authRepository.signOut() is Result.Success
         return if (unsubscribeSuccess && signOutSuccess) {
             Result.Success(Unit)

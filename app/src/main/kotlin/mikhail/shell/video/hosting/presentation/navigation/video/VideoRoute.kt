@@ -19,10 +19,14 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenState
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 fun NavGraphBuilder.videoRoute(
@@ -40,48 +44,45 @@ fun NavGraphBuilder.videoRoute(
         val videoId = videoRouteInfo.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
-        val videoScreenViewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-            factory.create(userId, videoId, player)
-        }
-        val state by videoScreenViewModel.state.collectAsStateWithLifecycle()
+        val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
+        val state by viewModel.state.collectAsStateWithLifecycle()
         VideoScreen(
-            userId = userId,
+            owns = userId == (state as? VideoScreenState.Success)?.video?.ownerId,
             state = state,
             player = player,
-            onRefresh = videoScreenViewModel::loadVideo,
-            onRate = videoScreenViewModel::rate,
-            onSubscribe = videoScreenViewModel::subscribe,
-            onChannelLinkClick = {
-                navController.navigate(Route.Channel.View(it))
-            },
-            onDelete = {
-                videoScreenViewModel.deleteVideo()
-                coroutineScope.launch {
-                    delay(1000)
-                    navController.navigate(Route.User)
-                }
-            },
-            onUpdate = {
-                coroutineScope.launch {
-                    delay(1000)
-                    navController.navigate(Route.Video.Edit(it))
-                }
-            },
-            onComment = videoScreenViewModel::saveComment,
-            onLoadComments = videoScreenViewModel::getComments,
-            onObserve = videoScreenViewModel::observeComments,
-            onUnobserve = videoScreenViewModel::unobserveComments,
-            onRemoveComment = videoScreenViewModel::removeComment,
-            onGoToProfile = {
-                navController.navigate(Route.User.Profile(it))
-            },
-            onShare = { videoId ->
-                Intent(Intent.ACTION_SEND).apply {
-                    setType("text/plain")
-                    putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/$videoId")
-                    context.startActivity(
-                        Intent.createChooser(this, context.getString(R.string.video_share))
-                    )
+            onEvent = {
+                when (it) {
+                    VideoScreenUiEvent.Edit -> navController.navigate(Route.Video.Edit(videoId))
+                    VideoScreenUiEvent.OpenChannel -> {
+                        val channelId = (state as? VideoScreenState.Success)?.video?.channelId!!
+                        navController.navigate(Route.Channel.View(channelId))
+                    }
+                    is VideoScreenUiEvent.OpenProfile -> navController.navigate(Route.User.Profile(it.userId))
+                    VideoScreenUiEvent.Remove -> {
+                        coroutineScope.launch {
+                            viewModel.onEvent(it)
+                            delay(0.8.seconds)
+                            navController.navigate(Route.User)
+                        }
+                    }
+                    VideoScreenUiEvent.Share -> {
+                        Intent(Intent.ACTION_SEND).apply {
+                            setType("text/plain")
+                            putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/$videoId")
+                            context.startActivity(
+                                Intent.createChooser(this, context.getString(R.string.video_share))
+                            )
+                        }
+                    }
+                    VideoScreenUiEvent.DownLoad -> {
+                        Intent(context, VideoDownloadingService::class.java).also {
+                            it.action =
+                                "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
+                            it.putExtra("videoId", videoId)
+                            context.startService(it)
+                        }
+                    }
+                    else -> viewModel.onEvent(it)
                 }
             },
             onVideoNotFound = {

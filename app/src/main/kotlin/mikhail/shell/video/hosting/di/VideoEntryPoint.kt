@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
+import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 
@@ -23,7 +23,7 @@ interface VideoUploadingEntryPoint {
 @InstallIn(SingletonComponent::class)
 interface NotificationEntryPoint {
     fun getFirebaseMessaging(): FirebaseMessaging
-    fun getResubscribe(): SubscribeToChannelNotifications
+    fun getResubscribe(): SubscribeToNotifications
     fun getUserDetailsProvider(): UserDetailsProvider
     fun getCommentRepository(): CommentRepository
     fun getGson(): Gson

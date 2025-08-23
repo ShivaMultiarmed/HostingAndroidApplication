@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -31,103 +30,98 @@ import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 
-
 @Composable
 fun ChannelScreen(
     state: ChannelScreenState,
-    onRefresh: () -> Unit,
-    onSubscription: (Subscription) -> Unit,
-    onVideoClick: (Long) -> Unit,
-    onScrollToBottom: () -> Unit,
-    onEdit: (channelId: Long) -> Unit = {},
-    onRemove: (channelId: Long) -> Unit = {},
-    onChannelNotFound: () -> Unit = {},
-    onAuthenticationRequired: () -> Unit = {},
+    onEvent: (ChannelScreenUiEvent) -> Unit,
+    onChannelNotFound: () -> Unit,
+    onAuthenticationRequired: () -> Unit,
     owns: Boolean = false
 ) {
-    Box (
+    val snackBarHostState = remember { SnackbarHostState() }
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        val snackBarHostState = remember { SnackbarHostState() }
-        Scaffold (
+            .background(MaterialTheme.colorScheme.background),
+        snackbarHost = {
+            SnackbarHost(hostState = snackBarHostState)
+        }
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            snackbarHost = {
-                SnackbarHost(hostState = snackBarHostState)
-            }
-        ) { padding ->
-            Box(
-                modifier = Modifier.fillMaxSize()
-                    .padding(padding)
-            ) {
-                if (state.channel != null && state.videos != null) {
-                    var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
-                    Column (
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        ChannelHeader(
-                            modifier = Modifier.padding(10.dp),
-                            channel = state.channel,
-                            onSubscription = onSubscription,
-                            onEdit = onEdit,
-                            onRemove = onRemove,
-                            owns = owns,
-                            onShowAvatar = {
-                                shouldShowAvatar = true
-                            }
-                        )
+                .padding(padding)
+        ) {
+            if (state is ChannelScreenState.Success) {
+                var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    ChannelHeader(
+                        modifier = Modifier.padding(10.dp),
+                        channel = state.channel,
+                        onEvent = onEvent,
+                        owns = owns,
+                        onShowAvatar = {
+                            shouldShowAvatar = true
+                        }
+                    )
+                    if (state.videoState.videos != null) {
                         VideoGridSection(
                             modifier = Modifier,
-                            videos = state.videos,
-                            onVideoClick = onVideoClick,
-                            onScrollToBottom = onScrollToBottom,
-                            areAllVideosLoaded = state.areAllVideosLoaded
-                        )
-                    }
-                    if (shouldShowAvatar) {
-                        ImageViewerScreen(
-                            state.channel.avatarUrl,
-                            onPopup = {
-                                shouldShowAvatar = false
+                            videos = state.videoState.videos,
+                            onVideoClick = {
+                                onEvent(ChannelScreenUiEvent.ClickVideo(it))
                             },
-                            imageModifier = Modifier
-                                .fillMaxWidth(0.95f)
-                                .aspectRatio(1f)
-                                .clip(CircleShape)
+                            onScrollToBottom = {
+                                onEvent(ChannelScreenUiEvent.ReachedBottom)
+                            },
+                            areAllVideosLoaded = !state.videoState.hasMore
+                        )
+                        StandardComplexErrorHandler(
+                            error = state.videoState.error,
+                            snackBarHostState = snackBarHostState,
+                            notFoundMessage = stringResource(R.string.channel_not_found),
+                            notFoundHandler = onChannelNotFound,
+                            authenticationRequiredHandler = onAuthenticationRequired
                         )
                     }
-                } else if (state.isChannelLoading || state.areVideosLoading) {
-                    LoadingComponent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surface)
-                    )
-                } else {
-                    ErrorComponent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surface),
-                        onRetry = onRefresh
+                }
+                if (shouldShowAvatar) {
+                    ImageViewerScreen(
+                        state.channel.avatarUrl,
+                        onPopup = {
+                            shouldShowAvatar = false
+                        },
+                        imageModifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
                     )
                 }
+            } else if (state is ChannelScreenState.Loading) {
+                LoadingComponent(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                )
+            } else if (state is ChannelScreenState.Failure) {
+                ErrorComponent(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface),
+                    onRetry = {
+                        onEvent(ChannelScreenUiEvent.Reload)
+                    }
+                )
+                StandardComplexErrorHandler(
+                    error = state.error,
+                    snackBarHostState = snackBarHostState,
+                    notFoundMessage = stringResource(R.string.channel_not_found),
+                    notFoundHandler = onChannelNotFound,
+                    authenticationRequiredHandler = onAuthenticationRequired
+                )
             }
         }
-        StandardComplexErrorHandler(
-            error = state.channelLoadingError,
-            snackBarHostState = snackBarHostState,
-            notFoundMessage = stringResource(R.string.channel_not_found),
-            notFoundHandler = onChannelNotFound,
-            authenticationRequiredHandler = onAuthenticationRequired
-        )
-        StandardComplexErrorHandler(
-            error = state.videosLoadingError,
-            snackBarHostState = snackBarHostState,
-            notFoundMessage = stringResource(R.string.channel_not_found),
-            notFoundHandler = onChannelNotFound,
-            authenticationRequiredHandler = onAuthenticationRequired
-        )
     }
 }

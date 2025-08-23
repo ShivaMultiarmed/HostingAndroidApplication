@@ -18,5 +18,5 @@ data class ChannelCreationScreenState(
     val descriptionError: TextError? = null,
     val channelId: Long? = null,
     val isCreating: Boolean = false,
-    val creationError: Error? = null,
+    val creationError: Error? = null
 )

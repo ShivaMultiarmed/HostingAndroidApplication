@@ -9,11 +9,5 @@ import javax.inject.Inject
 class GetVideoDetails @Inject constructor(
     private val repository: VideoRepository
 ) {
-    suspend operator fun invoke(
-        videoId: Long,
-        userId: Long
-    ): Result<VideoWithChannelForUser, Error> = repository.fetchVideoDetails(
-        videoId = videoId,
-        userId = userId
-    )
+    suspend operator fun invoke( videoId: Long): Result<VideoWithChannelForUser, Error> = repository.fetchVideoDetails(videoId)
 }

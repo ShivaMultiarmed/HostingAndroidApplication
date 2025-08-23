@@ -1,14 +1,13 @@
 package mikhail.shell.video.hosting.domain.usecases.channels
 
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 
-class SubscribeToChannelNotifications @Inject constructor(
-    private val channelRepository: ChannelRepository
+class GetSubscriptions @Inject constructor(
+    private val channelsRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(): Result<Unit, Error> {
-        return channelRepository.subscribeToNotifications()
-    }
+    suspend operator fun invoke(): Result<List<Channel>, Error> = channelsRepository.fetchSubscriptions()
 }

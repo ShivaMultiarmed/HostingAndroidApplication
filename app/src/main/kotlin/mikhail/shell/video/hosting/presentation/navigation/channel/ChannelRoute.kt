@@ -12,6 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenState
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenUiEvent
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import kotlin.time.Duration.Companion.milliseconds
@@ -24,28 +26,21 @@ fun NavGraphBuilder.channelRoute(
         val channelRouteInfo = it.toRoute<Route.Channel.View>()
         val userId = userDetailsProvider.getUserId()
         val channelId = channelRouteInfo.channelId
-        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { it.create(channelId, userId) }
+        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { it.create(channelId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         ChannelScreen(
             state = state,
-            onRefresh = {
-                viewModel.loadChannelInfo()
-                viewModel.loadVideosPart()
-            },
-            onSubscription = viewModel::subscribe,
-            onVideoClick = {
-                navController.navigate(Route.Video.View(it))
-            },
-            onScrollToBottom = viewModel::loadVideosPart,
-            onEdit = {
-                navController.navigate(Route.Channel.Edit(it))
-            },
-            onRemove = {
-                coroutineScope.launch {
-                    viewModel.removeChannel(it)
-                    delay(800.milliseconds)
-                    navController.navigate(Route.User.Profile(userId))
+            onEvent = {
+                when (it) {
+                    is ChannelScreenUiEvent.ClickVideo -> navController.navigate(Route.Video.View(it.videoId))
+                    ChannelScreenUiEvent.Edit -> navController.navigate(Route.Channel.Edit(channelId))
+                    ChannelScreenUiEvent.Remove -> coroutineScope.launch {
+                        viewModel.onEvent(it)
+                        delay(800.milliseconds)
+                        navController.navigate(Route.User.Profile(userId))
+                    }
+                    else -> viewModel.onEvent(it)
                 }
             },
             onChannelNotFound = {
@@ -60,7 +55,7 @@ fun NavGraphBuilder.channelRoute(
                     navController.navigate(Route.Authentication)
                 }
             },
-            owns = userId == state.channel?.ownerId
+            owns = userId == (state as? ChannelScreenState.Success)?.channel?.ownerId
         )
     }
 }

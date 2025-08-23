@@ -89,7 +89,7 @@ import java.io.File
 @Composable
 fun UploadVideoScreen(
     modifier: Modifier = Modifier,
-    state: UploadVideoScreenState,
+    state: VideoUploadingScreenState,
     player: Player,
     onValidate: (UploadVideoInput) -> Unit,
     onUpload: (UploadVideoInput) -> Unit,

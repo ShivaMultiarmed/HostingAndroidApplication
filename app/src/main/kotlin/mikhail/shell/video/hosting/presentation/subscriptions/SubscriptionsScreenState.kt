@@ -6,5 +6,6 @@ import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 data class SubscriptionsScreenState(
     val channels: List<ChannelUi>? = null,
     val error: Error? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val hasMore: Boolean = true
 )

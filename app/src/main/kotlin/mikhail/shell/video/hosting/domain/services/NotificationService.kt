@@ -25,7 +25,7 @@ import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToChannelNotifications
+import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
 @AndroidEntryPoint
@@ -35,7 +35,7 @@ class NotificationService: FirebaseMessagingService() {
     private var NOTIFICATIONS_COUNT = 0
     lateinit var entryPoint: NotificationEntryPoint
     private lateinit var userDetailsProvider: UserDetailsProvider
-    private lateinit var subscribeToChannelNotifications: SubscribeToChannelNotifications
+    private lateinit var subscribeToNotifications: SubscribeToNotifications
     private lateinit var notificationManager: NotificationManager
     private lateinit var commentRepository: CommentRepository
     private lateinit var fcm: FirebaseMessaging
@@ -45,7 +45,7 @@ class NotificationService: FirebaseMessagingService() {
         notificationManager = getSystemService(NotificationManager::class.java)
         entryPoint = EntryPointAccessors.fromApplication(this, NotificationEntryPoint::class.java)
         userDetailsProvider = entryPoint.getUserDetailsProvider()
-        subscribeToChannelNotifications = entryPoint.getResubscribe()
+        subscribeToNotifications = entryPoint.getResubscribe()
         commentRepository = entryPoint.getCommentRepository()
         fcm = entryPoint.getFirebaseMessaging()
         gson = entryPoint.getGson()
@@ -91,7 +91,7 @@ class NotificationService: FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         coroutineScope.launch {
-            subscribeToChannelNotifications()
+            subscribeToNotifications()
         }
     }
 

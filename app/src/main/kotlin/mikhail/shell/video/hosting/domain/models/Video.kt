@@ -10,6 +10,7 @@ data class Video(
     val views: Long = 0,
     val likes: Long = 0,
     val dislikes: Long = 0,
+    val description: String? = null,
     val sourceUrl: String? = null,
     val cover: String? = null
 )
@@ -28,6 +29,7 @@ data class VideoForUser(
     val likes: Long = 0,
     val dislikes: Long = 0,
     val liking: Liking = Liking.NONE,
+    val description: String? = null,
     val sourceUrl: String? = null,
     val coverUrl: String? = null,
 )

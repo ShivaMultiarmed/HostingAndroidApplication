@@ -24,7 +24,7 @@ class UploadVideoViewModel @AssistedInject constructor(
     private val _getChannelsByOwner: GetChannelsByOwner,
     private val _validateVideo: ValidateUploadingVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow(UploadVideoScreenState())
+    private val _state = MutableStateFlow(VideoUploadingScreenState())
     val state = _state.asStateFlow()
 
     init {
