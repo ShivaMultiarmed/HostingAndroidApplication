@@ -9,7 +9,7 @@ import javax.inject.Inject
 class ValidateImage @Inject constructor(
     private val fileProvider: FileProvider
 ) {
-    suspend operator fun invoke(uri: String): Result<Unit, FileError> {
+    operator fun invoke(uri: String): Result<Unit, FileError> {
         val error = if (!fileProvider.exists(uri)) {
             FileError.EMPTY
         } else if (fileProvider.getFileMimeType(uri) == null) {

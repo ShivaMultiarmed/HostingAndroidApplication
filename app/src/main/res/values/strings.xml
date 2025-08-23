@@ -275,4 +275,6 @@
     <string name="reset_password_button">OK</string>
     <string name="reset_password_success">The new password is set</string>
     <string name="channel_cover_choose_another_label">Choose another header\n</string>
+    <string name="video_removed">Video was successfully removed</string>
+    <string name="video_uploaded_success">Video is successfully created</string>
 </resources>

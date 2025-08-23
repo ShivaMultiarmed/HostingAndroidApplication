@@ -21,5 +21,6 @@ sealed class VideoScreenState {
 data class CommentsState(
     val comments: List<CommentUi>? = null,
     val action: ActionModel<CommentUi>? = null,
+    val isLoading: Boolean = false,
     val error: Error? = null
 )

@@ -37,9 +37,8 @@ import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSni
 
 @Composable
 fun VideoRecommendationsScreen(
-    state: VideoRecommendationsScreenState,
-    onLoadVideosPart: () -> Unit,
-    onVideoClick: (videoId: Long) -> Unit,
+    state: RecommendationsScreenState,
+    onEvent: (RecommendationsScreenUiEvent) -> Unit,
     onAuthenticationRequired: () -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
@@ -78,7 +77,9 @@ fun VideoRecommendationsScreen(
                         VideoWithChannelSnippet(
                             modifier = Modifier.fillMaxWidth(),
                             videoWithChannel = it,
-                            onClick = onVideoClick
+                            onClick = {
+                                onEvent(RecommendationsScreenUiEvent.ClickedVideo(it))
+                            }
                         )
                     }
                 } else {
@@ -113,25 +114,27 @@ fun VideoRecommendationsScreen(
                             .height(150.dp)
                     }
                 )
-                if (state.areVideosLoading) {
+                if (state.isLoading) {
                     LoadingComponent(
                         modifier = loadModifier
                     )
-                } else if (state.videosLoadingError != null) {
+                } else if (state.error != null) {
                     ErrorComponent(
                         modifier = loadModifier,
-                        onRetry = onLoadVideosPart
+                        onRetry = {
+                            onEvent(RecommendationsScreenUiEvent.Reload)
+                        }
                     )
                 }
             }
         }
         LaunchedEffect(reachedBottom) {
-            if (reachedBottom && !state.areAllVideosLoaded) {
-                onLoadVideosPart()
+            if (reachedBottom && state.hasMore) {
+                onEvent(RecommendationsScreenUiEvent.BottomReached)
             }
         }
         StandardComplexErrorHandler(
-            error = state.videosLoadingError,
+            error = state.error,
             snackBarHostState = snackBarHostState,
             authenticationRequiredHandler = onAuthenticationRequired
         )

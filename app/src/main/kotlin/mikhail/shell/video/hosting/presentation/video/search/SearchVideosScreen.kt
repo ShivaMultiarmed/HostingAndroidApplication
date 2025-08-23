@@ -74,7 +74,6 @@ import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SearchVideosScreen(
-    modifier: Modifier = Modifier,
     state: SearchVideosScreenState,
     onSubmit: (String) -> Unit = {},
     onScrollToBottom: () -> Unit = {},

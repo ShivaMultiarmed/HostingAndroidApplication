@@ -11,18 +11,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.recommendations.VideoRecommendationsScreen
-import mikhail.shell.video.hosting.presentation.video.recommendations.VideoRecommendationsViewModel
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsViewModel
 
 fun NavGraphBuilder.videoRecommendationsRoute(
     navController: NavController
 ) {
     composable<Route.Video.Recommendations> {
-        val viewModel = hiltViewModel<VideoRecommendationsViewModel>()
-        val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+        val viewModel = hiltViewModel<RecommendationsViewModel>()
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         VideoRecommendationsScreen(
             state = state,
-            onLoadVideosPart = viewModel::loadNextVideosPart,
+            onLoadVideosPart = viewModel::load,
             onVideoClick = {
                 navController.navigate(Route.Video.View(it))
             },

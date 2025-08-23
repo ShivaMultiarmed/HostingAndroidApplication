@@ -6,7 +6,7 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import javax.inject.Inject
 
-class GetVideoRecommendations @Inject constructor(
+class GetRecommendations @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
     suspend operator fun invoke(

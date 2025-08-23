@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
-import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelsByOwner
+import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.user.models.toUi
@@ -20,7 +20,7 @@ import mikhail.shell.video.hosting.presentation.user.models.toUi
 class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val _getUser: GetUser,
-    private val _getChannelsByOwner: GetChannelsByOwner,
+    private val _getOwnedChannels: GetOwnedChannels,
     private val _signOut: SignOut
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
@@ -60,7 +60,7 @@ class ProfileViewModel @AssistedInject constructor(
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
-            _getChannelsByOwner(userId)
+            _getOwnedChannels(userId)
                 .onSuccess { gotList ->
                     _state.update {
                         it.copy(

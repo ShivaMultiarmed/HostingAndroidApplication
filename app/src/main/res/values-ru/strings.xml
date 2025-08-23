@@ -287,5 +287,7 @@
     <string name="go_forward_button">Далее</string>
     <string name="reset_password_button">OK</string>
     <string name="reset_password_success">Пароль успешно изменён</string>
-    <string name="channel_cover_choose_another_label">Choose another header\n</string>
+    <string name="channel_cover_choose_another_label">Выберите другую шапку</string>
+    <string name="video_removed">Видео успешно удалено</string>
+    <string name="video_uploaded_success">Видео успешно создано</string>
 </resources>

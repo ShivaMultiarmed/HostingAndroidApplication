@@ -4,8 +4,8 @@ import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
+import mikhail.shell.video.hosting.data.repositories.VideoEditingRequest
 import mikhail.shell.video.hosting.data.repositories.VideoUploadingRequest
-import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -64,10 +64,9 @@ interface VideoApi {
     @PATCH("videos/{videoId}/increment-views")
     suspend fun incrementViews(@Path("videoId") videoId: Long): VideoDto
     @Multipart
-    @PATCH("videos/edit")
+    @PATCH("videos")
     suspend fun editVideo(
-        @Part("video") video: VideoDto,
-        @Part("coverAction") coverAction: EditAction,
+        @Part("video") video: VideoEditingRequest,
         @Part cover: MultipartBody.Part?
     ): VideoDto
     @DELETE("videos/{videoId}")

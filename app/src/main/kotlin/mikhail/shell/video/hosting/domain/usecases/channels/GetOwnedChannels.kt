@@ -6,7 +6,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 
-class GetChannelsByOwner @Inject constructor(
+class GetOwnedChannels @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(userId: Long): Result<List<Channel>, Error> = channelRepository.fetchChannelsByOwner(userId)

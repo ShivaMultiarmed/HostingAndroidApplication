@@ -5,7 +5,6 @@ import com.google.common.net.HttpHeaders
 import kotlinx.coroutines.CancellationException
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
-import mikhail.shell.video.hosting.data.dto.toDto
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
@@ -33,6 +32,7 @@ class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
     private val fileProvider: FileProvider
 ) : VideoRepository {
+
     override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request {
         videoApi.fetchVideo(videoId).toDomain()
     }
@@ -90,13 +90,9 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun uploadVideo(
         video: Video,
-        source: String,
-        cover: String?,
-        onVideoCreated: (Video) -> Unit,
-        onProgress: (Float) -> Unit
+        cover: String?
     ): Result<Video, Error> {
-        return try {
-
+        return request {
             val coverPart = cover?.let {
                 val mime = fileProvider.getFileMimeType(it)!!
                 val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
@@ -110,15 +106,22 @@ class VideoRepositoryWithApi @Inject constructor(
                     }
                 }
             }
-            val videoResponse = videoApi.uploadVideoDetails(
-                VideoUploadingRequest(
+            videoApi.uploadVideoDetails(
+                video = VideoUploadingRequest(
                     title = video.title,
                     channelId = video.channelId,
                     description = video.description
                 ),
-                coverPart
+                cover = coverPart
             ).toDomain()
-            onVideoCreated(videoResponse)
+        }
+    }
+    override suspend fun uploadVideo(
+        videoId: Long,
+        source: String,
+        onProgress: (Float) -> Unit
+    ): Result<Unit, Error> {
+        return try {
             val sourceMime = fileProvider.getFileMimeType(source)!!
             val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(source)!!
@@ -126,7 +129,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceInputStream = fileProvider.getFileAsInputStream(source)
             sourceInputStream!!.process { bytesRead, buffer ->
                 videoApi.uploadVideoSource(
-                    videoId = videoResponse.videoId!!,
+                    videoId = videoId,
                     extension = sourceExtension!!,
                     source = buffer.toRequestBody(bytesNumber = bytesRead)
                 )
@@ -134,8 +137,8 @@ class VideoRepositoryWithApi @Inject constructor(
                 val progress = bytesTransferred.toFloat() / sourceSize
                 onProgress(progress)
             }
-            videoApi.confirmVideoUpload(videoResponse.videoId!!)
-            Result.Success(videoResponse)
+            videoApi.confirmVideoUpload(videoId)
+            Result.Success(Unit)
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 401 -> NetworkError.AUTHENTICATION
@@ -186,8 +189,12 @@ class VideoRepositoryWithApi @Inject constructor(
                 }
         }
         videoApi.editVideo(
-            video = video.toDto(),
-            coverAction = coverAction,
+            video = VideoEditingRequest(
+                videoId = video.videoId!!,
+                title = video.title,
+                channelId = video.channelId,
+                description = video.description
+            ),
             cover = coverPart
         ).toDomain()
     }

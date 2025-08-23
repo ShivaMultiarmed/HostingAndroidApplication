@@ -6,10 +6,15 @@ sealed class VideoUploadingScreenState {
     data object Loading: VideoUploadingScreenState()
     data class Editing(
         val channels: List<ChannelOptionUi>,
+        val input: VideoUploadingInput,
+        val isLoading: Boolean = false,
         val error: Error? = null
     ): VideoUploadingScreenState()
     data class Failure(val error: Error): VideoUploadingScreenState()
-    data object Success: VideoUploadingScreenState()
+    data class Success(
+        val videoId: Long,
+        val source: String
+    ): VideoUploadingScreenState()
 }
 
 data class ChannelOptionUi(

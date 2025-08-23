@@ -46,16 +46,16 @@ import mikhail.shell.video.hosting.presentation.video.models.toUi
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
     @Assisted("player") val player: Player,
-    private val _getVideoDetails: GetVideoDetails,
-    private val _rateVideo: RateVideo,
-    private val _subscribe: Subscribe,
-    private val _incrementViews: IncrementViews,
-    private val _deleteVideo: DeleteVideo,
-    private val _saveComment: SaveComment,
-    private val _removeComment: RemoveComment,
-    private val _getComments: GetComments,
-    private val _observeComments: ObserveComments,
-    private val _unobserveComments: UnobserveComments
+    private val getVideoDetails: GetVideoDetails,
+    private val rateVideo: RateVideo,
+    private val subscribe: Subscribe,
+    private val incrementViews: IncrementViews,
+    private val deleteVideo: DeleteVideo,
+    private val saveComment: SaveComment,
+    private val removeComment: RemoveComment,
+    private val getComments: GetComments,
+    private val observeComments: ObserveComments,
+    private val unobserveComments: UnobserveComments
 ) : ViewModel() {
     private val _state = MutableStateFlow<VideoScreenState>(VideoScreenState.Loading)
     val state = _state
@@ -91,7 +91,7 @@ class VideoScreenViewModel @AssistedInject constructor(
     @OptIn(UnstableApi::class)
     private fun load() {
         viewModelScope.launch {
-            _getVideoDetails(videoId)
+            getVideoDetails(videoId)
                 .onSuccess { videoDetails ->
                     _state.update {
                         VideoScreenState.Success(
@@ -119,12 +119,12 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun incrementViews() {
         viewModelScope.launch {
-            _incrementViews(videoId)
+            incrementViews(videoId)
                 .onSuccess { video ->
                     _state.update {
                         it as VideoScreenState.Success
                         it.copy(
-                            video = it.video?.copy(
+                            video = it.video.copy(
                                 views = video.views
                             )
                         )
@@ -135,14 +135,14 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun subscribe(subscription: Subscription) {
         viewModelScope.launch {
-            _subscribe(
-                channelId = (_state.value as VideoScreenState.Success).video!!.videoId,
+            subscribe(
+                channelId = (_state.value as VideoScreenState.Success).video.videoId,
                 subscription = subscription
             ).onSuccess { channel ->
                 _state.update {
                     it as VideoScreenState.Success
                     it.copy(
-                        video = it.video!!.copy(
+                        video = it.video.copy(
                             subscription = channel.subscription,
                             subscribers = channel.subscribers
                         ),
@@ -159,14 +159,14 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun rate(liking: Liking) {
         viewModelScope.launch {
-            _rateVideo(
-                videoId = (_state.value as VideoScreenState.Success).video!!.videoId,
+            rateVideo(
+                videoId = (_state.value as VideoScreenState.Success).video.videoId,
                 liking = liking
             ).onSuccess { video ->
                 _state.update {
                     it as VideoScreenState.Success
                     it.copy(
-                        video = it.video!!.copy(
+                        video = it.video.copy(
                             likes = video.likes,
                             dislikes = video.dislikes,
                             liking = liking
@@ -185,7 +185,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun remove() {
         viewModelScope.launch {
-            _deleteVideo(videoId)
+            deleteVideo(videoId)
                 .onSuccess {
                     _state.update {
                         VideoScreenState.Removed
@@ -199,7 +199,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         text: String
     ) {
         viewModelScope.launch {
-            _saveComment(
+            saveComment(
                 Comment(
                     commentId = commentId,
                     videoId = videoId,
@@ -225,7 +225,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun removeComment(commentId: Long) {
         viewModelScope.launch {
-            _removeComment(commentId)
+            removeComment.invoke(commentId)
                 .onSuccess {
                     _state.update {
                         it as VideoScreenState.Success
@@ -242,7 +242,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun getComments(before: LocalDateTime) {
         viewModelScope.launch {
-            _getComments(
+            getComments(
                 before = before.toInstant(TimeZone.currentSystemDefault()),
                 videoId = videoId
             ).onSuccess { comments ->
@@ -270,7 +270,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     private fun observe() {
         _collectCommentsJob = viewModelScope.launch {
-            _observeComments(videoId).collect(::handleComment)
+            observeComments(videoId).collect(::handleComment)
         }
     }
 
@@ -279,7 +279,7 @@ class VideoScreenViewModel @AssistedInject constructor(
             (it as VideoScreenState.Success).copy(commentsState = null)
         }
         _collectCommentsJob?.cancel()
-        _unobserveComments(videoId)
+        unobserveComments(videoId)
     }
 
     private fun handleComment(actionModel: ActionModel<CommentWithUser>) {
@@ -300,6 +300,11 @@ class VideoScreenViewModel @AssistedInject constructor(
             )
         }
     }
+
+    override fun onCleared() {
+        unobserveComments(videoId)
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(

@@ -46,7 +46,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -91,19 +90,13 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.comment.CommentError
-import mikhail.shell.video.hosting.domain.models.Action
-import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
 import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
 import mikhail.shell.video.hosting.presentation.models.CommentUi
@@ -131,7 +124,7 @@ import kotlin.time.Duration.Companion.minutes
 fun VideoScreen(
     state: VideoScreenState,
     player: Player,
-    owns: Boolean = false,
+    userId: Long,
     onEvent: (VideoScreenUiEvent) -> Unit,
     onVideoNotFound: () -> Unit,
     onAuthenticationRequired: () -> Unit
@@ -312,7 +305,7 @@ fun VideoScreen(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     lineHeight = 16.sp
                                 )
-                                if (owns) {
+                                if (userId == state.video.ownerId) {
                                     var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
                                     var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
                                     Box {
@@ -521,16 +514,17 @@ fun VideoScreen(
                                     LaunchedEffect(Unit) {
                                         onEvent(VideoScreenUiEvent.OpenComments)
                                     }
-                                    if (state.comments != null) {
+                                    state.commentsState?.let { notNullCommentsState ->
                                         CommentsBottomSheet(
                                             sheetState = sheetState,
+                                            commentsState = notNullCommentsState,
                                             userId = userId,
-                                            comments = state.comments,
-                                            commentError = state.commentError,
+                                            onEvent = onEvent,
+                                            onVideoNotFound = onVideoNotFound,
+                                            onAuthenticationRequired = onAuthenticationRequired,
                                         )
                                     }
                                 }
-
                             }
                         }
                     }
@@ -565,7 +559,7 @@ fun VideoScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface),
                     onRetry = {
-                        // TODO
+                        onEvent(VideoScreenUiEvent.Reload)
                     }
                 )
                 StandardComplexErrorHandler(
@@ -578,7 +572,16 @@ fun VideoScreen(
             }
 
             else -> {
-                // TODO
+                Box (
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.video_removed)
+                    )
+                }
             }
         }
     }
@@ -611,7 +614,7 @@ fun CommentsBottomSheet(
                 .fillMaxHeight(0.4f)
                 .padding(10.dp),
         ) {
-            var initialCommentUi by remember { mutableStateOf(null as CommentUi?) }
+            var initialComment by remember { mutableStateOf(null as CommentUi?) }
             if (commentsState.comments?.isNotEmpty() == true) {
                 commentsState.comments
                 val lazyListState = rememberLazyListState()
@@ -627,22 +630,14 @@ fun CommentsBottomSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
-                            own = comment.userId == userId,
+                            owns = comment.userId == userId,
+                            onEvent = onEvent,
                             comment = comment,
-                            onEdit = { _, _ ->
-                                initialCommentUi = comment
-                            },
-                            onRemove = {
-                                onEvent(VideoScreenUiEvent.RemoveComment(it))
-                            },
-                            onGoToProfile = {
-                                onEvent(VideoScreenUiEvent.OpenProfile(it))
-                            }
                         )
                     }
                 }
                 LaunchedEffect(commentsState.comments) {
-                    initialCommentUi = null
+                    initialComment = null
                 }
                 LaunchedEffect(reachedBottom) {
                     if (reachedBottom) {
@@ -664,36 +659,17 @@ fun CommentsBottomSheet(
             }
             val snackBarHostState = remember { SnackbarHostState() }
             SnackbarHost(snackBarHostState)
-            var commentError by rememberSaveable { mutableStateOf(null as String?) }
-            LaunchedEffect(commentsState.error) {
-                if (commentsState.error == TextError.LARGE) {
-                    context.getString(
-                        R.string.text_too_large_error,
-                        ValidationRules.MAX_TEXT_LENGTH
-                    )
-                }
-            }
+
             CommentForm(
-                initialCommentUi = initialCommentUi,
-                onSubmit = {
-                    onEvent(VideoScreenUiEvent.SaveComment(initialCommentUi.commentId)) // TODO
-                },
-                commentError = commentError,
-                actionComment =
+                initialComment = initialComment,
+                onEvent = onEvent,
+                error = commentsState.error
             )
         }
         SnackbarHost(hostState = snackBarHostState)
     }
-
-    DisposableEffect(Unit) {
-        onObserve()
-        onDispose {
-            onUnobserve()
-        }
-    }
-
     StandardComplexErrorHandler(
-        error = commentError,
+        error = commentsState.error,
         snackBarHostState = snackBarHostState,
         notFoundMessage = stringResource(R.string.video_not_found),
         notFoundHandler = onVideoNotFound,
@@ -704,16 +680,13 @@ fun CommentsBottomSheet(
 @Composable
 fun CommentBox(
     modifier: Modifier = Modifier,
-    own: Boolean = false,
+    owns: Boolean,
     comment: CommentUi,
-    onEdit: (commentId: Long, text: String) -> Unit = { _, _ -> },
-    onRemove: (commentId: Long) -> Unit = {},
-    onGoToProfile: (userId: Long) -> Unit = {}
+    onEvent: (VideoScreenUiEvent) -> Unit,
 ) {
     val context = LocalContext.current
     Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+        modifier = modifier.background(MaterialTheme.colorScheme.background)
     ) {
         var isMenuVisible by rememberSaveable { mutableStateOf(false) }
         if (isMenuVisible) {
@@ -723,14 +696,14 @@ fun CommentBox(
                     MenuItem(
                         title = stringResource(R.string.comment_edit_button),
                         onClick = {
-                            onEdit(comment.commentId, comment.text)
+                            onEvent(VideoScreenUiEvent.SaveComment(comment.commentId, comment.text))
                             isMenuVisible = false
                         }
                     ),
                     MenuItem(
                         title = stringResource(R.string.comment_delete_button),
                         onClick = {
-                            onRemove(comment.commentId)
+                            onEvent(VideoScreenUiEvent.RemoveComment(comment.commentId))
                             isMenuVisible = false
                         }
                     )
@@ -749,7 +722,7 @@ fun CommentBox(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.tertiaryContainer)
                     .clickable {
-                        onGoToProfile(comment.userId)
+                        onEvent(VideoScreenUiEvent.OpenProfile(comment.userId))
                     },
                 model = comment.avatar,
                 contentDescription = null,
@@ -765,7 +738,7 @@ fun CommentBox(
                         text = comment.nick + " - " + comment.dateTime.toPresentation(context),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (own) {
+                    if (owns) {
                         IconButton(
                             modifier = Modifier.size(20.dp),
                             onClick = {
@@ -790,14 +763,13 @@ fun CommentBox(
 
 @Composable
 fun CommentForm(
-    initialCommentUi: CommentUi? = null,
-    onSubmit: (commentId: Long?, text: String) -> Unit = { _, _ -> },
-    actionComment: ActionModel<CommentUi>? = null,
-    commentError: Error? = null
+    initialComment: CommentUi? = null,
+    onEvent: (VideoScreenUiEvent) -> Unit,
+    error: Error? = null
 ) {
     var text by rememberSaveable { mutableStateOf("") }
-    LaunchedEffect(initialCommentUi) {
-        initialCommentUi?.let { text = it.text }
+    LaunchedEffect(initialComment) {
+        initialComment?.let { text = it.text }
     }
     Row(
         modifier = Modifier
@@ -812,7 +784,7 @@ fun CommentForm(
                 .clip(RoundedCornerShape(5.dp))
                 .border(
                     width = 1.dp,
-                    color = when (commentError) {
+                    color = when (error) {
                         null -> Color.Transparent
                         else -> MaterialTheme.colorScheme.error
                     },
@@ -846,15 +818,10 @@ fun CommentForm(
         PrimaryProgressButton(
             enabled = text.isNotEmpty(),
             onClick = {
-                onSubmit(initialCommentUi?.commentId, text)
+                onEvent(VideoScreenUiEvent.SaveComment(initialComment?.commentId, text))
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )
-        LaunchedEffect(actionComment) {
-            if (actionComment?.action != Action.REMOVE) {
-                text = ""
-            }
-        }
     }
 }
 

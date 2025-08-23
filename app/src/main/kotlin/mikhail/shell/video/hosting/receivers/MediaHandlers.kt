@@ -20,7 +20,7 @@ class MediaBroadcastReceiver: BroadcastReceiver() {
             player = entryPoint.getPlayer()
         }
         when (intent?.action) {
-            AudioManager.ACTION_AUDIO_BECOMING_NOISY ->  player?.pause()
+            AudioManager.ACTION_AUDIO_BECOMING_NOISY -> player?.pause()
         }
     }
 }

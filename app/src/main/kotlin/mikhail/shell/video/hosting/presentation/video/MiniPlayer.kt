@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.presentation.video
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,12 +38,6 @@ fun MiniPlayer(
             )
             .aspectRatio(aspectRatio)
     ) {
-        var topBarAlpha by rememberSaveable { mutableFloatStateOf(1f) }
-        val animatedTopBarAlpha by animateFloatAsState(
-            targetValue = topBarAlpha,
-            animationSpec = tween(200),
-            label = "pip container top bar animation"
-        )
         PlayerComponent(
             modifier = Modifier.matchParentSize(),
             player = player,
