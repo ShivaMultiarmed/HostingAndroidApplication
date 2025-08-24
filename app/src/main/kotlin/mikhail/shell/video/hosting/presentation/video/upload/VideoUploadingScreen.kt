@@ -85,6 +85,7 @@ import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
+import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import java.io.File
 
@@ -431,6 +432,30 @@ fun VideoUploadingScreen(
                                     contentDescription = stringResource(R.string.video_cover_chosen_label)
                                 )
                             }
+                        }
+                        val descriptionErrMsg = when (state.input.descriptionError) {
+                            TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                            else -> null
+                        }
+                        StandardEditField(
+                            empty = state.input.description.isEmpty(),
+                            onDelete = {
+                                onEvent(VideoUploadingScreenUiEvent.DescriptionChanged(""))
+                            },
+                            onRevert = {
+                                onEvent(VideoUploadingScreenUiEvent.DescriptionChanged(state.input.description))
+                            }
+                        ) {
+                            InputField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = state.input.description,
+                                onValueChange = {
+                                    onEvent(VideoUploadingScreenUiEvent.TitleChanged(it))
+                                },
+                                errorMsg = descriptionErrMsg,
+                                placeholder = stringResource(R.string.video_title_label),
+                                icon = Icons.Rounded.Title
+                            )
                         }
                     }
                 }

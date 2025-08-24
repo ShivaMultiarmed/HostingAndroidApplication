@@ -19,6 +19,7 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
 import mikhail.shell.video.hosting.domain.usecases.videos.EditVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 
 @HiltViewModel(assistedFactory = VideoEditingViewModel.Factory::class)
@@ -26,6 +27,7 @@ class VideoEditingViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
     private val getVideo: GetVideo,
     private val validateTitle: ValidateTitle,
+    private val validateDescription: ValidateDescription,
     private val validateImage: ValidateImage,
     private val editVideo: EditVideo
 ) : ViewModel() {
@@ -45,7 +47,23 @@ class VideoEditingViewModel @AssistedInject constructor(
             VideoEditingUiEvent.Reload -> load()
             VideoEditingUiEvent.Submit -> edit()
             is VideoEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
+            is VideoEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
             else -> Unit
+        }
+    }
+
+    private fun onDescriptionChanged(description: String) {
+        _state.update {
+            it as VideoEditingScreenState.Editing
+            it.copy(
+                currentVideo = it.currentVideo.copy(
+                    description = description,
+                    descriptionError = description.let {
+                        val validationResult = validateDescription(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
+            )
         }
     }
 
@@ -90,10 +108,11 @@ class VideoEditingViewModel @AssistedInject constructor(
                                 title = video.title,
                                 cover = video.cover,
                                 channelId = video.channelId,
+                                description = video.description ?: ""
                             ),
                             currentVideo = VideoEditingInputState(
                                 title = video.title,
-                                description = video.description?: ""
+                                description = video.description ?: ""
                             )
                         )
                     }
@@ -137,6 +156,7 @@ class VideoEditingViewModel @AssistedInject constructor(
             }
         }
     }
+
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("videoId") videoId: Long): VideoEditingViewModel
@@ -151,6 +171,7 @@ sealed class VideoEditingScreenState {
         val isLoading: Boolean = false,
         val submitError: Error? = null
     ) : VideoEditingScreenState()
+
     data class Failure(val error: Error) : VideoEditingScreenState()
     data object Success : VideoEditingScreenState()
 }
@@ -159,6 +180,7 @@ sealed class VideoEditingUiEvent {
     data object Reload : VideoEditingUiEvent()
     data class TitleChanged(val title: String) : VideoEditingUiEvent()
     data class CoverChanged(val cover: String?, val action: EditAction) : VideoEditingUiEvent()
+    data class DescriptionChanged(val description: String) : VideoEditingUiEvent()
     data object Submit : VideoEditingUiEvent()
     data object Success : VideoEditingUiEvent()
     data object Cancel : VideoEditingUiEvent()

@@ -20,6 +20,7 @@ import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateI
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.ValidateVideoSource
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
@@ -31,6 +32,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val validateImage: ValidateImage,
     private val validateVideoSource: ValidateVideoSource,
     private val validateTitle: ValidateTitle,
+    private val validateDescription: ValidateDescription,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
     private val _state =
@@ -53,8 +55,24 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
                 VideoUploadingScreenUiEvent.Submit -> upload()
                 is VideoUploadingScreenUiEvent.TitleChanged -> onTitleChanged(event.title)
+                is VideoUploadingScreenUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
                 else -> null
             }
+        }
+    }
+
+    private fun onDescriptionChanged(description: String) {
+        _state.update {
+            it as VideoUploadingScreenState.Editing
+            it.copy(
+                input = it.input.copy(
+                    description = description,
+                    descriptionError = description.let {
+                        val validationResult = validateDescription(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
+            )
         }
     }
 
@@ -184,6 +202,7 @@ sealed class VideoUploadingScreenUiEvent {
     data class SourceChanged(val source: String?): VideoUploadingScreenUiEvent()
     data class CoverChanged(val cover: String?): VideoUploadingScreenUiEvent()
     data class ChannelChanged(val channelId: Long?): VideoUploadingScreenUiEvent()
+    data class DescriptionChanged(val description: String): VideoUploadingScreenUiEvent()
     data object Submit: VideoUploadingScreenUiEvent()
     data class Success(val videoId: Long, val source: String): VideoUploadingScreenUiEvent()
 }

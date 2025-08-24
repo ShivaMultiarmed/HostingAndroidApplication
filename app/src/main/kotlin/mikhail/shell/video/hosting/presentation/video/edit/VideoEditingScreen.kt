@@ -80,10 +80,6 @@ fun VideoEditingScreen(
         }
     ) { padding ->
         if (state is VideoEditingScreenState.Editing) {
-            val title = state.currentVideo.title
-            val coverUri = state.currentVideo.cover
-            val coverAction = state.currentVideo.coverAction
-            val description = state.currentVideo.description
             Column(
                 modifier = Modifier
                     .padding(padding)
@@ -107,8 +103,8 @@ fun VideoEditingScreen(
                 }
                 StandardEditField(
                     firstTime = false,
-                    updated = title != state.initialVideo.title,
-                    empty = title.isEmpty(),
+                    updated = state.currentVideo.title != state.initialVideo.title,
+                    empty = state.currentVideo.title.isEmpty(),
                     onDelete = {
                         onEvent(VideoEditingUiEvent.TitleChanged(""))
                     },
@@ -118,7 +114,7 @@ fun VideoEditingScreen(
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = title,
+                        value = state.currentVideo.title,
                         onValueChange = {
                             onEvent(VideoEditingUiEvent.TitleChanged(it))
                         },
@@ -142,8 +138,8 @@ fun VideoEditingScreen(
                 Column {
                     StandardEditField(
                         firstTime = false,
-                        updated = coverAction == UPDATE || coverAction == REMOVE && coverExists == true,
-                        empty = !(coverUri != null || coverExists == true && coverAction != REMOVE),
+                        updated = state.currentVideo.coverAction == state.currentVideo.coverAction || state.currentVideo.coverAction == REMOVE && coverExists == true,
+                        empty = !(state.currentVideo.cover != null || coverExists == true && state.currentVideo.coverAction != REMOVE),
                         onRevert = {
                             onEvent(VideoEditingUiEvent.CoverChanged(null, KEEP))
 
@@ -157,7 +153,7 @@ fun VideoEditingScreen(
                             onClick = {
                                 coverPicker.launch("image/*")
                             },
-                            placeholder = if (coverUri != null || coverExists == true && coverAction == KEEP)
+                            placeholder = if (state.currentVideo.cover != null || coverExists == true && state.currentVideo.coverAction == KEEP)
                                 stringResource(R.string.video_cover_choose_another_label)
                             else stringResource(R.string.video_cover_choose_label),
                             icon = Icons.Rounded.Wallpaper,
@@ -200,7 +196,7 @@ fun VideoEditingScreen(
                                 )
                             }
                         }
-                        if (coverUri != null) {
+                        if (state.currentVideo.cover != null) {
                             Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -214,7 +210,7 @@ fun VideoEditingScreen(
                                 Text(
                                     text = stringResource(R.string.video_cover_chosen_label)
                                 )
-                                val painter = rememberAsyncImagePainter(model = coverUri)
+                                val painter = rememberAsyncImagePainter(model = state.currentVideo.cover)
                                 Image(
                                     painter = painter,
                                     contentDescription = state.initialVideo.title,
@@ -227,7 +223,7 @@ fun VideoEditingScreen(
                             }
                         }
                     }
-                    if (coverExists == true && coverAction == REMOVE) {
+                    if (coverExists == true && state.currentVideo.coverAction == REMOVE) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -238,6 +234,32 @@ fun VideoEditingScreen(
                             )
                         }
                     }
+                }
+                val descriptionErrMsg = when (state.currentVideo.descriptionError) {
+                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    else -> null
+                }
+                StandardEditField(
+                    firstTime = false,
+                    updated = state.currentVideo.description != state.initialVideo.description,
+                    empty = state.currentVideo.description.isEmpty(),
+                    onDelete = {
+                        onEvent(VideoEditingUiEvent.DescriptionChanged(""))
+                    },
+                    onRevert = {
+                        onEvent(VideoEditingUiEvent.DescriptionChanged(state.initialVideo.description))
+                    }
+                ) {
+                    InputField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = state.currentVideo.description,
+                        onValueChange = {
+                            onEvent(VideoEditingUiEvent.TitleChanged(it))
+                        },
+                        errorMsg = descriptionErrMsg,
+                        placeholder = stringResource(R.string.video_title_label),
+                        icon = Icons.Rounded.Title
+                    )
                 }
             }
         } else {
