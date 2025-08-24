@@ -32,7 +32,7 @@ fun Long.toViews(): String {
 }
 
 fun Long.toRoundString(): String {
-    val roundedNumber: Double = when {
+    val roundedNumber = when {
         this < 1_000 -> toDouble()
         this < 1_000_000 -> toDouble() / 1_000
         this < 1_000_000_000 -> toDouble() / 1_000_000
@@ -47,7 +47,7 @@ fun Long.toRoundString(): String {
         else {
             roundedNumber.toLong().toString()
         }
-    }
+    } + " " + toCorrectSuffix()
 }
 
 fun Double.round(n: Int) = round(this * n) / n

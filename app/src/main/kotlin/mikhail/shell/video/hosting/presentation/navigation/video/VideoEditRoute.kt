@@ -11,8 +11,8 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.video.edit.EditVideoScreen
-import mikhail.shell.video.hosting.presentation.video.edit.EditVideoViewModel
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.editVideoRoute(
@@ -20,11 +20,14 @@ fun NavGraphBuilder.editVideoRoute(
 ) {
     composable<Route.Video.Edit> {
         val input = it.toRoute<Route.Video.Edit>()
-        val viewModel = hiltViewModel<EditVideoViewModel, EditVideoViewModel.Factory> { it.create(input.videoId) }
+        val viewModel = hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { it.create(input.videoId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
-        EditVideoScreen(
+        VideoEditingScreen(
             state = state,
+            onEvent = {
+
+            },
             onRefresh = viewModel::loadInitialVideo,
             onSubmit = viewModel::edit,
             onSuccess = {

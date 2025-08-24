@@ -382,7 +382,7 @@ fun VideoUploadingScreen(
                             FileError.EMPTY -> stringResource(R.string.file_not_found_error)
                             FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
                             FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-                            null -> TODO()
+                            else -> null
                         }
                         EditField(
                             actionItems = if (state.input.cover == null) emptyList() else listOf(

@@ -430,7 +430,7 @@ fun VideoScreen(
                                 }
                                 ActionButton(
                                     icon = likeVector,
-                                    text = state.video.likes.toRoundString(), // TODO rounded to 2 digits after a point and with suffix
+                                    text = state.video.likes.toRoundString(),
                                     onClick = {
                                         onEvent(VideoScreenUiEvent.Like(if (state.video.liking != LIKED) LIKED else NONE))
                                     }
@@ -441,7 +441,7 @@ fun VideoScreen(
                                 }
                                 ActionButton(
                                     icon = dislikeVector,
-                                    text = state.video.dislikes.toRoundString(), // TODO rounded to 2 digits after a point and with suffix
+                                    text = state.video.dislikes.toRoundString(),
                                     onClick = {
                                         onEvent(VideoScreenUiEvent.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
                                     }

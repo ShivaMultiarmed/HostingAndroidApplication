@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.video.edit
 
-import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -31,7 +29,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,19 +38,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
+import mikhail.shell.video.hosting.domain.errors.FileError
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
+import mikhail.shell.video.hosting.domain.validation.mb
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -64,34 +61,29 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun EditVideoScreen(
-    modifier: Modifier = Modifier,
-    state: EditVideoScreenState,
-    onRefresh: () -> Unit,
-    onSubmit: (VideoEditInputState) -> Unit,
-    onSuccess: (Long) -> Unit,
-    onCancel: (Long) -> Unit,
-    onVideoNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit
+fun VideoEditingScreen(
+    state: VideoEditingScreenState,
+    onEvent: (VideoEditingUiEvent) -> Unit,
+    onAuthenticationRequired: () -> Unit,
+    // TODO onNotFound
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
     val scrollState = rememberScrollState()
-    val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         snackbarHost = {
             SnackbarHost(snackBarHostState)
         }
     ) { padding ->
-        if (state.initialVideo != null) {
-            val editError = state.editVideoError
-            var coverUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-            var title by rememberSaveable { mutableStateOf(state.initialVideo.title) }
-            var coverAction by rememberSaveable { mutableStateOf(KEEP) }
+        if (state is VideoEditingScreenState.Editing) {
+            val title = state.currentVideo.title
+            val coverUri = state.currentVideo.cover
+            val coverAction = state.currentVideo.coverAction
+            val description = state.currentVideo.description
             Column(
                 modifier = Modifier
                     .padding(padding)
@@ -100,78 +92,64 @@ fun EditVideoScreen(
                 TopBar(
                     title = stringResource(R.string.video_edit_title),
                     onPopup = {
-                        onCancel(state.initialVideo.videoId)
+                        onEvent(VideoEditingUiEvent.Cancel)
                     },
                     inProgress = state.isLoading,
-                    complete = state.editConfirmed,
+                    complete = false,
                     onSubmit = {
-                        onSubmit(
-                            VideoEditInputState(
-                                title = title,
-                                coverAction = coverAction,
-                                cover = coverUri?.toString()
-                            )
-                        )
+                        onEvent(VideoEditingUiEvent.Submit)
                     }
                 )
-                val titleErrMsg = constructInfoMessage(
-                    editError,
-                    mapOf(
-                        VideoEditingError.TITLE_EMPTY to stringResource(R.string.text_empty_error),
-                        VideoEditingError.TITLE_TOO_LARGE to stringResource(
-                            R.string.text_too_large_error,
-                            ValidationRules.MAX_TITLE_LENGTH
-                        )
-                    )
-                )
+                val titleErrMsg = when (state.currentVideo.titleError) {
+                    TextError.EMPTY -> stringResource(R.string.text_empty_error)
+                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    else -> null
+                }
                 StandardEditField(
                     firstTime = false,
                     updated = title != state.initialVideo.title,
                     empty = title.isEmpty(),
-                    onDelete = { title = "" },
-                    onRevert = { title = state.initialVideo.title }
+                    onDelete = {
+                        onEvent(VideoEditingUiEvent.TitleChanged(""))
+                    },
+                    onRevert = {
+                        onEvent(VideoEditingUiEvent.TitleChanged(state.initialVideo.title))
+                    }
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
                         value = title,
-                        onValueChange = { title = it },
+                        onValueChange = {
+                            onEvent(VideoEditingUiEvent.TitleChanged(it))
+                        },
                         errorMsg = titleErrMsg,
                         placeholder = stringResource(R.string.video_title_label),
                         icon = Icons.Rounded.Title
                     )
                 }
-                val coverPicker = rememberLauncherForActivityResult(
-                    ActivityResultContracts.GetContent()
-                ) {
+                val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        coverUri = it
-                        coverAction = UPDATE
+                        onEvent(VideoEditingUiEvent.CoverChanged(it.toString(), UPDATE))
                     }
                 }
                 var coverExists by rememberSaveable { mutableStateOf<Boolean?>(null) }
-                val coverErrMsg = constructInfoMessage(
-                    editError,
-                    mapOf(
-                        VideoEditingError.COVER_NOT_FOUND to stringResource(R.string.file_not_found_error),
-                        VideoEditingError.COVER_TYPE_NOT_VALID to stringResource(R.string.type_not_valid_error),
-                        VideoEditingError.COVER_TOO_LARGE to stringResource(
-                            R.string.file_too_large_error,
-                            (ValidationRules.MAX_IMAGE_SIZE / 1024 / 1024).toString() + " MB"
-                        )
-                    )
-                )
+                val coverErrMsg = when (state.currentVideo.coverError) {
+                    FileError.EMPTY -> stringResource(R.string.file_not_found_error)
+                    FileError.LARGE -> stringResource(R.string.file_too_large_error, "${(MAX_IMAGE_SIZE.mb)} MB")
+                    FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                    else -> null
+                }
                 Column {
                     StandardEditField(
                         firstTime = false,
                         updated = coverAction == UPDATE || coverAction == REMOVE && coverExists == true,
                         empty = !(coverUri != null || coverExists == true && coverAction != REMOVE),
                         onRevert = {
-                            coverUri = null
-                            coverAction = KEEP
+                            onEvent(VideoEditingUiEvent.CoverChanged(null, KEEP))
+
                         },
                         onDelete = {
-                            coverUri = null
-                            coverAction = REMOVE
+                            onEvent(VideoEditingUiEvent.CoverChanged(null, REMOVE))
                         }
                     ) {
                         FileInputField(
@@ -268,44 +246,32 @@ fun EditVideoScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                if (state.isLoading) {
+                if (state is VideoEditingScreenState.Loading) {
                     LoadingComponent(
-                        modifier = modifier
+                        modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface)
                     )
-                } else if (state.initialVideoError != null && state.initialVideoError != NetworkError.NOT_FOUND) {
+                } else if (state is VideoEditingScreenState.Failure) {
                     ErrorComponent(
-                        modifier = modifier
+                        modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface),
-                        onRetry = onRefresh
+                        onRetry = {
+                            onEvent(VideoEditingUiEvent.Reload)
+                        }
+                    )
+                    StandardComplexErrorHandler(
+                        error = state.error,
+                        snackBarHostState = snackBarHostState,
+                        notFoundMessage = stringResource(R.string.video_not_found),
+                        notFoundHandler = {
+                            onEvent(VideoEditingUiEvent.Cancel)
+                        },
+                        authenticationRequiredHandler = onAuthenticationRequired
                     )
                 }
             }
         }
     }
-    LaunchedEffect(state.editConfirmed) {
-        if (state.editConfirmed) {
-            snackBarHostState.showSnackbar(
-                message = context.getString(R.string.video_edit_success),
-                duration = SnackbarDuration.Long
-            )
-            onSuccess(state.initialVideo!!.videoId)
-        }
-    }
-    StandardComplexErrorHandler(
-        error = state.initialVideoError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.video_not_found),
-        notFoundHandler = onVideoNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
-    StandardComplexErrorHandler(
-        error = state.editVideoError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.video_not_found),
-        notFoundHandler = onVideoNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
 }

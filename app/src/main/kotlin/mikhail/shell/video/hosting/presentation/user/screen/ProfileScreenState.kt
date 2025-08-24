@@ -15,7 +15,7 @@ sealed class ProfileScreenState {
 
 data class OwnedChannelsState(
     val channels: List<ChannelUi>? = null,
-    val channelError: Error? = null,
+    val error: Error? = null,
     val hasMore: Boolean = true,
     val isLoading: Boolean = false
 )
