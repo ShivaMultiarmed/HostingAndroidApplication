@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Intent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -11,16 +12,14 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenUiEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
-import kotlin.time.Duration.Companion.milliseconds
 
 fun NavGraphBuilder.profileRoute(
     navController: NavController,
@@ -61,25 +60,12 @@ fun NavGraphBuilder.profileRoute(
                     }
                     else -> viewModel.onEvent(it)
                 }
-            },
-            onGoToChannel = {
-
-            },
-            onPublishVideo = {
-
-            },
-            onAuthenticationRequired = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
-                    navController.navigate(Route.Authentication.SignIn)
-                }
-            },
-            onUserNotFound = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
-                    navController.popBackStack()
-                }
             }
         )
+        LaunchedEffect(state.error) {
+            if (state.error == NetworkError.AUTHENTICATION) {
+                navController.navigate(Route.Authentication.SignIn)
+            }
+        }
     }
 }

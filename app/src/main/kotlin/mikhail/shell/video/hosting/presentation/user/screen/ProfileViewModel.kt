@@ -25,7 +25,7 @@ class ProfileViewModel @AssistedInject constructor(
     private val getOwnedChannels: GetOwnedChannels,
     private val signOut: SignOut
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ProfileScreenState>(ProfileScreenState.Loading)
+    private val _state = MutableStateFlow<ProfileScreenState>(ProfileScreenState())
     val state = _state.onStart {
         viewModelScope.launch {
             load()
@@ -49,30 +49,33 @@ class ProfileViewModel @AssistedInject constructor(
     private suspend fun load() {
         getUser(userId)
             .onSuccess { user ->
-                ProfileScreenState.Success(
-                    user = user.toUi(),
-                    channelState = OwnedChannelsState()
-                )
+                _state.update {
+                    it.copy(
+                        user = user.toUi(),
+                        error = null
+                    )
+                }
             }.onFailure { error ->
-                ProfileScreenState.Failure(error)
+                _state.update {
+                    it.copy(
+                        error = error
+                    )
+                }
             }
     }
 
     private suspend fun loadChannels() {
         _state.update {
-            it as ProfileScreenState.Success
             it.copy(
                 channelState = it.channelState.copy(isLoading = true)
             )
         }
-        val currentState = _state.value as ProfileScreenState.Success
         getOwnedChannels(
             userId = userId,
-            partIndex = (currentState.channelState.channels?.size ?: 0).toLong() / PART_SIZE,
+            partIndex = (_state.value.channelState.channels?.size ?: 0).toLong() / PART_SIZE,
             partSize = PART_SIZE
         ).onSuccess { channels ->
             _state.update {
-                it as ProfileScreenState.Success
                 it.copy(
                     channelState = it.channelState.copy(
                         channels = channels.map { it.toUi() },
@@ -84,7 +87,6 @@ class ProfileViewModel @AssistedInject constructor(
             }
         }.onFailure { error ->
             _state.update {
-                it as ProfileScreenState.Success
                 it.copy(
                     channelState = it.channelState.copy(
                         error = error,
@@ -100,7 +102,7 @@ class ProfileViewModel @AssistedInject constructor(
         viewModelScope.launch {
             signOut.invoke().onSuccess {
                 _state.update {
-                    ProfileScreenState.SignedOut
+                    it.copy(signedOut = true)
                 }
             }
         }
