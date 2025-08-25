@@ -39,18 +39,21 @@ interface ChannelApi {
         @Path("userId") userId: Long
     ): List<ChannelDto>
     @GET("channels/subscriptions")
-    suspend fun getSubscriptions(): List<ChannelDto>
-    @PATCH("channels/{channelId}/subscribe")
+    suspend fun getSubscriptions(
+        partIndex: Long,
+        partSize: Int
+    ): List<ChannelDto>
+    @PATCH("channels/{channelId}/subscription")
     suspend fun subscribe(
         @Path("channelId") channelId: Long,
         @Query("subscription") subscription: Subscription,
         @Query("fcmToken") fcmToken: String
     ): ChannelWithUserDto
-    @PATCH("channels/notifications/subscribe")
+    @POST("channels/notifications/subscription")
     suspend fun subscribeToChannelNotifications(
         @Query("fcmToken") fcmToken: String
     )
-    @PATCH("channels/notifications/unsubscribe")
+    @DELETE("channels/notifications/subscription")
     suspend fun unsubscribeFromChannelNotifications(
         @Query("fcmToken") fcmToken: String
     )

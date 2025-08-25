@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.subscriptions
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,40 +14,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
+import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
+import mikhail.shell.video.hosting.presentation.utils.ReloadableBox
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SubscriptionsScreen(
-    modifier: Modifier = Modifier,
     state: SubscriptionsScreenState,
-    onRefresh: () -> Unit,
-    onChannelClick: (Long) -> Unit,
-    onUserNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit
+    onEvent: (SubscriptionsScreenUiEvent) -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     val snackBarHostState = remember { SnackbarHostState() }
+
     Scaffold(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
@@ -61,76 +55,103 @@ fun SubscriptionsScreen(
         }
     ) { padding ->
         if (state.channels != null) {
-            LazyVerticalGrid(
+            ReloadableBox(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .then(
-                        if (isWidthCompact) {
-                            Modifier
-                        } else {
-                            Modifier
-                                .padding(top = 10.dp)
-                                .padding(horizontal = 10.dp)
-                        }
-                    ),
-                columns = GridCells.Adaptive(300.dp),
-                horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                verticalArrangement = if (state.channels.isEmpty()) Arrangement.Center else Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp)
+                    .padding(padding),
+                onLaunch = {
+                    onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = true))
+                },
+                isLoading = state.isLoading
             ) {
                 if (state.channels.isNotEmpty()) {
-                    items(state.channels) {
-                        ChannelSnippet(
-                            modifier = Modifier
-                                .then(
-                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
-                                        Modifier
-                                    } else {
-                                        Modifier.clip(RoundedCornerShape(15.dp))
-                                    }
-                                ),
-                            channel = it,
-                            onClick = onChannelClick
+                    LazyVerticalGrid(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(
+                                if (isWidthCompact) {
+                                    Modifier
+                                } else {
+                                    Modifier
+                                        .padding(top = 10.dp)
+                                        .padding(horizontal = 10.dp)
+                                }
+                            ),
+                        columns = GridCells.Adaptive(300.dp),
+                        horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
+                        verticalArrangement = if (state.channels.isEmpty()) Arrangement.Center else Arrangement.spacedBy(
+                            if (isWidthCompact) 0.dp else 10.dp
                         )
-                    }
-                } else {
-                    item(
-                        span = {
-                            GridItemSpan(maxLineSpan)
-                        }
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.no_subscriptions_yet),
-                                textAlign = TextAlign.Center
+                        items(state.channels) {
+                            ChannelSnippet(
+                                modifier = Modifier
+                                    .then(
+                                        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                            Modifier
+                                        } else {
+                                            Modifier.clip(RoundedCornerShape(15.dp))
+                                        }
+                                    ),
+                                channel = it,
+                                onClick = {
+                                    onEvent(SubscriptionsScreenUiEvent.ClickedChannel(it))
+                                }
                             )
                         }
+                        if (state.isLoading) {
+                            item(
+                                span = {
+                                    GridItemSpan(maxLineSpan)
+                                }
+                            ) {
+                                LoadingComponent(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.surface)
+                                )
+                            }
+                        } else if (state.error != null) {
+                            item(
+                                span = {
+                                    GridItemSpan(maxLineSpan)
+                                }
+                            ) {
+                                ErrorComponent(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.surface),
+                                    onRetry = {
+                                        onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = false))
+                                    }
+                                )
+                            }
+                        }
                     }
+                } else {
+                    EmptyResultComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
+                        message = stringResource(R.string.no_subscriptions_yet)
+                    )
                 }
             }
         } else if (state.isLoading) {
             LoadingComponent(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
             )
         } else if (state.error != null) {
             ErrorComponent(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
-                onRetry = onRefresh
+                onRetry = {
+                    onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = true))
+                }
             )
         }
     }
-    StandardComplexErrorHandler(
-        error = state.error,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.user_not_found),
-        notFoundHandler = onUserNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
 }

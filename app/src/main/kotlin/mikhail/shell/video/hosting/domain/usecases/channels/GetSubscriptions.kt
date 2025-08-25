@@ -9,5 +9,11 @@ import javax.inject.Inject
 class GetSubscriptions @Inject constructor(
     private val channelsRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(): Result<List<Channel>, Error> = channelsRepository.fetchSubscriptions()
+    suspend operator fun invoke(
+        partIndex: Long,
+        partSize: Int
+    ): Result<List<Channel>, Error> = channelsRepository.fetchSubscriptions(
+        partIndex = partIndex,
+        partSize = partSize
+    )
 }

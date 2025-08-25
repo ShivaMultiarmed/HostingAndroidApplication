@@ -61,8 +61,14 @@ class ChannelRepositoryWithApi @Inject constructor(
             channelApi.getChannelsByOwner(userId).map { it.toDomain() }
         }
 
-    override suspend fun fetchSubscriptions(): Result<List<Channel>, Error> = request {
-        channelApi.getSubscriptions().map { it.toDomain() }
+    override suspend fun fetchSubscriptions(
+        partIndex: Long,
+        partSize: Int
+    ): Result<List<Channel>, Error> = request {
+        channelApi.getSubscriptions(
+            partIndex = partIndex,
+            partSize = partSize
+        ).map { it.toDomain() }
     }
 
     override suspend fun subscribe(
