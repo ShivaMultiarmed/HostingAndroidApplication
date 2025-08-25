@@ -10,7 +10,7 @@ class ValidateTitle @Inject constructor() {
         return if (title.isEmpty()) {
             Result.Failure(TextError.EMPTY)
         } else if (title.length > ValidationRules.MAX_TITLE_LENGTH) {
-            Result.Failure(TextError.LARGE)
+            Result.Failure(TextError.LONG)
         } else {
             Result.Success(Unit)
         }

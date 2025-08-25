@@ -2,7 +2,8 @@ package mikhail.shell.video.hosting.domain.errors
 
 enum class TextError: Error {
     EMPTY,
-    LARGE,
+    SHORT,
+    LONG,
     EXISTS,
     PATTERN
 }

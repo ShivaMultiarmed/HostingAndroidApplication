@@ -12,7 +12,5 @@ sealed class ChannelEditingUiEvent {
     data class DescriptionChanged(val description: String) : ChannelEditingUiEvent()
     data object Submit : ChannelEditingUiEvent()
     data object Cancel: ChannelEditingUiEvent()
-    data object Success: ChannelEditingUiEvent()
     data object Retry: ChannelEditingUiEvent()
-    data object AuthenticationRequired: ChannelEditingUiEvent()
 }

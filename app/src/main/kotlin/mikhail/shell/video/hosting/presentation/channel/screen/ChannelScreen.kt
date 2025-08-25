@@ -32,11 +32,9 @@ import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandle
 
 @Composable
 fun ChannelScreen(
+    userId: Long,
     state: ChannelScreenState,
-    onEvent: (ChannelScreenUiEvent) -> Unit,
-    onChannelNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit,
-    owns: Boolean = false
+    onEvent: (ChannelScreenUiEvent) -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -61,7 +59,7 @@ fun ChannelScreen(
                         modifier = Modifier.padding(10.dp),
                         channel = state.channel,
                         onEvent = onEvent,
-                        owns = owns,
+                        owns = userId == state.channel.channelId,
                         onShowAvatar = {
                             shouldShowAvatar = true
                         }
@@ -81,9 +79,7 @@ fun ChannelScreen(
                         StandardComplexErrorHandler(
                             error = state.videoState.error,
                             snackBarHostState = snackBarHostState,
-                            notFoundMessage = stringResource(R.string.channel_not_found),
-                            notFoundHandler = onChannelNotFound,
-                            authenticationRequiredHandler = onAuthenticationRequired
+                            notFoundMessage = stringResource(R.string.channel_not_found)
                         )
                     }
                 }
@@ -117,9 +113,7 @@ fun ChannelScreen(
                 StandardComplexErrorHandler(
                     error = state.error,
                     snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.channel_not_found),
-                    notFoundHandler = onChannelNotFound,
-                    authenticationRequiredHandler = onAuthenticationRequired
+                    notFoundMessage = stringResource(R.string.channel_not_found)
                 )
             }
         }

@@ -100,7 +100,7 @@ fun ChannelCreationScreen(
             }
             val titleErrMsg = when (state.titleError) {
                 TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                TextError.LARGE -> stringResource(
+                TextError.LONG -> stringResource(
                     R.string.text_too_large_error,
                     ValidationRules.MAX_TITLE_LENGTH
                 )
@@ -127,7 +127,7 @@ fun ChannelCreationScreen(
                 )
             }
             val aliasErrMsg = when (state.aliasError) {
-                TextError.LARGE -> stringResource(
+                TextError.LONG -> stringResource(
                     R.string.text_too_large_error,
                     ValidationRules.MAX_TITLE_LENGTH
                 )
@@ -154,7 +154,7 @@ fun ChannelCreationScreen(
                 )
             }
             val descriptionErrMsg = when (state.descriptionError) {
-                TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
+                TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                 else -> null
             }
             EditField(

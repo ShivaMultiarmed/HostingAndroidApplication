@@ -182,6 +182,5 @@ sealed class VideoEditingUiEvent {
     data class CoverChanged(val cover: String?, val action: EditAction) : VideoEditingUiEvent()
     data class DescriptionChanged(val description: String) : VideoEditingUiEvent()
     data object Submit : VideoEditingUiEvent()
-    data object Success : VideoEditingUiEvent()
     data object Cancel : VideoEditingUiEvent()
 }

@@ -4,7 +4,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -39,11 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -52,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,17 +70,13 @@ import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 @Composable
 fun SearchVideosScreen(
     state: SearchVideosScreenState,
-    onSubmit: (String) -> Unit = {},
-    onScrollToBottom: () -> Unit = {},
-    onVideoClick: (Long) -> Unit = {},
-    onAuthenticationRequired: () -> Unit = {}
+    onEvent: (SearchScreenUiEvent) -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    var query by rememberSaveable { mutableStateOf("") }
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         topBar = {
@@ -98,12 +89,12 @@ fun SearchVideosScreen(
                     )
             ) {
                 val button = createRef()
-                var errorMsg by rememberSaveable { mutableStateOf<String?>(null) }
+                val errorMsg = state.queryError?.let { "" }
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = query,
+                    value = state.query,
                     onValueChange = {
-                        query = it
+                        onEvent(SearchScreenUiEvent.QueryChanged(it))
                     },
                     errorMsg = errorMsg,
                     placeholder = stringResource(R.string.video_search_label),
@@ -115,10 +106,9 @@ fun SearchVideosScreen(
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     },
-                    enabled = query.isNotEmpty(),
+                    enabled = state.query.isNotEmpty(),
                     onClick = {
-                        errorMsg = null
-                        onSubmit(query)
+                        onEvent(SearchScreenUiEvent.Submit)
                     },
                     icon = Icons.AutoMirrored.Rounded.Send
                 )
@@ -133,14 +123,10 @@ fun SearchVideosScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            val lazyGridState = rememberLazyGridState()
+            val reachedBottom by remember { derivedStateOf { lazyGridState.reachedBottom(buffer = 4) } }
             if (state.videos != null) {
                 if (state.videos.isNotEmpty()) {
-                    val lazyGridState = rememberLazyGridState()
-                    val reachedBottom by remember {
-                        derivedStateOf {
-                            lazyGridState.reachedBottom(buffer = 4)
-                        }
-                    }
                     LazyVerticalGrid(
                         modifier = Modifier
                             .fillMaxSize()
@@ -160,7 +146,7 @@ fun SearchVideosScreen(
                     ) {
                         items(state.videos) {
                             VideoWithChannelSnippet(
-                                modifier = modifier
+                                modifier = Modifier
                                     .then(
                                         if (isWidthCompact) {
                                             Modifier
@@ -170,54 +156,57 @@ fun SearchVideosScreen(
                                         }
                                     ),
                                 videoWithChannel = it,
-                                onClick = onVideoClick
+                                onClick = {
+                                    onEvent(SearchScreenUiEvent.ClickedVideo(it))
+                                }
                             )
+                        }
+                        item (
+                            span = {
+                                GridItemSpan(maxLineSpan)
+                            }
+                        ) {
+                            if (state.isLoading) {
+                                LoadingComponent(modifier = Modifier.fillMaxSize())
+                            } else if (state.error != null) {
+                                ErrorComponent(
+                                    modifier = Modifier.fillMaxSize(),
+                                    onRetry = {
+                                        onEvent(SearchScreenUiEvent.Reload)
+                                    }
+                                )
+                            }
                         }
                     }
                     LaunchedEffect(reachedBottom) {
-                        if (reachedBottom && !state.areAllVideosLoaded) {
-                            onScrollToBottom()
+                        if (reachedBottom && state.hasMore) {
+                            onEvent(SearchScreenUiEvent.BottomReached)
                         }
                     }
                 } else {
                     EmptyResultComponent(
-                        modifier = modifier
+                        modifier = Modifier
                             .padding(padding)
                             .fillMaxSize(),
                         message = stringResource(R.string.video_found_nothing)
                     )
                 }
+            } else if (state.isLoading) {
+                LoadingComponent(modifier = Modifier.fillMaxSize())
             } else if (state.error != null) {
                 ErrorComponent(
-                    modifier = modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     onRetry = {
-                        if (query.isNotEmpty()) {
-                            onSubmit(query)
-                        }
+                        onEvent(SearchScreenUiEvent.Reload)
                     }
                 )
-            } else if (state.isLoading) {
-                LoadingComponent(
-                    modifier = modifier.fillMaxSize()
-                )
-            } else {
-                Box(
-                    modifier = modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.video_search_hint),
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
+            StandardComplexErrorHandler(
+                error = state.error,
+                snackBarHostState = snackBarHostState
+            )
         }
     }
-    StandardComplexErrorHandler(
-        error = state.error,
-        snackBarHostState = snackBarHostState,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

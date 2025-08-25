@@ -38,8 +38,7 @@ import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSni
 @Composable
 fun VideoRecommendationsScreen(
     state: RecommendationsScreenState,
-    onEvent: (RecommendationsScreenUiEvent) -> Unit,
-    onAuthenticationRequired: () -> Unit
+    onEvent: (RecommendationsScreenUiEvent) -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -135,8 +134,7 @@ fun VideoRecommendationsScreen(
         }
         StandardComplexErrorHandler(
             error = state.error,
-            snackBarHostState = snackBarHostState,
-            authenticationRequiredHandler = onAuthenticationRequired
+            snackBarHostState = snackBarHostState
         )
     }
 }

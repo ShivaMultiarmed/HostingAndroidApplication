@@ -125,9 +125,7 @@ fun VideoScreen(
     state: VideoScreenState,
     player: Player,
     userId: Long,
-    onEvent: (VideoScreenUiEvent) -> Unit,
-    onVideoNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit
+    onEvent: (VideoScreenUiEvent) -> Unit
 ) {
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -519,9 +517,7 @@ fun VideoScreen(
                                             sheetState = sheetState,
                                             commentsState = notNullCommentsState,
                                             userId = userId,
-                                            onEvent = onEvent,
-                                            onVideoNotFound = onVideoNotFound,
-                                            onAuthenticationRequired = onAuthenticationRequired,
+                                            onEvent = onEvent
                                         )
                                     }
                                 }
@@ -532,16 +528,12 @@ fun VideoScreen(
                 StandardComplexErrorHandler(
                     error = state.likingError,
                     snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found),
-                    notFoundHandler = onVideoNotFound,
-                    authenticationRequiredHandler = onAuthenticationRequired
+                    notFoundMessage = stringResource(R.string.video_not_found)
                 )
                 StandardComplexErrorHandler(
                     error = state.subscriptionError,
                     snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found),
-                    notFoundHandler = onVideoNotFound,
-                    authenticationRequiredHandler = onAuthenticationRequired
+                    notFoundMessage = stringResource(R.string.video_not_found)
                 )
             }
 
@@ -565,9 +557,7 @@ fun VideoScreen(
                 StandardComplexErrorHandler(
                     error = state.error,
                     snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found),
-                    notFoundHandler = onVideoNotFound,
-                    authenticationRequiredHandler = onAuthenticationRequired
+                    notFoundMessage = stringResource(R.string.video_not_found)
                 )
             }
 
@@ -594,11 +584,8 @@ fun CommentsBottomSheet(
     userId: Long,
     sheetState: SheetState,
     commentsState: CommentsState,
-    onEvent: (VideoScreenUiEvent) -> Unit,
-    onVideoNotFound: () -> Unit,
-    onAuthenticationRequired: () -> Unit
+    onEvent: (VideoScreenUiEvent) -> Unit
 ) {
-    val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
     ModalBottomSheet(
         sheetState = sheetState,
@@ -671,9 +658,7 @@ fun CommentsBottomSheet(
     StandardComplexErrorHandler(
         error = commentsState.error,
         snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.video_not_found),
-        notFoundHandler = onVideoNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
+        notFoundMessage = stringResource(R.string.video_not_found)
     )
 }
 

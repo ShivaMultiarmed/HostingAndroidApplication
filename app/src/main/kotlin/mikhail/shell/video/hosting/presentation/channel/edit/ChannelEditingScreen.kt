@@ -111,12 +111,11 @@ fun ChannelEditingScreen(
                             message = activity.resources.getString(R.string.channel_edit_success),
                             duration = SnackbarDuration.Long
                         )
-                        onEvent(ChannelEditingUiEvent.Success)
                     }
                 }
                 val titleErrMsg = when(current.titleError) {
                     TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
                     else -> null
                 }
@@ -144,7 +143,7 @@ fun ChannelEditingScreen(
                     )
                 }
                 val aliasErrMsg = when (current.aliasError) {
-                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
                     else -> null
                 }
@@ -172,7 +171,7 @@ fun ChannelEditingScreen(
                     )
                 }
                 val descriptionErrMsg = when (current.descriptionError) {
-                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
+                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                     else -> null
                 }
                 StandardEditField(
@@ -407,29 +406,24 @@ fun ChannelEditingScreen(
                 }
             }
         }
-    } else if (state is ChannelEditingScreenState.Initializing) {
-        if (state.error != null) {
-            ErrorComponent(
-                modifier = Modifier.fillMaxSize(),
-                onRetry = {
-                    onEvent(ChannelEditingUiEvent.Retry)
-                }
-            )
-            StandardComplexErrorHandler(
-                error = state.error,
-                snackBarHostState = snackBarHostState,
-                notFoundMessage = stringResource(R.string.channel_not_found),
-                notFoundHandler = {
-                    onEvent(ChannelEditingUiEvent.Cancel)
-                },
-                authenticationRequiredHandler = {
-                    onEvent(ChannelEditingUiEvent.AuthenticationRequired)
-                }
-            )
-        } else {
-            LoadingComponent(
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+    } else if (state is ChannelEditingScreenState.Failure) {
+        ErrorComponent(
+            modifier = Modifier.fillMaxSize(),
+            onRetry = {
+                onEvent(ChannelEditingUiEvent.Retry)
+            }
+        )
+        StandardComplexErrorHandler(
+            error = state.error,
+            snackBarHostState = snackBarHostState,
+            notFoundMessage = stringResource(R.string.channel_not_found),
+            notFoundHandler = {
+                onEvent(ChannelEditingUiEvent.Cancel)
+            }
+        )
+    } else if (state is ChannelEditingScreenState.Loading) {
+        LoadingComponent(
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }

@@ -1,53 +1,42 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenState
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingUiEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
-import kotlin.time.Duration.Companion.milliseconds
 
-fun NavGraphBuilder.editVideoRoute(
-    navController: NavController,
-) {
+fun NavGraphBuilder.editVideoRoute(navController: NavController) {
     composable<Route.Video.Edit> {
         val input = it.toRoute<Route.Video.Edit>()
         val viewModel = hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { it.create(input.videoId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val coroutineScope = rememberCoroutineScope()
         VideoEditingScreen(
             state = state,
             onEvent = {
-
-            },
-            onRefresh = viewModel::loadInitialVideo,
-            onSubmit = viewModel::edit,
-            onSuccess = {
-                navController.navigate(Route.Video.View(it))
-            },
-            onCancel = {
-                navController.navigate(Route.Video.View(it))
-            },
-            onVideoNotFound = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
-                    navController.popBackStack()
-                }
-            },
-            onAuthenticationRequired = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
-                    navController.navigate(Route.Authentication)
+                when (it) {
+                    VideoEditingUiEvent.Cancel -> navController.popBackStack()
+                    else -> null
                 }
             }
         )
+        LaunchedEffect(state) {
+            if (state is VideoEditingScreenState.Failure) {
+                if ((state as VideoEditingScreenState.Failure).error == NetworkError.NOT_FOUND) {
+                    navController.popBackStack()
+                } else if ((state as VideoEditingScreenState.Failure).error == NetworkError.AUTHENTICATION) {
+                    navController.navigate(Route.Authentication)
+                }
+            }
+        }
     }
 }

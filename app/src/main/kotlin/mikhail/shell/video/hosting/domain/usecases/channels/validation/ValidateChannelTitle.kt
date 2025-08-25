@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.usecases.channels.validation
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.TextError.EXISTS
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
@@ -19,7 +19,7 @@ class ValidateChannelTitle @Inject constructor(
             val exists = channelRepository.existsByTitle(title)
             if (exists is Result.Success) {
                 if (exists.data) {
-                    Result.Failure(TextError.EXISTS)
+                    Result.Failure(EXISTS)
                 } else {
                     Result.Success(Unit)
                 }

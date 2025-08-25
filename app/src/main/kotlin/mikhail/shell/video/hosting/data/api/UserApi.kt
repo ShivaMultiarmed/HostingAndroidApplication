@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.UserDto
-import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.data.repositories.UserEditingRequest
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,13 +13,12 @@ import retrofit2.http.Path
 interface UserApi {
     @GET("users/{userId}")
     suspend fun get(@Path("userId") userId: Long): UserDto
-    @PATCH("users/edit")
+    @PATCH("users")
     @Multipart
     suspend fun edit(
-        @Part("user") user: UserDto,
-        @Part("avatarAction") avatarAction: EditAction,
+        @Part("user") request: UserEditingRequest,
         @Part avatar: MultipartBody.Part?
     ): UserDto
-    @DELETE
+    @DELETE("users")
     suspend fun remove()
 }

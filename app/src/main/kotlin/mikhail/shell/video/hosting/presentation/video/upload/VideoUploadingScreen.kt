@@ -319,7 +319,7 @@ fun VideoUploadingScreen(
                     if (!isFullScreen) {
                         val titleErrMsg = when(state.input.titleError) {
                             TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                            TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                            TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                             else -> null
                         }
                         val titleActionItems = if (state.input.title.isBlank()) emptyList() else listOf(
@@ -434,7 +434,7 @@ fun VideoUploadingScreen(
                             }
                         }
                         val descriptionErrMsg = when (state.input.descriptionError) {
-                            TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                            TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                             else -> null
                         }
                         StandardEditField(

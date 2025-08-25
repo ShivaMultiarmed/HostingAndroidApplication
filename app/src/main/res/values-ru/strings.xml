@@ -290,4 +290,7 @@
     <string name="channel_cover_choose_another_label">Выберите другую шапку</string>
     <string name="video_removed">Видео успешно удалено</string>
     <string name="video_uploaded_success">Видео успешно создано</string>
+    <string name="nick_validation_unavailable">Неизвестна занятость ника</string>
+    <string name="phone_number_short_error">Номер телефона слишком короткий</string>
+    <string name="phone_number_long_error">Номер телефона слишком длинный</string>
 </resources>

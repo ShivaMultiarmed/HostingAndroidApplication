@@ -17,9 +17,9 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
-import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 
 @HiltViewModel(assistedFactory = ChannelEditingViewModel.Factory::class)
 class ChannelEditingViewModel @AssistedInject constructor(
@@ -33,7 +33,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
 ) : ViewModel() {
 
     private val _state =
-        MutableStateFlow<ChannelEditingScreenState>(ChannelEditingScreenState.Initializing())
+        MutableStateFlow<ChannelEditingScreenState>(ChannelEditingScreenState.Loading)
     val state = _state
         .onStart {
             load()
@@ -69,8 +69,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     }
                 }.onFailure { error ->
                     _state.update {
-                        it as ChannelEditingScreenState.Initializing
-                        it.copy(error = error)
+                        ChannelEditingScreenState.Failure(error = error)
                     }
                 }
         }
@@ -80,17 +79,15 @@ class ChannelEditingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             when (event) {
                 is ChannelEditingUiEvent.AliasChanged -> onAliasChanged(event.alias)
-                ChannelEditingUiEvent.AuthenticationRequired -> Unit
-                ChannelEditingUiEvent.Cancel -> Unit
                 is ChannelEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
                 is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header)
                 is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo)
                 ChannelEditingUiEvent.Submit -> edit()
-                ChannelEditingUiEvent.Success -> Unit
                 is ChannelEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
                 is ChannelEditingUiEvent.HeaderExists -> onHeaderExists(event.exists)
                 is ChannelEditingUiEvent.LogoExists -> onLogoExists(event.exists)
                 ChannelEditingUiEvent.Retry -> load()
+                else -> Unit
             }
         }
     }

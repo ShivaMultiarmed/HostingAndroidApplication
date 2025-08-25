@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 
 import android.content.Intent
 import androidx.annotation.OptIn
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -25,7 +27,6 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenState
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
@@ -47,7 +48,7 @@ fun NavGraphBuilder.videoRoute(
         val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         VideoScreen(
-            owns = userId == (state as? VideoScreenState.Success)?.video?.ownerId,
+            userId = userId,
             state = state,
             player = player,
             onEvent = {
@@ -84,20 +85,16 @@ fun NavGraphBuilder.videoRoute(
                     }
                     else -> viewModel.onEvent(it)
                 }
-            },
-            onVideoNotFound = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
+            }
+        )
+        LaunchedEffect(state) {
+            if (state is VideoScreenState.Failure) {
+                if ((state as VideoScreenState.Failure).error == NetworkError.NOT_FOUND) {
                     navController.popBackStack()
-                }
-            },
-            onAuthenticationRequired = {
-                coroutineScope.launch {
-                    delay(800.milliseconds)
+                } else if ((state as VideoScreenState.Failure).error == NetworkError.AUTHENTICATION) {
                     navController.navigate(Route.Authentication)
                 }
             }
-        )
-
+        }
     }
 }

@@ -63,9 +63,7 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 @Composable
 fun VideoEditingScreen(
     state: VideoEditingScreenState,
-    onEvent: (VideoEditingUiEvent) -> Unit,
-    onAuthenticationRequired: () -> Unit,
-    // TODO onNotFound
+    onEvent: (VideoEditingUiEvent) -> Unit
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
@@ -98,7 +96,7 @@ fun VideoEditingScreen(
                 )
                 val titleErrMsg = when (state.currentVideo.titleError) {
                     TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     else -> null
                 }
                 StandardEditField(
@@ -236,7 +234,7 @@ fun VideoEditingScreen(
                     }
                 }
                 val descriptionErrMsg = when (state.currentVideo.descriptionError) {
-                    TextError.LARGE -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     else -> null
                 }
                 StandardEditField(
@@ -289,8 +287,7 @@ fun VideoEditingScreen(
                         notFoundMessage = stringResource(R.string.video_not_found),
                         notFoundHandler = {
                             onEvent(VideoEditingUiEvent.Cancel)
-                        },
-                        authenticationRequiredHandler = onAuthenticationRequired
+                        }
                     )
                 }
             }
