@@ -91,7 +91,7 @@ dependencies {
     implementation(libs.androidx.uiautomator)
     implementation(libs.androidx.window)
     testImplementation(libs.junit)
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation(libs.kotlinx.datetime)
 
     //androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.androidx.junit)
@@ -100,7 +100,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation(libs.androidx.core)
 
 
     implementation(libs.androidx.compose.foundation)
@@ -110,9 +110,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions)
-    implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
-    implementation("androidx.constraintlayout:constraintlayout-compose-android:1.1.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation(libs.androidx.material3.window.size.klass.android)
+    implementation(libs.androidx.constraintlayout.compose.android)
+    implementation(libs.androidx.appcompat)
 
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 
@@ -128,7 +128,7 @@ dependencies {
     implementation (libs.retrofit)
     implementation(libs.converter.gson)
     implementation (libs.okhttp)
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation (libs.logging.interceptor)
 
     implementation(libs.androidx.media3.exoplayer)
     implementation (libs.androidx.media3.ui)
@@ -136,10 +136,8 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.compose)
 
-    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
-    implementation("com.google.firebase:firebase-messaging-ktx:23.0.0")
-
-    implementation("androidx.compose.material3:material3-window-size-class-android:1.3.1")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging.ktx)
 
     implementation(libs.androidx.datastore)
 }

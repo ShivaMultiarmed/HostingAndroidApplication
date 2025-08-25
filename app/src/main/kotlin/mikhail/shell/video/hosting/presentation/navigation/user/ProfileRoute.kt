@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 import android.content.Intent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,7 +31,6 @@ fun NavGraphBuilder.profileRoute(
         val userId = bundle.userId
         val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             owns = userId == userDetailsProvider.getUserId(),
             state = state,
