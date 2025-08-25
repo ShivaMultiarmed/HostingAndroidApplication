@@ -293,4 +293,5 @@
     <string name="nick_validation_unavailable">Неизвестна занятость ника</string>
     <string name="phone_number_short_error">Номер телефона слишком короткий</string>
     <string name="phone_number_long_error">Номер телефона слишком длинный</string>
+    <string name="not_found_error">Не найдено</string>
 </resources>

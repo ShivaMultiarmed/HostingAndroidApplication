@@ -12,7 +12,11 @@ interface ChannelRepository {
 
     suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error>
 
-    suspend fun fetchChannelsByOwner(userId: Long): Result<List<Channel>, Error>
+    suspend fun fetchChannelsByOwner(
+        userId: Long,
+        partIndex: Long,
+        partSize: Int
+    ): Result<List<Channel>, Error>
 
     suspend fun fetchSubscriptions(
         partIndex: Long,

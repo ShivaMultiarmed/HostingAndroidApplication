@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.activity.compose.LocalActivity
@@ -43,7 +42,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,7 +54,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -66,63 +63,42 @@ import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
+import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.ReloadableBox
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ProfileScreen(
-    modifier: Modifier = Modifier,
+    owns: Boolean,
     state: ProfileScreenState,
-    isOwner: Boolean = false,
-    onGoToChannel: (Long) -> Unit,
-    onPublishVideo: () -> Unit,
-    onCreateChannel: () -> Unit,
-    onRefresh: () -> Unit,
-    onLogOut: () -> Unit,
-    onLogOutSuccess: () -> Unit,
-    onInvite: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onAuthenticationRequired: () -> Unit,
-    onUserNotFound: () -> Unit
+    onEvent: (ProfileScreenUiEvent) -> Unit
 ) {
     val orientation = LocalConfiguration.current.orientation
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
-    val content: @Composable () -> Unit = {
-        ProfileScreenContent(
-            modifier = modifier,
-            state = state,
-            isOwner = isOwner,
-            onGoToChannel = onGoToChannel,
-            onPublishVideo = onPublishVideo,
-            onCreateChannel = onCreateChannel,
-            onRefresh = onRefresh,
-            onLogOut = onLogOut,
-            onInvite = onInvite,
-            onShowAvatar = {
-                shouldShowAvatar = true
-            }
-        )
-    }
     val snackBarHostState = remember { SnackbarHostState() }
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopBar(
                     title = stringResource(R.string.profile_title),
-                    actions = if (isOwner) listOf(
+                    actions = if (owns) listOf(
                         {
                             IconButton(
-                                onClick = onOpenSettings
+                                onClick = {
+                                    onEvent(ProfileScreenUiEvent.OpenSettings)
+                                }
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Settings,
@@ -140,27 +116,71 @@ fun ProfileScreen(
                 )
             }
         ) { padding ->
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
+            if (state.user != null) {
+                ReloadableBox(
+                    modifier = Modifier.fillMaxSize(),
+                    onLaunch = {
+                        onEvent(ProfileScreenUiEvent.Reload)
+                    },
+                    isLoading = state.isLoading
                 ) {
-                    content()
+                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                        ) {
+                            ProfileScreenContent(
+                                owns = owns,
+                                state = state,
+                                onEvent = onEvent,
+                                onShowAvatar = {
+                                    shouldShowAvatar = true
+                                }
+                            )
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                        ) {
+                            ProfileScreenContent(
+                                owns = owns,
+                                state = state,
+                                onEvent = onEvent,
+                                onShowAvatar = {
+                                    shouldShowAvatar = true
+                                }
+                            )
+                        }
+                    }
                 }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    content()
-                }
+                StandardComplexErrorHandler(
+                    error = state.channelState.error,
+                    snackBarHostState = snackBarHostState
+                )
+            } else if (state.isLoading) {
+                LoadingComponent(
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (state.error != null) {
+                ErrorComponent(
+                    modifier = Modifier.fillMaxSize(),
+                    onRetry = {
+                        onEvent(ProfileScreenUiEvent.Reload)
+                    }
+                )
             }
+
+            StandardComplexErrorHandler(
+                error = state.error,
+                snackBarHostState = snackBarHostState
+            )
         }
-        if (shouldShowAvatar) {
+        if (state.user != null && shouldShowAvatar) {
             ImageViewerScreen(
-                model = state.user!!.avatar,
+                model = state.user.avatar,
                 imageModifier = Modifier
                     .fillMaxWidth(0.95f)
                     .aspectRatio(1f)
@@ -171,91 +191,55 @@ fun ProfileScreen(
             )
         }
     }
-    LaunchedEffect(state.isSignedOut) {
-        if (state.isSignedOut == true) {
-            onLogOutSuccess()
-        }
-    }
-
-    StandardComplexErrorHandler(
-        error = state.userError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.user_not_found),
-        notFoundHandler = onUserNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
-    StandardComplexErrorHandler(
-        error = state.channelError,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.user_not_found),
-        notFoundHandler = onUserNotFound,
-        authenticationRequiredHandler = onAuthenticationRequired
-    )
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ProfileScreenContent(
-    modifier: Modifier = Modifier,
+private fun ProfileScreenContent(
+    owns: Boolean,
     state: ProfileScreenState,
-    isOwner: Boolean = false,
-    onGoToChannel: (Long) -> Unit,
-    onPublishVideo: () -> Unit,
-    onCreateChannel: () -> Unit,
-    onRefresh: () -> Unit,
-    onLogOut: () -> Unit,
-    onInvite: () -> Unit,
+    onEvent: (ProfileScreenUiEvent) -> Unit,
     onShowAvatar: () -> Unit
 ) {
-    val context = LocalContext.current
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     val orientation = LocalConfiguration.current.orientation
-
-    if (state.user != null && state.channels != null) {
-        Column(
-            modifier = Modifier.then(
-                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    Modifier.fillMaxWidth()
-                } else {
+    Column(
+        modifier = Modifier.then(
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                Modifier.fillMaxWidth()
+            } else {
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.5f)
+                    .verticalScroll(rememberScrollState())
+            }
+        )
+    ) {
+        UserDetailsSection(
+            user = state.user!!,
+            onShowAvatar = onShowAvatar
+        )
+        if (owns) {
+            UserActions(
+                onEvent = onEvent,
+                hasChannels = (state.channelState.channels?.size ?: 0) > 0
+            )
+        }
+    }
+    Column(
+        modifier = Modifier
+            .then(
+                if (orientation == ORIENTATION_LANDSCAPE) {
                     Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.5f)
-                        .verticalScroll(rememberScrollState())
+                } else {
+                    Modifier.fillMaxSize()
                 }
             )
-        ) {
-            UserDetailsSection(
-                modifier = Modifier,
-                user = state.user,
-                onShowAvatar = onShowAvatar
-            )
-            if (isOwner) {
-                UserActions(
-                    modifier = Modifier,
-                    onPublishVideo = onPublishVideo.takeIf { state.channels.isNotEmpty() },
-                    onCreateChannel = onCreateChannel,
-                    onLogOut = onLogOut,
-                    onInvite = onInvite.takeIf {
-                        context.packageManager.hasSystemFeature(
-                            PackageManager.FEATURE_TELEPHONY
-                        )
-                    }
-                )
-            }
-        }
-        Column(
-            modifier = Modifier
-                .then(
-                    if (orientation == ORIENTATION_LANDSCAPE) {
-                        Modifier
-                    } else {
-                        Modifier.fillMaxSize()
-                    }
-                )
-                .padding(top = 10.dp)
-        ) {
-            if (state.channels.isNotEmpty()) {
+            .padding(top = 10.dp)
+    ) {
+        if (state.channelState.channels != null) {
+            if (state.channelState.channels.isNotEmpty()) {
                 Title(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -276,7 +260,7 @@ fun ProfileScreenContent(
                     verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                     columns = GridCells.Adaptive(300.dp)
                 ) {
-                    items(state.channels) { channel ->
+                    items(state.channelState.channels) { channel ->
                         ChannelSnippet(
                             modifier = Modifier.then(
                                 if (isWidthCompact) {
@@ -286,44 +270,59 @@ fun ProfileScreenContent(
                                 }
                             ),
                             channel = channel,
-                            onClick = onGoToChannel
+                            onClick = {
+                                onEvent(ProfileScreenUiEvent.ClickedChannel(it))
+                            }
                         )
+                    }
+                    if (state.channelState.isLoading) {
+                        item {
+                            LoadingComponent(
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    } else if (state.channelState.error != null) {
+                        item {
+                            ErrorComponent(
+                                modifier = Modifier.fillMaxSize(),
+                                onRetry = {
+                                    onEvent(ProfileScreenUiEvent.ReloadChannels)
+                                }
+                            )
+                        }
                     }
                 }
             } else {
-                Box(
+                EmptyResultComponent(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.user_channels_empty_message)
-                    )
-                }
+                    message = stringResource(R.string.user_channels_empty_message)
+                )
             }
+        } else if (state.channelState.error != null) {
+            ErrorComponent(
+                modifier = Modifier.fillMaxSize(),
+                onRetry = {
+                    onEvent(ProfileScreenUiEvent.ReloadChannels)
+                }
+            )
+        } else if (state.channelState.isLoading) {
+            LoadingComponent(
+                modifier = Modifier.fillMaxSize()
+            )
         }
-    } else if (state.channelError != null || state.userError != null) {
-        ErrorComponent(
-            modifier = modifier.fillMaxSize(),
-            onRetry = onRefresh
-        )
-    } else {
-        LoadingComponent(
-            modifier = modifier.fillMaxSize()
-        )
     }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun UserDetailsSection(
-    modifier: Modifier = Modifier,
+private fun UserDetailsSection(
     user: UserUi,
     onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
-    val avatar: @Composable () -> Unit = {
+    val avatar = @Composable {
         AsyncImage(
             model = user.avatar,
             contentScale = ContentScale.Crop,
@@ -345,17 +344,15 @@ fun UserDetailsSection(
             }
         )
     }
-    val nick: @Composable () -> Unit = {
+    val nick = @Composable {
         Text(
-            modifier = Modifier
-                .padding(top = 5.dp),
+            modifier = Modifier.padding(top = 5.dp),
             text = user.nick,
             fontSize = 16.sp
         )
     }
     Column(
-        modifier = modifier
-            .padding(10.dp),
+        modifier = Modifier.padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isCompact) {
@@ -374,7 +371,7 @@ fun UserDetailsSection(
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun UserTextDetails(
+private fun UserTextDetails(
     modifier: Modifier = Modifier,
     user: UserUi,
 ) {
@@ -444,7 +441,7 @@ fun UserTextDetails(
 }
 
 @Composable
-fun UserDetail(text: String) {
+private fun UserDetail(text: String) {
     Text(
         modifier = Modifier.padding(top = 5.dp),
         text = text,
@@ -453,12 +450,10 @@ fun UserDetail(text: String) {
 }
 
 @Composable
-fun UserActions(
+private fun UserActions(
     modifier: Modifier = Modifier,
-    onPublishVideo: (() -> Unit)? = null,
-    onCreateChannel: () -> Unit,
-    onLogOut: () -> Unit,
-    onInvite: (() -> Unit)? = null,
+    hasChannels: Boolean,
+    onEvent: (ProfileScreenUiEvent) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -468,22 +463,26 @@ fun UserActions(
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        if (onPublishVideo != null) {
+        if (hasChannels) {
             ActionButton(
                 text = stringResource(R.string.upload_video_button),
-                onClick = onPublishVideo
+                onClick = {
+                    onEvent(ProfileScreenUiEvent.PublishVideo)
+                }
             )
         }
         ActionButton(
             text = stringResource(R.string.create_channel_button),
-            onClick = onCreateChannel
+            onClick = {
+                onEvent(ProfileScreenUiEvent.CreateChannel)
+            }
         )
-        if (onInvite != null) {
-            ActionButton(
-                text = stringResource(R.string.invite_button),
-                onClick = onInvite
-            )
-        }
+        ActionButton(
+            text = stringResource(R.string.invite_button),
+            onClick = {
+                onEvent(ProfileScreenUiEvent.Invite)
+            }
+        )
         var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
         ActionButton(
             text = stringResource(R.string.sign_out_button),
@@ -493,7 +492,9 @@ fun UserActions(
         )
         if (isLogoutDialogVisible) {
             Dialog(
-                onSubmit = onLogOut,
+                onSubmit = {
+                    onEvent(ProfileScreenUiEvent.SignOut)
+                },
                 onDismiss = {
                     isLogoutDialogVisible = false
                 },
@@ -501,38 +502,6 @@ fun UserActions(
                 dialogDescription = stringResource(R.string.sign_out_warning_message)
             )
         }
-    }
-}
-
-@Composable
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-fun ProfileScreenPreviewDay() {
-    VideoHostingTheme {
-        ProfileScreen(
-            state = ProfileScreenState(
-                user = UserUi(
-                    100500,
-                    "Balance Keeper",
-                    "Mikhail Shell",
-                    "",
-                    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-                    "+79131234567",
-                    "some@email.com"
-                ), channels = listOf()
-            ),
-            isOwner = true,
-            onGoToChannel = {},
-            onPublishVideo = {},
-            onCreateChannel = {},
-            onRefresh = {},
-            onLogOut = {},
-            onLogOutSuccess = {},
-            onInvite = {},
-            onOpenSettings = {},
-            onAuthenticationRequired = {},
-            onUserNotFound = {}
-        )
     }
 }
 
@@ -548,7 +517,7 @@ fun ChannelSnippet(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
-                onClick(channel.channelId!!)
+                onClick(channel.channelId)
             }
             .padding(10.dp)
     ) {

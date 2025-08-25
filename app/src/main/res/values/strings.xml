@@ -280,4 +280,5 @@
     <string name="nick_validation_unavailable">Can\'t check if the nick is taken</string>
     <string name="phone_number_short_error">Phone number is too short</string>
     <string name="phone_number_long_error">Phone number is too long</string>
+    <string name="not_found_error">Not found</string>
 </resources>

@@ -20,6 +20,7 @@ fun Context.constructNetworkErrorMessage(error: NetworkError): String {
         error,
         mapOf(
             NetworkError.CONNECTION_ERROR to getString(R.string.connection_error),
+            NetworkError.NOT_FOUND to getString(R.string.not_found_error),
             NetworkError.TIMEOUT_EXCEEDED to getString(R.string.timeout_exceeded),
             NetworkError.SERVER_NOT_AVAILABLE to getString(R.string.server_not_available),
             NetworkError.BAD_REQUEST to getString(R.string.bad_request),

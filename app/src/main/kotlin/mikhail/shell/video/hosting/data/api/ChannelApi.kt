@@ -36,7 +36,9 @@ interface ChannelApi {
     ): ChannelDto
     @GET("channels/owner/{userId}")
     suspend fun getChannelsByOwner(
-        @Path("userId") userId: Long
+        @Path("userId") userId: Long,
+        @Query("partIndex") partIndex: Long,
+        @Query("partSize") partSize: Int
     ): List<ChannelDto>
     @GET("channels/subscriptions")
     suspend fun getSubscriptions(

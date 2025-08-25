@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
+import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenUiEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 import kotlin.time.Duration.Companion.milliseconds
@@ -34,44 +35,38 @@ fun NavGraphBuilder.profileRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
+            owns = userId == userDetailsProvider.getUserId(),
             state = state,
-            isOwner = userId == userDetailsProvider.getUserId(),
+            onEvent = {
+                when (it) {
+                    is ProfileScreenUiEvent.ClickedChannel -> navController.navigate(Route.Channel.View(it.channelId))
+                    ProfileScreenUiEvent.CreateChannel -> navController.navigate(Route.Channel.Create)
+                    ProfileScreenUiEvent.Invite -> {
+                        context.startActivity(
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
+                            }
+                        )
+                    }
+                    ProfileScreenUiEvent.OpenSettings -> navController.navigate(Route.User.Settings)
+                    ProfileScreenUiEvent.PublishVideo -> navController.navigate(Route.Video.Upload)
+                    ProfileScreenUiEvent.SignOut -> {
+                        player.stop()
+                        player.clearMediaItems()
+
+                        viewModel.onEvent(it)
+
+                        logOut(userDetailsProvider, navController)
+                    }
+                    else -> viewModel.onEvent(it)
+                }
+            },
             onGoToChannel = {
-                navController.navigate(Route.Channel.View(it))
+
             },
             onPublishVideo = {
-                navController.navigate(Route.Video.Upload)
-            },
-            onCreateChannel = {
-                navController.navigate(Route.Channel.Create)
-            },
-            onRefresh = {
-                if (state.user == null) {
-                    viewModel.loadProfile()
-                }
-                if (state.channels == null) {
-                    viewModel.loadChannels()
-                }
-            },
-            onLogOut = {
-                player.stop()
-                player.clearMediaItems()
 
-                viewModel.signOut()
-            },
-            onLogOutSuccess = {
-                logOut(userDetailsProvider, navController)
-            },
-            onInvite = {
-                context.startActivity(
-                    Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
-                    }
-                )
-            },
-            onOpenSettings = {
-                navController.navigate(Route.User.Settings)
             },
             onAuthenticationRequired = {
                 coroutineScope.launch {
