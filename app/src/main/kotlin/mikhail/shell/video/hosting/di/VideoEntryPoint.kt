@@ -10,12 +10,12 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
-import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
+import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface VideoUploadingEntryPoint {
-    fun getUploadVideo(): UploadVideo
+    fun getUploadVideo(): UploadSource
     fun getRemoveVideo(): DeleteVideo
 }
 

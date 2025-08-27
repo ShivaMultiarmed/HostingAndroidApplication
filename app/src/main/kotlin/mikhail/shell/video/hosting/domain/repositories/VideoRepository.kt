@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.repositories
 
+import mikhail.shell.video.hosting.data.repositories.VideoMetaData
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
@@ -28,11 +29,6 @@ interface VideoRepository {
         partSize: Int
     ): Result<List<VideoWithChannel>, Error>
 
-    suspend fun uploadVideo(
-        video: Video,
-        cover: String?
-    ): Result<Video, Error>
-
     suspend fun incrementViews(videoId: Long): Result<Video, Error>
 
     suspend fun deleteVideo(videoId: Long): Result<Unit, Error>
@@ -58,4 +54,10 @@ interface VideoRepository {
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error>
+
+    suspend fun uploadVideo(
+        video: Video,
+        videoMetaData: VideoMetaData,
+        cover: String?
+    ): Result<Video, Error>
 }

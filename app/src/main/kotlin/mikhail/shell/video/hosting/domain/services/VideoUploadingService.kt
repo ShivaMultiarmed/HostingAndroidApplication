@@ -30,15 +30,15 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
-import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
+import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
 @AndroidEntryPoint
 class VideoUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
-    private lateinit var _uploadVideo: UploadVideo
-    private lateinit var _removeVideo: DeleteVideo
+    private lateinit var uploadSource: UploadSource
+    private lateinit var removeVideo: DeleteVideo
     private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -52,8 +52,8 @@ class VideoUploadingService : Service() {
         notificationManager = getSystemService(NotificationManager::class.java)
         videoUploadingEntryPoint =
             EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
-        _uploadVideo = videoUploadingEntryPoint.getUploadVideo()
-        _removeVideo = videoUploadingEntryPoint.getRemoveVideo()
+        uploadSource = videoUploadingEntryPoint.getUploadVideo()
+        removeVideo = videoUploadingEntryPoint.getRemoveVideo()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -69,26 +69,19 @@ class VideoUploadingService : Service() {
                     } else {
                         startForeground(++NOTIFICATION_COUNT, createProgressNotification())
                     }
-                    val video = Video(
-                        channelId = bundle.getLong("channelId"),
-                        title = bundle.getString("title")!!
-                    )
+                    val videoId = bundle.getLong("source")
                     sourceUri = bundle.getString("source")!!.toUri()
                     coverUri = bundle.getString("cover")?.toUri()
                     uploadJob = coroutineScope.launch {
                         try {
-                            _uploadVideo(
-                                video = video,
-                                source = bundle.getString("source")!!,
-                                cover = bundle.getString("cover"),
-                                onVideoCreated = { createdVideo ->
-                                    videoIdState.value = createdVideo.videoId
-                                }
+                            uploadSource(
+                                videoId = videoId,
+                                source = bundle.getString("source")!!
                             ) {
                                 updateProgressNotification((it * 100).toInt())
-                            }.onSuccess { vid ->
+                            }.onSuccess {
                                 stopUploading()
-                                displaySuccessNotification(vid)
+                                displaySuccessNotification(videoId)
                             }.onFailure { err ->
                                 stopUploading()
                                 displayFailureNotification(err)
@@ -101,7 +94,7 @@ class VideoUploadingService : Service() {
                     videoIdState
                         .mapNotNull { it }
                         .collect { newVideoId ->
-                            _removeVideo(newVideoId)
+                            removeVideo(newVideoId)
                             if (uploadJob?.isCancelled != true) {
                                 uploadJob?.cancel()
                             }

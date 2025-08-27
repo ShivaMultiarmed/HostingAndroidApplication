@@ -21,7 +21,6 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
-import retrofit2.http.Streaming
 
 interface VideoApi {
     @GET("videos/{videoId}")
@@ -46,23 +45,25 @@ interface VideoApi {
         @Query("partSize") partSize: Int
     ): List<VideoWithChannelDto>
     @Multipart
-    @POST("videos/upload")
+    @POST("videos")
     suspend fun uploadVideoDetails(
         @Part("video") video: VideoUploadingRequest,
         @Part cover: MultipartBody.Part?
     ): VideoDto
-    @POST("videos/upload/{videoId}/source")
+    @POST("videos/upload/{videoId}/chunk")
     suspend fun uploadVideoSource(
         @Path("videoId") videoId: Long,
-        @Query("extension") extension: String,
+        @Query("chunkIndex") chunkIndex: Long,
         @Body source: RequestBody
     )
-    @POST("videos/upload/{videoId}/confirm")
+    @POST("videos/upload/{videoId}/confirmation")
     suspend fun confirmVideoUpload(
         @Path("videoId") videoId: Long
     )
-    @PATCH("videos/{videoId}/increment-views")
-    suspend fun incrementViews(@Path("videoId") videoId: Long): VideoDto
+    @PATCH("videos/{videoId}/views")
+    suspend fun incrementViews(
+        @Path("videoId") videoId: Long
+    ): VideoDto
     @Multipart
     @PATCH("videos")
     suspend fun editVideo(
@@ -71,14 +72,7 @@ interface VideoApi {
     ): VideoDto
     @DELETE("videos/{videoId}")
     suspend fun deleteVideo(@Path("videoId") videoId: Long)
-    @GET("videos/{videoId}/play")
-    @Streaming
-    suspend fun playVideo(
-        @Path("videoId") videoId: Long,
-        @Header("Range") byteRange: String
-    ): Response<ResponseBody>
-    @GET("videos/{videoId}/download")
-    @Streaming
+    @GET("videos/{videoId}/source")
     suspend fun downloadVideo(
         @Path("videoId") videoId: Long,
         @Header("Range") byteRange: String

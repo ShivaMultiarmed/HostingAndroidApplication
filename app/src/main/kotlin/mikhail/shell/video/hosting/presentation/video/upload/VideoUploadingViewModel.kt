@@ -18,8 +18,8 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
-import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateVideoSource
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
+import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateVideoSource
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 
@@ -145,6 +145,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     description = input.description,
                     title = input.title,
                 ),
+                source = input.source!!,
                 cover = input.cover
             ).onSuccess { video ->
                 _state.update {
@@ -165,7 +166,11 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            getOwnedChannels(userId)
+            getOwnedChannels(
+                userId = userId,
+                partIndex = 0,
+                partSize = 100
+            ) // TODO all channels fetch here?
                 .onSuccess { channels ->
                     _state.update {
                         VideoUploadingScreenState.Editing(

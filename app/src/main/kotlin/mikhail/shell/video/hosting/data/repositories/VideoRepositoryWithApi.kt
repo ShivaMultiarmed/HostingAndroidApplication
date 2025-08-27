@@ -3,8 +3,13 @@ package mikhail.shell.video.hosting.data.repositories
 import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.utils.TRANSFER_BUFFER_SIZE
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
@@ -90,6 +95,7 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun uploadVideo(
         video: Video,
+        videoMetaData: VideoMetaData,
         cover: String?
     ): Result<Video, Error> {
         return request {
@@ -110,7 +116,8 @@ class VideoRepositoryWithApi @Inject constructor(
                 video = VideoUploadingRequest(
                     title = video.title,
                     channelId = video.channelId,
-                    description = video.description
+                    description = video.description,
+                    videoMetaData = videoMetaData
                 ),
                 cover = coverPart
             ).toDomain()
@@ -122,20 +129,21 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
         return try {
-            val sourceMime = fileProvider.getFileMimeType(source)!!
-            val sourceExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(sourceMime)
             val sourceSize = fileProvider.getFileSize(source)!!
             var bytesTransferred = 0
             val sourceInputStream = fileProvider.getFileAsInputStream(source)
+            val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
             sourceInputStream!!.process { bytesRead, buffer ->
-                videoApi.uploadVideoSource(
-                    videoId = videoId,
-                    extension = sourceExtension!!,
-                    source = buffer.toRequestBody(bytesNumber = bytesRead)
-                )
-                bytesTransferred += bytesRead
-                val progress = bytesTransferred.toFloat() / sourceSize
-                onProgress(progress)
+                coroutineScope.launch {
+                    videoApi.uploadVideoSource(
+                        videoId = videoId,
+                        chunkIndex = bytesTransferred.toLong() / TRANSFER_BUFFER_SIZE,
+                        source = buffer.toRequestBody(bytesNumber = bytesRead)
+                    )
+                    bytesTransferred += bytesRead
+                    val progress = bytesTransferred.toFloat() / sourceSize
+                    onProgress(progress)
+                }
             }
             videoApi.confirmVideoUpload(videoId)
             Result.Success(Unit)
@@ -261,7 +269,13 @@ class VideoRepositoryWithApi @Inject constructor(
 data class VideoUploadingRequest(
     val title: String,
     val channelId: Long,
-    val description: String?
+    val description: String?,
+    val videoMetaData: VideoMetaData
+)
+
+data class VideoMetaData(
+    val fileName: String,
+    val size: Long
 )
 
 data class VideoEditingRequest(
