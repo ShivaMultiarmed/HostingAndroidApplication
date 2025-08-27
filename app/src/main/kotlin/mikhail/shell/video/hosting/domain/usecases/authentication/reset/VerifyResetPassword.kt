@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain.usecases.authentication
+package mikhail.shell.video.hosting.domain.usecases.authentication.reset
 
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Result

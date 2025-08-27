@@ -2,65 +2,103 @@ package mikhail.shell.video.hosting.presentation.reset
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
-import mikhail.shell.video.hosting.domain.usecases.authentication.ConfirmResetPassword
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import javax.inject.Inject
+import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.usecases.authentication.reset.ConfirmResetPassword
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePasswordDuplicate
 
-class ConfirmResetViewModel @Inject constructor(
-    private val _confirmResetPassword: ConfirmResetPassword
+@HiltViewModel(assistedFactory = ConfirmResetViewModel.Factory::class)
+class ConfirmResetViewModel @AssistedInject constructor(
+    @Assisted("token") private val token: String,
+    private val validatePassword: ValidatePassword,
+    private val validatePasswordDuplicate: ValidatePasswordDuplicate,
+    private val confirm: ConfirmResetPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ConfirmResetScreenState())
+    private val _state = MutableStateFlow<ConfirmResetScreenState>(ConfirmResetScreenState.Entering())
     val state = _state.asStateFlow()
 
-    fun confirm(
-        token: String,
-        password: String,
-        passwordDuplicate: String
-    ) {
-        val compoundError = CompoundError<ResetError>()
-        if (password.isEmpty()) {
-            compoundError.add(ResetError.PASSWORD_EMPTY)
-        } else if (!password.matches(ValidationRules.PASSWORD_REGEX)) {
-            compoundError.add(ResetError.PASSWORD_NOT_VALID)
+    fun onEvent(event: ConfirmResetUiEvent) {
+        when (event) {
+            is ConfirmResetUiEvent.PasswordChanged -> onPasswordChanged(event.password)
+            is ConfirmResetUiEvent.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
+            ConfirmResetUiEvent.Submit -> confirm()
         }
-        if (password != passwordDuplicate) {
-            compoundError.add(ResetError.PASSWORDS_NOT_MATCH)
+    }
+
+    private fun onPasswordChanged(password: String) {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    password = password,
+                    passwordError = password.let {
+                        val validationResult = validatePassword(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
+            )
         }
-        if (compoundError.isEmpty()) {
-            _state.update {
-                it.copy(error = compoundError)
-            }
-        } else {
-            _state.update {
-                it.copy(isLoading = true)
-            }
-            viewModelScope.launch {
-                _confirmResetPassword(
-                    token = token,
-                    password = password
-                ).onSuccess {
-                    _state.update {
-                        it.copy(
-                            isAccepted = true,
-                            isLoading = false,
-                            error = null
+    }
+
+    private fun onPasswordDuplicateChanged(passwordDuplicate: String) {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordDuplicate = passwordDuplicate,
+                    passwordDuplicateError = passwordDuplicate.let { passwordDuplicate ->
+                        val validationResult = validatePasswordDuplicate(
+                            password = it.input.password,
+                            passwordDuplicate = passwordDuplicate
                         )
+                        if (validationResult is Result.Failure) validationResult.error else null
                     }
-                }.onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            error = error,
-                            isLoading = false
-                        )
-                    }
+                )
+            )
+        }
+    }
+
+    private fun confirm() {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(isLoading = true)
+        }
+        val input = (_state.value as ConfirmResetScreenState.Entering).input
+        viewModelScope.launch {
+            confirm(
+                token = token,
+                password = input.password
+            ).onSuccess { authModel ->
+                _state.update {
+                    ConfirmResetScreenState.Success(authModel)
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it as ConfirmResetScreenState.Entering
+                    it.copy(
+                        error = error,
+                        isLoading = false
+                    )
                 }
             }
         }
     }
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted("token") token: String): ConfirmResetViewModel
+    }
+}
+
+sealed class ConfirmResetUiEvent {
+    data class PasswordChanged(val password: String): ConfirmResetUiEvent()
+    data class PasswordDuplicatedChanged(val passwordDuplicate: String): ConfirmResetUiEvent()
+    data object Submit: ConfirmResetUiEvent()
 }

@@ -5,6 +5,9 @@ enum class TextError: Error {
     SHORT,
     LONG,
     EXISTS,
+    NOT_EXISTS,
+    NOT_CORRECT,
+    NOT_VALID,
     PATTERN
 }
 

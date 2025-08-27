@@ -10,5 +10,6 @@ enum class NetworkError: Error {
     FORBIDDEN,
     SERVER_ERROR,
     NOT_FOUND,
-    BAD_REQUEST
+    BAD_REQUEST,
+    CONFLICT
 }

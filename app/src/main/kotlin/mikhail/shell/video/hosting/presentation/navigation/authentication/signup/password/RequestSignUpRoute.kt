@@ -1,18 +1,15 @@
 package mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpViewModel
-import kotlin.time.Duration.Companion.seconds
 
 fun NavGraphBuilder.requestSignUpRoute(
     navController: NavController
@@ -20,16 +17,16 @@ fun NavGraphBuilder.requestSignUpRoute(
     composable<Route.Authentication.SignUp.Request> {
         val viewModel = hiltViewModel<RequestSignUpViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val coroutineScope = rememberCoroutineScope()
         RequestSignUpScreen(
             state = state,
-            onRequest = viewModel::request,
-            onSuccess = { userName ->
-                coroutineScope.launch {
-                    delay(0.5.seconds)
-                    navController.navigate(Route.Authentication.SignUp.Verification(userName))
-                }
+            onEvent = { event ->
+                viewModel.onEvent(event)
             }
         )
+        LaunchedEffect(state.isAccepted) {
+            if (state.isAccepted) {
+                navController.navigate(Route.Authentication.SignUp.Verification(state.userName))
+            }
+        }
     }
 }

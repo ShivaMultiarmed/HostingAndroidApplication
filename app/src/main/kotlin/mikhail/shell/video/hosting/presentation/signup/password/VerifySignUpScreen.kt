@@ -13,20 +13,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
-import mikhail.shell.video.hosting.domain.errors.equivalentTo
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -34,9 +28,7 @@ import mikhail.shell.video.hosting.presentation.utils.Title
 @Composable
 fun VerifySignUpScreen(
     state: VerifySignUpScreenState,
-    onVerify: (code: String) -> Unit,
-    onExpiration: () -> Unit,
-    onSuccess: (token: String) -> Unit,
+    onEvent: (VerifySignUpUiEvent) -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
@@ -50,59 +42,52 @@ fun VerifySignUpScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-        ) {
-            Title(
-                text = stringResource(R.string.sign_up_title)
-            )
-            var code by rememberSaveable { mutableStateOf("") }
-            val codeErrorMsg = constructInfoMessage(
-                error = state.error,
-                errorMessages = mapOf(
-                    SignUpError.CODE_NOT_VALID to stringResource(R.string.code_not_valid)
+        if (state is VerifySignUpScreenState.Entering) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+            ) {
+                Title(
+                    text = stringResource(R.string.sign_up_title)
                 )
-            )
-            CodeInputField(
-                isValid = when {
-                    state.error in arrayOf(SignUpError.CODE_NOT_VALID, SignUpError.CODE_NOT_CORRECT) -> false
-                    state.token != null -> true
+                val code = state.code
+                val codeErrorMsg = when (state.codeError) {
+                    TextError.NOT_CORRECT -> stringResource(R.string.code_not_correct)
                     else -> null
-                },
-                length = ValidationRules.CODE_LENGTH,
-                onValueChange = {
-                    code = it
                 }
-            )
-            if (codeErrorMsg != null) {
-                Text(
-                    text = codeErrorMsg
+                CodeInputField(
+                    isValid = when {
+                        state.codeError in arrayOf(
+                            TextError.NOT_CORRECT, TextError.NOT_VALID
+                        ) -> false
+                        else -> null
+                    },
+                    length = ValidationRules.CODE_LENGTH,
+                    onValueChange = {
+                        onEvent(VerifySignUpUiEvent.CodeChanged(it))
+                    }
                 )
-            }
-            LaunchedEffect(code) {
-                if (code.length == ValidationRules.CODE_LENGTH) {
-                    onVerify(code)
+                if (codeErrorMsg != null) {
+                    Text(
+                        text = codeErrorMsg
+                    )
+                }
+                LaunchedEffect(code) {
+                    if (code.length == ValidationRules.CODE_LENGTH) {
+                        onEvent(VerifySignUpUiEvent.Submit)
+                    }
                 }
             }
-            LaunchedEffect(state.token) {
-                if (state.token != null) {
-                    onSuccess(state.token)
-                }
-            }
+        } else if (state is VerifySignUpScreenState.Expired) {
+            StandardComplexErrorHandler(
+                error = TextError.NOT_VALID,
+                snackBarHostState = snackBarHostState
+            )
         }
     }
-    LaunchedEffect(state.error) {
-        if (state.error.equivalentTo(SignUpError.CODE_NOT_VALID)) {
-            onExpiration()
-        }
-    }
-    StandardComplexErrorHandler(
-        error = state.error,
-        snackBarHostState = snackBarHostState
-    )
+
 }

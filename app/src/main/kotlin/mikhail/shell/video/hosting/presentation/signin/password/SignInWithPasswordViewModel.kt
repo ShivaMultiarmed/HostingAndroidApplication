@@ -7,76 +7,111 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.CompoundError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
+import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
-    private val _signInWithPassword: SignInWithPassword,
-    private val _subscribeToNotifications: SubscribeToNotifications
+    private val validateUserName: ValidateUserName,
+    private val validatePassword: ValidatePassword,
+    private val signInWithPassword: SignInWithPassword,
+    private val subscribeToNotifications: SubscribeToNotifications
 ) : ViewModel() {
-    private val _state = MutableStateFlow(SignInWithPasswordState())
+    private val _state = MutableStateFlow<SignInScreenState>(SignInScreenState.Entering())
     val state = _state.asStateFlow()
 
-    private companion object {
-        val emailRegex = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
+    fun onEvent(event: SignInUiEvent) {
+        when (event) {
+            SignInUiEvent.Submit -> signIn()
+            is SignInUiEvent.PasswordChanged -> onPasswordChanged(event.password)
+            is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
+            else -> null
+        }
     }
 
-    private fun validateSignInInput(email: String, password: String): CompoundError<SignInError>? {
-        val compoundError = CompoundError<SignInError>()
-        if (email.isEmpty()) {
-            compoundError.add(SignInError.USERNAME_EMPTY)
-        }
-        else if (!emailRegex.matches(email)) {
-            compoundError.add(SignInError.USERNAME_MALFORMED)
-        }
-        if (password.isEmpty()) {
-            compoundError.add(SignInError.PASSWORD_EMPTY)
-        }
-        return compoundError.takeIf { it.isNotEmpty() }
-    }
-
-    fun signIn(email: String, password: String) {
+    private fun onPasswordChanged(password: String) {
         _state.update {
+            it as SignInScreenState.Entering
             it.copy(
-                isLoading = true
+                input = it.input.copy(
+                    password = password,
+                    passwordError = password.let {
+                        val validationResult = validatePassword(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
             )
         }
-        val compoundError = validateSignInInput(email, password)
-        if (compoundError == null) {
-            viewModelScope.launch {
-                _signInWithPassword(
-                    email,
-                    password
-                ).onSuccess {
-                    _state.value = SignInWithPasswordState(
-                        isLoading = false,
-                        authModel = it,
-                        error = null
-                    )
-                }.onFailure {
-                    _state.value = SignInWithPasswordState(
-                        isLoading = false,
-                        authModel = null,
-                        error = it
-                    )
-                }
-            }
-        } else {
+    }
+
+    private fun onUserNameChanged(userName: String) {
+        viewModelScope.launch {
             _state.update {
+                it as SignInScreenState.Entering
                 it.copy(
-                    isLoading = false,
-                    error = compoundError
+                    input = it.input.copy(
+                        userName = userName,
+                        userNameError = userName.let {
+                            val validationResult = validateUserName(it)
+                            if (validationResult is Result.Failure) {
+                                validationResult.error
+                            } else {
+                                validationResult as Result.Success
+                                if (!validationResult.data) TextError.NOT_EXISTS else null
+                            }
+                        }
+                    )
                 )
             }
         }
     }
-    fun subscribeToNotifications() {
+
+    private fun signIn() {
+        _state.update {
+            it as SignInScreenState.Entering
+            it.copy(isLoading = true)
+        }
+        val currentInput = (_state.value as SignInScreenState.Entering).input
         viewModelScope.launch {
-            _subscribeToNotifications()
+            signInWithPassword(
+                email = currentInput.userName,
+                password = currentInput.password
+            ).onSuccess { authModel ->
+                subscribeToNotifications()
+                _state.update {
+                    SignInScreenState.Success(authModel)
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it as SignInScreenState.Entering
+                    it.copy(
+                        isLoading = false,
+                        error = if (error != TextError.NOT_CORRECT) error else it.error,
+                        input = it.input.copy(
+                            passwordError = TextError.NOT_CORRECT
+                        )
+                    )
+                }
+            }
+        }
+
+    }
+
+    private fun subscribeToNotifications() {
+        viewModelScope.launch {
+            subscribeToNotifications.invoke()
         }
     }
+}
+
+sealed class SignInUiEvent {
+    data class UserNameChanged(val userName: String): SignInUiEvent()
+    data class PasswordChanged(val password: String): SignInUiEvent()
+    data object Submit: SignInUiEvent()
+    data object SignUp: SignInUiEvent()
 }

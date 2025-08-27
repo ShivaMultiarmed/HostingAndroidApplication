@@ -140,4 +140,7 @@ dependencies {
     implementation(libs.firebase.messaging.ktx)
 
     implementation(libs.androidx.datastore)
+
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
 }

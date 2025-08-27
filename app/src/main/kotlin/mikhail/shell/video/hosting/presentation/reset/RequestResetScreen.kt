@@ -27,7 +27,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -37,69 +39,65 @@ import mikhail.shell.video.hosting.presentation.utils.Title
 @Composable
 fun RequestResetScreen(
     state: RequestResetScreenState,
-    onRequest: (userName: String) -> Unit,
-    onSuccess: (userName: String) -> Unit
+    onEvent: (RequestResetUiEvent) -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding()
-            .background(MaterialTheme.colorScheme.background),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState
-            )
-        }
-    ) { padding ->
-        Column (
+    if (state is RequestResetScreenState.Entering) {
+        Scaffold(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-        ) {
-            Title(
-                text = stringResource(R.string.reset_password_title)
-            )
-            var userName by rememberSaveable { mutableStateOf("") }
-            val userNameErrorMsg = constructInfoMessage(
-                error = state.error,
-                errorMessages = mapOf(
-                    ResetError.USERNAME_EMPTY to stringResource(R.string.user_name_empty_error),
-                    ResetError.USERNAME_MALFORMED to stringResource(R.string.user_name_malformed),
-                    ResetError.USERNAME_NOT_FOUND to stringResource(R.string.user_name_exists)
+                .imePadding()
+                .background(MaterialTheme.colorScheme.background),
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackBarHostState
                 )
-            )
-            InputField(
+            }
+        ) { padding ->
+            Column (
                 modifier = Modifier
-                    .width(280.dp)
-                    .clip(RoundedCornerShape(10.dp)),
-                icon = Icons.Rounded.Email,
-                value = userName,
-                onValueChange = {
-                    userName = it
-                },
-                errorMsg = userNameErrorMsg,
-                placeholder = "E-mail"
-            )
-            PrimaryProgressButton(
-                inProgress = state.isLoading,
-                complete = state.isAccepted,
-                onClick = {
-                    onRequest(userName)
-                },
-                text = stringResource(R.string.go_forward_button)
-            )
-            StandardComplexErrorHandler(
-                error = state.error,
-                snackBarHostState = snackBarHostState
-            )
-            LaunchedEffect(state.isAccepted) {
-                if (state.isAccepted) {
-                    onSuccess(userName)
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+            ) {
+                Title(
+                    text = stringResource(R.string.reset_password_title)
+                )
+                val userNameErrorMsg = when (state.userNameError) {
+                    is TextError -> when (state.userNameError) {
+                        TextError.LONG -> TODO()
+                        TextError.EMPTY -> stringResource(R.string.user_name_empty_error)
+                        TextError.NOT_EXISTS -> stringResource(R.string.user_not_found)
+                        TextError.SHORT -> TODO()
+                        TextError.PATTERN -> stringResource(R.string.user_name_malformed)
+                        else -> null
+                    }
                 }
+                InputField(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+                    icon = Icons.Rounded.Email,
+                    value = state.userName,
+                    onValueChange = {
+                        onEvent(RequestResetUiEvent.UserNameChanged(it))
+                    },
+                    errorMsg = userNameErrorMsg,
+                    placeholder = "E-mail"
+                )
+                PrimaryProgressButton(
+                    inProgress = state.isLoading,
+                    onClick = {
+                        onEvent(RequestResetUiEvent.Submit)
+                    },
+                    text = stringResource(R.string.go_forward_button)
+                )
+                StandardComplexErrorHandler(
+                    error = state.error,
+                    snackBarHostState = snackBarHostState
+                )
             }
         }
     }

@@ -2,7 +2,11 @@ package mikhail.shell.video.hosting.presentation.signup.password
 
 import mikhail.shell.video.hosting.domain.errors.Error
 
-data class VerifySignUpScreenState(
-    val token: String? = null,
-    val error: Error? = null
-)
+sealed class VerifySignUpScreenState {
+    data class Entering(
+        val code: String = "",
+        val codeError: Error? = null
+    ): VerifySignUpScreenState()
+    data object Expired: VerifySignUpScreenState()
+    data class Success(val token: String): VerifySignUpScreenState()
+}

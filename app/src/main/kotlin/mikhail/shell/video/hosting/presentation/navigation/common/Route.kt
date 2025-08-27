@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.presentation.navigation.common
 
 import kotlinx.serialization.Serializable
 
-@Serializable
 sealed class Route {
     @Serializable
     data object Authentication: Route() {
