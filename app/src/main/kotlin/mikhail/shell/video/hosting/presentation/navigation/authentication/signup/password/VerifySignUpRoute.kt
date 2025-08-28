@@ -4,22 +4,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpScreenState
 import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpViewModel
 
-fun NavGraphBuilder.verifySignUpRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.verifySignUpRoute(
+    signUpBackStack: MutableList<Route>
 ) {
-    composable<Route.Authentication.SignUp.Verification> {
-        val bundle = it.toRoute<Route.Authentication.SignUp.Verification>()
-        val userName = bundle.userName
-        val viewModel = hiltViewModel<VerifySignUpViewModel, VerifySignUpViewModel.Factory> { it.create(userName) }
+    entry<Route.Authentication.SignUp.Verification> { bundle ->
+        val viewModel = hiltViewModel<VerifySignUpViewModel, VerifySignUpViewModel.Factory> { it.create(bundle.userName) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         VerifySignUpScreen(
             state = state,
@@ -29,11 +25,14 @@ fun NavGraphBuilder.verifySignUpRoute(
         )
         LaunchedEffect(state) {
             if (state is VerifySignUpScreenState.Success) {
-                navController.navigate(
+                signUpBackStack.add(
                     Route.Authentication.SignUp.Confirmation(
                         (state as VerifySignUpScreenState.Success).token
                     )
                 )
+                signUpBackStack.removeAt(signUpBackStack.size - 2)
+            } else if (state is VerifySignUpScreenState.Expired) {
+                signUpBackStack.removeLastOrNull()
             }
         }
     }

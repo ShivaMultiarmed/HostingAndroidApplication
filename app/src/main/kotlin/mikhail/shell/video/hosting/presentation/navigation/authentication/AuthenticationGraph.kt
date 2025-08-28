@@ -1,28 +1,43 @@
 package mikhail.shell.video.hosting.presentation.navigation.authentication
 
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.resetGraph
 import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signUpGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun NavGraphBuilder.authenticationGraph(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.authenticationGraph(
+    rootBackStack: SnapshotStateList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    navigation<Route.Authentication>(
-        startDestination = Route.Authentication.SignIn
-    ) {
-        signInRoute(
-            navController = navController,
-            userDetailsProvider = userDetailsProvider
+    entry<Route.Authentication> {
+        val authBackStack = rememberSaveable {
+            mutableStateListOf<Route>(Route.Authentication.SignIn)
+        }
+        NavDisplay(
+            backStack = authBackStack,
+            entryDecorators = listOf(), // TODO
+            entryProvider = entryProvider {
+                signInRoute(
+                    rootBackStack = rootBackStack,
+                    authBackStack = authBackStack,
+                    userDetailsProvider = userDetailsProvider
+                )
+                signUpGraph(
+                    rootBackStack = rootBackStack,
+                    authBackStack = authBackStack,
+                    userDetailsProvider = userDetailsProvider
+                )
+                resetGraph(
+                    rootBackStack = rootBackStack
+                )
+            }
         )
-        signUpGraph(
-            navController = navController,
-            userDetailsProvider = userDetailsProvider
-        )
-        resetGraph(navController)
     }
 }

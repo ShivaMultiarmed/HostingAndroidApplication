@@ -9,7 +9,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.toDomain
-import mikhail.shell.video.hosting.data.utils.TRANSFER_BUFFER_SIZE
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
@@ -131,19 +130,21 @@ class VideoRepositoryWithApi @Inject constructor(
         return try {
             val sourceSize = fileProvider.getFileSize(source)!!
             var bytesTransferred = 0
+            var chunkIndex = 0L
             val sourceInputStream = fileProvider.getFileAsInputStream(source)
             val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
             sourceInputStream!!.process { bytesRead, buffer ->
                 coroutineScope.launch {
                     videoApi.uploadVideoSource(
                         videoId = videoId,
-                        chunkIndex = bytesTransferred.toLong() / TRANSFER_BUFFER_SIZE,
+                        chunkIndex = chunkIndex,
                         source = buffer.toRequestBody(bytesNumber = bytesRead)
                     )
                     bytesTransferred += bytesRead
                     val progress = bytesTransferred.toFloat() / sourceSize
                     onProgress(progress)
                 }
+                chunkIndex++
             }
             videoApi.confirmVideoUpload(videoId)
             Result.Success(Unit)

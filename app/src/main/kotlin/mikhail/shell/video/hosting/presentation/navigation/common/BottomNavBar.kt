@@ -56,19 +56,19 @@ fun BottomNavBar(
     BottomNavBar(
         navItems = listOf(
             BottomNavItem(
-                Route.Video.Recommendations,
+                Route.Recommendations,
                 stringResource(R.string.recommendations_title),
                 Icons.Outlined.Dataset,
                 Icons.Rounded.Dataset
             ),
             BottomNavItem(
-                Route.User.Subscriptions,
+                Route.Subscriptions,
                 stringResource(R.string.nav_subscribers_item_label),
                 Icons.Outlined.Subscriptions,
                 Icons.Rounded.Subscriptions
             ),
             BottomNavItem(
-                Route.Video.Search,
+                Route.Search,
                 stringResource(R.string.nav_search_item_label),
                 Icons.Outlined.Search,
                 Icons.Rounded.Search

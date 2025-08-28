@@ -17,7 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -27,10 +27,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
@@ -38,13 +36,9 @@ import mikhail.shell.video.hosting.presentation.exoplayer.PlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerStateSaver
 import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
-import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
-import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
-import mikhail.shell.video.hosting.presentation.video.shouldShowMiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
 import mikhail.shell.video.hosting.ui.theme.DarkColorScheme
@@ -74,59 +68,46 @@ class MainActivity : ComponentActivity() {
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
-                val playerState = rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
+                val playerState =
+                    rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val navController = rememberNavController()
-                    val backStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = backStackEntry?.destination?.route
+                    val backStack = rememberSaveable {
+                        mutableStateListOf<Route>(if (userDetailsProvider.getUserId() != 0L) Route.Video else Route.Authentication)
+                    }
+                    val currentRoute = backStack.last()
                     val orientation = LocalConfiguration.current.orientation
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
-                        if (Route.Video.View::class.qualifiedName?.let { currentRoute?.contains(it) } == true) {
-                            WindowCompat.getInsetsController(
-                                activity.window,
-                                view
-                            ).isAppearanceLightStatusBars = false
-                        } else {
-                            WindowCompat.getInsetsController(
-                                activity.window,
-                                view
-                            ).isAppearanceLightStatusBars =
-                                (statusBarIconsColor != DarkColorScheme.onSurface)
+                        WindowCompat.getInsetsController(
+                            activity.window,
+                            view
+                        ).isAppearanceLightStatusBars = when {
+                            currentRoute is Route.Video.View -> false
+                            else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
                     Scaffold(
                         modifier = Modifier
                             .fillMaxSize(),
                         bottomBar = {
-                            if (backStackEntry != null && currentRoute !in listOf(
-                                    Route.Authentication.SignIn::class.qualifiedName,
-                                    Route.Authentication.SignUp::class.qualifiedName,
-                                    Route.Video::class.qualifiedName
-                                ) && !(orientation == Configuration.ORIENTATION_LANDSCAPE
-                                        && Route.Video.View::class.qualifiedName?.let {
-                                    currentRoute?.contains(
-                                        it
-                                    )
-                                } != false
+                            if (
+                                currentRoute !is Route.Authentication
+                                        && currentRoute !is Route.Video && !(orientation == Configuration.ORIENTATION_LANDSCAPE
+                                        && currentRoute is Route.Video.View
                                         || LocalPlayerState.current.value.fullScreen)
                             ) {
                                 BottomNavBar(
-                                    onClick = {
-                                        navController.navigate(it.route) {
-                                            val destinationToPopUpTo =
-                                                navController.currentDestination?.id
-                                                    ?: navController.graph.findStartDestination().id
-                                            popUpTo(destinationToPopUpTo) {
-                                                saveState = true
-                                                inclusive = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
+                                    onClick = { navItem ->
+                                        if (!backStack.contains(navItem.route)) {
+                                            backStack.add(navItem.route)
+                                        } else {
+                                            val item = backStack.find { it == navItem.route }!!
+                                            backStack.remove(item)
+                                            backStack.add(item)
                                         }
                                     },
                                     userId = userDetailsProvider.getUserId()
@@ -138,11 +119,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    if (Route.Video.View::class.qualifiedName?.let {
-                                            currentRoute?.contains(
-                                                it
-                                            )
-                                        } == true) {
+                                    if (currentRoute is Route.Video.View) {
                                         Color.Black
                                     } else {
                                         MaterialTheme.colorScheme.surface
@@ -151,36 +128,23 @@ class MainActivity : ComponentActivity() {
                                 .padding(padding)
                                 .consumeWindowInsets(padding)
                         ) {
-                            NavHost(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                navController = navController,
-                                startDestination = if (userDetailsProvider.getUserId() != 0L) Route.Video else Route.Authentication
-                            ) {
-                                authenticationGraph(
-                                    navController = navController,
-                                    userDetailsProvider = userDetailsProvider
-                                )
-                                videoGraph(
-                                    navController = navController,
-                                    player = player,
-                                    userDetailsProvider = userDetailsProvider
-                                )
-                                channelGraph(
-                                    navController = navController,
-                                    userDetailsProvider = userDetailsProvider
-                                )
-                                userGraph(
-                                    navController = navController,
-                                    userDetailsProvider = userDetailsProvider,
-                                    player = player
-                                )
-                            }
-                            if (shouldShowMiniPlayer(navController) && isPlayerPrepared(player)) {
+                            NavDisplay(
+                                modifier = Modifier.fillMaxSize(),
+                                backStack = backStack,
+                                entryDecorators = listOf(), // TODO
+                                entryProvider = entryProvider {
+                                    authenticationGraph(
+                                        rootBackStack = backStack,
+                                        userDetailsProvider = userDetailsProvider
+                                    )
+                                    // TODO
+                                }
+                            )
+                            if (currentRoute !is Route.Video.View && isPlayerPrepared(player)) {
                                 MiniPlayer(
                                     player = player,
                                     onFullScreen = {
-                                        navController.navigate(Route.Video.View(it))
+                                        backStack.add(Route.Video.View(it))
                                     }
                                 )
                             }

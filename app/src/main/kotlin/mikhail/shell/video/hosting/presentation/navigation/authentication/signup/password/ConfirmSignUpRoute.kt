@@ -4,20 +4,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpScreenState
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpViewModel
 
-fun NavGraphBuilder.confirmSignUpRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.confirmSignUpRoute(
+    rootBackStack: MutableList<Route>
 ) {
-    composable<Route.Authentication.SignUp.Confirmation> {
-        val bundle = it.toRoute<Route.Authentication.SignUp.Confirmation>()
+    entry<Route.Authentication.SignUp.Confirmation> { bundle ->
         val viewModel = hiltViewModel<ConfirmSignUpViewModel, ConfirmSignUpViewModel.Factory> { it.create(bundle.token) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         ConfirmSignUpScreen(
@@ -28,10 +25,10 @@ fun NavGraphBuilder.confirmSignUpRoute(
         )
         LaunchedEffect(state) {
             if (state is ConfirmSignUpScreenState.Success) {
-                navController.navigate(Route.Video.Recommendations)
+                rootBackStack.add(Route.Recommendations)
+                rootBackStack.remove(Route.Authentication)
             } else if (state is ConfirmSignUpScreenState.Expired) {
-                navController.popBackStack()
-                navController.popBackStack()
+                rootBackStack.removeLastOrNull()
             }
         }
     }

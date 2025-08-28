@@ -4,20 +4,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreen
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreenState
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetViewModel
 
-fun NavGraphBuilder.confirmResetRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.confirmResetRoute(
+    rootBackStack: MutableList<Route>,
+    resettingBackStack: MutableList<Route>
 ) {
-    composable<Route.Authentication.Reset.Confirmation> {
-        val bundle = it.toRoute<Route.Authentication.Reset.Confirmation>()
+    entry<Route.Authentication.Reset.Confirmation> { bundle ->
         val viewModel = hiltViewModel<ConfirmResetViewModel, ConfirmResetViewModel.Factory> { it.create(bundle.token) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         ConfirmResetScreen(
@@ -28,10 +26,10 @@ fun NavGraphBuilder.confirmResetRoute(
         )
         LaunchedEffect(state) {
             if (state is ConfirmResetScreenState.Success) {
-                navController.navigate(Route.Video.Recommendations)
+                rootBackStack.add(Route.Recommendations)
+                rootBackStack.remove(Route.Authentication)
             } else if (state is ConfirmResetScreenState.Expiration) {
-                navController.popBackStack()
-                navController.popBackStack()
+                resettingBackStack.removeLastOrNull()
             }
         }
     }
