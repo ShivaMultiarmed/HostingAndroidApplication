@@ -37,6 +37,7 @@ media3 = "1.8.0"
 okhttp = "5.1.0"
 retrofit = "3.0.0"
 accompanist = "0.37.3"
+lifecycleViewmodelNavigation3Android = "2.10.0-alpha02"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -90,6 +91,7 @@ ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref =
 androidx-window = { group = "androidx.window", name = "window", version.ref = "window" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref="media3" }
+androidx-lifecycle-viewmodel-navigation3-android = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-navigation3-android", version.ref = "lifecycleViewmodelNavigation3Android" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

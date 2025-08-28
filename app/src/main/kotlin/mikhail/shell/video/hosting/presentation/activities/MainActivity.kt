@@ -25,10 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
@@ -131,7 +134,11 @@ class MainActivity : ComponentActivity() {
                             NavDisplay(
                                 modifier = Modifier.fillMaxSize(),
                                 backStack = backStack,
-                                entryDecorators = listOf(), // TODO
+                                entryDecorators = listOf(
+                                    rememberSceneSetupNavEntryDecorator(),
+                                    rememberSavedStateNavEntryDecorator(),
+                                    rememberViewModelStoreNavEntryDecorator()
+                                ),
                                 entryProvider = entryProvider {
                                     authenticationGraph(
                                         rootBackStack = backStack,

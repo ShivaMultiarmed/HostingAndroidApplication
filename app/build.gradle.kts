@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.androidx.rules)
     implementation(libs.androidx.uiautomator)
     implementation(libs.androidx.window)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3.android)
     testImplementation(libs.junit)
     implementation(libs.kotlinx.datetime)
 
