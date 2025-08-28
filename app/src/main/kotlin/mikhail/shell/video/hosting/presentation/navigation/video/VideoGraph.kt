@@ -1,31 +1,57 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.media3.common.Player
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun NavGraphBuilder.videoGraph(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.videoGraph(
     player: Player,
+    rootBackStack: MutableList<Route>,
+    currentBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    navigation<Route.Video>(
-        startDestination = Route.Video.Recommendations
-    ) {
-        videoRoute(
-            navController = navController,
-            player = player,
-            userDetailsProvider = userDetailsProvider
+    entry<Route.Video> { bundle ->
+        val videoBackStack = rememberSaveable {
+            mutableStateListOf<Route>(Route.Video.View(bundle.videoId))
+        }
+        NavDisplay(
+            backStack = videoBackStack,
+            entryDecorators = listOf(
+                rememberSceneSetupNavEntryDecorator(),
+                rememberSavedStateNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                videoRoute(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentBackStack,
+                    videoBackStack = videoBackStack,
+                    userDetailsProvider = userDetailsProvider,
+                    player = player
+                )
+                editVideoRoute(
+                    rootBackStack = rootBackStack,
+                    videoBackStack = videoBackStack
+                )
+            }
+
         )
-        editVideoRoute(navController)
+
+
         uploadVideoRoute(
             navController = navController,
             userDetailsProvider = userDetailsProvider
         )
         searchRoute(navController)
-        videoRecommendationsRoute(navController)
+        videoRecommendationsGraph(navController)
     }
 }

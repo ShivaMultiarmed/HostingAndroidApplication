@@ -4,35 +4,33 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreen
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenUiEvent
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenViewModel
 
-fun NavGraphBuilder.subscriptionsRoute(
-    navController: NavController,
-    userDetailsProvider: UserDetailsProvider
+fun EntryProviderBuilder<Route>.subscriptionsRoute(
+    rootBackStack: MutableList<Route>,
+    subscriptionsBackStack: MutableList<Route>
 ) {
-    composable<Route.User.Subscriptions> {
+    entry <Route.Subscriptions.View> {
         val viewModel = hiltViewModel<SubscriptionsScreenViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         SubscriptionsScreen(
             state = state,
-            onEvent = {
-                when(it) {
-                    is SubscriptionsScreenUiEvent.ClickedChannel -> navController.navigate(Route.Channel.View(it.channelId))
-                    else -> viewModel.onEvent(it)
+            onEvent = { event ->
+                when(event) {
+                    is SubscriptionsScreenUiEvent.ClickedChannel -> subscriptionsBackStack.add(Route.Channel(event.channelId))
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state.error == NetworkError.AUTHENTICATION) {
-                navController.navigate(Route.Authentication)
+                rootBackStack.add(Route.Authentication)
             }
         }
     }

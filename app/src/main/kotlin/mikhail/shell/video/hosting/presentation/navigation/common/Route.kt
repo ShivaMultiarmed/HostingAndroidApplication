@@ -28,7 +28,10 @@ sealed class Route: NavKey {
         }
     }
     @Serializable
-    data object Subscriptions: Route()
+    data object Subscriptions: Route() {
+        @Serializable
+        data object View: Route()
+    }
     @Serializable
     data object User: Route() {
         @Serializable
@@ -43,18 +46,24 @@ sealed class Route: NavKey {
         data object UploadVideo: Route()
     }
     @Serializable
-    data object Video: Route() {
+    data class Video(val videoId: Long): Route() {
         @Serializable
         data class View(val videoId: Long): Route()
         @Serializable
         data class Edit(val videoId: Long): Route()
     }
     @Serializable
-    data object Recommendations: Route()
+    data object Recommendations: Route() {
+        @Serializable
+        data object View: Route()
+    }
     @Serializable
-    data object Search: Route()
+    data object Search: Route() {
+        @Serializable
+        data object View: Route()
+    }
     @Serializable
-    data object Channel: Route() {
+    data class Channel(val channelId: Long): Route() {
         @Serializable
         data class View(val channelId: Long): Route()
         @Serializable

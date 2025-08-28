@@ -4,33 +4,33 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsViewModel
 import mikhail.shell.video.hosting.presentation.video.recommendations.VideoRecommendationsScreen
 
-fun NavGraphBuilder.videoRecommendationsRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.videoRecommendationsRoute(
+    rootBackStack: MutableList<Route>,
+    recommendationsBackStack: MutableList<Route>
 ) {
-    composable<Route.Video.Recommendations> {
+    entry <Route.Recommendations.View> {
         val viewModel = hiltViewModel<RecommendationsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         VideoRecommendationsScreen(
             state = state,
-            onEvent = {
-                when (it) {
-                    is RecommendationsScreenUiEvent.ClickedVideo -> navController.navigate(Route.Video.View(it.videoId))
-                    else -> null
+            onEvent = { event ->
+                when (event) {
+                    is RecommendationsScreenUiEvent.ClickedVideo -> rootBackStack.add(Route.Video.View(event.videoId))
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state.error == NetworkError.AUTHENTICATION) {
-                navController.navigate(Route.Authentication)
+                rootBackStack.add(Route.Authentication)
             }
         }
     }

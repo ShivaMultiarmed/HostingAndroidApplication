@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.navigation.channel
+package mikhail.shell.video.hosting.presentation.navigation.video
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -10,32 +10,29 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun EntryProviderBuilder<Route>.channelGraph(
-    currentTabBackStack: MutableList<Route>,
+fun EntryProviderBuilder<Route>.searchGraph(
+    rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry<Route.Channel> {
-        val channelBackStack = rememberSaveable {
-            mutableStateListOf<Route>(Route.Channel.View(it.channelId))
+    entry <Route.Search> {
+        val searchBackStack = rememberSaveable {
+            mutableStateListOf<Route>(Route.Search.View)
         }
         NavDisplay(
-            backStack = channelBackStack,
+            backStack = searchBackStack,
             entryDecorators = listOf(
                 rememberSceneSetupNavEntryDecorator(),
                 rememberSavedStateNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                channelRoute(
-                    rootBackStack = currentTabBackStack,
-                    channelBackStack = channelBackStack,
+                searchRoute(rootBackStack)
+                channelGraph(
+                    currentTabBackStack = searchBackStack,
                     userDetailsProvider = userDetailsProvider
-                )
-                editChannelRoute(
-                    rootBackStack = currentTabBackStack,
-                    channelBackStack = channelBackStack
                 )
             }
         )

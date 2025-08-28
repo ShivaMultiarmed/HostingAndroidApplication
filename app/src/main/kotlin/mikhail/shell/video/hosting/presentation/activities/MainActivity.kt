@@ -41,6 +41,9 @@ import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
+import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
+import mikhail.shell.video.hosting.presentation.navigation.video.videoRecommendationsGraph
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -78,10 +81,10 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val backStack = rememberSaveable {
+                    val rootBackStack = rememberSaveable {
                         mutableStateListOf<Route>(if (userDetailsProvider.getUserId() != 0L) Route.Video else Route.Authentication)
                     }
-                    val currentRoute = backStack.last()
+                    val currentRoute = rootBackStack.last()
                     val orientation = LocalConfiguration.current.orientation
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
@@ -105,12 +108,12 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 BottomNavBar(
                                     onClick = { navItem ->
-                                        if (!backStack.contains(navItem.route)) {
-                                            backStack.add(navItem.route)
+                                        if (!rootBackStack.contains(navItem.route)) {
+                                            rootBackStack.add(navItem.route)
                                         } else {
-                                            val item = backStack.find { it == navItem.route }!!
-                                            backStack.remove(item)
-                                            backStack.add(item)
+                                            val item = rootBackStack.find { it == navItem.route }!!
+                                            rootBackStack.remove(item)
+                                            rootBackStack.add(item)
                                         }
                                     },
                                     userId = userDetailsProvider.getUserId()
@@ -133,7 +136,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             NavDisplay(
                                 modifier = Modifier.fillMaxSize(),
-                                backStack = backStack,
+                                backStack = rootBackStack,
                                 entryDecorators = listOf(
                                     rememberSceneSetupNavEntryDecorator(),
                                     rememberSavedStateNavEntryDecorator(),
@@ -141,17 +144,28 @@ class MainActivity : ComponentActivity() {
                                 ),
                                 entryProvider = entryProvider {
                                     authenticationGraph(
-                                        rootBackStack = backStack,
+                                        rootBackStack = rootBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
-                                    // TODO
+                                    videoRecommendationsGraph(
+                                        rootBackStack = rootBackStack,
+                                        userDetailsProvider = userDetailsProvider
+                                    )
+                                    subscriptionsGraph(
+                                        rootBackStack = rootBackStack,
+                                        userDetailsProvider = userDetailsProvider
+                                    )
+                                    searchGraph(
+                                        rootBackStack = rootBackStack,
+                                        userDetailsProvider = userDetailsProvider
+                                    )
                                 }
                             )
                             if (currentRoute !is Route.Video.View && isPlayerPrepared(player)) {
                                 MiniPlayer(
                                     player = player,
                                     onFullScreen = {
-                                        backStack.add(Route.Video.View(it))
+                                        rootBackStack.add(Route.Video.View(it))
                                     }
                                 )
                             }

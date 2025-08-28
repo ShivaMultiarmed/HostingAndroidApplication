@@ -10,11 +10,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
@@ -30,19 +27,17 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewMode
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
-fun NavGraphBuilder.videoRoute(
-    navController: NavController,
-    player: Player,
-    userDetailsProvider: UserDetailsProvider
+fun EntryProviderBuilder<Route>.videoRoute(
+    rootBackStack: MutableList<Route>,
+    currentTabBackStack: MutableList<Route>,
+    videoBackStack: MutableList<Route>,
+    userDetailsProvider: UserDetailsProvider,
+    player: Player
 ) {
-    composable<Route.Video.View>(
-        deepLinks = listOf(
-            navDeepLink<Route.Video.View>(basePath = "https://$HOST/videos")
-        )
-    ) {
+    // TODO navDeepLink (basePath = "https://$HOST/videos")
+    entry <Route.Video.View> { bundle ->
         val context = LocalContext.current
-        val videoRouteInfo = it.toRoute<Route.Video.View>()
-        val videoId = videoRouteInfo.videoId
+        val videoId = bundle.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
@@ -51,19 +46,19 @@ fun NavGraphBuilder.videoRoute(
             userId = userId,
             state = state,
             player = player,
-            onEvent = {
-                when (it) {
-                    VideoScreenUiEvent.Edit -> navController.navigate(Route.Video.Edit(videoId))
+            onEvent = { event ->
+                when (event) {
+                    VideoScreenUiEvent.Edit -> videoBackStack.add(Route.Video.Edit(videoId))
                     VideoScreenUiEvent.OpenChannel -> {
                         val channelId = (state as? VideoScreenState.Success)?.video?.channelId!!
-                        navController.navigate(Route.Channel.View(channelId))
+                        currentTabBackStack.add(Route.Channel.View(channelId))
                     }
-                    is VideoScreenUiEvent.OpenProfile -> navController.navigate(Route.User.Profile(it.userId))
+                    is VideoScreenUiEvent.OpenProfile -> currentTabBackStack.add(Route.User.Profile(event.userId))
                     VideoScreenUiEvent.Remove -> {
                         coroutineScope.launch {
-                            viewModel.onEvent(it)
-                            delay(0.8.seconds)
-                            navController.navigate(Route.User)
+                            viewModel.onEvent(event)
+                            delay(1.seconds)
+                            videoBackStack.clear()
                         }
                     }
                     VideoScreenUiEvent.Share -> {
@@ -83,16 +78,16 @@ fun NavGraphBuilder.videoRoute(
                             context.startService(it)
                         }
                     }
-                    else -> viewModel.onEvent(it)
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state is VideoScreenState.Failure) {
                 if ((state as VideoScreenState.Failure).error == NetworkError.NOT_FOUND) {
-                    navController.popBackStack()
+                    videoBackStack.clear()
                 } else if ((state as VideoScreenState.Failure).error == NetworkError.AUTHENTICATION) {
-                    navController.navigate(Route.Authentication)
+                    rootBackStack.add(Route.Authentication)
                 }
             }
         }

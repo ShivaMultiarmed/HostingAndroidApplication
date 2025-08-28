@@ -4,10 +4,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
@@ -15,26 +13,28 @@ import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenSta
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingUiEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
 
-fun NavGraphBuilder.editVideoRoute(navController: NavController) {
-    composable<Route.Video.Edit> {
-        val input = it.toRoute<Route.Video.Edit>()
-        val viewModel = hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { it.create(input.videoId) }
+fun EntryProviderBuilder<Route>.editVideoRoute(
+    rootBackStack: MutableList<Route>,
+    videoBackStack: MutableList<Route>
+) {
+    entry<Route.Video.Edit> { bundle ->
+        val viewModel = hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { it.create(bundle.videoId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         VideoEditingScreen(
             state = state,
-            onEvent = {
-                when (it) {
-                    VideoEditingUiEvent.Cancel -> navController.popBackStack()
-                    else -> null
+            onEvent = { event ->
+                when (event) {
+                    VideoEditingUiEvent.Cancel -> videoBackStack.removeLastOrNull()
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state is VideoEditingScreenState.Failure) {
                 if ((state as VideoEditingScreenState.Failure).error == NetworkError.NOT_FOUND) {
-                    navController.popBackStack()
+                    videoBackStack.clear()
                 } else if ((state as VideoEditingScreenState.Failure).error == NetworkError.AUTHENTICATION) {
-                    navController.navigate(Route.Authentication)
+                    rootBackStack.add(Route.Authentication)
                 }
             }
         }
