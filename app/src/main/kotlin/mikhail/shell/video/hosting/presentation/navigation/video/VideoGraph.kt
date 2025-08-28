@@ -43,15 +43,6 @@ fun EntryProviderBuilder<Route>.videoGraph(
                     videoBackStack = videoBackStack
                 )
             }
-
         )
-
-
-        uploadVideoRoute(
-            navController = navController,
-            userDetailsProvider = userDetailsProvider
-        )
-        searchRoute(navController)
-        videoRecommendationsGraph(navController)
     }
 }

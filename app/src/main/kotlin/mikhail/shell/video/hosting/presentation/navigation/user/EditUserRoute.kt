@@ -5,9 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -17,36 +16,38 @@ import mikhail.shell.video.hosting.presentation.user.edit.UserEditingUiEvent
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 
-fun NavGraphBuilder.editUserRoute(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.editUserRoute(
+    rootBackStack: MutableList<Route>,
+    userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    composable<Route.User.Edit> {
+    entry<Route.User.Edit> {
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<UserEditingViewModel, UserEditingViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         UserEditingScreen(
             state = state,
-            onEvent = {
-                when (it) {
-                    UserEditingUiEvent.Cancel -> navController.popBackStack()
-                    else -> viewModel.onEvent(it)
+            onEvent = { event ->
+                when (event) {
+                    UserEditingUiEvent.Cancel -> userBackStack.removeLastOrNull()
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state is UserEditingScreenState.Success) {
-                navController.navigate(Route.User.Profile(userId))
+                userBackStack.removeFirstOrNull()
+                userBackStack.add(Route.User.Profile(userId))
             } else if (state is UserEditingScreenState.Removed) {
                 player.stop()
                 player.clearMediaItems()
-                logOut(userDetailsProvider, navController)
+                logOut(userDetailsProvider, rootBackStack)
             } else if (state is UserEditingScreenState.Failure) {
                 if ((state as UserEditingScreenState.Failure).error == NetworkError.AUTHENTICATION) {
-                    navController.navigate(Route.Authentication)
+                    rootBackStack.add(Route.Authentication)
                 } else if ((state as UserEditingScreenState.Failure).error == NetworkError.NOT_FOUND){
-                    navController.popBackStack()
+                    userBackStack.clear()
                 }
             }
         }

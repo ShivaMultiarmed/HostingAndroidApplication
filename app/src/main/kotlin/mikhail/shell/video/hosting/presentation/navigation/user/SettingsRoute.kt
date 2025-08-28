@@ -1,19 +1,18 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.settings.SettingsScreen
 
-fun NavGraphBuilder.settingsRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.settingsRoute(
+    profileBackStack: MutableList<Route>
 ) {
-    composable<Route.User.Settings> {
+    entry<Route.User.Settings> {
         SettingsScreen(
-            onPopup = navController::popBackStack,
+            onPopup = profileBackStack::removeLastOrNull,
             onEdit = {
-                navController.navigate(Route.User.Edit)
+                profileBackStack.add(Route.User.Edit)
             }
         )
     }

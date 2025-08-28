@@ -7,10 +7,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
@@ -20,24 +18,24 @@ import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenUiEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 
-fun NavGraphBuilder.profileRoute(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.profileRoute(
+    rootBackStack: MutableList<Route>,
+    currentTabBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    composable<Route.User.Profile> {
+    entry<Route.User.Profile> { bundle ->
         val context = LocalContext.current
-        val bundle = it.toRoute<Route.User.Profile>()
         val userId = bundle.userId
         val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         ProfileScreen(
             owns = userId == userDetailsProvider.getUserId(),
             state = state,
-            onEvent = {
-                when (it) {
-                    is ProfileScreenUiEvent.ClickedChannel -> navController.navigate(Route.Channel.View(it.channelId))
-                    ProfileScreenUiEvent.CreateChannel -> navController.navigate(Route.Channel.Create)
+            onEvent = { event ->
+                when (event) {
+                    is ProfileScreenUiEvent.ClickedChannel -> currentTabBackStack.add(Route.Channel(event.channelId))
+                    ProfileScreenUiEvent.CreateChannel -> currentTabBackStack.add(Route.User.UploadVideo)
                     ProfileScreenUiEvent.Invite -> {
                         context.startActivity(
                             Intent(Intent.ACTION_SEND).apply {
@@ -46,23 +44,23 @@ fun NavGraphBuilder.profileRoute(
                             }
                         )
                     }
-                    ProfileScreenUiEvent.OpenSettings -> navController.navigate(Route.User.Settings)
-                    ProfileScreenUiEvent.PublishVideo -> navController.navigate(Route.Video.Upload)
+                    ProfileScreenUiEvent.OpenSettings -> currentTabBackStack.add(Route.User.Settings)
+                    ProfileScreenUiEvent.PublishVideo -> currentTabBackStack.add(Route.User.UploadVideo)
                     ProfileScreenUiEvent.SignOut -> {
                         player.stop()
                         player.clearMediaItems()
 
-                        viewModel.onEvent(it)
+                        viewModel.onEvent(event)
 
-                        logOut(userDetailsProvider, navController)
+                        logOut(userDetailsProvider, rootBackStack)
                     }
-                    else -> viewModel.onEvent(it)
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state.error) {
             if (state.error == NetworkError.AUTHENTICATION) {
-                navController.navigate(Route.Authentication.SignIn)
+                rootBackStack.add(Route.Authentication)
             }
         }
     }

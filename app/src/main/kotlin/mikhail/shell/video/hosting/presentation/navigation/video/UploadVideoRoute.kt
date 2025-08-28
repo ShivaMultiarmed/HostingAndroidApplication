@@ -10,24 +10,26 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreen
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
-fun NavGraphBuilder.uploadVideoRoute(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.uploadVideoRoute(
+    rootBackStack: MutableList<Route>,
+    userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    composable<Route.Video.Upload> {
+    entry<Route.User.UploadVideo> {
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
         val viewModel = hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> {
@@ -42,28 +44,32 @@ fun NavGraphBuilder.uploadVideoRoute(
         VideoUploadingScreen(
             state = state,
             player = viewModel.player,
-            onEvent = {
-                when (it) {
-                    VideoUploadingScreenUiEvent.Cancel -> navController.popBackStack()
+            onEvent = { event ->
+                when (event) {
+                    VideoUploadingScreenUiEvent.Cancel -> userBackStack.removeLastOrNull()
                     is VideoUploadingScreenUiEvent.Success -> {
                         coroutineScope.launch {
-                            if (!it.source.contains(context.packageName + ".fileprovider")) {
-                                context.contentResolver.takePersistableUriPermission(it.source.toUri(), FLAG_GRANT_READ_URI_PERMISSION)
+                            if (!event.source.contains(context.packageName + ".fileprovider")) {
+                                context.contentResolver.takePersistableUriPermission(event.source.toUri(), FLAG_GRANT_READ_URI_PERMISSION)
                             }
                             context.startService(
                                 Intent(context, VideoUploadingService::class.java).also { intent ->
                                     intent.action = VideoUploadingService.ACTION_LAUNCH_UPLOADING
-                                    intent.putExtra("source", it.source)
+                                    intent.putExtra("source", event.source)
                                 }
                             )
                             delay(1000.milliseconds)
-                            navController.navigate(Route.User.Profile(userId))
+                            userBackStack.add(Route.Channel(event.videoId))
                         }
                     }
-                    else -> viewModel.onEvent(it)
+                    else -> viewModel.onEvent(event)
                 }
             }
         )
-
+        if (state is VideoUploadingScreenState.Editing) {
+            if ((state as VideoUploadingScreenState.Editing).error == NetworkError.AUTHENTICATION) {
+                rootBackStack.add(Route.Authentication)
+            }
+        }
     }
 }

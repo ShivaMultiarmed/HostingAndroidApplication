@@ -4,21 +4,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationUiEvent
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
-import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
-fun NavGraphBuilder.createChannelRoute(
-    navController: NavController
+fun EntryProviderBuilder<Route>.createChannelRoute(
+    rootBackStack: MutableList<Route>,
+    userBackStack: MutableList<Route>
 ) {
-    composable<Route.Channel.Create> {
+    entry <Route.User.CreateChannel> {
         val viewModel = hiltViewModel<ChannelCreationViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
@@ -26,12 +26,15 @@ fun NavGraphBuilder.createChannelRoute(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    is ChannelCreationUiEvent.Success -> navController.navigate(Route.Channel.View(event.channelId))
-                    is ChannelCreationUiEvent.AuthenticationRequired -> coroutineScope.launch {
-                        delay(800.milliseconds)
-                        navController.navigate(Route.Authentication)
+                    is ChannelCreationUiEvent.Success -> {
+                        userBackStack.add(Route.Channel.View(event.channelId))
+                        userBackStack.removeAt(userBackStack.size - 2)
                     }
-                    is ChannelCreationUiEvent.Cancel -> navController.popBackStack()
+                    is ChannelCreationUiEvent.AuthenticationRequired -> coroutineScope.launch {
+                        delay(1.seconds)
+                        userBackStack.add(Route.Authentication)
+                    }
+                    is ChannelCreationUiEvent.Cancel -> rootBackStack.removeLastOrNull()
                     else -> viewModel.onEvent(event)
                 }
             }

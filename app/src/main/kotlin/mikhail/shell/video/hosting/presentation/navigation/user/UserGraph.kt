@@ -1,24 +1,62 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.media3.common.Player
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.channel.createChannelRoute
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.video.uploadVideoRoute
 
-fun NavGraphBuilder.userGraph(
-    navController: NavController,
+fun EntryProviderBuilder<Route>.userGraph(
+    rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    val userId = userDetailsProvider.getUserId()
-    navigation<Route.User>(
-        startDestination = Route.User.Profile(userId)
-    ) {
-        profileRoute(navController, userDetailsProvider, player)
-        subscriptionsRoute(navController, userDetailsProvider)
-        settingsRoute(navController)
-        editUserRoute(navController, userDetailsProvider, player)
+    entry<Route.User> {
+        val userBackStack = rememberSaveable {
+            mutableStateListOf<Route>(Route.User.Profile(userDetailsProvider.getUserId()))
+        }
+        NavDisplay(
+            backStack = userBackStack,
+            entryDecorators = listOf(
+                rememberSceneSetupNavEntryDecorator(),
+                rememberSavedStateNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                settingsRoute(
+                    profileBackStack = userBackStack
+                )
+                profileRoute(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = userBackStack,
+                    userDetailsProvider = userDetailsProvider,
+                    player = player
+                )
+                editUserRoute(
+                    rootBackStack = rootBackStack,
+                    userBackStack = userBackStack,
+                    userDetailsProvider = userDetailsProvider,
+                    player = player
+                )
+                uploadVideoRoute(
+                    rootBackStack = rootBackStack,
+                    userBackStack = userBackStack,
+                    userDetailsProvider = userDetailsProvider
+                )
+                createChannelRoute(
+                    rootBackStack = rootBackStack,
+                    userBackStack = userBackStack
+                )
+            }
+        )
     }
 }
