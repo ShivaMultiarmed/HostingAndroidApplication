@@ -341,7 +341,13 @@ fun VideoUploadingScreen(
                                 },
                                 errorMsg = titleErrMsg,
                                 placeholder = stringResource(R.string.video_title_label),
-                                icon = Icons.Rounded.Title
+                                icon = Icons.Rounded.Title,
+                                onTypingStarted = {
+                                    onEvent(VideoUploadingScreenUiEvent.TitleTypingStarted)
+                                },
+                                onTypingEnded = {
+                                    onEvent(VideoUploadingScreenUiEvent.TitleTypingEnded)
+                                }
                             )
                         }
 
@@ -454,7 +460,13 @@ fun VideoUploadingScreen(
                                 },
                                 errorMsg = descriptionErrMsg,
                                 placeholder = stringResource(R.string.video_title_label),
-                                icon = Icons.Rounded.Title
+                                icon = Icons.Rounded.Title,
+                                onTypingStarted = {
+                                    onEvent(VideoUploadingScreenUiEvent.DescriptionTypingStarted)
+                                },
+                                onTypingEnded = {
+                                    onEvent(VideoUploadingScreenUiEvent.DescriptionTypingEnded)
+                                }
                             )
                         }
                     }

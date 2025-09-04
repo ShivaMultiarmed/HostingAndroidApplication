@@ -25,6 +25,8 @@ class RequestSignUpViewModel @Inject constructor(
         when (event) {
             RequestSignUpUiEvent.Submit -> request()
             is RequestSignUpUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
+            RequestSignUpUiEvent.UserNameTypingStarted -> onUserNameTypingStarted()
+            RequestSignUpUiEvent.UserNameTypingEnded -> onUserNameTypingEnded()
         }
     }
 
@@ -32,9 +34,26 @@ class RequestSignUpViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update {
                 it.copy(
-                    userName = userName,
-                    userNameError = userName.let {
-                        val validationResult = validateUserName(userName)
+                    userName = userName
+                )
+            }
+        }
+    }
+    private fun onUserNameTypingStarted() {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    userNameError = null
+                )
+            }
+        }
+    }
+    private fun onUserNameTypingEnded() {
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(
+                    userNameError = currentState.userName.let {
+                        val validationResult = validateUserName(currentState.userName)
                         if (validationResult is Result.Failure) {
                             validationResult.error
                         } else {
@@ -69,5 +88,7 @@ class RequestSignUpViewModel @Inject constructor(
 
 sealed class RequestSignUpUiEvent {
     data class UserNameChanged(val userName: String): RequestSignUpUiEvent()
+    data object UserNameTypingStarted: RequestSignUpUiEvent()
+    data object UserNameTypingEnded: RequestSignUpUiEvent()
     data object Submit: RequestSignUpUiEvent()
 }

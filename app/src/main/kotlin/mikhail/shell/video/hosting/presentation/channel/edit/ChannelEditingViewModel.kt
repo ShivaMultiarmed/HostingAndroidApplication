@@ -79,11 +79,17 @@ class ChannelEditingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             when (event) {
                 is ChannelEditingUiEvent.AliasChanged -> onAliasChanged(event.alias)
+                ChannelEditingUiEvent.AliasTypingStarted -> onAliasTypingStarted()
+                ChannelEditingUiEvent.AliasTypingEnded -> onAliasTypingEnded()
                 is ChannelEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
+                ChannelEditingUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
+                ChannelEditingUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
                 is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header)
                 is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo)
                 ChannelEditingUiEvent.Submit -> edit()
                 is ChannelEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
+                ChannelEditingUiEvent.TitleTypingStarted -> onTitleTypingStarted()
+                ChannelEditingUiEvent.TitleTypingEnded -> onTitleTypingEnded()
                 is ChannelEditingUiEvent.HeaderExists -> onHeaderExists(event.exists)
                 is ChannelEditingUiEvent.LogoExists -> onLogoExists(event.exists)
                 ChannelEditingUiEvent.Retry -> load()
@@ -110,13 +116,32 @@ class ChannelEditingViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun onAliasChanged(alias: String) {
+    private fun onAliasChanged(alias: String) {
         _state.update {
             it as ChannelEditingScreenState.Editing
             it.copy(
                 editedChannel = it.editedChannel.copy(
-                    alias = alias,
-                    aliasError = alias.takeIf { it.isNotEmpty() }?.let {
+                    alias = alias
+                )
+            )
+        }
+    }
+    private fun onAliasTypingStarted() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    aliasError = null
+                )
+            )
+        }
+    }
+    private suspend fun onAliasTypingEnded() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    aliasError = it.editedChannel.alias.takeIf { it.isNotEmpty() }?.let {
                         val validationResult = validateChannelAlias(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -130,8 +155,29 @@ class ChannelEditingViewModel @AssistedInject constructor(
             it as ChannelEditingScreenState.Editing
             it.copy(
                 editedChannel = it.editedChannel.copy(
-                    title = title,
-                    titleError = title.let {
+                    title = title
+                )
+            )
+        }
+    }
+
+    private suspend fun onTitleTypingStarted() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    titleError = null
+                )
+            )
+        }
+    }
+
+    private suspend fun onTitleTypingEnded() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    titleError = it.editedChannel.title.let {
                         val validationResult = validateChannelTitle(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -145,8 +191,27 @@ class ChannelEditingViewModel @AssistedInject constructor(
             it as ChannelEditingScreenState.Editing
             it.copy(
                 editedChannel = it.editedChannel.copy(
-                    description = description,
-                    descriptionError = description.takeIf { it.isNotEmpty() }?.let {
+                    description = description
+                )
+            )
+        }
+    }
+    private fun onDescriptionTypingStarted() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    descriptionError = null
+                )
+            )
+        }
+    }
+    private fun onDescriptionTypingEnded() {
+        _state.update {
+            it as ChannelEditingScreenState.Editing
+            it.copy(
+                editedChannel = it.editedChannel.copy(
+                    descriptionError = it.editedChannel.description.takeIf { it.isNotEmpty() }?.let {
                         val validationResult = validateDescription(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }

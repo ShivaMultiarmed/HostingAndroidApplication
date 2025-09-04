@@ -15,12 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,9 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
@@ -74,6 +66,7 @@ fun RequestResetScreen(
                         TextError.PATTERN -> stringResource(R.string.user_name_malformed)
                         else -> null
                     }
+                    else -> null
                 }
                 InputField(
                     modifier = Modifier
@@ -85,7 +78,13 @@ fun RequestResetScreen(
                         onEvent(RequestResetUiEvent.UserNameChanged(it))
                     },
                     errorMsg = userNameErrorMsg,
-                    placeholder = "E-mail"
+                    placeholder = "E-mail",
+                    onTypingStarted = {
+                        onEvent(RequestResetUiEvent.UserNameTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(RequestResetUiEvent.UserNameTypingEnded)
+                    }
                 )
                 PrimaryProgressButton(
                     inProgress = state.isLoading,

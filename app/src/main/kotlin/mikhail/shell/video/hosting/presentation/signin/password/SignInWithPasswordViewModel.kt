@@ -29,7 +29,11 @@ class SignInWithPasswordViewModel @Inject constructor(
         when (event) {
             SignInUiEvent.Submit -> signIn()
             is SignInUiEvent.PasswordChanged -> onPasswordChanged(event.password)
+            SignInUiEvent.PasswordTypingStarted -> onPasswordTypingStarted()
+            SignInUiEvent.PasswordTypingEnded -> onPasswordTypingEnded()
             is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
+            SignInUiEvent.UserNameTypingStarted -> TODO()
+            SignInUiEvent.UserNameTypingEnded -> TODO()
             else -> null
         }
     }
@@ -39,8 +43,29 @@ class SignInWithPasswordViewModel @Inject constructor(
             it as SignInScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    password = password,
-                    passwordError = password.let {
+                    password = password
+                )
+            )
+        }
+    }
+
+    private fun onPasswordTypingStarted() {
+        _state.update {
+            it as SignInScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordError = null
+                )
+            )
+        }
+    }
+
+    private fun onPasswordTypingEnded() {
+        _state.update {
+            it as SignInScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordError = it.input.password.let {
                         val validationResult = validatePassword(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -50,13 +75,34 @@ class SignInWithPasswordViewModel @Inject constructor(
     }
 
     private fun onUserNameChanged(userName: String) {
+        _state.update {
+            it as SignInScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    userName = userName
+                )
+            )
+        }
+    }
+
+    private fun onUserNameTypingStarted() {
+        _state.update {
+            it as SignInScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    userNameError = null
+                )
+            )
+        }
+    }
+
+    private fun onUserNameTypingEnded() {
         viewModelScope.launch {
             _state.update {
                 it as SignInScreenState.Entering
                 it.copy(
                     input = it.input.copy(
-                        userName = userName,
-                        userNameError = userName.let {
+                        userNameError = it.input.userName.let {
                             val validationResult = validateUserName(it)
                             if (validationResult is Result.Failure) {
                                 validationResult.error
@@ -110,8 +156,12 @@ class SignInWithPasswordViewModel @Inject constructor(
 }
 
 sealed class SignInUiEvent {
-    data class UserNameChanged(val userName: String): SignInUiEvent()
-    data class PasswordChanged(val password: String): SignInUiEvent()
-    data object Submit: SignInUiEvent()
-    data object SignUp: SignInUiEvent()
+    data class UserNameChanged(val userName: String) : SignInUiEvent()
+    data object UserNameTypingStarted : SignInUiEvent()
+    data object UserNameTypingEnded : SignInUiEvent()
+    data class PasswordChanged(val password: String) : SignInUiEvent()
+    data object PasswordTypingStarted : SignInUiEvent()
+    data object PasswordTypingEnded : SignInUiEvent()
+    data object Submit : SignInUiEvent()
+    data object SignUp : SignInUiEvent()
 }

@@ -139,7 +139,13 @@ fun ChannelEditingScreen(
                             onEvent(ChannelEditingUiEvent.TitleChanged(it))
                         },
                         placeholder = stringResource(R.string.channel_title_label),
-                        errorMsg = titleErrMsg
+                        errorMsg = titleErrMsg,
+                        onTypingStarted = {
+                            onEvent(ChannelEditingUiEvent.TitleTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(ChannelEditingUiEvent.TitleTypingEnded)
+                        }
                     )
                 }
                 val aliasErrMsg = when (current.aliasError) {
@@ -167,7 +173,13 @@ fun ChannelEditingScreen(
                             onEvent(ChannelEditingUiEvent.AliasChanged(it))
                         },
                         placeholder = stringResource(R.string.channel_alias_label),
-                        errorMsg = aliasErrMsg
+                        errorMsg = aliasErrMsg,
+                        onTypingStarted = {
+                            onEvent(ChannelEditingUiEvent.AliasTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(ChannelEditingUiEvent.AliasTypingEnded)
+                        }
                     )
                 }
                 val descriptionErrMsg = when (current.descriptionError) {
@@ -197,7 +209,13 @@ fun ChannelEditingScreen(
                         },
                         placeholder = stringResource(R.string.channel_description_label),
                         maxLines = 50,
-                        errorMsg = descriptionErrMsg
+                        errorMsg = descriptionErrMsg,
+                        onTypingStarted = {
+                            onEvent(ChannelEditingUiEvent.DescriptionTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(ChannelEditingUiEvent.DescriptionTypingEnded)
+                        }
                     )
                 }
                 val logoPicker =

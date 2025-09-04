@@ -74,7 +74,13 @@ fun RequestSignUpScreen(
                     onEvent(RequestSignUpUiEvent.UserNameChanged(it))
                 },
                 errorMsg = userNameErrorMsg,
-                placeholder = "E-mail"
+                placeholder = "E-mail",
+                onTypingStarted = {
+                    onEvent(RequestSignUpUiEvent.UserNameTypingStarted)
+                },
+                onTypingEnded = {
+                    onEvent(RequestSignUpUiEvent.UserNameTypingEnded)
+                }
             )
             PrimaryProgressButton(
                 inProgress = state.isLoading,

@@ -28,7 +28,11 @@ class ConfirmResetViewModel @AssistedInject constructor(
     fun onEvent(event: ConfirmResetUiEvent) {
         when (event) {
             is ConfirmResetUiEvent.PasswordChanged -> onPasswordChanged(event.password)
+            ConfirmResetUiEvent.PasswordTypingStarted -> TODO()
+            ConfirmResetUiEvent.PasswordTypingEnded -> TODO()
             is ConfirmResetUiEvent.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
+            ConfirmResetUiEvent.PasswordDuplicatedTypingStarted -> TODO()
+            ConfirmResetUiEvent.PasswordDuplicatedTypingEnded -> TODO()
             ConfirmResetUiEvent.Submit -> confirm()
         }
     }
@@ -38,8 +42,27 @@ class ConfirmResetViewModel @AssistedInject constructor(
             it as ConfirmResetScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    password = password,
-                    passwordError = password.let {
+                    password = password
+                )
+            )
+        }
+    }
+    private fun onPasswordTypingStarted() {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordError = null
+                )
+            )
+        }
+    }
+    private fun onPasswordTypingEnded() {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordError = it.input.password.let {
                         val validationResult = validatePassword(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -53,8 +76,27 @@ class ConfirmResetViewModel @AssistedInject constructor(
             it as ConfirmResetScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    passwordDuplicate = passwordDuplicate,
-                    passwordDuplicateError = passwordDuplicate.let { passwordDuplicate ->
+                    passwordDuplicate = passwordDuplicate
+                )
+            )
+        }
+    }
+    private fun onPasswordDuplicateTypingStarted() {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordDuplicateError = null
+                )
+            )
+        }
+    }
+    private fun onPasswordDuplicateTypingEnded() {
+        _state.update {
+            it as ConfirmResetScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordDuplicateError = it.input.passwordDuplicate.let { passwordDuplicate ->
                         val validationResult = validatePasswordDuplicate(
                             password = it.input.password,
                             passwordDuplicate = passwordDuplicate
@@ -99,6 +141,10 @@ class ConfirmResetViewModel @AssistedInject constructor(
 
 sealed class ConfirmResetUiEvent {
     data class PasswordChanged(val password: String): ConfirmResetUiEvent()
+    data object PasswordTypingStarted: ConfirmResetUiEvent()
+    data object PasswordTypingEnded: ConfirmResetUiEvent()
     data class PasswordDuplicatedChanged(val passwordDuplicate: String): ConfirmResetUiEvent()
+    data object PasswordDuplicatedTypingStarted: ConfirmResetUiEvent()
+    data object PasswordDuplicatedTypingEnded: ConfirmResetUiEvent()
     data object Submit: ConfirmResetUiEvent()
 }

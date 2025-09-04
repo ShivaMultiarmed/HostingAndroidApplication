@@ -47,7 +47,11 @@ class VideoEditingViewModel @AssistedInject constructor(
             VideoEditingUiEvent.Reload -> load()
             VideoEditingUiEvent.Submit -> edit()
             is VideoEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
+            VideoEditingUiEvent.TitleTypingStarted -> onTitleTypingStarted()
+            VideoEditingUiEvent.TitleTypingEnded -> onTitleTypingEnded()
             is VideoEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
+            VideoEditingUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
+            VideoEditingUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
             else -> Unit
         }
     }
@@ -57,8 +61,29 @@ class VideoEditingViewModel @AssistedInject constructor(
             it as VideoEditingScreenState.Editing
             it.copy(
                 currentVideo = it.currentVideo.copy(
-                    description = description,
-                    descriptionError = description.let {
+                    description = description
+                )
+            )
+        }
+    }
+
+    private fun onDescriptionTypingStarted() {
+        _state.update {
+            it as VideoEditingScreenState.Editing
+            it.copy(
+                currentVideo = it.currentVideo.copy(
+                    descriptionError = null
+                )
+            )
+        }
+    }
+
+    private fun onDescriptionTypingEnded() {
+        _state.update {
+            it as VideoEditingScreenState.Editing
+            it.copy(
+                currentVideo = it.currentVideo.copy(
+                    descriptionError = it.currentVideo.description.let {
                         val validationResult = validateDescription(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -72,8 +97,29 @@ class VideoEditingViewModel @AssistedInject constructor(
             it as VideoEditingScreenState.Editing
             it.copy(
                 currentVideo = it.currentVideo.copy(
-                    title = title,
-                    titleError = title.let {
+                    title = title
+                )
+            )
+        }
+    }
+
+    private fun onTitleTypingStarted() {
+        _state.update {
+            it as VideoEditingScreenState.Editing
+            it.copy(
+                currentVideo = it.currentVideo.copy(
+                    titleError = null
+                )
+            )
+        }
+    }
+
+    private fun onTitleTypingEnded() {
+        _state.update {
+            it as VideoEditingScreenState.Editing
+            it.copy(
+                currentVideo = it.currentVideo.copy(
+                    titleError = it.currentVideo.title.let {
                         val validationResult = validateTitle(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -178,8 +224,12 @@ sealed class VideoEditingScreenState {
 
 sealed class VideoEditingUiEvent {
     data object Reload : VideoEditingUiEvent()
+    data object TitleTypingStarted: VideoEditingUiEvent()
+    data object TitleTypingEnded: VideoEditingUiEvent()
     data class TitleChanged(val title: String) : VideoEditingUiEvent()
     data class CoverChanged(val cover: String?, val action: EditAction) : VideoEditingUiEvent()
+    data object DescriptionTypingStarted: VideoEditingUiEvent()
+    data object DescriptionTypingEnded: VideoEditingUiEvent()
     data class DescriptionChanged(val description: String) : VideoEditingUiEvent()
     data object Submit : VideoEditingUiEvent()
     data object Cancel : VideoEditingUiEvent()

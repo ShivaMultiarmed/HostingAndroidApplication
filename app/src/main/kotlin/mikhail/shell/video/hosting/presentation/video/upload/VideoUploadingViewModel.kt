@@ -48,18 +48,23 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     fun onEvent(event: VideoUploadingScreenUiEvent) {
         viewModelScope.launch {
-            when(event) {
+            when (event) {
                 is VideoUploadingScreenUiEvent.ChannelChanged -> onChannelChanged(event.channelId)
                 is VideoUploadingScreenUiEvent.CoverChanged -> onCoverChanged(event.cover)
                 VideoUploadingScreenUiEvent.Reload -> load()
                 is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
                 VideoUploadingScreenUiEvent.Submit -> upload()
                 is VideoUploadingScreenUiEvent.TitleChanged -> onTitleChanged(event.title)
+                VideoUploadingScreenUiEvent.TitleTypingStarted -> onTitleTypingStarted()
+                VideoUploadingScreenUiEvent.TitleTypingEnded -> onTitleTypingEnded()
                 is VideoUploadingScreenUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
+                VideoUploadingScreenUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
+                VideoUploadingScreenUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
                 else -> null
             }
         }
     }
+
 
     private fun onDescriptionChanged(description: String) {
         _state.update {
@@ -67,7 +72,28 @@ class VideoUploadingViewModel @AssistedInject constructor(
             it.copy(
                 input = it.input.copy(
                     description = description,
-                    descriptionError = description.let {
+                )
+            )
+        }
+    }
+
+    private fun onDescriptionTypingStarted() {
+        _state.update {
+            it as VideoUploadingScreenState.Editing
+            it.copy(
+                input = it.input.copy(
+                    descriptionError = null
+                )
+            )
+        }
+    }
+
+    private fun onDescriptionTypingEnded() {
+        _state.update {
+            it as VideoUploadingScreenState.Editing
+            it.copy(
+                input = it.input.copy(
+                    descriptionError = it.input.description.let {
                         val validationResult = validateDescription(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -126,8 +152,29 @@ class VideoUploadingViewModel @AssistedInject constructor(
             it as VideoUploadingScreenState.Editing
             it.copy(
                 input = it.input.copy(
-                    title = title,
-                    titleError = title.let {
+                    title = title
+                )
+            )
+        }
+    }
+
+    private fun onTitleTypingStarted() {
+        _state.update {
+            it as VideoUploadingScreenState.Editing
+            it.copy(
+                input = it.input.copy(
+                    titleError = null
+                )
+            )
+        }
+    }
+
+    private fun onTitleTypingEnded() {
+        _state.update {
+            it as VideoUploadingScreenState.Editing
+            it.copy(
+                input = it.input.copy(
+                    titleError = it.input.title.let {
                         val validationResult = validateTitle(it)
                         if (validationResult is Result.Failure) validationResult.error else null
                     }
@@ -170,24 +217,23 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 userId = userId,
                 partIndex = 0,
                 partSize = 100
-            ) // TODO all channels fetch here?
-                .onSuccess { channels ->
-                    _state.update {
-                        VideoUploadingScreenState.Editing(
-                            channels = channels.map {
-                                ChannelOptionUi(
-                                    channelId = it.channelId!!,
-                                    title = it.title
-                                )
-                            },
-                            input = VideoUploadingInput()
-                        )
-                    }
-                }.onFailure { error ->
-                    _state.update {
-                        VideoUploadingScreenState.Failure(error)
-                    }
+            ).onSuccess { channels -> // TODO all channels fetch here?
+                _state.update {
+                    VideoUploadingScreenState.Editing(
+                        channels = channels.map {
+                            ChannelOptionUi(
+                                channelId = it.channelId!!,
+                                title = it.title
+                            )
+                        },
+                        input = VideoUploadingInput()
+                    )
                 }
+            }.onFailure { error ->
+                _state.update {
+                    VideoUploadingScreenState.Failure(error)
+                }
+            }
         }
     }
 
@@ -201,13 +247,17 @@ class VideoUploadingViewModel @AssistedInject constructor(
 }
 
 sealed class VideoUploadingScreenUiEvent {
-    data object Cancel: VideoUploadingScreenUiEvent()
-    data object Reload: VideoUploadingScreenUiEvent()
-    data class TitleChanged(val title: String): VideoUploadingScreenUiEvent()
-    data class SourceChanged(val source: String?): VideoUploadingScreenUiEvent()
-    data class CoverChanged(val cover: String?): VideoUploadingScreenUiEvent()
-    data class ChannelChanged(val channelId: Long?): VideoUploadingScreenUiEvent()
-    data class DescriptionChanged(val description: String): VideoUploadingScreenUiEvent()
-    data object Submit: VideoUploadingScreenUiEvent()
-    data class Success(val videoId: Long, val source: String): VideoUploadingScreenUiEvent()
+    data object Cancel : VideoUploadingScreenUiEvent()
+    data object Reload : VideoUploadingScreenUiEvent()
+    data class TitleChanged(val title: String) : VideoUploadingScreenUiEvent()
+    data object TitleTypingEnded : VideoUploadingScreenUiEvent()
+    data object TitleTypingStarted : VideoUploadingScreenUiEvent()
+    data class SourceChanged(val source: String?) : VideoUploadingScreenUiEvent()
+    data class CoverChanged(val cover: String?) : VideoUploadingScreenUiEvent()
+    data class ChannelChanged(val channelId: Long?) : VideoUploadingScreenUiEvent()
+    data class DescriptionChanged(val description: String) : VideoUploadingScreenUiEvent()
+    data object DescriptionTypingEnded : VideoUploadingScreenUiEvent()
+    data object DescriptionTypingStarted : VideoUploadingScreenUiEvent()
+    data object Submit : VideoUploadingScreenUiEvent()
+    data class Success(val videoId: Long, val source: String) : VideoUploadingScreenUiEvent()
 }

@@ -26,6 +26,8 @@ class RequestResetViewModel @Inject constructor(
         when (event) {
             RequestResetUiEvent.Submit -> request()
             is RequestResetUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
+            RequestResetUiEvent.UserNameTypingStarted -> onUserNameTypingStarted()
+            RequestResetUiEvent.UserNameTypingEnded -> onUserNameTypingEnded()
             else -> Unit
         }
     }
@@ -35,8 +37,27 @@ class RequestResetViewModel @Inject constructor(
             _state.update {
                 it as RequestResetScreenState.Entering
                 it.copy(
-                    userName = userName,
-                    userNameError = userName.let {
+                    userName = userName
+                )
+            }
+        }
+    }
+    private fun onUserNameTypingStarted() {
+        viewModelScope.launch {
+            _state.update {
+                it as RequestResetScreenState.Entering
+                it.copy(
+                    userNameError = null
+                )
+            }
+        }
+    }
+    private fun onUserNameTypingEnded() {
+        viewModelScope.launch {
+            _state.update {
+                it as RequestResetScreenState.Entering
+                it.copy(
+                    userNameError = it.userName.let {
                         val validationResult = validateUserName(it)
                         if (validationResult is Result.Failure) {
                             validationResult.error
@@ -81,6 +102,8 @@ class RequestResetViewModel @Inject constructor(
 
 sealed class RequestResetUiEvent {
     data class UserNameChanged(val userName: String): RequestResetUiEvent()
+    data object UserNameTypingStarted: RequestResetUiEvent()
+    data object UserNameTypingEnded: RequestResetUiEvent()
     data object Submit: RequestResetUiEvent()
     data object Cancel: RequestResetUiEvent()
 }

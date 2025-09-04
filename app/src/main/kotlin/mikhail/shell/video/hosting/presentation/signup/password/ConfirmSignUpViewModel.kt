@@ -32,8 +32,14 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
     fun onEvent(event: ConfirmSignUpUiEvent) {
         when (event) {
             is ConfirmSignUpUiEvent.NickChanged -> onNickChanged(event.nick)
+            ConfirmSignUpUiEvent.NickTypingStarted -> onNickTypingStarted()
+            ConfirmSignUpUiEvent.NickTypingEnded -> onNickTypingEnded()
             is ConfirmSignUpUiEvent.PasswordChanged -> onPasswordChanged(event.password)
+            ConfirmSignUpUiEvent.PasswordTypingStarted -> onPasswordTypingStarted()
+            ConfirmSignUpUiEvent.PasswordTypingEnded -> onPasswordTypingStarted()
             is ConfirmSignUpUiEvent.PasswordDuplicateChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
+            ConfirmSignUpUiEvent.PasswordDuplicateTypingStarted -> onPasswordDuplicateTypingStarted()
+            ConfirmSignUpUiEvent.PasswordDuplicateTypingEnded -> onPasswordDuplicateTypingStarted()
             ConfirmSignUpUiEvent.Submit -> confirm()
         }
     }
@@ -44,8 +50,33 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
                 it as ConfirmSignUpScreenState.Entering
                 it.copy(
                     input = it.input.copy(
-                        nick = nick,
-                        nickError = nick.let {
+                        nick = nick
+                    )
+                )
+            }
+        }
+    }
+
+    private fun onNickTypingStarted() {
+        viewModelScope.launch {
+            _state.update {
+                it as ConfirmSignUpScreenState.Entering
+                it.copy(
+                    input = it.input.copy(
+                        nickError = null
+                    )
+                )
+            }
+        }
+    }
+
+    private fun onNickTypingEnded() {
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState as ConfirmSignUpScreenState.Entering
+                currentState.copy(
+                    input = currentState.input.copy(
+                        nickError = currentState.input.nick.let {
                             val validationResult = validateNick(it)
                             if (validationResult is Result.Failure) {
                                 validationResult.error
@@ -69,7 +100,28 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
             it as ConfirmSignUpScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    password = password,
+                    password = password
+                )
+            )
+        }
+    }
+
+    private fun onPasswordTypingStarted() {
+        _state.update {
+            it as ConfirmSignUpScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordError = null
+                )
+            )
+        }
+    }
+
+    private fun onPasswordTypingEnded(password: String) {
+        _state.update {
+            it as ConfirmSignUpScreenState.Entering
+            it.copy(
+                input = it.input.copy(
                     passwordError = password.let {
                         val validationResult = validatePassword(it)
                         if (validationResult is Result.Failure) validationResult.error else null
@@ -84,8 +136,29 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
             it as ConfirmSignUpScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    passwordDuplicate = passwordDuplicate,
-                    passwordDuplicateError = passwordDuplicate.let { passwordDuplicate ->
+                    passwordDuplicate = passwordDuplicate
+                )
+            )
+        }
+    }
+
+    private fun onPasswordDuplicateTypingStarted() {
+        _state.update {
+            it as ConfirmSignUpScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordDuplicateError = null
+                )
+            )
+        }
+    }
+
+    private fun onPasswordDuplicateTypingEnded() {
+        _state.update {
+            it as ConfirmSignUpScreenState.Entering
+            it.copy(
+                input = it.input.copy(
+                    passwordDuplicateError = it.input.passwordDuplicate.let { passwordDuplicate ->
                         val validationResult = validatePasswordDuplicate(
                             password = it.input.password,
                             passwordDuplicate = passwordDuplicate
@@ -134,7 +207,13 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
 
 sealed class ConfirmSignUpUiEvent {
     data class NickChanged(val nick: String): ConfirmSignUpUiEvent()
+    data object NickTypingStarted: ConfirmSignUpUiEvent()
+    data object NickTypingEnded: ConfirmSignUpUiEvent()
     data class PasswordChanged(val password: String): ConfirmSignUpUiEvent()
+    data object PasswordTypingStarted: ConfirmSignUpUiEvent()
+    data object PasswordTypingEnded: ConfirmSignUpUiEvent()
     data class PasswordDuplicateChanged(val passwordDuplicate: String): ConfirmSignUpUiEvent()
+    data object PasswordDuplicateTypingStarted: ConfirmSignUpUiEvent()
+    data object PasswordDuplicateTypingEnded: ConfirmSignUpUiEvent()
     data object Submit: ConfirmSignUpUiEvent()
 }

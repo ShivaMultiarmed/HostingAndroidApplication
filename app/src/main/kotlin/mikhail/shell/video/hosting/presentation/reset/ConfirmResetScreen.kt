@@ -73,10 +73,16 @@ fun ConfirmResetScreen(
                         onEvent(ConfirmResetUiEvent.PasswordChanged(it))
                     },
                     errorMsg = passwordErrorMsg,
-                    secure = true,
-                    placeholder = stringResource(R.string.password_label)
+                    secured = true,
+                    placeholder = stringResource(R.string.password_label),
+                    onTypingStarted = {
+                        onEvent(ConfirmResetUiEvent.PasswordTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ConfirmResetUiEvent.PasswordTypingEnded)
+                    }
                 )
-                val passwordDuplicateErrorMsg = constructInfoMessage(
+                val passwordDuplicateErrorMsg = constructInfoMessage( // TODO
                     state.error,
                     mapOf(
                         ResetError.PASSWORDS_NOT_MATCH to stringResource(R.string.passwords_not_match)
@@ -89,11 +95,17 @@ fun ConfirmResetScreen(
                     icon = Icons.Rounded.Password,
                     value = state.input.passwordDuplicate,
                     onValueChange = {
-                        onEvent(ConfirmResetUiEvent.PasswordChanged(it))
+                        onEvent(ConfirmResetUiEvent.PasswordDuplicatedChanged(it))
                     },
                     errorMsg = passwordDuplicateErrorMsg,
-                    secure = true,
-                    placeholder = stringResource(R.string.password_again_label)
+                    secured = true,
+                    placeholder = stringResource(R.string.password_again_label),
+                    onTypingStarted = {
+                        onEvent(ConfirmResetUiEvent.PasswordDuplicatedTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ConfirmResetUiEvent.PasswordDuplicatedTypingEnded)
+                    }
                 )
 
                 PrimaryProgressButton(

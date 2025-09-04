@@ -78,10 +78,16 @@ fun ConfirmSignUpScreen(
                         onEvent(ConfirmSignUpUiEvent.PasswordChanged(it))
                     },
                     errorMsg = passwordErrorMsg,
-                    secure = true,
-                    placeholder = stringResource(R.string.password_label)
+                    secured = true,
+                    placeholder = stringResource(R.string.password_label),
+                    onTypingStarted = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordTypingStarted)
+                    }
                 )
-                val passwordDuplicateErrorMsg = constructInfoMessage(
+                val passwordDuplicateErrorMsg = constructInfoMessage( // TODO
                     state.error,
                     mapOf(
                         SignUpError.PASSWORDS_NOT_MATCH to stringResource(R.string.passwords_not_match)
@@ -97,10 +103,16 @@ fun ConfirmSignUpScreen(
                         onEvent(ConfirmSignUpUiEvent.PasswordDuplicateChanged(it))
                     },
                     errorMsg = passwordDuplicateErrorMsg,
-                    secure = true,
-                    placeholder = stringResource(R.string.password_again_label)
+                    secured = true,
+                    placeholder = stringResource(R.string.password_again_label),
+                    onTypingStarted = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordDuplicateTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordDuplicateTypingEnded)
+                    }
                 )
-                val nickErrMsg = constructInfoMessage(
+                val nickErrMsg = constructInfoMessage( // TODO
                     error = state.error,
                     errorMessages = mapOf(
                         SignUpError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
@@ -121,7 +133,13 @@ fun ConfirmSignUpScreen(
                         onEvent(ConfirmSignUpUiEvent.NickChanged(it))
                     },
                     errorMsg = nickErrMsg,
-                    placeholder = stringResource(R.string.nick_label)
+                    placeholder = stringResource(R.string.nick_label),
+                    onTypingStarted = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordDuplicateTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ConfirmSignUpUiEvent.PasswordDuplicateTypingEnded)
+                    }
                 )
                 PrimaryProgressButton(
                     inProgress = state.isLoading,

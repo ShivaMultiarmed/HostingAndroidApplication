@@ -82,7 +82,13 @@ fun SignInScreen(
                         onValueChange = {
                             onEvent(SignInUiEvent.UserNameChanged(it))
                         },
-                        errorMsg = emailErrorMsg
+                        errorMsg = emailErrorMsg,
+                        onTypingStarted = {
+                            onEvent(SignInUiEvent.UserNameTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(SignInUiEvent.UserNameTypingEnded)
+                        }
                     )
                     val passwordErrorMsg = when (state.input.passwordError) {
                         TextError.EMPTY -> stringResource(R.string.password_empty_error)
@@ -99,8 +105,14 @@ fun SignInScreen(
                         onValueChange = {
                             onEvent(SignInUiEvent.PasswordChanged(it))
                         },
-                        secure = true,
-                        errorMsg = passwordErrorMsg
+                        secured = true,
+                        errorMsg = passwordErrorMsg,
+                        onTypingStarted = {
+                            onEvent(SignInUiEvent.PasswordTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(SignInUiEvent.PasswordTypingEnded)
+                        }
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

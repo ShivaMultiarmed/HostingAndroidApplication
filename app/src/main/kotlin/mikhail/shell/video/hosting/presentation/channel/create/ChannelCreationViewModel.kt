@@ -12,9 +12,9 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
-import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
+import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 
 @HiltViewModel
 class ChannelCreationViewModel(
@@ -33,23 +33,43 @@ class ChannelCreationViewModel(
         viewModelScope.launch {
             when (event) {
                 is ChannelCreationUiEvent.AliasChanged -> onAliasChanged(event.alias)
+                ChannelCreationUiEvent.AliasTypingStarted -> onAliasTypingStarted()
+                ChannelCreationUiEvent.AliasTypingEnded -> onAliasTypingEnded()
                 is ChannelCreationUiEvent.HeaderChanged -> onHeaderChanged(event.header)
                 is ChannelCreationUiEvent.LogoChanged -> onLogoChanged(event.logo)
                 is ChannelCreationUiEvent.TitleChanged -> onTitleChanged(event.title)
-                is ChannelCreationUiEvent.Cancel -> Unit
+                ChannelCreationUiEvent.TitleTypingStarted -> onTitleTypingStarted()
+                ChannelCreationUiEvent.TitleTypingEnded -> onTitleTypingEnded()
                 is ChannelCreationUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                is ChannelCreationUiEvent.Success -> Unit
+                ChannelCreationUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
+                ChannelCreationUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
                 is ChannelCreationUiEvent.Submit -> onSubmit()
-                is ChannelCreationUiEvent.AuthenticationRequired -> Unit
+                else -> Unit
             }
         }
     }
-    private suspend fun onAliasChanged(alias: String) {
+
+    private fun onAliasChanged(alias: String) {
         _state.update {
             it.copy(
-                alias = alias,
-                aliasError = alias.takeIf { it.isNotEmpty() }?.let {
-                    val validationResult = validateChannelAlias(alias)
+                alias = alias
+            )
+        }
+    }
+
+    private fun onAliasTypingStarted() {
+        _state.update {
+            it.copy(
+                aliasError = null
+            )
+        }
+    }
+
+    private suspend fun onAliasTypingEnded() {
+        _state.update { currentState ->
+            currentState.copy(
+                aliasError = currentState.alias.takeIf { it.isNotEmpty() }?.let {
+                    val validationResult = validateChannelAlias(currentState.alias)
                     if (validationResult is Result.Failure) validationResult.error else null
                 }
             )
@@ -67,6 +87,7 @@ class ChannelCreationViewModel(
             )
         }
     }
+
     private suspend fun onLogoChanged(logo: String?) {
         _state.update {
             it.copy(
@@ -78,35 +99,66 @@ class ChannelCreationViewModel(
             )
         }
     }
-    private suspend fun onTitleChanged(title: String) {
-        _state.update {
-            it.copy(
-                title = title,
-                titleError = title.let {
-                    val validationResult = validateChannelTitle(title)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
-            )
-        }
 
-    }
-    private suspend fun onDescriptionChanged(description: String) {
+    private fun onTitleChanged(title: String) {
         _state.update {
             it.copy(
-                description = description,
-                descriptionError = description.takeIf { it.isNotEmpty() }?.let {
-                    val validationResult = validateDescription(description)
+                title = title
+            )
+        }
+    }
+
+    private fun onTitleTypingStarted() {
+        _state.update {
+            it.copy(
+                titleError = null
+            )
+        }
+    }
+
+    private suspend fun onTitleTypingEnded() {
+        _state.update { currentState ->
+            currentState.copy(
+                titleError = currentState.title.let {
+                    val validationResult = validateChannelTitle(currentState.title)
                     if (validationResult is Result.Failure) validationResult.error else null
                 }
             )
         }
     }
+
+    private fun onDescriptionChanged(description: String) {
+        _state.update {
+            it.copy(
+                description = description
+            )
+        }
+    }
+
+    private fun onDescriptionTypingStarted() {
+        _state.update {
+            it.copy(
+                descriptionError = null
+            )
+        }
+    }
+    private fun onDescriptionTypingEnded() {
+        _state.update { currentState ->
+            currentState.copy(
+                descriptionError = currentState.description.takeIf { it.isNotEmpty() }?.let {
+                    val validationResult = validateDescription(currentState.description)
+                    if (validationResult is Result.Failure) validationResult.error else null
+                }
+            )
+        }
+    }
+
     private suspend fun onSubmit() {
         if (_state.value.titleError != null
             || _state.value.aliasError != null
             || _state.value.logoError != null
             || _state.value.headerError != null
-            ) {
+        ) {
             return
         }
         _state.update {
@@ -120,22 +172,21 @@ class ChannelCreationViewModel(
             ),
             logo = _state.value.logo,
             header = _state.value.header
-        )
-            .onSuccess { channelId ->
-                _state.update {
-                    it.copy(
-                        channelId = channelId,
-                        isCreating = false,
-                        creationError = null
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        creationError = error,
-                        isCreating = false,
-                    )
-                }
+        ).onSuccess { channelId ->
+            _state.update {
+                it.copy(
+                    channelId = channelId,
+                    isCreating = false,
+                    creationError = null
+                )
             }
+        }.onFailure { error ->
+            _state.update {
+                it.copy(
+                    creationError = error,
+                    isCreating = false,
+                )
+            }
+        }
     }
 }

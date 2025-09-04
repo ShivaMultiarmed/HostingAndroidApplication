@@ -61,7 +61,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import kotlinx.coroutines.delay
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun InputField(
@@ -70,29 +72,34 @@ fun InputField(
     placeholder: String = "",
     onValueChange: (String) -> Unit,
     errorMsg: String? = null,
-    secure: Boolean = false,
+    secured: Boolean = false,
     maxLines: Int = 1,
     readOnly: Boolean = false,
     icon: ImageVector? = null,
     enabled: Boolean = true,
+    onTypingStarted: (() -> Unit)? = null,
+    onTypingEnded: (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         var focused by rememberSaveable { mutableStateOf(false) }
-        var exposeText by rememberSaveable { mutableStateOf(!secure) }
+        var isTyping by rememberSaveable { mutableStateOf(false) }
+        var exposeText by rememberSaveable { mutableStateOf(!secured) }
         TextField(
             modifier = modifier.onFocusChanged {
                 focused = it.isFocused
             },
-            keyboardOptions = if (secure) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
+            keyboardOptions = if (secured) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = {
+                isTyping = true
+                onTypingStarted?.invoke()
+                onValueChange(it)
+            },
             label = {
-                Box(
-                    modifier = Modifier
-                ) {
+                Box {
                     Text(
                         text = placeholder
                     )
@@ -101,7 +108,6 @@ fun InputField(
             leadingIcon = {
                 if (icon != null) {
                     Box(
-                        modifier = Modifier,
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Icon(
@@ -129,7 +135,7 @@ fun InputField(
                 unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
                 focusedLabelColor = MaterialTheme.colorScheme.primary
             ),
-            visualTransformation = if (secure && !exposeText) PasswordVisualTransformation()
+            visualTransformation = if (secured && !exposeText) PasswordVisualTransformation()
             else VisualTransformation.None,
             isError = errorMsg != null,
             textStyle = TextStyle.Default.copy(
@@ -142,7 +148,7 @@ fun InputField(
             readOnly = readOnly,
             enabled = enabled,
             trailingIcon = {
-                if (secure) {
+                if (secured) {
                     IconButton(
                         onClick = {
                             exposeText = !exposeText
@@ -161,6 +167,13 @@ fun InputField(
                 modifier = Modifier.padding(all = 7.dp),
                 errorMsg = errorMsg
             )
+        }
+        LaunchedEffect(isTyping) {
+            if (isTyping) {
+                delay(1.3.seconds)
+                isTyping = false
+                onTypingEnded?.invoke()
+            }
         }
     }
 }

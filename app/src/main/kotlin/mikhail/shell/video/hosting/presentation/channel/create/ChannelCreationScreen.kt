@@ -123,7 +123,13 @@ fun ChannelCreationScreen(
                         onEvent(ChannelCreationUiEvent.TitleChanged(it))
                     },
                     placeholder = stringResource(R.string.channel_title_label),
-                    errorMsg = titleErrMsg
+                    errorMsg = titleErrMsg,
+                    onTypingStarted = {
+                        onEvent(ChannelCreationUiEvent.TitleTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ChannelCreationUiEvent.TitleTypingEnded)
+                    }
                 )
             }
             val aliasErrMsg = when (state.aliasError) {
@@ -150,7 +156,13 @@ fun ChannelCreationScreen(
                         onEvent(ChannelCreationUiEvent.AliasChanged(it))
                     },
                     placeholder = stringResource(R.string.channel_alias_label),
-                    errorMsg = aliasErrMsg
+                    errorMsg = aliasErrMsg,
+                    onTypingStarted = {
+                        onEvent(ChannelCreationUiEvent.AliasTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ChannelCreationUiEvent.TitleTypingEnded)
+                    }
                 )
             }
             val descriptionErrMsg = when (state.descriptionError) {
@@ -175,7 +187,13 @@ fun ChannelCreationScreen(
                     },
                     placeholder = stringResource(R.string.channel_description_label),
                     maxLines = 50,
-                    errorMsg = descriptionErrMsg
+                    errorMsg = descriptionErrMsg,
+                    onTypingStarted = {
+                        onEvent(ChannelCreationUiEvent.DescriptionTypingStarted)
+                    },
+                    onTypingEnded = {
+                        onEvent(ChannelCreationUiEvent.DescriptionTypingEnded)
+                    }
                 )
             }
             val logoPicker =

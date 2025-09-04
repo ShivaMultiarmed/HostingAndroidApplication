@@ -118,7 +118,13 @@ fun VideoEditingScreen(
                         },
                         errorMsg = titleErrMsg,
                         placeholder = stringResource(R.string.video_title_label),
-                        icon = Icons.Rounded.Title
+                        icon = Icons.Rounded.Title,
+                        onTypingStarted = {
+                            onEvent(VideoEditingUiEvent.TitleTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(VideoEditingUiEvent.TitleTypingEnded)
+                        }
                     )
                 }
                 val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
@@ -256,7 +262,13 @@ fun VideoEditingScreen(
                         },
                         errorMsg = descriptionErrMsg,
                         placeholder = stringResource(R.string.video_title_label),
-                        icon = Icons.Rounded.Title
+                        icon = Icons.Rounded.Title,
+                        onTypingStarted = {
+                            onEvent(VideoEditingUiEvent.DescriptionTypingStarted)
+                        },
+                        onTypingEnded = {
+                            onEvent(VideoEditingUiEvent.DescriptionTypingEnded)
+                        }
                     )
                 }
             }
