@@ -1,11 +1,14 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import android.webkit.MimeTypeMap
-import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -18,12 +21,8 @@ import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
     private val userApi: UserApi,
-    private val fileProvider: FileProvider,
-    private val gson: Gson
+    private val fileProvider: FileProvider
 ) : UserRepository {
-    private companion object {
-        const val MAX_FILE_SIZE = 10 * 1024 * 1024
-    }
 
     override suspend fun get(userId: Long): Result<User, Error> = request {
         userApi.get(userId).toDomain()
@@ -34,7 +33,18 @@ class UserRepositoryWithApi @Inject constructor(
         avatar: String?,
         avatarAction: EditAction
     ): Result<User, Error> {
-        return request {
+        return request (
+            httpExceptionHandler(400) {
+                val response = Json.decodeFromString<UserEditingErrorResponse>(it.response()?.body() as String)
+                UserEditingError(
+                    nickError = response.nick,
+                    nameError = response.name,
+                    bioError = response.bio,
+                    telError = response.tel,
+                    emailError = response.email
+                )
+            }
+        ) {
             val avatarPart = avatar?.let { uri ->
                 val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
                 val mimeType = fileProvider.getFileMimeType(uri)
@@ -68,11 +78,19 @@ class UserRepositoryWithApi @Inject constructor(
     }
 }
 
+data class UserEditingErrorResponse(
+    val nick: TextError?,
+    val name: TextError?,
+    val bio: TextError?,
+    val tel: TextError?,
+    val email: TextError?
+)
+
 data class UserEditingRequest(
     val nick: String,
     val name: String?,
     val bio: String?,
     val tel: String?,
     val email: String?,
-    val avatarAction: EditAction,
+    val avatarAction: EditAction
 )

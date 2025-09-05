@@ -6,7 +6,9 @@ class ValidationException(val error: Error): RuntimeException()
 
 interface Error
 
-data object UnexpectedError: Error
+data object UnexpectedError: Error {
+    override fun toString() = "UnexpectedError"
+}
 
 class CompoundError<T: Error>(): Error {
     @SerializedName("errors") private val _errors: MutableList<T> = mutableListOf()

@@ -7,8 +7,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.api.VideoApi
+import mikhail.shell.video.hosting.data.dto.VideoEditingErrorResponse
+import mikhail.shell.video.hosting.data.dto.VideoUploadingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
@@ -16,6 +20,8 @@ import mikhail.shell.video.hosting.data.utils.toRequestBody
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
+import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
@@ -97,7 +103,17 @@ class VideoRepositoryWithApi @Inject constructor(
         videoMetaData: VideoMetaData,
         cover: String?
     ): Result<Video, Error> {
-        return request {
+        return request(
+            httpExceptionHandler(400) {
+                val response = Json.decodeFromString<VideoUploadingErrorResponse>(it.response()?.body() as String)
+                VideoUploadingError(
+                    titleError = response.title,
+                    sourceError = UnexpectedError, // TODO
+                    coverError = response.cover,
+                    descriptionError = response.description
+                )
+            }
+        ) {
             val coverPart = cover?.let {
                 val mime = fileProvider.getFileMimeType(it)!!
                 val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
@@ -180,7 +196,17 @@ class VideoRepositoryWithApi @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: String?
-    ): Result<Video, Error> = request {
+    ): Result<Video, Error> = request (
+        httpExceptionHandler(400) {
+            val response = Json.decodeFromString<VideoEditingErrorResponse>(it.response()?.body() as String)
+            VideoEditingError(
+                titleError = response.title,
+                coverError = response.cover,
+                descriptionError = response.description,
+                channelId = response.channelId
+            )
+        }
+    ) {
         val coverPart = cover?.let {
             val mime = fileProvider.getFileMimeType(it)!!
             fileProvider.getFileAsInputStream(it)

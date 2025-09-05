@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
@@ -205,7 +206,21 @@ class VideoUploadingViewModel @AssistedInject constructor(
             }.onFailure { error ->
                 _state.update {
                     it as VideoUploadingScreenState.Editing
-                    it.copy(error = error)
+                    if (error is VideoUploadingError) {
+                        it.copy(
+                            input = it.input.copy(
+                                titleError = error.titleError,
+                                coverError = error.coverError,
+                                channelError = error.channelError,
+                                sourceError = error.sourceError,
+                                descriptionError = error.descriptionError
+                            )
+                        )
+                    } else {
+                        it.copy(
+                            error = error
+                        )
+                    }
                 }
             }
         }

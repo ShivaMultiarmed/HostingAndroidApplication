@@ -6,7 +6,6 @@ import android.net.NetworkCapabilities
 import android.webkit.MimeTypeMap
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.ValidationException
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.FileProvider
@@ -47,8 +46,6 @@ suspend fun <D> request(
             else -> unexpectedExceptionHandler(e)
         }
         Result.Failure(error)
-    } catch (e: ValidationException) {
-        Result.Failure(e.error)
     } catch (e: Exception) {
         val error = when (e) {
             is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED

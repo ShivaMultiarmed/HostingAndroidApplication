@@ -2,11 +2,17 @@ package mikhail.shell.video.hosting.data.repositories
 
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.api.ChannelApi
+import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
+import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -34,7 +40,18 @@ class ChannelRepositoryWithApi @Inject constructor(
         channel: Channel,
         logo: String?,
         header: String?
-    ): Result<Channel, Error> = request {
+    ): Result<Channel, Error> = request (
+        httpExceptionHandler(400) {
+            val response = Json.decodeFromString<ChannelCreationErrorResponse>(it.response()?.body() as String)
+            ChannelCreationError(
+                titleError = response.title,
+                aliasError = response.alias,
+                descriptionError = response.description,
+                headerError = response.header,
+                logoError = response.logo
+            )
+        }
+    ) {
         channelApi.createChannel(
             channel = ChannelCreationRequest(
                 title = channel.title,
@@ -104,7 +121,18 @@ class ChannelRepositoryWithApi @Inject constructor(
         header: String?,
         logoAction: EditAction,
         logo: String?
-    ): Result<Channel, Error> = request {
+    ): Result<Channel, Error> = request (
+        httpExceptionHandler(400) {
+            val response = Json.decodeFromString<ChannelEditingErrorResponse>(it.response()?.body() as String)
+            ChannelEditingError(
+                titleError = response.title,
+                aliasError = response.alias,
+                descriptionError = response.description,
+                headerError = response.header,
+                logoError = response.logo
+            )
+        }
+    ) {
         val coverPart = header?.let {
             fileProvider.uriToPart(
                 uri = it,
