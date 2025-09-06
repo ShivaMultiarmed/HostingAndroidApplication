@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
 import mikhail.shell.video.hosting.data.repositories.VideoEditingRequest
+import mikhail.shell.video.hosting.data.repositories.VideoMetaData
 import mikhail.shell.video.hosting.data.repositories.VideoUploadingRequest
 import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
@@ -48,6 +49,7 @@ interface VideoApi {
     @POST("videos")
     suspend fun uploadVideoDetails(
         @Part("video") video: VideoUploadingRequest,
+        @Part("source") source: VideoMetaData,
         @Part cover: MultipartBody.Part?
     ): VideoDto
     @POST("videos/upload/{videoId}/chunk")

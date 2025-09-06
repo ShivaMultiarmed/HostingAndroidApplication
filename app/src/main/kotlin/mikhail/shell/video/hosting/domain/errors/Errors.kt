@@ -20,3 +20,8 @@ enum class FileError: Error {
     LARGE,
     NOT_SUPPORTED
 }
+enum class NumericError: Error {
+    EMPTY,
+    LOW,
+    HIGH
+}

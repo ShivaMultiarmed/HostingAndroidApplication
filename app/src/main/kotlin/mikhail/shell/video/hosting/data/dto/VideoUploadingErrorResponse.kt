@@ -8,11 +8,6 @@ data class VideoUploadingErrorResponse(
     val title: TextError?,
     val channelId: OptionError?,
     val description: TextError?,
-    val cover: FileError?,
-    val metaData: VideoMetaDataErrorResponse
-)
-
-data class VideoMetaDataErrorResponse(
-    val fileNameError: TextError?,
-    val sizeError: Error? // TODO: some new subtype of Error
+    val source: FileError?,
+    val cover: FileError?
 )

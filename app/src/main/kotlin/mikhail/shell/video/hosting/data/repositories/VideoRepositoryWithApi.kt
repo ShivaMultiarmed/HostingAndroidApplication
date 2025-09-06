@@ -108,7 +108,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 val response = Json.decodeFromString<VideoUploadingErrorResponse>(it.response()?.body() as String)
                 VideoUploadingError(
                     titleError = response.title,
-                    sourceError = UnexpectedError, // TODO
+                    sourceError = response.source,
                     coverError = response.cover,
                     descriptionError = response.description
                 )
@@ -131,9 +131,9 @@ class VideoRepositoryWithApi @Inject constructor(
                 video = VideoUploadingRequest(
                     title = video.title,
                     channelId = video.channelId,
-                    description = video.description,
-                    videoMetaData = videoMetaData
+                    description = video.description
                 ),
+                source = videoMetaData,
                 cover = coverPart
             ).toDomain()
         }
@@ -296,12 +296,12 @@ class VideoRepositoryWithApi @Inject constructor(
 data class VideoUploadingRequest(
     val title: String,
     val channelId: Long,
-    val description: String?,
-    val videoMetaData: VideoMetaData
+    val description: String?
 )
 
 data class VideoMetaData(
     val fileName: String,
+    val mimeType: String,
     val size: Long
 )
 

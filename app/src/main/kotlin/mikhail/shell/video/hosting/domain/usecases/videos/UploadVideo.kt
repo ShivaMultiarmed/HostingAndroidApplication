@@ -19,14 +19,17 @@ class UploadVideo @Inject constructor(
         cover: String?,
         source: String
     ): Result<Video, Error> {
-        val fileMetaData = fileProvider.getFile(source)?: return Result.Failure(FileError.EMPTY)
+        val fileMetaData = fileProvider.getFile(source) ?: return Result.Failure(FileError.EMPTY)
         return videoRepository.uploadVideo(
             video = video,
             videoMetaData = VideoMetaData(
-                fileName = "source." + (MimeTypeMap
-                    .getSingleton()
-                    .getExtensionFromMimeType(fileMetaData.mimeType!!)
-                    ?: return Result.Failure(FileError.NOT_SUPPORTED)),
+                fileName = "source." + (
+                        MimeTypeMap
+                            .getSingleton()
+                            .getExtensionFromMimeType(fileMetaData.mimeType!!)
+                            ?: return Result.Failure(FileError.NOT_SUPPORTED)
+                        ),
+                mimeType = fileMetaData.mimeType,
                 size = fileMetaData.size!!
             ),
             cover = cover
