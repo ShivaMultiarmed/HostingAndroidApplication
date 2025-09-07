@@ -17,10 +17,10 @@ import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
-import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
-import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateVideoSource
+import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 

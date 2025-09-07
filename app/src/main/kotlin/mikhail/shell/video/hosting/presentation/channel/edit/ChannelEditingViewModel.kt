@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
-import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 
 @HiltViewModel(assistedFactory = ChannelEditingViewModel.Factory::class)

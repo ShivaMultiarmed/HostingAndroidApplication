@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateImage
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.usecases.videos.EditVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
