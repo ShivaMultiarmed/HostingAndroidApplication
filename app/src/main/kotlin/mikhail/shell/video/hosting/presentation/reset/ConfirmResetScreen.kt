@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -82,12 +83,10 @@ fun ConfirmResetScreen(
                         onEvent(ConfirmResetUiEvent.PasswordTypingEnded)
                     }
                 )
-                val passwordDuplicateErrorMsg = constructInfoMessage( // TODO
-                    state.error,
-                    mapOf(
-                        ResetError.PASSWORDS_NOT_MATCH to stringResource(R.string.passwords_not_match)
-                    )
-                )
+                val passwordDuplicateErrorMsg = when (state.input.passwordDuplicateError) {
+                    TextError.PATTERN -> stringResource(R.string.passwords_not_match)
+                    else -> null
+                }
                 InputField(
                     modifier = Modifier
                         .width(280.dp)

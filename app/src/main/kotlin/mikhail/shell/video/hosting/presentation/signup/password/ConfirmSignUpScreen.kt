@@ -24,9 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import mikhail.shell.video.hosting.domain.validation.constructInfoMessage
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_NAME_LENGTH
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
@@ -62,9 +61,9 @@ fun ConfirmSignUpScreen(
                     text = stringResource(R.string.sign_up_title)
                 )
                 val passwordErrorMsg = when (state.input.passwordError) {
-                    TextError.LONG -> TODO()
                     TextError.EMPTY -> stringResource(R.string.password_empty_error)
-                    TextError.SHORT -> TODO()
+                    TextError.LONG -> stringResource(R.string.password_too_long)
+                    TextError.SHORT -> stringResource(R.string.password_too_short)
                     TextError.PATTERN -> stringResource(R.string.password_not_valid_error)
                     else -> null
                 }
@@ -87,12 +86,10 @@ fun ConfirmSignUpScreen(
                         onEvent(ConfirmSignUpUiEvent.PasswordTypingStarted)
                     }
                 )
-                val passwordDuplicateErrorMsg = constructInfoMessage( // TODO
-                    state.error,
-                    mapOf(
-                        SignUpError.PASSWORDS_NOT_MATCH to stringResource(R.string.passwords_not_match)
-                    )
-                )
+                val passwordDuplicateErrorMsg = when (state.input.passwordDuplicateError) {
+                    TextError.PATTERN -> stringResource(R.string.passwords_not_match)
+                    else -> null
+                }
                 InputField(
                     modifier = Modifier
                         .width(280.dp)
@@ -112,17 +109,16 @@ fun ConfirmSignUpScreen(
                         onEvent(ConfirmSignUpUiEvent.PasswordDuplicateTypingEnded)
                     }
                 )
-                val nickErrMsg = constructInfoMessage( // TODO
-                    error = state.error,
-                    errorMessages = mapOf(
-                        SignUpError.NICK_EMPTY to stringResource(R.string.nick_empty_error),
-                        SignUpError.NICK_TOO_LARGE to stringResource(
-                            R.string.text_too_large_error,
-                            ValidationRules.MAX_NAME_LENGTH
-                        ),
-                        SignUpError.NICK_EXISTS to stringResource(R.string.nick_exists_error)
-                    )
-                )
+                val nickErrMsg = when (state.input.nickError) {
+                    is TextError -> when(state.input.nickError) {
+                        TextError.EMPTY -> stringResource(R.string.nick_empty_error)
+                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_NAME_LENGTH)
+                        TextError.EXISTS -> stringResource(R.string.nick_exists_error)
+                        else -> null
+                    }
+                    is NetworkError -> stringResource(R.string.nick_validation_unavailable)
+                    else -> null
+                }
                 InputField(
                     modifier = Modifier
                         .width(280.dp)

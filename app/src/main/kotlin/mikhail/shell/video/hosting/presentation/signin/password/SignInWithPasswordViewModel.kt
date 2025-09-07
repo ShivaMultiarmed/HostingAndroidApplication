@@ -32,8 +32,8 @@ class SignInWithPasswordViewModel @Inject constructor(
             SignInUiEvent.PasswordTypingStarted -> onPasswordTypingStarted()
             SignInUiEvent.PasswordTypingEnded -> onPasswordTypingEnded()
             is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
-            SignInUiEvent.UserNameTypingStarted -> TODO()
-            SignInUiEvent.UserNameTypingEnded -> TODO()
+            SignInUiEvent.UserNameTypingStarted -> onUserNameTypingStarted()
+            SignInUiEvent.UserNameTypingEnded -> onUserNameTypingEnded()
             else -> null
         }
     }

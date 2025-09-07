@@ -294,4 +294,7 @@
     <string name="phone_number_short_error">Номер телефона слишком короткий</string>
     <string name="phone_number_long_error">Номер телефона слишком длинный</string>
     <string name="not_found_error">Не найдено</string>
+    <string name="user_name_too_long">Имя пользователя сликом длинное</string>
+    <string name="password_too_long">Пароль слишком длинный</string>
+    <string name="password_too_short">Пароль слишком короткий</string>
 </resources>

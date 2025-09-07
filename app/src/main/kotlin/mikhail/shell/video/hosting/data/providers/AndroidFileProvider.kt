@@ -10,6 +10,15 @@ import java.io.InputStream
 class AndroidFileProvider(context: Context) : FileProvider {
 
     private val contentResolver = context.contentResolver
+    override fun getFileName(uri: String): String? {
+        return contentResolver.query(uri.toUri(), arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
+            if (it.moveToFirst()) {
+                it.getString(0)
+            } else {
+                null
+            }
+        }
+    }
 
     override fun getFileAsInputStream(uri: String): InputStream? {
         return contentResolver.openInputStream(uri.toUri())

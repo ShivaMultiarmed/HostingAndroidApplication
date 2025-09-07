@@ -28,11 +28,11 @@ class ConfirmResetViewModel @AssistedInject constructor(
     fun onEvent(event: ConfirmResetUiEvent) {
         when (event) {
             is ConfirmResetUiEvent.PasswordChanged -> onPasswordChanged(event.password)
-            ConfirmResetUiEvent.PasswordTypingStarted -> TODO()
-            ConfirmResetUiEvent.PasswordTypingEnded -> TODO()
+            ConfirmResetUiEvent.PasswordTypingStarted -> onPasswordTypingStarted()
+            ConfirmResetUiEvent.PasswordTypingEnded -> onPasswordTypingEnded()
             is ConfirmResetUiEvent.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
-            ConfirmResetUiEvent.PasswordDuplicatedTypingStarted -> TODO()
-            ConfirmResetUiEvent.PasswordDuplicatedTypingEnded -> TODO()
+            ConfirmResetUiEvent.PasswordDuplicatedTypingStarted -> onPasswordDuplicateTypingStarted()
+            ConfirmResetUiEvent.PasswordDuplicatedTypingEnded -> onPasswordDuplicateTypingEnded()
             ConfirmResetUiEvent.Submit -> confirm()
         }
     }

@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.domain.models.File
 import java.io.InputStream
 
 interface FileProvider {
+    fun getFileName(uri: String): String?
     fun getFileAsInputStream(uri: String): InputStream?
     fun getFileMimeType(uri: String): String?
     fun getFileSize(uri: String): Long?

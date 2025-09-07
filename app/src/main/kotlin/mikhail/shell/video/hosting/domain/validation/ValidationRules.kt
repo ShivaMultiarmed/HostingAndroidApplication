@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.domain.validation
 import kotlin.math.floor
 
 object ValidationRules {
+    const val FILE_NAME_REGEX = "^\\S+\\.\\S+$"
     const val MIN_PASSWORD_LENGTH = 8
     const val MAX_PASSWORD_LENGTH = 20
     const val MAX_TITLE_LENGTH = 100

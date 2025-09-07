@@ -281,4 +281,7 @@
     <string name="phone_number_short_error">Phone number is too short</string>
     <string name="phone_number_long_error">Phone number is too long</string>
     <string name="not_found_error">Not found</string>
+    <string name="user_name_too_long">Username is too long</string>
+    <string name="password_too_long">Password is too long</string>
+    <string name="password_too_short">Password is too short</string>
 </resources>

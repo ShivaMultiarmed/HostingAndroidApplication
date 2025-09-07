@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.domain.validation.ValidationRules.FILE_NAME_REGEX
 import javax.inject.Inject
 
 class ValidateImage @Inject constructor(
@@ -14,6 +15,8 @@ class ValidateImage @Inject constructor(
             FileError.NOT_FOUND
         } else if (fileProvider.getFileMimeType(uri) == null || !(fileProvider.getFileMimeType(uri)?:"").startsWith("image")) {
             FileError.NOT_SUPPORTED
+        } else if (fileProvider.getFileName(uri) == null || !fileProvider.getFileName(uri)!!.matches(FILE_NAME_REGEX.toRegex())) {
+            FileError.NAME_NOT_VALID
         } else if (fileProvider.getFileSize(uri)!! == 0L) {
             FileError.EMPTY
         } else if (fileProvider.getFileSize(uri)!! > ValidationRules.MAX_IMAGE_SIZE) {

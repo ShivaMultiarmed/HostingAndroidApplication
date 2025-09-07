@@ -59,10 +59,9 @@ fun RequestResetScreen(
                 )
                 val userNameErrorMsg = when (state.userNameError) {
                     is TextError -> when (state.userNameError) {
-                        TextError.LONG -> TODO()
+                        TextError.LONG -> stringResource(R.string.user_name_too_long)
                         TextError.EMPTY -> stringResource(R.string.user_name_empty_error)
                         TextError.NOT_EXISTS -> stringResource(R.string.user_not_found)
-                        TextError.SHORT -> TODO()
                         TextError.PATTERN -> stringResource(R.string.user_name_malformed)
                         else -> null
                     }
