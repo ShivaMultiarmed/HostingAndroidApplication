@@ -13,11 +13,12 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
-import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import javax.inject.Inject
 
 @HiltViewModel
-class ChannelCreationViewModel(
+class ChannelCreationViewModel @Inject constructor(
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,

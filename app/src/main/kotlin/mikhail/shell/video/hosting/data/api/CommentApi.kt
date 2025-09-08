@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.data.api
 
-import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.data.dto.CommentDto
 import mikhail.shell.video.hosting.data.dto.CommentWithUserDto
 import retrofit2.http.Body
@@ -9,6 +8,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import kotlin.time.Instant
 
 interface CommentApi {
     @POST("comments/save")

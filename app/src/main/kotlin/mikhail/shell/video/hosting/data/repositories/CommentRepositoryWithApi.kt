@@ -4,7 +4,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.dto.toDto

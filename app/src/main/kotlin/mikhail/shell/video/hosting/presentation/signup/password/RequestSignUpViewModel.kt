@@ -58,7 +58,7 @@ class RequestSignUpViewModel @Inject constructor(
                             validationResult.error
                         } else {
                             validationResult as Result.Success
-                            if (validationResult.data) TextError.EXISTS else null
+                            if (false) TextError.EXISTS else null
                         }
                     }
                 )

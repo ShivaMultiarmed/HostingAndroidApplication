@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.data.api
 import mikhail.shell.video.hosting.data.dto.SignUpDto
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -38,5 +39,7 @@ interface AuthApi {
     suspend fun confirmResetPassword(
         @Header("Authorization") token: String,
         @Query("password") password: String
-    )
+    ): AuthModel
+    @GET("auth/existence")
+    suspend fun existsByUserName(@Query("userName")userName: String): Boolean
 }

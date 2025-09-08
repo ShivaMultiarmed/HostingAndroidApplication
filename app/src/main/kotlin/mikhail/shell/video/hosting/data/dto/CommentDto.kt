@@ -1,8 +1,8 @@
 package mikhail.shell.video.hosting.data.dto
 
-import kotlinx.datetime.Instant
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
+import kotlin.time.Instant
 
 data class CommentDto(
     val commentId: Long? = null,

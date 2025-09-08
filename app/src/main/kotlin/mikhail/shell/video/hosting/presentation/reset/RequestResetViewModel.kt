@@ -59,10 +59,10 @@ class RequestResetViewModel @Inject constructor(
                 it.copy(
                     userNameError = it.userName.let {
                         val validationResult = validateUserName(it)
-                        if (validationResult is Result.Failure) {
+                        if (validationResult is Result.Failure<TextError>) {
                             validationResult.error
                         } else {
-                            validationResult as Result.Success
+                            validationResult as Result.Success<Boolean>
                             if (!validationResult.data) {
                                 TextError.NOT_EXISTS
                             } else {

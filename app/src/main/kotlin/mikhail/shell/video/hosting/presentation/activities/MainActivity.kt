@@ -44,6 +44,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoRecommendationsGraph
+import mikhail.shell.video.hosting.presentation.utils.BackStackSaver
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -81,17 +82,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val rootBackStack = rememberSaveable {
-                        mutableStateListOf<Route>(if (userDetailsProvider.getUserId() != 0L) Route.Video else Route.Authentication)
+                    val rootBackStack = rememberSaveable(
+                        saver = BackStackSaver
+                    ) {
+                        mutableStateListOf((if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication))
                     }
                     val currentRoute = rootBackStack.last()
                     val orientation = LocalConfiguration.current.orientation
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
-                        WindowCompat.getInsetsController(
-                            activity.window,
-                            view
-                        ).isAppearanceLightStatusBars = when {
+                        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = when {
                             currentRoute is Route.Video.View -> false
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }

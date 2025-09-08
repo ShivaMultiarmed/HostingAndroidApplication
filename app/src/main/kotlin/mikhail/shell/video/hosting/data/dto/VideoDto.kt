@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.data.dto
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel

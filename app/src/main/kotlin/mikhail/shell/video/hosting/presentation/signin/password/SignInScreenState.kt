@@ -1,8 +1,8 @@
 package mikhail.shell.video.hosting.presentation.signin.password
 
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.AuthModel
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 sealed class SignInScreenState {
     data class Entering(
@@ -14,8 +14,6 @@ sealed class SignInScreenState {
 }
 
 data class SignInInputState(
-    val userName: String = "",
-    val userNameError: Error? = null,
-    val password: String = "",
-    val passwordError: TextError? = null
+    val userName: FieldState<String, Error> = FieldState(""),
+    val password: FieldState<String, Error> = FieldState("")
 )

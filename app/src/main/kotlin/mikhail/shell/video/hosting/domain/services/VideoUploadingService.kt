@@ -81,7 +81,7 @@ class VideoUploadingService : Service() {
                                 updateProgressNotification((it * 100).toInt())
                             }.onSuccess {
                                 stopUploading()
-                                displaySuccessNotification(videoId)
+                                // displaySuccessNotification(videoId) TODO
                             }.onFailure { err ->
                                 stopUploading()
                                 displayFailureNotification(err)

@@ -10,7 +10,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import mikhail.shell.video.hosting.BuildConfig
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi

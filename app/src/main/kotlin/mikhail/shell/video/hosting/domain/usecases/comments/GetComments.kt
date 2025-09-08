@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.comments
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.Result

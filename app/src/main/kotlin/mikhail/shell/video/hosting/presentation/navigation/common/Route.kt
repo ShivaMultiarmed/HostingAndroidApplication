@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.navigation.common
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class Route: NavKey {
     @Serializable
     data object Authentication: Route() {
@@ -69,4 +70,8 @@ sealed class Route: NavKey {
         @Serializable
         data class Edit(val channelId: Long): Route()
     }
+}
+
+fun a() {
+    Route.Video.Companion
 }

@@ -94,8 +94,10 @@ fun InputField(
             keyboardOptions = if (secured) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
             value = value,
             onValueChange = {
-                isTyping = true
-                onTypingStarted?.invoke()
+                if (!isTyping) {
+                    isTyping = true
+                    onTypingStarted?.invoke()
+                }
                 onValueChange(it)
             },
             label = {
@@ -170,7 +172,7 @@ fun InputField(
         }
         LaunchedEffect(isTyping) {
             if (isTyping) {
-                delay(1.3.seconds)
+                delay(2.seconds)
                 isTyping = false
                 onTypingEnded?.invoke()
             }
@@ -441,3 +443,4 @@ fun CodeInputPreview() {
         }
     }
 }
+

@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -41,6 +40,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.presentation.models.toUi
 import mikhail.shell.video.hosting.presentation.video.models.toUi
+import kotlin.time.Clock
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(

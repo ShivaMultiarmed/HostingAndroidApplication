@@ -63,13 +63,15 @@ fun SignInScreen(
                     Title(
                         text = stringResource(R.string.sign_in_title)
                     )
-                    val emailErrorMsg = when(state.input.userNameError) {
-                        is TextError -> when (state.input.userNameError) {
+                    val emailErrorMsg = when(state.input.userName.error) {
+                        is TextError -> when (state.input.userName.error) {
                             TextError.EMPTY -> stringResource(R.string.user_name_empty_error)
+                            TextError.LONG -> stringResource(R.string.user_name_too_long)
                             TextError.PATTERN -> stringResource(R.string.email_malformed_error)
+                            TextError.NOT_EXISTS -> stringResource(R.string.email_not_found_error)
                             else -> null
                         }
-                        NetworkError.NOT_FOUND -> stringResource(R.string.email_not_found_error)
+                        NetworkError.NOT_FOUND -> stringResource(R.string.email_not_found_error) // TODO: leave NOT_FOUND or NOT_EXISTS only
                         else -> null
                     }
                     InputField(
@@ -78,7 +80,7 @@ fun SignInScreen(
                             .clip(RoundedCornerShape(10.dp)),
                         icon = Icons.Rounded.Email,
                         placeholder = stringResource(R.string.email_label),
-                        value = state.input.userName,
+                        value = state.input.userName.value,
                         onValueChange = {
                             onEvent(SignInUiEvent.UserNameChanged(it))
                         },
@@ -90,9 +92,12 @@ fun SignInScreen(
                             onEvent(SignInUiEvent.UserNameTypingEnded)
                         }
                     )
-                    val passwordErrorMsg = when (state.input.passwordError) {
+                    val passwordErrorMsg = when (state.input.password.error) {
                         TextError.EMPTY -> stringResource(R.string.password_empty_error)
-                        TextError.PATTERN -> stringResource(R.string.password_incorrect_error)
+                        TextError.SHORT -> stringResource(R.string.password_too_short)
+                        TextError.LONG -> stringResource(R.string.password_too_long)
+                        TextError.PATTERN -> stringResource(R.string.password_not_valid_error)
+                        TextError.NOT_CORRECT -> stringResource(R.string.password_incorrect_error)
                         else -> null
                     }
                     InputField(
@@ -101,18 +106,12 @@ fun SignInScreen(
                             .clip(RoundedCornerShape(10.dp)),
                         icon = Icons.Rounded.Password,
                         placeholder = stringResource(R.string.password_label),
-                        value = state.input.password,
+                        value = state.input.password.value,
                         onValueChange = {
                             onEvent(SignInUiEvent.PasswordChanged(it))
                         },
                         secured = true,
-                        errorMsg = passwordErrorMsg,
-                        onTypingStarted = {
-                            onEvent(SignInUiEvent.PasswordTypingStarted)
-                        },
-                        onTypingEnded = {
-                            onEvent(SignInUiEvent.PasswordTypingEnded)
-                        }
+                        errorMsg = passwordErrorMsg
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -38,7 +40,7 @@ android {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.2/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.2/api/v2/\"")
             buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "true")
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -65,12 +67,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    kotlinOptions {
+        freeCompilerArgs = listOf("-XXLanguage:+WhenGuards")
+    }
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 

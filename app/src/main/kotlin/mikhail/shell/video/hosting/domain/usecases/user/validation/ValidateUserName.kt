@@ -1,20 +1,22 @@
 package mikhail.shell.video.hosting.domain.usecases.user.validation
 
-import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import javax.inject.Inject
 
 class ValidateUserName @Inject constructor(
-    private val validateEmail: ValidateEmail,
-    private val userRepository: UserRepository
+    private val validateEmail: ValidateEmail
 ) {
-    suspend operator fun invoke(userName: String): Result<Boolean, Error> {
-        val localResult = validateEmail(userName)
-        return if (localResult is Result.Failure) {
-            Result.Failure(localResult.error)
+    operator fun invoke(userName: String): Result<Unit, TextError> {
+        return if (userName.isBlank()) {
+            Result.Failure(TextError.EMPTY)
         } else {
-            Result.Success(true) as Result<Boolean, Error> // TODO
+            val emailValidationResult = validateEmail(userName)
+            if (emailValidationResult is Result.Failure) {
+                Result.Failure(emailValidationResult.error)
+            } else {
+                Result.Success(Unit) as Result<Unit, TextError>
+            }
         }
     }
 }

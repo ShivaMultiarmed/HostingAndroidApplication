@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.models
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 data class Video(
     val videoId: Long? = null,

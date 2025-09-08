@@ -8,16 +8,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
+import mikhail.shell.video.hosting.domain.validation.CheckUserName
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
     private val validateUserName: ValidateUserName,
+    private val checkUserName: CheckUserName,
     private val validatePassword: ValidatePassword,
     private val signInWithPassword: SignInWithPassword,
     private val subscribeToNotifications: SubscribeToNotifications
@@ -29,8 +32,6 @@ class SignInWithPasswordViewModel @Inject constructor(
         when (event) {
             SignInUiEvent.Submit -> signIn()
             is SignInUiEvent.PasswordChanged -> onPasswordChanged(event.password)
-            SignInUiEvent.PasswordTypingStarted -> onPasswordTypingStarted()
-            SignInUiEvent.PasswordTypingEnded -> onPasswordTypingEnded()
             is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
             SignInUiEvent.UserNameTypingStarted -> onUserNameTypingStarted()
             SignInUiEvent.UserNameTypingEnded -> onUserNameTypingEnded()
@@ -43,32 +44,13 @@ class SignInWithPasswordViewModel @Inject constructor(
             it as SignInScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    password = password
-                )
-            )
-        }
-    }
-
-    private fun onPasswordTypingStarted() {
-        _state.update {
-            it as SignInScreenState.Entering
-            it.copy(
-                input = it.input.copy(
-                    passwordError = null
-                )
-            )
-        }
-    }
-
-    private fun onPasswordTypingEnded() {
-        _state.update {
-            it as SignInScreenState.Entering
-            it.copy(
-                input = it.input.copy(
-                    passwordError = it.input.password.let {
-                        val validationResult = validatePassword(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
+                    password = it.input.password.copy(
+                        value = password,
+                        error = it.input.password.value.let {
+                            val validationResult = validatePassword(password)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
                 )
             )
         }
@@ -79,7 +61,13 @@ class SignInWithPasswordViewModel @Inject constructor(
             it as SignInScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    userName = userName
+                    userName = it.input.userName.copy(
+                        value = userName,
+                        error = it.input.userName.value.let {
+                            val validationResult = validateUserName(userName)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
                 )
             )
         }
@@ -90,7 +78,9 @@ class SignInWithPasswordViewModel @Inject constructor(
             it as SignInScreenState.Entering
             it.copy(
                 input = it.input.copy(
-                    userNameError = null
+                    userName = it.input.userName.copy(
+                        isTyping = true
+                    )
                 )
             )
         }
@@ -102,15 +92,19 @@ class SignInWithPasswordViewModel @Inject constructor(
                 it as SignInScreenState.Entering
                 it.copy(
                     input = it.input.copy(
-                        userNameError = it.input.userName.let {
-                            val validationResult = validateUserName(it)
-                            if (validationResult is Result.Failure) {
-                                validationResult.error
+                        userName = it.input.userName.copy(
+                            isTyping = false,
+                            error = if (it.input.userName.error == null || it.input.userName.error == TextError.NOT_EXISTS) {
+                                val checkResult = checkUserName(it.input.userName.value)
+                                when (checkResult) {
+                                    is Result.Failure -> checkResult.error
+                                    is Result.Success if (!checkResult.data) -> TextError.NOT_EXISTS
+                                    else -> null
+                                }
                             } else {
-                                validationResult as Result.Success
-                                if (!validationResult.data) TextError.NOT_EXISTS else null
+                                it.input.userName.error
                             }
-                        }
+                        )
                     )
                 )
             }
@@ -125,8 +119,8 @@ class SignInWithPasswordViewModel @Inject constructor(
         val currentInput = (_state.value as SignInScreenState.Entering).input
         viewModelScope.launch {
             signInWithPassword(
-                email = currentInput.userName,
-                password = currentInput.password
+                email = currentInput.userName.value,
+                password = currentInput.password.value
             ).onSuccess { authModel ->
                 subscribeToNotifications()
                 _state.update {
@@ -137,9 +131,14 @@ class SignInWithPasswordViewModel @Inject constructor(
                     it as SignInScreenState.Entering
                     it.copy(
                         isLoading = false,
-                        error = if (error != TextError.NOT_CORRECT) error else it.error,
+                        error = if (error !in listOf(NetworkError.NOT_FOUND, NetworkError.BAD_REQUEST)) error else it.error,
                         input = it.input.copy(
-                            passwordError = TextError.NOT_CORRECT
+                            userName = it.input.userName.copy(
+                                error = if (error == NetworkError.NOT_FOUND) TextError.NOT_EXISTS else it.input.password.error
+                            ),
+                            password = it.input.password.copy(
+                                error = if (error == NetworkError.BAD_REQUEST) TextError.NOT_CORRECT else it.input.password.error
+                            )
                         )
                     )
                 }
@@ -160,8 +159,6 @@ sealed class SignInUiEvent {
     data object UserNameTypingStarted : SignInUiEvent()
     data object UserNameTypingEnded : SignInUiEvent()
     data class PasswordChanged(val password: String) : SignInUiEvent()
-    data object PasswordTypingStarted : SignInUiEvent()
-    data object PasswordTypingEnded : SignInUiEvent()
     data object Submit : SignInUiEvent()
     data object SignUp : SignInUiEvent()
 }

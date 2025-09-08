@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.presentation.navigation.authentication
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
@@ -16,7 +15,7 @@ import mikhail.shell.video.hosting.presentation.navigation.authentication.signup
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderBuilder<Route>.authenticationGraph(
-    rootBackStack: SnapshotStateList<Route>,
+    rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
     entry<Route.Authentication> {

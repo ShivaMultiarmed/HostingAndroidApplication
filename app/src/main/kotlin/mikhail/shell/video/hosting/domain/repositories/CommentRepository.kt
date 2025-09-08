@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.repositories
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ActionModel
 import mikhail.shell.video.hosting.domain.models.Comment

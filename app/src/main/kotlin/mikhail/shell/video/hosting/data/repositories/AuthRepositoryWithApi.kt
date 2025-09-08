@@ -11,7 +11,6 @@ import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
@@ -26,14 +25,12 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun signInWithPassword(
         email: String,
         password: String
-    ): Result<AuthModel, Error> = request(
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<SignInError>>() {}.type
-            gson.fromJson(json, type) ?: UnexpectedError
-        }
-    ) {
+    ): Result<AuthModel, Error> = request {
         authApi.signInWithPassword(email, password)
+    }
+
+    override suspend fun existsByUserName(userName: String): Result<Boolean, Error> = request {
+        authApi.existsByUserName(userName)
     }
 
     override suspend fun requestSignUpWithPassword(userName: String): Result<Unit, Error> = request (
@@ -111,7 +108,7 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun confirmResetPassword(
         token: String,
         password: String
-    ): Result<Unit, Error> = request (
+    ): Result<AuthModel, Error> = request (
         httpExceptionHandler(400) { e ->
             val json = e.response()?.errorBody()?.string()
             gson.fromJson(json, ResetError::class.java)?: UnexpectedError
