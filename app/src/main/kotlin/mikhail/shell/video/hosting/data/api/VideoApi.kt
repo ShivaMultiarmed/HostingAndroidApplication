@@ -24,26 +24,26 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface VideoApi {
-    @GET("videos/{videoId}")
-    suspend fun fetchVideo(@Path("videoId") videoId: Long) : VideoDto
-    @GET("videos/{videoId}/details")
-    suspend fun fetchVideoDetails(@Path("videoId") videoId: Long) : VideoDetailsDto
-    @PATCH("videos/{videoId}/rate")
+    @GET("videos/{video_id}")
+    suspend fun fetchVideo(@Path("video_id") videoId: Long) : VideoDto
+    @GET("videos/{video_id}/details")
+    suspend fun fetchVideoDetails(@Path("video_id") videoId: Long) : VideoDetailsDto
+    @PATCH("videos/{video_id}/rate")
     suspend fun rateVideo(
-        @Path("videoId") videoId: Long,
+        @Path("video_id") videoId: Long,
         @Query("liking") liking: Liking
     ): VideoWithUserDto
-    @GET("videos/channel/{channelId}")
+    @GET("videos/channel/{channel_id}")
     suspend fun fetchVideoList(
-        @Path("channelId") channelId: Long,
-        @Query("partNumber") partNumber: Long,
-        @Query("partSize") partSize: Int
+        @Path("channel_id") channelId: Long,
+        @Query("part_number") partNumber: Long,
+        @Query("part_size") partSize: Int
     ): List<VideoDto>
     @GET("videos/search")
     suspend fun fetchVideoListByQuery(
         @Query("query") query: String,
-        @Query("partNumber") partNumber: Long,
-        @Query("partSize") partSize: Int
+        @Query("part_number") partNumber: Long,
+        @Query("part_size") partSize: Int
     ): List<VideoWithChannelDto>
     @Multipart
     @POST("videos")
@@ -54,17 +54,17 @@ interface VideoApi {
     ): VideoDto
     @POST("videos/upload/{videoId}/chunk")
     suspend fun uploadVideoSource(
-        @Path("videoId") videoId: Long,
-        @Query("chunkIndex") chunkIndex: Long,
+        @Path("video_id") videoId: Long,
+        @Query("chunk_index") chunkIndex: Long,
         @Body source: RequestBody
     )
-    @POST("videos/upload/{videoId}/confirmation")
+    @POST("videos/upload/{video_id}/confirmation")
     suspend fun confirmVideoUpload(
-        @Path("videoId") videoId: Long
+        @Path("video_id") videoId: Long
     )
-    @PATCH("videos/{videoId}/views")
+    @PATCH("videos/{video_id}/views")
     suspend fun incrementViews(
-        @Path("videoId") videoId: Long
+        @Path("video_id") videoId: Long
     ): VideoDto
     @Multipart
     @PATCH("videos")
@@ -72,16 +72,16 @@ interface VideoApi {
         @Part("video") video: VideoEditingRequest,
         @Part cover: MultipartBody.Part?
     ): VideoDto
-    @DELETE("videos/{videoId}")
-    suspend fun deleteVideo(@Path("videoId") videoId: Long)
-    @GET("videos/{videoId}/source")
+    @DELETE("videos/{video_id}")
+    suspend fun deleteVideo(@Path("video_id") videoId: Long)
+    @GET("videos/{video_id}/source")
     suspend fun downloadVideo(
-        @Path("videoId") videoId: Long,
+        @Path("video_id") videoId: Long,
         @Header("Range") byteRange: String
     ): Response<ResponseBody>
     @GET("videos/recommendations")
     suspend fun fetchVideoRecommendationsPart(
-        @Query("partIndex") partIndex: Long,
-        @Query("partSize") partSize: Int
+        @Query("part_index") partIndex: Long,
+        @Query("part_size") partSize: Int
     ): List<VideoWithChannelDto>
 }

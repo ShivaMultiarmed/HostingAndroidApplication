@@ -79,17 +79,28 @@ fun InputField(
     enabled: Boolean = true,
     onTypingStarted: (() -> Unit)? = null,
     onTypingEnded: (() -> Unit)? = null,
+    onFocus: (() -> Unit)? = null,
+    onBlur: (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
+        var focusedEarlier by rememberSaveable { mutableStateOf(false) }
         var focused by rememberSaveable { mutableStateOf(false) }
         var isTyping by rememberSaveable { mutableStateOf(false) }
         var exposeText by rememberSaveable { mutableStateOf(!secured) }
         TextField(
             modifier = modifier.onFocusChanged {
                 focused = it.isFocused
+                if (focused) {
+                    onFocus?.invoke()
+                    if (!focusedEarlier) {
+                        focusedEarlier = true
+                    }
+                } else if (focusedEarlier) {
+                    onBlur?.invoke()
+                }
             },
             keyboardOptions = if (secured) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
             value = value,
@@ -162,14 +173,15 @@ fun InputField(
                         )
                     }
                 }
+            },
+            supportingText = {
+                if (errorMsg != null) {
+                    ErrorText(
+                        errorMsg = errorMsg
+                    )
+                }
             }
         )
-        if (errorMsg != null) {
-            ErrorText(
-                modifier = Modifier.padding(all = 7.dp),
-                errorMsg = errorMsg
-            )
-        }
         LaunchedEffect(isTyping) {
             if (isTyping) {
                 delay(2.seconds)

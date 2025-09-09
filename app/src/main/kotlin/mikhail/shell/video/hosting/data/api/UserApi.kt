@@ -11,8 +11,8 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface UserApi {
-    @GET("users/{userId}")
-    suspend fun get(@Path("userId") userId: Long): UserDto
+    @GET("users/{user_id}")
+    suspend fun get(@Path("user_id") userId: Long): UserDto
     @PATCH("users")
     @Multipart
     suspend fun edit(

@@ -29,9 +29,8 @@ fun EntryProviderBuilder<Route>.videoRecommendationsGraph(
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                videoRecommendationsRoute(
-                    rootBackStack = rootBackStack,
-                    recommendationsBackStack = recommendationsBackStack
+                recommendationsRoute(
+                    rootBackStack = rootBackStack
                 )
                 channelGraph(
                     currentTabBackStack = recommendationsBackStack,

@@ -21,14 +21,13 @@ fun ErrorDisplay(
     val context = LocalContext.current
     LaunchedEffect(error) {
         if (error != null) {
-            val message = errorMessages[error]
-                ?: error.let {
-                    when (it) {
-                        is NetworkError -> context.constructNetworkErrorMessage(it)
-                        is UnexpectedError -> context.getString(R.string.unexpected_error)
-                        else -> null
-                    }
+            val message = errorMessages[error] ?: error.let { it ->
+                when (it) {
+                    is NetworkError if (it != NetworkError.AUTHENTICATION) -> context.constructNetworkErrorMessage(it)
+                    is UnexpectedError -> context.getString(R.string.unexpected_error)
+                    else -> null
                 }
+            }
             message?.let {
                 snackBarHostState.showSnackbar(
                     message = it,

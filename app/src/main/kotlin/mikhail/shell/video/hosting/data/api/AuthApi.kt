@@ -11,14 +11,14 @@ import retrofit2.http.Query
 interface AuthApi {
     @POST("auth/signin/password")
     suspend fun signInWithPassword(
-        @Query("username") email: String,
+        @Query("user_name") email: String,
         @Query("password") password: String
     ): AuthModel
     @POST("auth/signup/password/request")
-    suspend fun requestSignUpWithPassword(@Query("userName") userName: String)
-    @POST("auth/signup/password/verify")
+    suspend fun requestSignUpWithPassword(@Query("user_name") userName: String)
+    @POST("auth/signup/password/verification")
     suspend fun verifySignUpWithPassword(
-        @Query("userName") userName: String,
+        @Query("user_name") userName: String,
         @Query("code") code: String
     ): String
     @POST("auth/signup/password/confirm")
@@ -29,10 +29,10 @@ interface AuthApi {
     @POST("auth/signout")
     suspend fun signOut()
     @POST("auth/reset/password/request")
-    suspend fun requestResetPassword(@Query("userName") userName: String)
+    suspend fun requestResetPassword(@Query("user_name") userName: String)
     @POST("auth/reset/password/verify")
     suspend fun verifyResetPassword(
-        @Query("userName") userName: String,
+        @Query("user_name") userName: String,
         @Query("code") code: String
     ): String
     @POST("auth/reset/password/confirm")
@@ -41,5 +41,5 @@ interface AuthApi {
         @Query("password") password: String
     ): AuthModel
     @GET("auth/existence")
-    suspend fun existsByUserName(@Query("userName")userName: String): Boolean
+    suspend fun existsByUserName(@Query("user_name") userName: String): Boolean
 }

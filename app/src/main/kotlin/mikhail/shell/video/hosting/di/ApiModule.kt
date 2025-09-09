@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.di
 import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.messaging.messaging
+import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -10,7 +11,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlin.time.Instant
 import mikhail.shell.video.hosting.BuildConfig
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
@@ -26,12 +26,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import javax.inject.Singleton
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
+import kotlin.time.Instant
 
 
 @Module
@@ -40,43 +36,17 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideAndroidFileProvider(
-        @ApplicationContext appContext: Context
-    ): FileProvider = AndroidFileProvider(appContext)
+    fun provideAndroidFileProvider(@ApplicationContext appContext: Context): FileProvider = AndroidFileProvider(appContext)
 
     @Provides
     @Singleton
-    fun provideHttpClient(
-        tokenInterceptor: TokenInterceptor
-    ) = OkHttpClient.Builder()
+    fun provideHttpClient(tokenInterceptor: TokenInterceptor) = OkHttpClient.Builder()
         .addInterceptor(tokenInterceptor)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
-        ).apply {
-            if (BuildConfig.DEBUG) {
-                val trustManager = object : X509TrustManager {
-                    override fun checkClientTrusted(
-                        chain: Array<X509Certificate>,
-                        authType: String
-                    ) {}
-
-                    override fun checkServerTrusted(
-                        chain: Array<X509Certificate>,
-                        authType: String
-                    ) {}
-
-                    override fun getAcceptedIssuers(): Array<X509Certificate> {
-                        return arrayOf()
-                    }
-                }
-                val sslContext = SSLContext.getInstance("SSL")
-                sslContext.init(null, arrayOf<TrustManager>(trustManager), SecureRandom())
-                this.sslSocketFactory(sslContext.socketFactory, trustManager)
-                this.hostnameVerifier { hostname, session -> true }
-            }
-        }
+        )
         .build()
 
     @Provides
@@ -89,6 +59,7 @@ object ApiModule {
         instantConverter: InstantConverter
     ) = GsonBuilder()
         .registerTypeAdapter(Instant::class.java, instantConverter)
+        .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
     @Provides
@@ -108,33 +79,23 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideVideoApi(
-        retrofit: Retrofit
-    ) = retrofit.create<VideoApi>()
+    fun provideVideoApi(retrofit: Retrofit) = retrofit.create<VideoApi>()
 
     @Provides
     @Singleton
-    fun provideChannelApi(
-        retrofit: Retrofit
-    ) = retrofit.create<ChannelApi>()
+    fun provideChannelApi(retrofit: Retrofit) = retrofit.create<ChannelApi>()
 
     @Provides
     @Singleton
-    fun provideAuthApi(
-        retrofit: Retrofit
-    ) = retrofit.create<AuthApi>()
+    fun provideAuthApi(retrofit: Retrofit) = retrofit.create<AuthApi>()
 
     @Provides
     @Singleton
-    fun provideCommentApi(
-        retrofit: Retrofit
-    ) = retrofit.create<CommentApi>()
+    fun provideCommentApi(retrofit: Retrofit) = retrofit.create<CommentApi>()
 
     @Provides
     @Singleton
-    fun provideUserApi(
-        retrofit: Retrofit
-    ) = retrofit.create<UserApi>()
+    fun provideUserApi(retrofit: Retrofit) = retrofit.create<UserApi>()
 
     @Provides
     @Singleton

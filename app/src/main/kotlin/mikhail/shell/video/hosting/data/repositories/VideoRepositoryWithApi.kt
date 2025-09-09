@@ -50,20 +50,14 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun fetchVideoRecommendations(
         partIndex: Long,
         partSize: Int
-    ): Result<List<VideoWithChannel>, Error> {
-        return request {
-            videoApi
-                .fetchVideoRecommendationsPart(
-                    partIndex = partIndex,
-                    partSize = partSize
-                )
-                .map { it.toDomain() }
-        }
+    ): Result<List<VideoWithChannel>, Error> = request {
+        videoApi.fetchVideoRecommendationsPart(
+            partIndex = partIndex,
+            partSize = partSize
+        ).map { it.toDomain() }
     }
 
-    override suspend fun fetchVideoDetails(
-        videoId: Long
-    ): Result<VideoWithChannelForUser, Error> = request {
+    override suspend fun fetchVideoDetails(videoId: Long): Result<VideoWithChannelForUser, Error> = request {
         videoApi.fetchVideoDetails(videoId).toDomain()
     }
 
@@ -105,7 +99,9 @@ class VideoRepositoryWithApi @Inject constructor(
     ): Result<Video, Error> {
         return request(
             httpExceptionHandler(400) {
-                val response = Json.decodeFromString<VideoUploadingErrorResponse>(it.response()?.body() as String)
+                val response = Json.decodeFromString<VideoUploadingErrorResponse>(
+                    it.response()?.body() as String
+                )
                 VideoUploadingError(
                     titleError = response.title,
                     sourceError = response.source,
@@ -138,6 +134,7 @@ class VideoRepositoryWithApi @Inject constructor(
             ).toDomain()
         }
     }
+
     override suspend fun uploadVideo(
         videoId: Long,
         source: String,
@@ -196,9 +193,10 @@ class VideoRepositoryWithApi @Inject constructor(
         video: Video,
         coverAction: EditAction,
         cover: String?
-    ): Result<Video, Error> = request (
+    ): Result<Video, Error> = request(
         httpExceptionHandler(400) {
-            val response = Json.decodeFromString<VideoEditingErrorResponse>(it.response()?.body() as String)
+            val response =
+                Json.decodeFromString<VideoEditingErrorResponse>(it.response()?.body() as String)
             VideoEditingError(
                 titleError = response.title,
                 coverError = response.cover,

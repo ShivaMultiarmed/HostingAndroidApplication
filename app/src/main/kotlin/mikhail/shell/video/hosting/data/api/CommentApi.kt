@@ -11,13 +11,13 @@ import retrofit2.http.Query
 import kotlin.time.Instant
 
 interface CommentApi {
-    @POST("comments/save")
+    @POST("comments")
     suspend fun save(@Body comment: CommentDto)
-    @GET("comments/videos/{videoId}")
+    @GET("comments/videos/{video_id}")
     suspend fun fetch(
-        @Path("videoId") videoId: Long,
+        @Path("video_id") videoId: Long,
         @Query("before") before: Instant
     ): List<CommentWithUserDto>
-    @DELETE("comments/remove")
-    suspend fun remove(@Query("commentId") commentId: Long)
+    @DELETE("comments/{comment_id}")
+    suspend fun remove(@Path("comment_id") commentId: Long)
 }

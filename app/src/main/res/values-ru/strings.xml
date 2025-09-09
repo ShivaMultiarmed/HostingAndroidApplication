@@ -140,13 +140,7 @@
     <string name="sign_up_link_label">Зарегистрироваться</string>
     <string name="sign_up_title">Зарегистрироваться</string>
     <string name="email_exists_msg_error">Такой e-mail уже существует</string>
-    <string name="password_not_valid_error">
-        Пароль должен:\n
-        - быть длиной от 8 до 20 символов\n
-        - быть без пробелов\n
-        - содержать хотя бы одну цифру\n
-        - содержать хотя бы один специальны символ: &amp;, *, /, …
-    </string>
+    <string name="password_not_valid_error">Минимум одна цифра и специальный символ (&amp;, *, /, …)</string>
     <string name="nick_empty_error">Заполните никнейм</string>
     <string name="nick_exists_error">Этот никнейм занят</string>
     <string name="nick_label">Никнейм</string>
@@ -297,4 +291,5 @@
     <string name="user_name_too_long">Имя пользователя сликом длинное</string>
     <string name="password_too_long">Пароль слишком длинный</string>
     <string name="password_too_short">Пароль слишком короткий</string>
+    <string name="user_name_check_failed">Не удалось проверить имя пользователя</string>
 </resources>

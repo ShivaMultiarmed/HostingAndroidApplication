@@ -6,6 +6,7 @@ import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
 data class RecommendationsScreenState(
     val videos: List<VideoWithChannelUi>? = null,
     val error: Error? = null,
+    val isStarting: Boolean = false,
     val isLoading: Boolean = false,
     val hasMore: Boolean = true
 )

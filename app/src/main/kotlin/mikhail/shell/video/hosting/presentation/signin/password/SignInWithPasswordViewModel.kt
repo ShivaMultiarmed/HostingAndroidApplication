@@ -33,90 +33,114 @@ class SignInWithPasswordViewModel @Inject constructor(
             SignInUiEvent.Submit -> signIn()
             is SignInUiEvent.PasswordChanged -> onPasswordChanged(event.password)
             is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
-            SignInUiEvent.UserNameTypingStarted -> onUserNameTypingStarted()
-            SignInUiEvent.UserNameTypingEnded -> onUserNameTypingEnded()
+            SignInUiEvent.UserNameFocused -> clearUserNameError()
+            SignInUiEvent.UserNameBlurred -> validateUserName()
+            SignInUiEvent.PasswordFocused -> clearPasswordError()
+            SignInUiEvent.PasswordBlurred -> validatePassword()
             else -> null
         }
     }
 
     private fun onPasswordChanged(password: String) {
         _state.update {
-            it as SignInScreenState.Entering
-            it.copy(
+            (it as? SignInScreenState.Entering)?.copy(
                 input = it.input.copy(
                     password = it.input.password.copy(
-                        value = password,
+                        value = password
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun clearPasswordError() {
+        _state.update {
+            (it as? SignInScreenState.Entering)?.copy(
+                input = it.input.copy(
+                    password = it.input.password.copy(
+                        error = null
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun validatePassword() {
+        _state.update {
+            (it as? SignInScreenState.Entering)?.copy(
+                input = it.input.copy(
+                    password = it.input.password.copy(
                         error = it.input.password.value.let {
-                            val validationResult = validatePassword(password)
+                            val validationResult = validatePassword(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
                     )
                 )
-            )
+            )?: it
         }
     }
 
     private fun onUserNameChanged(userName: String) {
         _state.update {
-            it as SignInScreenState.Entering
-            it.copy(
+            (it as? SignInScreenState.Entering)?.copy(
                 input = it.input.copy(
                     userName = it.input.userName.copy(
-                        value = userName,
-                        error = it.input.userName.value.let {
-                            val validationResult = validateUserName(userName)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
+                        value = userName
                     )
                 )
-            )
+            )?: it
         }
     }
 
-    private fun onUserNameTypingStarted() {
+    private fun clearUserNameError() {
         _state.update {
-            it as SignInScreenState.Entering
-            it.copy(
+            (it as? SignInScreenState.Entering)?.copy(
                 input = it.input.copy(
                     userName = it.input.userName.copy(
-                        isTyping = true
+                        error = null
                     )
                 )
-            )
+            )?: it
         }
     }
 
-    private fun onUserNameTypingEnded() {
+    private fun validateUserName() {
         viewModelScope.launch {
             _state.update {
-                it as SignInScreenState.Entering
-                it.copy(
+                (it as? SignInScreenState.Entering)?.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
-                            isTyping = false,
-                            error = if (it.input.userName.error == null || it.input.userName.error == TextError.NOT_EXISTS) {
-                                val checkResult = checkUserName(it.input.userName.value)
-                                when (checkResult) {
-                                    is Result.Failure -> checkResult.error
-                                    is Result.Success if (!checkResult.data) -> TextError.NOT_EXISTS
-                                    else -> null
+                            error = it.input.userName.value.let {
+                                val validationResult = validateUserName(it)
+                                if (validationResult is Result.Failure) {
+                                    validationResult.error
+                                } else {
+                                    val checkResult = checkUserName(it)
+                                    when (checkResult) {
+                                        is Result.Failure -> checkResult.error
+                                        is Result.Success if (!checkResult.data) -> TextError.NOT_EXISTS
+                                        else -> null
+                                    }
                                 }
-                            } else {
-                                it.input.userName.error
                             }
                         )
                     )
-                )
+                )?: it
             }
         }
     }
 
     private fun signIn() {
+        validateUserName()
+        validatePassword()
+        val currentInput = (_state.value as SignInScreenState.Entering).input
+        if (currentInput.userName.error != null || currentInput.password.error != null) {
+            return
+        }
         _state.update {
             it as SignInScreenState.Entering
             it.copy(isLoading = true)
         }
-        val currentInput = (_state.value as SignInScreenState.Entering).input
         viewModelScope.launch {
             signInWithPassword(
                 email = currentInput.userName.value,
@@ -131,7 +155,11 @@ class SignInWithPasswordViewModel @Inject constructor(
                     it as SignInScreenState.Entering
                     it.copy(
                         isLoading = false,
-                        error = if (error !in listOf(NetworkError.NOT_FOUND, NetworkError.BAD_REQUEST)) error else it.error,
+                        error = if (error !in listOf(
+                                NetworkError.NOT_FOUND,
+                                NetworkError.BAD_REQUEST
+                            )
+                        ) error else it.error,
                         input = it.input.copy(
                             userName = it.input.userName.copy(
                                 error = if (error == NetworkError.NOT_FOUND) TextError.NOT_EXISTS else it.input.password.error
@@ -156,9 +184,11 @@ class SignInWithPasswordViewModel @Inject constructor(
 
 sealed class SignInUiEvent {
     data class UserNameChanged(val userName: String) : SignInUiEvent()
-    data object UserNameTypingStarted : SignInUiEvent()
-    data object UserNameTypingEnded : SignInUiEvent()
+    data object UserNameFocused : SignInUiEvent()
+    data object UserNameBlurred : SignInUiEvent()
     data class PasswordChanged(val password: String) : SignInUiEvent()
+    data object PasswordFocused : SignInUiEvent()
+    data object PasswordBlurred : SignInUiEvent()
     data object Submit : SignInUiEvent()
     data object SignUp : SignInUiEvent()
 }

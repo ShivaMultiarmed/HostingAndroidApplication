@@ -16,10 +16,8 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ChannelApi {
-    @GET("channels/{channelId}/details")
-    suspend fun fetchChannelDetails(
-        @Path("channelId") channelId: Long
-    ): ChannelWithUserDto
+    @GET("channels/{channel_id}/details")
+    suspend fun fetchChannelDetails(@Path("channel_id") channelId: Long): ChannelWithUserDto
     @Multipart
     @POST("channels")
     suspend fun createChannel(
@@ -34,39 +32,35 @@ interface ChannelApi {
         @Part avatar: MultipartBody.Part?,
         @Part cover: MultipartBody.Part?
     ): ChannelDto
-    @GET("channels/owner/{userId}")
+    @GET("channels/owner/{user_id}")
     suspend fun getChannelsByOwner(
-        @Path("userId") userId: Long,
-        @Query("partIndex") partIndex: Long,
-        @Query("partSize") partSize: Int
+        @Path("user_id") userId: Long,
+        @Query("part_index") partIndex: Long,
+        @Query("part_size") partSize: Int
     ): List<ChannelDto>
     @GET("channels/subscriptions")
     suspend fun getSubscriptions(
-        partIndex: Long,
-        partSize: Int
+        @Query("part_index") partIndex: Long,
+        @Query("part_size") partSize: Int
     ): List<ChannelDto>
-    @PATCH("channels/{channelId}/subscription")
+    @PATCH("channels/{channel_id}/subscription")
     suspend fun subscribe(
-        @Path("channelId") channelId: Long,
+        @Path("channel_id") channelId: Long,
         @Query("subscription") subscription: Subscription,
-        @Query("fcmToken") fcmToken: String
+        @Query("fcm_token") fcmToken: String
     ): ChannelWithUserDto
     @POST("channels/notifications/subscription")
     suspend fun subscribeToChannelNotifications(
-        @Query("fcmToken") fcmToken: String
+        @Query("fcm_token") fcmToken: String
     )
     @DELETE("channels/notifications/subscription")
     suspend fun unsubscribeFromChannelNotifications(
-        @Query("fcmToken") fcmToken: String
+        @Query("fcm_token") fcmToken: String
     )
-    @GET("channels/{channelId}")
-    suspend fun fetchChannel(
-        @Path("channelId") channelId: Long
-    ): ChannelDto
-    @DELETE("channels/{channelId}")
-    suspend fun removeChannel(
-        @Path("channelId") channelId: Long
-    )
+    @GET("channels/{channel_id}")
+    suspend fun fetchChannel(@Path("channel_id") channelId: Long): ChannelDto
+    @DELETE("channels/{channel_id}")
+    suspend fun removeChannel(@Path("channel_id") channelId: Long)
     @GET("channels/existence/title")
     fun existsByTitle(@Query("title") title: String): Boolean
     @GET("channels/existence/alias")

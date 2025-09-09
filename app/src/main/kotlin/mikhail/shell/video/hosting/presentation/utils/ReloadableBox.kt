@@ -7,7 +7,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +35,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,7 +57,7 @@ fun ReloadableBox(
     val reloadThumbSize = 1.5f * reloadIndicatorSize
     val shadowBaseDiameter = 1.2f * reloadThumbSize
     val shadowWidth = 5
-    val resistance = 0.2f
+    val resistance = 0.15f
     val topPosition = -(shadowBaseDiameter + shadowWidth)
     val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
     val density = LocalDensity.current.density
@@ -65,27 +68,21 @@ fun ReloadableBox(
         modifier = modifier
             .clipToBounds()
             .pointerInput(Unit) {
-                detectDragGestures(
-                    onDrag = { change, offset ->
-                        if (!isLoading) {
-                            change.consume()
-                            if (height < bottomPosition) {
-                                height =
-                                    (height + (offset.y * density * resistance).toInt()).coerceIn(
-                                        topPosition,
-                                        bottomPosition
-                                    )
+                awaitPointerEventScope {
+                    while (true) {
+                        val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                        isDragged = true
+                        drag(down.id) {
+                            if (!isLoading) {
+                                if (height < bottomPosition) {
+                                    height = (height + (it.positionChange().y * density * resistance).toInt()).coerceIn(
+                                            topPosition,
+                                            bottomPosition
+                                        )
+                                }
+                                it.consume()
                             }
                         }
-                    },
-                    onDragStart = {
-                        isDragged = true
-                    },
-                    onDragCancel = {
-                        height = topPosition
-                        isDragged = false
-                    },
-                    onDragEnd = {
                         if (height == bottomPosition && !isLoading) {
                             onLaunch()
                         }
@@ -94,7 +91,7 @@ fun ReloadableBox(
                         }
                         isDragged = false
                     }
-                )
+                }
             },
         contentAlignment = Alignment.TopCenter
     ) {

@@ -71,7 +71,7 @@ fun SignInScreen(
                             TextError.NOT_EXISTS -> stringResource(R.string.email_not_found_error)
                             else -> null
                         }
-                        NetworkError.NOT_FOUND -> stringResource(R.string.email_not_found_error) // TODO: leave NOT_FOUND or NOT_EXISTS only
+                        is NetworkError -> stringResource(R.string.user_name_check_failed)
                         else -> null
                     }
                     InputField(
@@ -85,11 +85,11 @@ fun SignInScreen(
                             onEvent(SignInUiEvent.UserNameChanged(it))
                         },
                         errorMsg = emailErrorMsg,
-                        onTypingStarted = {
-                            onEvent(SignInUiEvent.UserNameTypingStarted)
+                        onFocus = {
+                            onEvent(SignInUiEvent.UserNameFocused)
                         },
-                        onTypingEnded = {
-                            onEvent(SignInUiEvent.UserNameTypingEnded)
+                        onBlur = {
+                            onEvent(SignInUiEvent.UserNameBlurred)
                         }
                     )
                     val passwordErrorMsg = when (state.input.password.error) {
@@ -109,6 +109,12 @@ fun SignInScreen(
                         value = state.input.password.value,
                         onValueChange = {
                             onEvent(SignInUiEvent.PasswordChanged(it))
+                        },
+                        onFocus = {
+                            onEvent(SignInUiEvent.PasswordFocused)
+                        },
+                        onBlur = {
+                            onEvent(SignInUiEvent.PasswordBlurred)
                         },
                         secured = true,
                         errorMsg = passwordErrorMsg
