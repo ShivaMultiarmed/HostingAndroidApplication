@@ -8,5 +8,6 @@ data class RecommendationsScreenState(
     val error: Error? = null,
     val isStarting: Boolean = false,
     val isLoading: Boolean = false,
+    val nextPartIndex: Long = 0,
     val hasMore: Boolean = true
 )

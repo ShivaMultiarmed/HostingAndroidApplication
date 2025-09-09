@@ -26,10 +26,6 @@ class RecommendationsViewModel @Inject constructor(
         initialValue = _state.value
     )
 
-    init {
-        load()
-    }
-
     fun onEvent(event: RecommendationsScreenUiEvent) {
         when (event) {
             RecommendationsScreenUiEvent.BottomReached -> load()
@@ -42,16 +38,15 @@ class RecommendationsViewModel @Inject constructor(
     }
 
     private fun load() {
-        val nextPartIndex = (_state.value.videos?.size ?: 0).toLong() / PART_SIZE
         _state.update {
             it.copy(
-                isStarting = nextPartIndex == 0L,
-                isLoading = nextPartIndex > 0L
+                isStarting = it.nextPartIndex == 0L,
+                isLoading = it.nextPartIndex > 0L
             )
         }
         viewModelScope.launch {
             getRecommendations(
-                partIndex = nextPartIndex,
+                partIndex = _state.value.nextPartIndex,
                 partSize = PART_SIZE
             ).onSuccess { videos ->
                 _state.update {
@@ -60,6 +55,7 @@ class RecommendationsViewModel @Inject constructor(
                         isStarting = false,
                         isLoading = false,
                         hasMore = videos.size == PART_SIZE,
+                        nextPartIndex = it.nextPartIndex + 1,
                         error = null
                     )
                 }
