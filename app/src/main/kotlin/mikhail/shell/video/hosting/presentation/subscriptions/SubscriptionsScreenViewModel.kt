@@ -28,11 +28,9 @@ class SubscriptionsScreenViewModel @Inject constructor(
 
     fun onEvent(event: SubscriptionsScreenUiEvent) {
         when (event) {
-            is SubscriptionsScreenUiEvent.Reload -> {
-                if (event.fromStart) {
-                    _state.update {
-                        SubscriptionsScreenState()
-                    }
+            is SubscriptionsScreenUiEvent.Restart -> {
+                _state.update {
+                    SubscriptionsScreenState()
                 }
                 load()
             }
@@ -43,25 +41,32 @@ class SubscriptionsScreenViewModel @Inject constructor(
 
     private fun load() {
         _state.update {
-            it.copy(isLoading = true)
+            it.copy(
+                isStarting = it.nextPartIndex == 0L,
+                isLoading = it.nextPartIndex > 0L
+            )
         }
         viewModelScope.launch {
             getSubscriptions(
-                partIndex = (_state.value.channels?.size ?: 0).toLong() / PART_SIZE,
+                partIndex = _state.value.nextPartIndex,
                 partSize = PART_SIZE
             ).onSuccess { fetchedChannels ->
                 _state.update {
                     it.copy(
-                        channels = fetchedChannels.map { it.toUi() },
+                        channels = (it.channels?: emptyList()) + fetchedChannels.map { it.toUi() },
                         error = null,
-                        isLoading = false
+                        isLoading = false,
+                        isStarting = false,
+                        nextPartIndex = it.nextPartIndex + 1,
+                        hasMore = fetchedChannels.size == PART_SIZE
                     )
                 }
             }.onFailure { err ->
                 _state.update {
                     it.copy(
                         error = err,
-                        isLoading = false
+                        isLoading = false,
+                        isStarting = false
                     )
                 }
             }
@@ -76,5 +81,5 @@ class SubscriptionsScreenViewModel @Inject constructor(
 sealed class SubscriptionsScreenUiEvent {
     data object ReachedBottom : SubscriptionsScreenUiEvent()
     data class ClickedChannel(val channelId: Long) : SubscriptionsScreenUiEvent()
-    data class Reload(val fromStart: Boolean = false) : SubscriptionsScreenUiEvent()
+    data object Restart : SubscriptionsScreenUiEvent()
 }

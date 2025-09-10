@@ -18,6 +18,6 @@ data class ChannelForUser(
     val description: String? = null,
     val subscribers: Long = 0,
     val subscription: Subscription = Subscription.NOT_SUBSCRIBED,
-    val coverUrl: String? = null,
-    val avatarUrl: String? = null
+    val header: String? = null,
+    val logo: String? = null
 )

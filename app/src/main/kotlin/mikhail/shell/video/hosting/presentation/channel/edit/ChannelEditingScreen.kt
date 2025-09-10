@@ -246,8 +246,8 @@ fun ChannelEditingScreen(
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Person,
-                            placeholder = if (current.logo == null) stringResource(R.string.channel_avatar_choose_label)
-                            else stringResource(R.string.channel_avatar_choose_another_label),
+                            placeholder = if (current.logo == null) stringResource(R.string.channel_logo_choose_label)
+                            else stringResource(R.string.channel_logo_choose_another_label),
                             onClick = {
                                 logoPicker.launch("image/*")
                             },
@@ -264,7 +264,7 @@ fun ChannelEditingScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_current_avatar_message)
+                                    text = stringResource(R.string.channel_current_logo_message)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -287,7 +287,7 @@ fun ChannelEditingScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_chosen_avatar_message)
+                                    text = stringResource(R.string.channel_chosen_logo_message)
                                 )
                                 val painter = rememberAsyncImagePainter(model = current.logo)
                                 Image(
@@ -307,7 +307,7 @@ fun ChannelEditingScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = stringResource(R.string.channel_delete_avatar_message)
+                                text = stringResource(R.string.channel_delete_logo_message)
                             )
                         }
                     }
@@ -341,8 +341,8 @@ fun ChannelEditingScreen(
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Rounded.Wallpaper,
-                            placeholder = if (current.header == null) stringResource(R.string.channel_choose_cover_label)
-                            else stringResource(R.string.channel_choose_another_cover_label),
+                            placeholder = if (current.header == null) stringResource(R.string.channel_choose_header_label)
+                            else stringResource(R.string.channel_choose_another_header_label),
                             onClick = {
                                 headerPicker.launch("image/*")
                             },
@@ -370,7 +370,7 @@ fun ChannelEditingScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_current_cover_message)
+                                    text = stringResource(R.string.channel_current_header_message)
                                 )
                                 AsyncImage(
                                     modifier = Modifier
@@ -401,7 +401,7 @@ fun ChannelEditingScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = stringResource(R.string.channel_chosen_cover_message)
+                                    text = stringResource(R.string.channel_chosen_header_message)
                                 )
                                 val painter = rememberAsyncImagePainter(model = current.header)
                                 Image(
@@ -417,7 +417,7 @@ fun ChannelEditingScreen(
                         }
                         if (initial.headerExists == true && current.headerAction == REMOVE) {
                             Text(
-                                text = stringResource(R.string.channel_delete_cover_warning)
+                                text = stringResource(R.string.channel_delete_header_warning)
                             )
                         }
                     }

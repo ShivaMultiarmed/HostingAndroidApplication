@@ -22,8 +22,8 @@ fun Channel.toUi() = ChannelUi(
 
 data class ChannelForUserUi(
     val channelId: Long,
-    val avatarUrl: String,
-    val coverUrl: String,
+    val logo: String,
+    val headerUrl: String,
     val title: String,
     val alias: String?,
     val description: String?,
@@ -34,8 +34,8 @@ data class ChannelForUserUi(
 
 fun ChannelForUser.toUi() = ChannelForUserUi(
     channelId = channelId!!,
-    avatarUrl = avatarUrl!!,
-    coverUrl = coverUrl!!,
+    logo = logo!!,
+    headerUrl = header!!,
     title = title,
     alias = alias,
     description = description,

@@ -76,7 +76,7 @@
     <string name="channel_create_title">Создать канал</string>
     <string name="channel_create_success">Канал был успешно создан</string>
 
-    <string name="channel_avatar_description">Аватар канала</string>
+    <string name="channel_logo_description">Логотип канала</string>
     <string name="channel_actions_description">Действия с каналом</string>
     <string name="channel_delete_button">Удалить</string>
     <string name="channel_edit_button">Редактировать</string>
@@ -94,17 +94,17 @@
 
     <string name="channel_description_label">Описание</string>
 
-    <string name="channel_avatar_choose_label">Выбрать аватар</string>
-    <string name="channel_avatar_choose_another_label">Поменять аватар</string>
-    <string name="channel_current_avatar_message">Текущий аватар</string>
-    <string name="channel_chosen_avatar_message">Выбранный аватар</string>
-    <string name="channel_delete_avatar_message">Вы удалите аватар</string>
+    <string name="channel_logo_choose_label">Выбрать логотип</string>
+    <string name="channel_logo_choose_another_label">Поменять логотип</string>
+    <string name="channel_current_logo_message">Текущий логотип</string>
+    <string name="channel_chosen_logo_message">Выбранный логотип</string>
+    <string name="channel_delete_logo_message">Вы удалите логотип</string>
     
-    <string name="channel_choose_cover_label">Выбрать обложку</string>
-    <string name="channel_choose_another_cover_label">Поменять обложку</string>
-    <string name="channel_current_cover_message">Текущая обложка</string>
-    <string name="channel_chosen_cover_message">Выбранная обложка</string>
-    <string name="channel_delete_cover_warning">Вы удалите обложку</string>
+    <string name="channel_choose_header_label">Выбрать шапку</string>
+    <string name="channel_choose_another_header_label">Поменять шапку</string>
+    <string name="channel_current_header_message">Текущая шапка</string>
+    <string name="channel_chosen_header_message">Выбранная шапка</string>
+    <string name="channel_delete_header_warning">Вы удалите шапку</string>
 
     <plurals name="subscribers_number">
         <item quantity="one">%s подписчик</item>
@@ -281,7 +281,7 @@
     <string name="go_forward_button">Далее</string>
     <string name="reset_password_button">OK</string>
     <string name="reset_password_success">Пароль успешно изменён</string>
-    <string name="channel_cover_choose_another_label">Выберите другую шапку</string>
+    <string name="channel_header_choose_another_label">Выберите другую шапку</string>
     <string name="video_removed">Видео успешно удалено</string>
     <string name="video_uploaded_success">Видео успешно создано</string>
     <string name="nick_validation_unavailable">Неизвестна занятость ника</string>

@@ -65,7 +65,7 @@
     <string name="channel_create_title">Create channel</string>
     <string name="channel_create_success">Channel was successfully created</string>
 
-    <string name="channel_avatar_description">Channel avatar</string>
+    <string name="channel_logo_description">Channel logo</string>
     <string name="channel_actions_description">Channel actions</string>
     <string name="channel_delete_button">Remove</string>
     <string name="channel_edit_button">Edit</string>
@@ -83,17 +83,17 @@
 
     <string name="channel_description_label">Description</string>
 
-    <string name="channel_avatar_choose_label">Choose an avatar</string>
-    <string name="channel_avatar_choose_another_label">Choose another avatar</string>
-    <string name="channel_current_avatar_message">Current avatar</string>
-    <string name="channel_chosen_avatar_message">Chosen avatar</string>
-    <string name="channel_delete_avatar_message">You\'re gonna remove the avatar</string>
+    <string name="channel_logo_choose_label">Choose a logo</string>
+    <string name="channel_logo_choose_another_label">Choose another logo</string>
+    <string name="channel_current_logo_message">Current logo</string>
+    <string name="channel_chosen_logo_message">Chosen logo</string>
+    <string name="channel_delete_logo_message">You\'re gonna remove the logo</string>
 
-    <string name="channel_choose_cover_label">Choose a cover</string>
-    <string name="channel_choose_another_cover_label">Choose another cover</string>
-    <string name="channel_current_cover_message">Current cover</string>
-    <string name="channel_chosen_cover_message">Chosen cover</string>
-    <string name="channel_delete_cover_warning">You\'re gonna remove the cover</string>
+    <string name="channel_choose_header_label">Choose a header</string>
+    <string name="channel_choose_another_header_label">Choose another header</string>
+    <string name="channel_current_header_message">Current header</string>
+    <string name="channel_chosen_header_message">Chosen header</string>
+    <string name="channel_delete_header_warning">You\'re gonna remove the header</string>
 
     <plurals name="subscribers_number">
         <item quantity="one">%s subscriber</item>
@@ -268,7 +268,7 @@
     <string name="go_forward_button">Next</string>
     <string name="reset_password_button">OK</string>
     <string name="reset_password_success">The new password is set</string>
-    <string name="channel_cover_choose_another_label">Choose another header\n</string>
+    <string name="channel_header_choose_another_label">Choose another header\n</string>
     <string name="video_removed">Video was successfully removed</string>
     <string name="video_uploaded_success">Video is successfully created</string>
     <string name="nick_validation_unavailable">Can\'t check if the nick is taken</string>

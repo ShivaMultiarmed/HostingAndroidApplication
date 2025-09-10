@@ -1,9 +1,9 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -18,7 +18,7 @@ fun EntryProviderBuilder<Route>.subscriptionsRoute(
 ) {
     entry <Route.Subscriptions.View> {
         val viewModel = hiltViewModel<SubscriptionsScreenViewModel>()
-        val state by viewModel.state.collectAsStateWithLifecycle()
+        val state by viewModel.state.collectAsState()
         SubscriptionsScreen(
             state = state,
             onEvent = { event ->

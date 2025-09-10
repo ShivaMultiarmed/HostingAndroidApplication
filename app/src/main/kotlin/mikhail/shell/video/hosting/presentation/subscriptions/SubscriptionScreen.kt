@@ -2,13 +2,8 @@ package mikhail.shell.video.hosting.presentation.subscriptions
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,7 +22,9 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.ReloadableBox
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
@@ -60,82 +57,56 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onLaunch = {
-                    onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = true))
+                    onEvent(SubscriptionsScreenUiEvent.Restart)
                 },
-                isLoading = state.isLoading
+                isLoading = state.isStarting
             ) {
-                if (state.channels.isNotEmpty()) {
-                    LazyVerticalGrid(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .then(
-                                if (isWidthCompact) {
-                                    Modifier
-                                } else {
-                                    Modifier
-                                        .padding(top = 10.dp)
-                                        .padding(horizontal = 10.dp)
-                                }
-                            ),
-                        columns = GridCells.Adaptive(300.dp),
-                        horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                        verticalArrangement = if (state.channels.isEmpty()) Arrangement.Center else Arrangement.spacedBy(
-                            if (isWidthCompact) 0.dp else 10.dp
-                        )
-                    ) {
-                        items(state.channels) {
-                            ChannelSnippet(
-                                modifier = Modifier
-                                    .then(
-                                        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
-                                            Modifier
-                                        } else {
-                                            Modifier.clip(RoundedCornerShape(15.dp))
-                                        }
-                                    ),
-                                channel = it,
-                                onClick = {
-                                    onEvent(SubscriptionsScreenUiEvent.ClickedChannel(it))
-                                }
-                            )
-                        }
-                        if (state.isLoading) {
-                            item(
-                                span = {
-                                    GridItemSpan(maxLineSpan)
-                                }
-                            ) {
-                                LoadingComponent(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(MaterialTheme.colorScheme.surface)
-                                )
+                PageableBox(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (isWidthCompact) {
+                                Modifier
+                            } else {
+                                Modifier
+                                    .padding(top = 10.dp)
+                                    .padding(horizontal = 10.dp)
                             }
-                        } else if (state.error != null) {
-                            item(
-                                span = {
-                                    GridItemSpan(maxLineSpan)
-                                }
-                            ) {
-                                ErrorComponent(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(MaterialTheme.colorScheme.surface),
-                                    onRetry = {
-                                        onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = false))
+                        ),
+                    items = state.channels,
+                    itemComponent = {
+                        ChannelSnippet(
+                            modifier = Modifier
+                                .then(
+                                    if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                        Modifier
+                                    } else {
+                                        Modifier.clip(RoundedCornerShape(15.dp))
                                     }
-                                )
+                                ),
+                            channel = it,
+                            onClick = {
+                                onEvent(SubscriptionsScreenUiEvent.ClickedChannel(it))
                             }
-                        }
-                    }
-                } else {
-                    EmptyResultComponent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.surface),
-                        message = stringResource(R.string.no_subscriptions_yet)
-                    )
-                }
+                        )
+                    },
+                    emptyComponent = {
+                        EmptyResultComponent(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface),
+                            message = stringResource(R.string.no_subscriptions_yet)
+                        )
+                    },
+                    isLoading = state.isLoading,
+                    onReload = {
+                        onEvent(SubscriptionsScreenUiEvent.ReachedBottom)
+                    },
+                    onReachedBottom = {
+                        onEvent(SubscriptionsScreenUiEvent.ReachedBottom)
+                    },
+                    hasMore = state.hasMore
+                )
             }
         } else if (state.isLoading) {
             LoadingComponent(
@@ -149,9 +120,13 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
                 onRetry = {
-                    onEvent(SubscriptionsScreenUiEvent.Reload(fromStart = true))
+                    onEvent(SubscriptionsScreenUiEvent.Restart)
                 }
             )
         }
+        ErrorDisplay(
+            error = state.error,
+            snackBarHostState = snackBarHostState
+        )
     }
 }

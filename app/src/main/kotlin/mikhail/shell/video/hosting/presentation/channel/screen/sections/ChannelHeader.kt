@@ -71,20 +71,20 @@ fun ChannelHeader(
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
-    onShowAvatar: () -> Unit
+    onShowLogo: () -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
-    var hasCover by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var hasHeader by rememberSaveable { mutableStateOf<Boolean?>(null) }
     if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
         ChannelHeaderCompact(
             modifier = modifier,
-            hasCover = hasCover,
-            coverUrlAssignment = { hasCover = it },
+            hasHeader = hasHeader,
+            headerUrlAssignment = { hasHeader = it },
             channel = channel,
             onEvent = onEvent,
             owns = owns,
-            onShowAvatar = onShowAvatar
+            onShowLogo = onShowLogo
         )
     } else if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
         ChannelHeaderMedium(
@@ -92,17 +92,17 @@ fun ChannelHeader(
             channel = channel,
             onEvent = onEvent,
             owns = owns,
-            onShowAvatar = onShowAvatar
+            onShowLogo = onShowLogo
         )
     } else {
         ChannelHeaderExpanded(
             modifier = modifier,
-            hasCover = hasCover,
-            coverUrlAssignment = { hasCover = it },
+            hasHeader = hasHeader,
+            headerUrlAssignment = { hasHeader = it },
             channel = channel,
             onEvent = onEvent,
             owns = owns,
-            onShowAvatar = onShowAvatar
+            onShowLogo = onShowLogo
         )
     }
 }
@@ -110,12 +110,12 @@ fun ChannelHeader(
 @Composable
 fun ChannelHeaderCompact(
     modifier: Modifier = Modifier,
-    hasCover: Boolean?,
-    coverUrlAssignment: (Boolean) -> Unit,
+    hasHeader: Boolean?,
+    headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
-    onShowAvatar: () -> Unit = {}
+    onShowLogo: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -123,10 +123,10 @@ fun ChannelHeaderCompact(
             .padding(vertical = 10.dp),
         verticalArrangement = Arrangement.Top,
     ) {
-        ChannelCover(
-            hasCover = hasCover,
-            coverUrlAssignment = coverUrlAssignment,
-            coverUrl = channel.coverUrl
+        ChannelHeader(
+            hasHeader = hasHeader,
+            headerUrlAssignment = headerUrlAssignment,
+            headerUrl = channel.headerUrl
         )
         Row(
             Modifier
@@ -136,10 +136,10 @@ fun ChannelHeaderCompact(
                     bottom = 7.dp
                 )
         ) {
-            ChannelAvatar(
+            ChannelLogo(
                 modifier = Modifier,
-                avatarUrl = channel.avatarUrl,
-                onShowAvatar = onShowAvatar
+                logo = channel.logo,
+                onShowLogo = onShowLogo
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -188,27 +188,27 @@ fun ChannelHeaderMedium(
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
-    onShowAvatar: () -> Unit = {}
+    onShowLogo: () -> Unit = {}
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
     ) {
-        val avatarRef = createRef()
-        ChannelAvatar(
-            modifier = Modifier.constrainAs(avatarRef) {
+        val logoRef = createRef()
+        ChannelLogo(
+            modifier = Modifier.constrainAs(logoRef) {
                 start.linkTo(parent.start)
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
             },
-            avatarUrl = channel.avatarUrl,
-            onShowAvatar = onShowAvatar
+            logo = channel.logo,
+            onShowLogo = onShowLogo
         )
         val briefRef = createRef()
         Column(
             modifier = Modifier.constrainAs(briefRef) {
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
-                start.linkTo(avatarRef.end, 10.dp)
+                start.linkTo(logoRef.end, 10.dp)
             }
         ) {
             ChannelTitle(title = channel.title)
@@ -217,7 +217,7 @@ fun ChannelHeaderMedium(
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
                     ChannelActionsButton(
-                        channelId = channel.channelId!!,
+                        channelId = channel.channelId,
                         onEdit = {
                             onEvent(ChannelScreenUiEvent.Edit)
                         },
@@ -246,53 +246,53 @@ fun ChannelHeaderMedium(
 @Composable
 fun ChannelHeaderExpanded(
     modifier: Modifier = Modifier,
-    hasCover: Boolean?,
-    coverUrlAssignment: (Boolean) -> Unit,
+    hasHeader: Boolean?,
+    headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
     owns: Boolean = false,
-    onShowAvatar: () -> Unit
+    onShowLogo: () -> Unit
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
     ) {
-        val coverRef = createRef()
-        ChannelCover(
+        val headerRef = createRef()
+        ChannelHeader(
             modifier = Modifier.then(
-                if (hasCover == true) {
+                if (hasHeader == true) {
                     Modifier
                         .fillMaxWidth()
-                        .constrainAs(coverRef) {
+                        .constrainAs(headerRef) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
                         }
                 } else Modifier
             ),
-            hasCover = hasCover,
-            coverUrlAssignment = coverUrlAssignment,
-            coverUrl = channel.coverUrl,
+            hasHeader = hasHeader,
+            headerUrlAssignment = headerUrlAssignment,
+            headerUrl = channel.headerUrl,
         )
-        val avatarRef = createRef()
-        ChannelAvatar(
-            modifier = Modifier.constrainAs(avatarRef) {
-                if (hasCover == true) {
-                    top.linkTo(coverRef.bottom, (-65).dp)
+        val logoRef = createRef()
+        ChannelLogo(
+            modifier = Modifier.constrainAs(logoRef) {
+                if (hasHeader == true) {
+                    top.linkTo(headerRef.bottom, (-65).dp)
                 } else {
                     top.linkTo(parent.top)
                 }
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
-            avatarUrl = channel.avatarUrl,
-            onShowAvatar = onShowAvatar
+            logo = channel.logo,
+            onShowLogo = onShowLogo
         )
         val annotationRef = createRef()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .constrainAs(annotationRef) {
-                    top.linkTo(avatarRef.bottom, 16.dp)
+                    top.linkTo(logoRef.bottom, 16.dp)
                 },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -312,7 +312,7 @@ fun ChannelHeaderExpanded(
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
                     ChannelActionsButton(
-                        channelId = channel.channelId!!,
+                        channelId = channel.channelId,
                         onEdit = {
                             onEvent(ChannelScreenUiEvent.Edit)
                         },
@@ -332,11 +332,11 @@ fun ChannelHeaderExpanded(
 }
 
 @Composable
-fun ChannelCover(
+fun ChannelHeader(
     modifier: Modifier = Modifier,
-    hasCover: Boolean?,
-    coverUrlAssignment: (Boolean) -> Unit,
-    coverUrl: String?
+    hasHeader: Boolean?,
+    headerUrlAssignment: (Boolean) -> Unit,
+    headerUrl: String?
 ) {
     val context = LocalContext.current
     val widthDp = LocalConfiguration.current.screenWidthDp
@@ -345,7 +345,7 @@ fun ChannelCover(
     Box(
         modifier = modifier
             .then(
-                if (hasCover == true) {
+                if (hasHeader == true) {
                     Modifier
                         .fillMaxWidth()
                         .height(100.dp)
@@ -359,7 +359,7 @@ fun ChannelCover(
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(coverUrl)
+                .data(headerUrl)
                 .size(widthPx, heightPx)
                 .build(),
             contentDescription = null,
@@ -367,8 +367,8 @@ fun ChannelCover(
             modifier = Modifier.matchParentSize(),
             onState = {
                 when (it) {
-                    is Success -> coverUrlAssignment(true)
-                    is AsyncImagePainter.State.Error -> coverUrlAssignment(false)
+                    is Success -> headerUrlAssignment(true)
+                    is AsyncImagePainter.State.Error -> headerUrlAssignment(false)
                     else -> Unit
                 }
             }
@@ -377,29 +377,29 @@ fun ChannelCover(
 }
 
 @Composable
-fun ChannelAvatar(
+fun ChannelLogo(
     modifier: Modifier = Modifier,
-    avatarUrl: String?,
-    onShowAvatar: (() -> Unit)? = null
+    logo: String?,
+    onShowLogo: (() -> Unit)? = null
 ) {
-    var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
+    var logoExists by rememberSaveable { mutableStateOf(null as Boolean?) }
     AsyncImage(
-        model = avatarUrl,
-        contentDescription = stringResource(R.string.channel_avatar_description),
+        model = logo,
+        contentDescription = stringResource(R.string.channel_logo_description),
         contentScale = ContentScale.Crop,
         onSuccess = {
-            avatarExists = true
+            logoExists = true
         },
         onError = {
-            avatarExists = false
+            logoExists = false
         },
         modifier = modifier
             .size(80.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(
-                enabled = avatarExists == true && onShowAvatar != null,
-                onClick = onShowAvatar ?: {}
+                enabled = logoExists == true && onShowLogo != null,
+                onClick = onShowLogo ?: {}
             )
     )
 }

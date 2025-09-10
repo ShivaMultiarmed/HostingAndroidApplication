@@ -81,7 +81,7 @@ fun RecommendationsScreen(
                     hasMore = state.hasMore,
                     error = state.error,
                     isLoading = state.isLoading,
-                    onLoad = {
+                    onReload = {
                         onEvent(RecommendationsScreenUiEvent.BottomReached)
                     },
                     onReachedBottom = {

@@ -133,17 +133,11 @@ class ChannelRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        val coverPart = header?.let {
-            fileProvider.uriToPart(
-                uri = it,
-                partName = "cover"
-            )
+        val headerPart = header?.let {
+            fileProvider.uriToPart(uri = it, partName = "header")
         }
-        val avatarPart = logo?.let {
-            fileProvider.uriToPart(
-                uri = it,
-                partName = "avatar"
-            )
+        val logoPart = logo?.let {
+            fileProvider.uriToPart(uri = it, partName = "logo")
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
@@ -153,8 +147,8 @@ class ChannelRepositoryWithApi @Inject constructor(
                 headerAction = headerAction,
                 logoAction = logoAction
             ),
-            avatar = avatarPart,
-            cover = coverPart
+            logo = logoPart,
+            header = headerPart
         ).toDomain()
     }
 

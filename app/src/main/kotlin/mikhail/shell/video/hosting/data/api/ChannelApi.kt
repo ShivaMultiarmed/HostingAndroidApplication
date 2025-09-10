@@ -29,8 +29,8 @@ interface ChannelApi {
     @PATCH("channels")
     suspend fun editChannel(
         @Part("channel") channel: ChannelEditingRequest,
-        @Part avatar: MultipartBody.Part?,
-        @Part cover: MultipartBody.Part?
+        @Part logo: MultipartBody.Part?,
+        @Part header: MultipartBody.Part?
     ): ChannelDto
     @GET("channels/owner/{user_id}")
     suspend fun getChannelsByOwner(

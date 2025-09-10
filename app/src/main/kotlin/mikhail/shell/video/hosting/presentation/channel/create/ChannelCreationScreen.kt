@@ -222,8 +222,8 @@ fun ChannelCreationScreen(
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Person,
-                    placeholder = if (state.logo == null) stringResource(R.string.channel_avatar_choose_label)
-                    else stringResource(R.string.channel_avatar_choose_another_label),
+                    placeholder = if (state.logo == null) stringResource(R.string.channel_logo_choose_label)
+                    else stringResource(R.string.channel_logo_choose_another_label),
                     onClick = {
                         logoPicker.launch("image/*")
                     },
@@ -236,7 +236,7 @@ fun ChannelCreationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = stringResource(R.string.channel_chosen_avatar_message)
+                        text = stringResource(R.string.channel_chosen_logo_message)
                     )
                     val painter = rememberAsyncImagePainter(model = state.logo)
                     Image(
@@ -276,8 +276,8 @@ fun ChannelCreationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Wallpaper,
                     placeholder = when (state.header) {
-                        null -> stringResource(R.string.channel_choose_cover_label)
-                        else -> stringResource(R.string.channel_cover_choose_another_label)
+                        null -> stringResource(R.string.channel_choose_header_label)
+                        else -> stringResource(R.string.channel_header_choose_another_label)
                     },
                     onClick = {
                         headerPicker.launch("image/*")
@@ -293,7 +293,7 @@ fun ChannelCreationScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = stringResource(R.string.channel_chosen_cover_message)
+                        text = stringResource(R.string.channel_chosen_header_message)
                     )
                     val painter = rememberAsyncImagePainter(model = state.header)
                     Image(

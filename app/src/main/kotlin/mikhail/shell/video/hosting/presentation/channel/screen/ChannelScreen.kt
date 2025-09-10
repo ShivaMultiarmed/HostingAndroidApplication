@@ -60,7 +60,7 @@ fun ChannelScreen(
                         channel = state.channel,
                         onEvent = onEvent,
                         owns = userId == state.channel.channelId,
-                        onShowAvatar = {
+                        onShowLogo = {
                             shouldShowAvatar = true
                         }
                     )
@@ -85,7 +85,7 @@ fun ChannelScreen(
                 }
                 if (shouldShowAvatar) {
                     ImageViewerScreen(
-                        state.channel.avatarUrl,
+                        state.channel.logo,
                         onPopup = {
                             shouldShowAvatar = false
                         },
