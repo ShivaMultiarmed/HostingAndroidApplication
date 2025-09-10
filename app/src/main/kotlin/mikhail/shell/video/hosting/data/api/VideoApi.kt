@@ -63,9 +63,7 @@ interface VideoApi {
         @Path("video_id") videoId: Long
     )
     @PATCH("videos/{video_id}/views")
-    suspend fun incrementViews(
-        @Path("video_id") videoId: Long
-    ): VideoDto
+    suspend fun incrementViews(@Path("video_id") videoId: Long): VideoDto
     @Multipart
     @PATCH("videos")
     suspend fun editVideo(

@@ -141,437 +141,431 @@ fun VideoScreen(
             SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
-        when (state) {
-            is VideoScreenState.Success -> {
-                var isFullScreen by rememberSaveable { mutableStateOf(false) }
-                var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-                val scrollState = rememberScrollState()
-                val orientation = LocalConfiguration.current.orientation
-                val isSmallWindow = rememberIsSmallWindow()
-                val targetOrientation = remember(isFullScreen, isSmallWindow) {
+        if (state.video != null) {
+            var isFullScreen by rememberSaveable { mutableStateOf(false) }
+            var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+            val scrollState = rememberScrollState()
+            val orientation = LocalConfiguration.current.orientation
+            val isSmallWindow = rememberIsSmallWindow()
+            val targetOrientation = remember(isFullScreen, isSmallWindow) {
+                if (isSmallWindow) {
+                    if (isFullScreen && aspectRatio >= 1f) {
+                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    }
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                }
+            }
+            val isFullScreenReached =
+                remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
                     if (isSmallWindow) {
-                        if (isFullScreen && aspectRatio >= 1f) {
-                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        } else {
-                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        isFullScreen && targetOrientation == when (orientation) {
+                            Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         }
                     } else {
-                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        isFullScreen
                     }
                 }
-                val isFullScreenReached =
-                    remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
-                        if (isSmallWindow) {
-                            isFullScreen && targetOrientation == when (orientation) {
-                                Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                                Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                                else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                            }
-                        } else {
-                            isFullScreen
-                        }
-                    }
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(padding)
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(padding)
+                        .fillMaxWidth()
+                        .then(
+                            if (isFullScreenReached) {
+                                Modifier.fillMaxHeight()
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
+                    PlayerComponent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .then(
                                 if (isFullScreenReached) {
                                     Modifier.fillMaxHeight()
                                 } else {
-                                    Modifier
-                                }
-                            )
-                            .background(Color.Black),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PlayerComponent(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .then(
-                                    if (isFullScreenReached) {
-                                        Modifier.fillMaxHeight()
+                                    if (isSmallWindow) {
+                                        try {
+                                            Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                        } catch (_: IllegalArgumentException) {
+                                            Modifier.aspectRatio(16f / 9)
+                                        }
                                     } else {
-                                        if (isSmallWindow) {
-                                            try {
-                                                Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                            } catch (_: IllegalArgumentException) {
-                                                Modifier.aspectRatio(16f / 9)
-                                            }
-                                        } else {
-                                            Modifier.fillMaxHeight(0.5f)
-                                        }
+                                        Modifier.fillMaxHeight(0.5f)
                                     }
-                                ),
-                            player = player,
-                            onRatioObtained = {
-                                aspectRatio = it
-                            },
-                            isFullScreen = isFullScreen,
-                            onFullscreen = {
-                                isFullScreen = it
-                            }
-                        )
-                    }
-                    LaunchedEffect(isFullScreenReached) {
-                        playerState.value = playerState.value.copy(fullScreen = isFullScreenReached)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            val window = activity.window
-                            WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
-                            if (isFullScreenReached) {
-                                window.insetsController?.let {
-                                    it.hide(WindowInsetsCompat.Type.systemBars())
-                                    it.systemBarsBehavior =
-                                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                                 }
-                            } else {
-                                window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
-                            }
+                            ),
+                        player = player,
+                        onRatioObtained = {
+                            aspectRatio = it
+                        },
+                        isFullScreen = isFullScreen,
+                        onFullscreen = {
+                            isFullScreen = it
                         }
-                    }
-                    LaunchedEffect(targetOrientation) {
-                        if (activity.requestedOrientation != targetOrientation) {
-                            activity.requestedOrientation = targetOrientation
-                        }
-                    }
-                    DisposableEffect(Unit) {
-                        val observer = LifecycleEventObserver { _, event ->
-                            if (event == Lifecycle.Event.ON_STOP) {
-                                activity.requestedOrientation =
-                                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                            }
-                        }
-                        lifecycleOwner.lifecycle.addObserver(observer)
-                        onDispose {
-                            lifecycleOwner.lifecycle.removeObserver(observer)
-                        }
-                    }
-                    if (!isFullScreenReached) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Black)
-                                .clip(
-                                    RoundedCornerShape(
-                                        topStart = 10.dp,
-                                        topEnd = 10.dp
-                                    )
-                                )
-                                .background(MaterialTheme.colorScheme.background)
-                                .padding(12.dp)
-                                .verticalScroll(scrollState)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = state.video.videoTitle,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontSize = 20.sp,
-                                    maxLines = 2,
-                                    lineHeight = 22.sp
-                                )
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.background)
-                                    .padding(vertical = 7.dp),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = state.video.views.toViews(),
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Icon(
-                                    modifier = Modifier.size(12.dp),
-                                    imageVector = Icons.Rounded.Visibility,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    contentDescription = state.video.views.toViews()
-                                )
-                                Text(
-                                    text = state.video.dateTime.toPresentation(context),
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 16.sp
-                                )
-                                if (userId == state.video.ownerId) {
-                                    var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
-                                    var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
-                                    Box {
-                                        EditButton(
-                                            modifier = Modifier.size(22.dp),
-                                            imageVector = Icons.Rounded.MoreVert,
-                                            onClick = {
-                                                isAdvancedDialogOpen = true
-                                            }
-                                        )
-                                        if (isAdvancedDialogOpen) {
-                                            ContextMenu(
-                                                modifier = Modifier,
-                                                isExpanded = true,
-                                                menuItems = listOf(
-                                                    MenuItem(
-                                                        title = stringResource(R.string.video_edit_button),
-                                                        onClick = {
-                                                            onEvent(VideoScreenUiEvent.Edit)
-                                                        }
-                                                    ),
-                                                    MenuItem(
-                                                        title = stringResource(R.string.video_delete_button),
-                                                        onClick = {
-                                                            isDeletingDialogOpen = true
-                                                        }
-                                                    )
-                                                ),
-                                                onDismiss = {
-                                                    isAdvancedDialogOpen = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                    if (isDeletingDialogOpen) {
-                                        Dialog(
-                                            onSubmit = {
-                                                onEvent(VideoScreenUiEvent.Remove)
-                                            },
-                                            onDismiss = {
-                                                isDeletingDialogOpen = false
-                                            },
-                                            dialogTitle = stringResource(R.string.video_delete_warning_title),
-                                            dialogDescription = stringResource(R.string.video_delete_warning_message)
-                                        )
-                                    }
-                                }
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(24.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .clickable {
-                                            onEvent(VideoScreenUiEvent.OpenChannel)
-                                        }
-                                        .weight(1f),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    AsyncImage(
-                                        model = state.video.avatarUrl,
-                                        contentDescription = stringResource(R.string.channel_link),
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.secondaryContainer)
-                                    )
-                                    Text(
-                                        text = state.video.channelTitle,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 13.dp),
-                                        fontSize = 15.sp,
-                                        lineHeight = 17.sp,
-                                        overflow = TextOverflow.Ellipsis,
-                                        maxLines = 1
-                                    )
-                                }
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                ) {
-                                    Text(
-                                        text = state.video.subscribers.toSubscribers(),
-                                        fontSize = 13.sp,
-                                        modifier = Modifier.padding(end = 5.dp)
-                                    )
-                                    Icon(
-                                        modifier = Modifier.size(14.dp),
-                                        imageVector = Icons.Rounded.Person,
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        contentDescription = state.video.subscribers.toSubscribers()
-                                    )
-                                }
-                                PrimaryToggleButton(
-                                    toggled = state.video.subscription == SUBSCRIBED,
-                                    onClick = {
-                                        val subscriptionState = when (state.video.subscription) {
-                                            SUBSCRIBED -> NOT_SUBSCRIBED
-                                            else -> SUBSCRIBED
-                                        }
-                                        onEvent(VideoScreenUiEvent.Subscribe(subscriptionState))
-                                    },
-                                    toggledOffText = stringResource(R.string.subscribe_button),
-                                    toggledOnText = stringResource(R.string.unsubscribe_button)
-                                )
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                val likeVector = when (state.video.liking) {
-                                    LIKED -> Icons.Rounded.ThumbUp
-                                    else -> Icons.Outlined.ThumbUp
-                                }
-                                ActionButton(
-                                    icon = likeVector,
-                                    text = state.video.likes.toRoundString(),
-                                    onClick = {
-                                        onEvent(VideoScreenUiEvent.Like(if (state.video.liking != LIKED) LIKED else NONE))
-                                    }
-                                )
-                                val dislikeVector = when (state.video.liking) {
-                                    DISLIKED -> Icons.Rounded.ThumbDown
-                                    else -> Icons.Outlined.ThumbDown
-                                }
-                                ActionButton(
-                                    icon = dislikeVector,
-                                    text = state.video.dislikes.toRoundString(),
-                                    onClick = {
-                                        onEvent(VideoScreenUiEvent.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
-                                    }
-                                )
-                                ActionButton(
-                                    icon = Icons.Rounded.Share,
-                                    text = stringResource(R.string.video_share),
-                                    onClick = {
-                                        onEvent(VideoScreenUiEvent.Share)
-                                    }
-                                )
-                                ActionButton(
-                                    icon = Icons.Outlined.Download,
-                                    text = stringResource(R.string.video_download_button),
-                                    onClick = {
-                                        onEvent(VideoScreenUiEvent.DownLoad)
-                                    }
-                                )
-                            }
-                            var commentsVisible by rememberSaveable { mutableStateOf(false) }
-                            val sheetState = rememberModalBottomSheetState()
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(MaterialTheme.colorScheme.tertiaryContainer)
-                                    .clickable {
-                                        coroutineScope
-                                            .launch {
-                                                sheetState.show()
-                                            }
-                                            .invokeOnCompletion {
-                                                if (sheetState.isVisible) {
-                                                    commentsVisible = true
-                                                }
-                                            }
-                                    }
-                                    .padding(10.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.comments_title),
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
-                                    val leaveCommentBg = tertiaryContainer.copy(
-                                        red = tertiaryContainer.red - 10f / 255,
-                                        green = tertiaryContainer.green - 10f / 255,
-                                        blue = tertiaryContainer.blue - 10f / 255
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(top = 10.dp)
-                                            .clip(CircleShape)
-                                            .background(leaveCommentBg)
-                                            .padding(vertical = 3.dp, horizontal = 10.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.comments_leave_hint),
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                    }
-                                }
-                                if (commentsVisible) {
-                                    LaunchedEffect(Unit) {
-                                        onEvent(VideoScreenUiEvent.OpenComments)
-                                    }
-                                    state.commentsState?.let { notNullCommentsState ->
-                                        CommentsBottomSheet(
-                                            sheetState = sheetState,
-                                            commentsState = notNullCommentsState,
-                                            userId = userId,
-                                            onEvent = onEvent
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                StandardComplexErrorHandler(
-                    error = state.likingError,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found)
-                )
-                StandardComplexErrorHandler(
-                    error = state.subscriptionError,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found)
-                )
-            }
-
-            is VideoScreenState.Loading -> {
-                LoadingComponent(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
-                )
-            }
-
-            is VideoScreenState.Failure -> {
-                ErrorComponent(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
-                    onRetry = {
-                        onEvent(VideoScreenUiEvent.Restart)
-                    }
-                )
-                StandardComplexErrorHandler(
-                    error = state.error,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.video_not_found)
-                )
-            }
-
-            else -> {
-                Box (
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.video_removed)
                     )
                 }
+                LaunchedEffect(isFullScreenReached) {
+                    playerState.value = playerState.value.copy(fullScreen = isFullScreenReached)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val window = activity.window
+                        WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
+                        if (isFullScreenReached) {
+                            window.insetsController?.let {
+                                it.hide(WindowInsetsCompat.Type.systemBars())
+                                it.systemBarsBehavior =
+                                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                            }
+                        } else {
+                            window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
+                        }
+                    }
+                }
+                LaunchedEffect(targetOrientation) {
+                    if (activity.requestedOrientation != targetOrientation) {
+                        activity.requestedOrientation = targetOrientation
+                    }
+                }
+                DisposableEffect(Unit) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_STOP) {
+                            activity.requestedOrientation =
+                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+                if (!isFullScreenReached) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Black)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 10.dp,
+                                    topEnd = 10.dp
+                                )
+                            )
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(12.dp)
+                            .verticalScroll(scrollState)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = state.video.videoTitle,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 20.sp,
+                                maxLines = 2,
+                                lineHeight = 22.sp
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(vertical = 7.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = state.video.views.toViews(),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Icon(
+                                modifier = Modifier.size(12.dp),
+                                imageVector = Icons.Rounded.Visibility,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                contentDescription = state.video.views.toViews()
+                            )
+                            Text(
+                                text = state.video.dateTime.toPresentation(context),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 16.sp
+                            )
+                            if (userId == state.video.ownerId) {
+                                var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
+                                var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
+                                Box {
+                                    EditButton(
+                                        modifier = Modifier.size(22.dp),
+                                        imageVector = Icons.Rounded.MoreVert,
+                                        onClick = {
+                                            isAdvancedDialogOpen = true
+                                        }
+                                    )
+                                    if (isAdvancedDialogOpen) {
+                                        ContextMenu(
+                                            modifier = Modifier,
+                                            isExpanded = true,
+                                            menuItems = listOf(
+                                                MenuItem(
+                                                    title = stringResource(R.string.video_edit_button),
+                                                    onClick = {
+                                                        onEvent(VideoScreenUiEvent.Edit)
+                                                    }
+                                                ),
+                                                MenuItem(
+                                                    title = stringResource(R.string.video_delete_button),
+                                                    onClick = {
+                                                        isDeletingDialogOpen = true
+                                                    }
+                                                )
+                                            ),
+                                            onDismiss = {
+                                                isAdvancedDialogOpen = false
+                                            }
+                                        )
+                                    }
+                                }
+                                if (isDeletingDialogOpen) {
+                                    Dialog(
+                                        onSubmit = {
+                                            onEvent(VideoScreenUiEvent.Remove)
+                                        },
+                                        onDismiss = {
+                                            isDeletingDialogOpen = false
+                                        },
+                                        dialogTitle = stringResource(R.string.video_delete_warning_title),
+                                        dialogDescription = stringResource(R.string.video_delete_warning_message)
+                                    )
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .clickable {
+                                        onEvent(VideoScreenUiEvent.OpenChannel)
+                                    }
+                                    .weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AsyncImage(
+                                    model = state.video.avatarUrl,
+                                    contentDescription = stringResource(R.string.channel_link),
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                )
+                                Text(
+                                    text = state.video.channelTitle,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 13.dp),
+                                    fontSize = 15.sp,
+                                    lineHeight = 17.sp,
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 1
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Text(
+                                    text = state.video.subscribers.toSubscribers(),
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(end = 5.dp)
+                                )
+                                Icon(
+                                    modifier = Modifier.size(14.dp),
+                                    imageVector = Icons.Rounded.Person,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    contentDescription = state.video.subscribers.toSubscribers()
+                                )
+                            }
+                            PrimaryToggleButton(
+                                toggled = state.video.subscription == SUBSCRIBED,
+                                onClick = {
+                                    val subscriptionState = when (state.video.subscription) {
+                                        SUBSCRIBED -> NOT_SUBSCRIBED
+                                        else -> SUBSCRIBED
+                                    }
+                                    onEvent(VideoScreenUiEvent.Subscribe(subscriptionState))
+                                },
+                                toggledOffText = stringResource(R.string.subscribe_button),
+                                toggledOnText = stringResource(R.string.unsubscribe_button)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            val likeVector = when (state.video.liking) {
+                                LIKED -> Icons.Rounded.ThumbUp
+                                else -> Icons.Outlined.ThumbUp
+                            }
+                            ActionButton(
+                                icon = likeVector,
+                                text = state.video.likes.toRoundString(),
+                                onClick = {
+                                    onEvent(VideoScreenUiEvent.Like(if (state.video.liking != LIKED) LIKED else NONE))
+                                }
+                            )
+                            val dislikeVector = when (state.video.liking) {
+                                DISLIKED -> Icons.Rounded.ThumbDown
+                                else -> Icons.Outlined.ThumbDown
+                            }
+                            ActionButton(
+                                icon = dislikeVector,
+                                text = state.video.dislikes.toRoundString(),
+                                onClick = {
+                                    onEvent(VideoScreenUiEvent.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
+                                }
+                            )
+                            ActionButton(
+                                icon = Icons.Rounded.Share,
+                                text = stringResource(R.string.video_share),
+                                onClick = {
+                                    onEvent(VideoScreenUiEvent.Share)
+                                }
+                            )
+                            ActionButton(
+                                icon = Icons.Outlined.Download,
+                                text = stringResource(R.string.video_download_button),
+                                onClick = {
+                                    onEvent(VideoScreenUiEvent.DownLoad)
+                                }
+                            )
+                        }
+                        var commentsVisible by rememberSaveable { mutableStateOf(false) }
+                        val sheetState = rememberModalBottomSheetState()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                .clickable {
+                                    coroutineScope
+                                        .launch {
+                                            sheetState.show()
+                                        }
+                                        .invokeOnCompletion {
+                                            if (sheetState.isVisible) {
+                                                commentsVisible = true
+                                            }
+                                        }
+                                }
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.comments_title),
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
+                                val leaveCommentBg = tertiaryContainer.copy(
+                                    red = tertiaryContainer.red - 10f / 255,
+                                    green = tertiaryContainer.green - 10f / 255,
+                                    blue = tertiaryContainer.blue - 10f / 255
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(top = 10.dp)
+                                        .clip(CircleShape)
+                                        .background(leaveCommentBg)
+                                        .padding(vertical = 3.dp, horizontal = 10.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.comments_leave_hint),
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                            if (commentsVisible) {
+                                LaunchedEffect(Unit) {
+                                    onEvent(VideoScreenUiEvent.OpenComments)
+                                }
+                                state.commentsState?.let { notNullCommentsState ->
+                                    CommentsBottomSheet(
+                                        sheetState = sheetState,
+                                        commentsState = notNullCommentsState,
+                                        userId = userId,
+                                        onEvent = onEvent
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            StandardComplexErrorHandler(
+                error = state.likingError,
+                snackBarHostState = snackBarHostState,
+                notFoundMessage = stringResource(R.string.video_not_found)
+            )
+            StandardComplexErrorHandler(
+                error = state.subscriptionError,
+                snackBarHostState = snackBarHostState,
+                notFoundMessage = stringResource(R.string.video_not_found)
+            )
+        }
+        else if (state.isStarting) {
+            LoadingComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+        }
+        else if (state.startingError != null) {
+            ErrorComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+                onRetry = {
+                    onEvent(VideoScreenUiEvent.Restart)
+                }
+            )
+            StandardComplexErrorHandler(
+                error = state.startingError,
+                snackBarHostState = snackBarHostState,
+                notFoundMessage = stringResource(R.string.video_not_found)
+            )
+        } else if (state.isRemoved) {
+            Box (
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.video_removed)
+                )
             }
         }
     }

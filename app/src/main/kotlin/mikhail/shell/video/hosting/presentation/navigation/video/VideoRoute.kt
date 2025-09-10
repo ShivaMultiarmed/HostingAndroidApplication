@@ -21,7 +21,6 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
-import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenState
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 import kotlin.time.Duration.Companion.seconds
@@ -50,7 +49,7 @@ fun EntryProviderBuilder<Route>.videoRoute(
                 when (event) {
                     VideoScreenUiEvent.Edit -> videoBackStack.add(Route.Video.Edit(videoId))
                     VideoScreenUiEvent.OpenChannel -> {
-                        val channelId = (state as? VideoScreenState.Success)?.video?.channelId!!
+                        val channelId = state.video!!.channelId
                         currentTabBackStack.add(Route.Channel.View(channelId))
                     }
                     is VideoScreenUiEvent.OpenProfile -> currentTabBackStack.add(Route.User.Profile(event.userId))
@@ -83,12 +82,9 @@ fun EntryProviderBuilder<Route>.videoRoute(
             }
         )
         LaunchedEffect(state) {
-            if (state is VideoScreenState.Failure) {
-                if ((state as VideoScreenState.Failure).error == NetworkError.NOT_FOUND) {
-                    videoBackStack.clear()
-                } else if ((state as VideoScreenState.Failure).error == NetworkError.AUTHENTICATION) {
-                    rootBackStack.add(Route.Authentication)
-                }
+            when(state.startingError) {
+                NetworkError.NOT_FOUND -> videoBackStack.clear()
+                NetworkError.AUTHENTICATION -> rootBackStack.add(Route.Authentication)
             }
         }
     }
