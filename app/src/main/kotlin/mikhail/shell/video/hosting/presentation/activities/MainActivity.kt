@@ -43,6 +43,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
+import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoRecommendationsGraph
 import mikhail.shell.video.hosting.presentation.utils.BackStackSaver
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
@@ -75,8 +76,7 @@ class MainActivity : ComponentActivity() {
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
-                val playerState =
-                    rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
+                val playerState = rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState
                 ) {
@@ -101,9 +101,8 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize(),
                         bottomBar = {
                             if (
-                                currentRoute !is Route.Authentication
+                                currentRoute !in listOf(Route.Authentication.SignIn, Route.Authentication.SignUp, Route.Authentication.Reset)
                                         && currentRoute !is Route.Video && !(orientation == Configuration.ORIENTATION_LANDSCAPE
-                                        && currentRoute is Route.Video.View
                                         || LocalPlayerState.current.value.fullScreen)
                             ) {
                                 BottomNavBar(
@@ -125,7 +124,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    if (currentRoute is Route.Video.View) {
+                                    if (currentRoute is Route.Video) {
                                         Color.Black
                                     } else {
                                         MaterialTheme.colorScheme.surface
@@ -159,9 +158,15 @@ class MainActivity : ComponentActivity() {
                                         rootBackStack = rootBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
+                                    videoGraph(
+                                        rootBackStack = rootBackStack,
+                                        player = player,
+                                        userDetailsProvider = userDetailsProvider,
+                                        currentBackStack = mutableListOf<Route>() // TODO
+                                    )
                                 }
                             )
-                            if (currentRoute !is Route.Video.View && isPlayerPrepared(player)) {
+                            if (currentRoute !is Route.Video && isPlayerPrepared(player)) {
                                 MiniPlayer(
                                     player = player,
                                     onFullScreen = {

@@ -22,7 +22,7 @@ fun EntryProviderBuilder<Route>.recommendationsRoute(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    is RecommendationsScreenUiEvent.ClickedVideo -> rootBackStack.add(Route.Video.View(event.videoId))
+                    is RecommendationsScreenUiEvent.ClickedVideo -> rootBackStack.add(Route.Video(event.videoId))
                     else -> viewModel.onEvent(event)
                 }
             }

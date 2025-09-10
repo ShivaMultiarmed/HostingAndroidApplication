@@ -551,7 +551,7 @@ fun VideoScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface),
                     onRetry = {
-                        onEvent(VideoScreenUiEvent.Reload)
+                        onEvent(VideoScreenUiEvent.Restart)
                     }
                 )
                 StandardComplexErrorHandler(

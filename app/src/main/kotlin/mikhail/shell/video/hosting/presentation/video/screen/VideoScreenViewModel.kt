@@ -77,7 +77,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 getComments(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()))
                 observe()
             }
-            VideoScreenUiEvent.Reload -> load()
+            VideoScreenUiEvent.Restart -> load()
             VideoScreenUiEvent.Remove -> remove()
             is VideoScreenUiEvent.SaveComment -> saveComment(
                 commentId = event.commentId,
@@ -100,7 +100,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                         )
                     }
                     val url = videoDetails.video.sourceUrl
-                    val previousUri = player.currentMediaItem?.localConfiguration?.uri.toString()
+                    val previousUri = player.currentMediaItem?.localConfiguration?.uri?.toString()
                     if (url != previousUri) {
                         val uri = url!!.toUri()
                         val mediaItem = MediaItem.fromUri(uri)
@@ -315,7 +315,7 @@ class VideoScreenViewModel @AssistedInject constructor(
 }
 
 sealed class VideoScreenUiEvent {
-    data object Reload: VideoScreenUiEvent()
+    data object Restart: VideoScreenUiEvent()
     data class Like(val liking: Liking): VideoScreenUiEvent()
     data class Subscribe(val subscription: Subscription): VideoScreenUiEvent()
     data object DownLoad: VideoScreenUiEvent()

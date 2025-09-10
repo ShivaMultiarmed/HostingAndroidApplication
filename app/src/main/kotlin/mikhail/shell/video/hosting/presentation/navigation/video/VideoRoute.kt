@@ -3,11 +3,11 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.EntryProviderBuilder
@@ -41,7 +41,7 @@ fun EntryProviderBuilder<Route>.videoRoute(
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
-        val state by viewModel.state.collectAsStateWithLifecycle()
+        val state by viewModel.state.collectAsState()
         VideoScreen(
             userId = userId,
             state = state,
