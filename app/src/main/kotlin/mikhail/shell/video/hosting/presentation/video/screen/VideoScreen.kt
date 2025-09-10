@@ -14,15 +14,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +55,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -103,13 +100,14 @@ import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
+import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
+import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
-import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -508,16 +506,19 @@ fun VideoScreen(
                                 }
                             }
                             if (commentsVisible) {
-                                LaunchedEffect(Unit) {
+                                CommentsBottomSheet(
+                                    sheetState = sheetState,
+                                    commentsState = state.commentsState,
+                                    userId = userId,
+                                    snackBarHostState = snackBarHostState,
+                                    onEvent = onEvent
+                                )
+                            }
+                            LaunchedEffect(commentsVisible) {
+                                if (commentsVisible) {
                                     onEvent(VideoScreenUiEvent.OpenComments)
-                                }
-                                state.commentsState?.let { notNullCommentsState ->
-                                    CommentsBottomSheet(
-                                        sheetState = sheetState,
-                                        commentsState = notNullCommentsState,
-                                        userId = userId,
-                                        onEvent = onEvent
-                                    )
+                                } else {
+                                    onEvent(VideoScreenUiEvent.CloseComments)
                                 }
                             }
                         }
@@ -534,15 +535,13 @@ fun VideoScreen(
                 snackBarHostState = snackBarHostState,
                 notFoundMessage = stringResource(R.string.video_not_found)
             )
-        }
-        else if (state.isStarting) {
+        } else if (state.isStarting) {
             LoadingComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
             )
-        }
-        else if (state.startingError != null) {
+        } else if (state.startingError != null) {
             ErrorComponent(
                 modifier = Modifier
                     .fillMaxSize()
@@ -557,7 +556,7 @@ fun VideoScreen(
                 notFoundMessage = stringResource(R.string.video_not_found)
             )
         } else if (state.isRemoved) {
-            Box (
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
@@ -574,13 +573,13 @@ fun VideoScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommentsBottomSheet(
+private fun CommentsBottomSheet(
     userId: Long,
     sheetState: SheetState,
+    snackBarHostState: SnackbarHostState,
     commentsState: CommentsState,
     onEvent: (VideoScreenUiEvent) -> Unit
 ) {
-    val snackBarHostState = remember { SnackbarHostState() }
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
@@ -596,58 +595,68 @@ fun CommentsBottomSheet(
                 .padding(10.dp),
         ) {
             var initialComment by remember { mutableStateOf(null as CommentUi?) }
-            if (commentsState.comments?.isNotEmpty() == true) {
-                commentsState.comments
-                val lazyListState = rememberLazyListState()
-                val reachedBottom by remember { derivedStateOf { lazyListState.reachedBottom(4) } }
-                LazyColumn(
+            if (commentsState.comments != null) {
+                PageableBox(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    state = lazyListState
-                ) {
-                    items(commentsState.comments) { comment ->
+                    itemComponent = {
                         CommentBox(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
-                            owns = comment.userId == userId,
+                            owns = it.userId == userId,
                             onEvent = onEvent,
-                            comment = comment,
+                            comment = it,
                         )
+                    },
+                    emptyComponent = {
+                        EmptyResultComponent(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp),
+                            message = stringResource(R.string.comments_empty_message)
+                        )
+                    },
+                    items = commentsState.comments,
+                    hasMore = commentsState.hasMore,
+                    error = commentsState.error,
+                    isLoading = commentsState.isLoading,
+                    onReachedBottom = {
+                        onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
+                    },
+                    onReload = {
+                        onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
                     }
-                }
-                LaunchedEffect(commentsState.comments) {
-                    initialComment = null
-                }
-                LaunchedEffect(reachedBottom) {
-                    if (reachedBottom) {
-                        onEvent(VideoScreenUiEvent.ReachedBottom)
-                    }
-                }
-            } else {
-                Box(
+                )
+            } else if (commentsState.isLoading) {
+                LoadingComponent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.comments_empty_message)
-                    )
-                }
+                )
+            } else if (commentsState.error != null) {
+                ErrorComponent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    onRetry = {
+                        onEvent(VideoScreenUiEvent.RestartComments)
+                    }
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
             }
-            val snackBarHostState = remember { SnackbarHostState() }
-            SnackbarHost(snackBarHostState)
-
             CommentForm(
                 initialComment = initialComment,
                 onEvent = onEvent,
                 error = commentsState.error
             )
         }
-        SnackbarHost(hostState = snackBarHostState)
     }
     StandardComplexErrorHandler(
         error = commentsState.error,
@@ -657,7 +666,7 @@ fun CommentsBottomSheet(
 }
 
 @Composable
-fun CommentBox(
+private fun CommentBox(
     modifier: Modifier = Modifier,
     owns: Boolean,
     comment: CommentUi,
@@ -675,7 +684,12 @@ fun CommentBox(
                     MenuItem(
                         title = stringResource(R.string.comment_edit_button),
                         onClick = {
-                            onEvent(VideoScreenUiEvent.SaveComment(comment.commentId, comment.text))
+                            onEvent(
+                                VideoScreenUiEvent.EditComment(
+                                    commentId = comment.commentId,
+                                    text = comment.text
+                                )
+                            )
                             isMenuVisible = false
                         }
                     ),
@@ -741,7 +755,7 @@ fun CommentBox(
 }
 
 @Composable
-fun CommentForm(
+private fun CommentForm(
     initialComment: CommentUi? = null,
     onEvent: (VideoScreenUiEvent) -> Unit,
     error: Error? = null
@@ -797,7 +811,7 @@ fun CommentForm(
         PrimaryProgressButton(
             enabled = text.isNotEmpty(),
             onClick = {
-                onEvent(VideoScreenUiEvent.SaveComment(initialComment?.commentId, text))
+                onEvent(VideoScreenUiEvent.PostComment(text))
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )

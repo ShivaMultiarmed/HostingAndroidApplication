@@ -11,7 +11,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
@@ -21,8 +20,6 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.NotificationEntryPoint
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
-import mikhail.shell.video.hosting.domain.models.ActionModel
-import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
@@ -59,12 +56,6 @@ class NotificationService: FirebaseMessagingService() {
             val channelTitle = data["channelTitle"]
             val videoTitle = data["videoTitle"]
             showNotification(videoId!!.toLong(), channelTitle, videoTitle)
-        } else if(COMMENTS_TOPIC_REGEX.matches(topic?: "")) {
-            val type = object : TypeToken<ActionModel<CommentWithUser>>() {}.type
-            val actionModel = gson.fromJson<ActionModel<CommentWithUser>>(data["actionModel"]?: return, type)
-            coroutineScope.launch {
-                commentRepository.receive(actionModel)
-            }
         }
     }
 
@@ -73,12 +64,7 @@ class NotificationService: FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java).apply{
             data = "https://$HOST/videos/$videoId".toUri()
         }
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val notification = NotificationCompat.Builder(this, "channel_subscriptions")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.new_video_title, channelTitle))

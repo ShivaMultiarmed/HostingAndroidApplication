@@ -25,7 +25,7 @@ class SignInWithPasswordViewModel @Inject constructor(
     private val signInWithPassword: SignInWithPassword,
     private val subscribeToNotifications: SubscribeToNotifications
 ) : ViewModel() {
-    private val _state = MutableStateFlow<SignInScreenState>(SignInScreenState.Entering())
+    private val _state = MutableStateFlow(SignInScreenState())
     val state = _state.asStateFlow()
 
     fun onEvent(event: SignInUiEvent) {
@@ -43,31 +43,31 @@ class SignInWithPasswordViewModel @Inject constructor(
 
     private fun onPasswordChanged(password: String) {
         _state.update {
-            (it as? SignInScreenState.Entering)?.copy(
+            it.copy(
                 input = it.input.copy(
                     password = it.input.password.copy(
                         value = password
                     )
                 )
-            )?: it
+            )
         }
     }
 
     private fun clearPasswordError() {
         _state.update {
-            (it as? SignInScreenState.Entering)?.copy(
+            it.copy(
                 input = it.input.copy(
                     password = it.input.password.copy(
                         error = null
                     )
                 )
-            )?: it
+            )
         }
     }
 
     private fun validatePassword() {
         _state.update {
-            (it as? SignInScreenState.Entering)?.copy(
+            it.copy(
                 input = it.input.copy(
                     password = it.input.password.copy(
                         error = it.input.password.value.let {
@@ -76,38 +76,38 @@ class SignInWithPasswordViewModel @Inject constructor(
                         }
                     )
                 )
-            )?: it
+            )
         }
     }
 
     private fun onUserNameChanged(userName: String) {
         _state.update {
-            (it as? SignInScreenState.Entering)?.copy(
+            it.copy(
                 input = it.input.copy(
                     userName = it.input.userName.copy(
                         value = userName
                     )
                 )
-            )?: it
+            )
         }
     }
 
     private fun clearUserNameError() {
         _state.update {
-            (it as? SignInScreenState.Entering)?.copy(
+            it.copy(
                 input = it.input.copy(
                     userName = it.input.userName.copy(
                         error = null
                     )
                 )
-            )?: it
+            )
         }
     }
 
     private fun validateUserName() {
         viewModelScope.launch {
             _state.update {
-                (it as? SignInScreenState.Entering)?.copy(
+                it.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
                             error = it.input.userName.value.let {
@@ -125,7 +125,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                             }
                         )
                     )
-                )?: it
+                )
             }
         }
     }
@@ -133,13 +133,14 @@ class SignInWithPasswordViewModel @Inject constructor(
     private fun signIn() {
         validateUserName()
         validatePassword()
-        val currentInput = (_state.value as SignInScreenState.Entering).input
+        val currentInput = _state.value.input
         if (currentInput.userName.error != null || currentInput.password.error != null) {
             return
         }
         _state.update {
-            it as SignInScreenState.Entering
-            it.copy(isLoading = true)
+            it.copy(
+                isLoading = true
+            )
         }
         viewModelScope.launch {
             signInWithPassword(
@@ -148,11 +149,14 @@ class SignInWithPasswordViewModel @Inject constructor(
             ).onSuccess { authModel ->
                 subscribeToNotifications()
                 _state.update {
-                    SignInScreenState.Success(authModel)
+                    it.copy(
+                        error = null,
+                        isLoading = false,
+                        authModel = authModel
+                    )
                 }
             }.onFailure { error ->
                 _state.update {
-                    it as SignInScreenState.Entering
                     it.copy(
                         isLoading = false,
                         error = if (error !in listOf(

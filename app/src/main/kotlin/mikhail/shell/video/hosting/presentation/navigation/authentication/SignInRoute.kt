@@ -10,7 +10,6 @@ import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
-import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenState
 import mikhail.shell.video.hosting.presentation.signin.password.SignInUiEvent
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 
@@ -32,9 +31,9 @@ fun EntryProviderBuilder<Route>.signInRoute(
             }
         )
         LaunchedEffect(state) {
-            if (state is SignInScreenState.Success) {
+            if (state.authModel != null) {
                 userDetailsProvider.save(
-                    (state as SignInScreenState.Success).authModel.let {
+                    state.authModel!!.let {
                         UserDetails(
                             userId = it.userId,
                             token = it.token

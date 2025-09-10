@@ -25,11 +25,10 @@ import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
+import mikhail.shell.video.hosting.domain.usecases.comments.EditComment
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
-import mikhail.shell.video.hosting.domain.usecases.comments.ObserveComments
+import mikhail.shell.video.hosting.domain.usecases.comments.PostComment
 import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
-import mikhail.shell.video.hosting.domain.usecases.comments.SaveComment
-import mikhail.shell.video.hosting.domain.usecases.comments.UnobserveComments
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
@@ -47,11 +46,10 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val subscribe: Subscribe,
     private val incrementViews: IncrementViews,
     private val deleteVideo: DeleteVideo,
-    private val saveComment: SaveComment,
+    private val postComment: PostComment,
+    private val editComment: EditComment,
     private val removeComment: RemoveComment,
-    private val getComments: GetComments,
-    private val observeComments: ObserveComments,
-    private val unobserveComments: UnobserveComments
+    private val getComments: GetComments
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.onStart {
@@ -68,16 +66,23 @@ class VideoScreenViewModel @AssistedInject constructor(
             is VideoScreenUiEvent.Like -> rate(event.liking)
             VideoScreenUiEvent.OpenComments -> {
                 if (_state.value.commentsState.comments == null) {
-                    getComments(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()))
+                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    getComments(now)
                 }
+            }
+            VideoScreenUiEvent.ReachedCommentsEnd, VideoScreenUiEvent.RestartComments -> {
+                val before = _state.value.commentsState.comments?.lastOrNull()?.dateTime
+                    ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                getComments(before)
             }
             VideoScreenUiEvent.Restart -> load()
             VideoScreenUiEvent.Remove -> remove()
-            is VideoScreenUiEvent.SaveComment -> saveComment(
+            is VideoScreenUiEvent.PostComment -> postComment(event.text)
+            is VideoScreenUiEvent.EditComment -> editComment(
                 commentId = event.commentId,
                 text = event.text
             )
-
+            is VideoScreenUiEvent.RemoveComment -> removeComment(event.commentId)
             is VideoScreenUiEvent.Subscribe -> subscribe(event.subscription)
             else -> Unit
         }
@@ -207,23 +212,22 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    private fun saveComment(
-        commentId: Long? = null,
+    private fun postComment(
         text: String
     ) {
         viewModelScope.launch {
-            saveComment(
+            postComment(
                 Comment(
-                    commentId = commentId,
                     videoId = videoId,
                     userId = 0,
                     text = text
                 )
-            ).onSuccess {
+            ).onSuccess { comment ->
                 _state.update {
                     it.copy(
-                        commentsState = it.commentsState!!.copy(
-                            comments = it.commentsState.comments, // TODO: Add/edit a comment
+                        commentsState = it.commentsState.copy(
+                            comments = listOf(comment.toUi()) + (it.commentsState.comments
+                                ?: emptyList()),
                             error = null
                         )
                     )
@@ -231,14 +235,50 @@ class VideoScreenViewModel @AssistedInject constructor(
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        commentsState = it.commentsState!!.copy(
+                        commentsState = it.commentsState.copy(
                             error = error
                         )
                     )
                 }
             }
         }
+    }
 
+    private fun editComment(
+        commentId: Long,
+        text: String
+    ) {
+        viewModelScope.launch {
+            editComment(
+                Comment(
+                    videoId = videoId,
+                    userId = 0,
+                    text = text
+                )
+            ).onSuccess { comment ->
+                _state.update {
+                    val editedCommentPosition =
+                        it.commentsState.comments!!.indexOfFirst { it.commentId == commentId }
+                    val editedComments = it.commentsState.comments.toMutableList().apply {
+                        set(editedCommentPosition, comment.toUi())
+                    }
+                    it.copy(
+                        commentsState = it.commentsState.copy(
+                            comments = editedComments,
+                            error = null
+                        )
+                    )
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        commentsState = it.commentsState.copy(
+                            error = error
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun removeComment(commentId: Long) {
@@ -247,7 +287,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 .onSuccess {
                     _state.update {
                         it.copy(
-                            commentsState = it.commentsState!!.copy(
+                            commentsState = it.commentsState.copy(
                                 comments = it.commentsState.comments!!.filter { it.commentId != commentId },
                                 error = null
                             )
@@ -256,7 +296,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }.onFailure { error ->
                     _state.update {
                         it.copy(
-                            commentsState = it.commentsState!!.copy(
+                            commentsState = it.commentsState.copy(
                                 error = error
                             )
                         )
@@ -269,27 +309,34 @@ class VideoScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             getComments(
                 before = before.toInstant(TimeZone.currentSystemDefault()),
-                videoId = videoId
+                videoId = videoId,
+                partSize = PART_SIZE
             ).onSuccess { comments ->
                 _state.update {
                     it.copy(
-                        commentsState = it.commentsState!!.copy(
+                        commentsState = it.commentsState.copy(
                             error = null,
-                            comments = ((it.commentsState.comments
-                                ?: listOf()) + comments.map { it.toUi() }).distinct()
+                            comments = (
+                                    (it.commentsState.comments ?: listOf()) + comments.map { it.toUi() }
+                                    ).distinct(),
+                            hasMore = comments.size < PART_SIZE
                         ),
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        commentsState = it.commentsState!!.copy(
+                        commentsState = it.commentsState.copy(
                             error = error
                         )
                     )
                 }
             }
         }
+    }
+
+    private companion object {
+        const val PART_SIZE = 10
     }
 
     @AssistedFactory
@@ -313,7 +360,9 @@ sealed class VideoScreenUiEvent {
     data object OpenComments : VideoScreenUiEvent()
     data object CloseComments : VideoScreenUiEvent()
     data class OpenProfile(val userId: Long) : VideoScreenUiEvent()
-    data class SaveComment(val commentId: Long?, val text: String) : VideoScreenUiEvent()
+    data class PostComment(val text: String) : VideoScreenUiEvent()
+    data class EditComment(val commentId: Long, val text: String) : VideoScreenUiEvent()
     data class RemoveComment(val commentId: Long) : VideoScreenUiEvent()
-    data object ReachedBottom : VideoScreenUiEvent()
+    data object ReachedCommentsEnd : VideoScreenUiEvent()
+    data object RestartComments : VideoScreenUiEvent()
 }

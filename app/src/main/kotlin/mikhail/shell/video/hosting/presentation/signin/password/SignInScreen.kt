@@ -39,7 +39,7 @@ fun SignInScreen(
     onEvent: (SignInUiEvent) -> Unit
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
-    Scaffold (
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
@@ -50,101 +50,97 @@ fun SignInScreen(
             )
         }
     ) { padding ->
-        when (state) {
-            is SignInScreenState.Entering -> {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .background(MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-                ) {
-                    Title(
-                        text = stringResource(R.string.sign_in_title)
-                    )
-                    val emailErrorMsg = when(state.input.userName.error) {
-                        is TextError -> when (state.input.userName.error) {
-                            TextError.EMPTY -> stringResource(R.string.user_name_empty_error)
-                            TextError.LONG -> stringResource(R.string.user_name_too_long)
-                            TextError.PATTERN -> stringResource(R.string.email_malformed_error)
-                            TextError.NOT_EXISTS -> stringResource(R.string.email_not_found_error)
-                            else -> null
-                        }
-                        is NetworkError -> stringResource(R.string.user_name_check_failed)
-                        else -> null
-                    }
-                    InputField(
-                        modifier = Modifier
-                            .width(280.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                        icon = Icons.Rounded.Email,
-                        placeholder = stringResource(R.string.email_label),
-                        value = state.input.userName.value,
-                        onValueChange = {
-                            onEvent(SignInUiEvent.UserNameChanged(it))
-                        },
-                        errorMsg = emailErrorMsg,
-                        onFocus = {
-                            onEvent(SignInUiEvent.UserNameFocused)
-                        },
-                        onBlur = {
-                            onEvent(SignInUiEvent.UserNameBlurred)
-                        }
-                    )
-                    val passwordErrorMsg = when (state.input.password.error) {
-                        TextError.EMPTY -> stringResource(R.string.password_empty_error)
-                        TextError.SHORT -> stringResource(R.string.password_too_short)
-                        TextError.LONG -> stringResource(R.string.password_too_long)
-                        TextError.PATTERN -> stringResource(R.string.password_not_valid_error)
-                        TextError.NOT_CORRECT -> stringResource(R.string.password_incorrect_error)
-                        else -> null
-                    }
-                    InputField(
-                        modifier = Modifier
-                            .width(280.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                        icon = Icons.Rounded.Password,
-                        placeholder = stringResource(R.string.password_label),
-                        value = state.input.password.value,
-                        onValueChange = {
-                            onEvent(SignInUiEvent.PasswordChanged(it))
-                        },
-                        onFocus = {
-                            onEvent(SignInUiEvent.PasswordFocused)
-                        },
-                        onBlur = {
-                            onEvent(SignInUiEvent.PasswordBlurred)
-                        },
-                        secured = true,
-                        errorMsg = passwordErrorMsg
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        PrimaryProgressButton(
-                            inProgress = state.isLoading,
-                            complete = false,
-                            onClick = {
-                                onEvent(SignInUiEvent.Submit)
-                            },
-                            text = stringResource(R.string.sign_in_main_btn_label)
-                        )
-                        Text(
-                            text = stringResource(R.string.sign_up_link_label),
-                            modifier = Modifier.clickable {
-                                onEvent(SignInUiEvent.SignUp)
-                            }
-                        )
-                    }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background),
+            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
+        ) {
+            Title(
+                text = stringResource(R.string.sign_in_title)
+            )
+            val emailErrorMsg = when (state.input.userName.error) {
+                is TextError -> when (state.input.userName.error) {
+                    TextError.EMPTY -> stringResource(R.string.user_name_empty_error)
+                    TextError.LONG -> stringResource(R.string.user_name_too_long)
+                    TextError.PATTERN -> stringResource(R.string.email_malformed_error)
+                    TextError.NOT_EXISTS -> stringResource(R.string.email_not_found_error)
+                    else -> null
                 }
-                StandardComplexErrorHandler(
-                    error = state.error,
-                    snackBarHostState = snackBarHostState
+
+                is NetworkError -> stringResource(R.string.user_name_check_failed)
+                else -> null
+            }
+            InputField(
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                icon = Icons.Rounded.Email,
+                placeholder = stringResource(R.string.email_label),
+                value = state.input.userName.value,
+                onValueChange = {
+                    onEvent(SignInUiEvent.UserNameChanged(it))
+                },
+                errorMsg = emailErrorMsg,
+                onFocus = {
+                    onEvent(SignInUiEvent.UserNameFocused)
+                },
+                onBlur = {
+                    onEvent(SignInUiEvent.UserNameBlurred)
+                }
+            )
+            val passwordErrorMsg = when (state.input.password.error) {
+                TextError.EMPTY -> stringResource(R.string.password_empty_error)
+                TextError.SHORT -> stringResource(R.string.password_too_short)
+                TextError.LONG -> stringResource(R.string.password_too_long)
+                TextError.PATTERN -> stringResource(R.string.password_not_valid_error)
+                TextError.NOT_CORRECT -> stringResource(R.string.password_incorrect_error)
+                else -> null
+            }
+            InputField(
+                modifier = Modifier
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                icon = Icons.Rounded.Password,
+                placeholder = stringResource(R.string.password_label),
+                value = state.input.password.value,
+                onValueChange = {
+                    onEvent(SignInUiEvent.PasswordChanged(it))
+                },
+                onFocus = {
+                    onEvent(SignInUiEvent.PasswordFocused)
+                },
+                onBlur = {
+                    onEvent(SignInUiEvent.PasswordBlurred)
+                },
+                secured = true,
+                errorMsg = passwordErrorMsg
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                PrimaryProgressButton(
+                    inProgress = state.isLoading,
+                    complete = state.authModel != null,
+                    onClick = {
+                        onEvent(SignInUiEvent.Submit)
+                    },
+                    text = stringResource(R.string.sign_in_main_btn_label)
+                )
+                Text(
+                    text = stringResource(R.string.sign_up_link_label),
+                    modifier = Modifier.clickable {
+                        onEvent(SignInUiEvent.SignUp)
+                    }
                 )
             }
-            is SignInScreenState.Success -> Unit
         }
+        StandardComplexErrorHandler(
+            error = state.error,
+            snackBarHostState = snackBarHostState
+        )
     }
 }
