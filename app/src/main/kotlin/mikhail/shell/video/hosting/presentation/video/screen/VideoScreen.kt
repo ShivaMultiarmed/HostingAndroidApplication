@@ -102,6 +102,7 @@ import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
@@ -555,17 +556,6 @@ fun VideoScreen(
                 snackBarHostState = snackBarHostState,
                 notFoundMessage = stringResource(R.string.video_not_found)
             )
-        } else if (state.isRemoved) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.video_removed)
-                )
-            }
         }
     }
 }
@@ -620,7 +610,7 @@ private fun CommentsBottomSheet(
                     },
                     items = commentsState.comments,
                     hasMore = commentsState.hasMore,
-                    error = commentsState.error,
+                    error = commentsState.loadingError,
                     isLoading = commentsState.isLoading,
                     onReachedBottom = {
                         onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
@@ -629,13 +619,13 @@ private fun CommentsBottomSheet(
                         onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
                     }
                 )
-            } else if (commentsState.isLoading) {
+            } else if (commentsState.isStarting) {
                 LoadingComponent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 )
-            } else if (commentsState.error != null) {
+            } else if (commentsState.loadingError != null) {
                 ErrorComponent(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -652,16 +642,16 @@ private fun CommentsBottomSheet(
                 )
             }
             CommentForm(
-                initialComment = initialComment,
+                currentText = commentsState.currentText,
+                snackBarHostState = snackBarHostState,
                 onEvent = onEvent,
-                error = commentsState.error
+                error = commentsState.actionError
             )
         }
     }
-    StandardComplexErrorHandler(
-        error = commentsState.error,
-        snackBarHostState = snackBarHostState,
-        notFoundMessage = stringResource(R.string.video_not_found)
+    ErrorDisplay(
+        error = commentsState.loadingError,
+        snackBarHostState = snackBarHostState
     )
 }
 
@@ -685,10 +675,7 @@ private fun CommentBox(
                         title = stringResource(R.string.comment_edit_button),
                         onClick = {
                             onEvent(
-                                VideoScreenUiEvent.EditComment(
-                                    commentId = comment.commentId,
-                                    text = comment.text
-                                )
+                                VideoScreenUiEvent.EditComment(comment.commentId)
                             )
                             isMenuVisible = false
                         }
@@ -756,14 +743,11 @@ private fun CommentBox(
 
 @Composable
 private fun CommentForm(
-    initialComment: CommentUi? = null,
+    currentText: String,
+    snackBarHostState: SnackbarHostState,
     onEvent: (VideoScreenUiEvent) -> Unit,
-    error: Error? = null
+    error: Error?
 ) {
-    var text by rememberSaveable { mutableStateOf("") }
-    LaunchedEffect(initialComment) {
-        initialComment?.let { text = it.text }
-    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -785,10 +769,10 @@ private fun CommentForm(
                 )
                 .background(MaterialTheme.colorScheme.tertiaryContainer)
                 .weight(1f),
-            value = text,
+            value = currentText,
             maxLines = 100,
             onValueChange = {
-                text = it
+                onEvent(VideoScreenUiEvent.CommentTextChanged(it))
             },
             textStyle = TextStyle(
                 fontSize = 16.sp
@@ -797,7 +781,7 @@ private fun CommentForm(
                 Box(
                     modifier = Modifier.padding(5.dp)
                 ) {
-                    if (text.isNotEmpty()) {
+                    if (currentText.isNotEmpty()) {
                         innerText()
                     } else {
                         Text(
@@ -809,13 +793,17 @@ private fun CommentForm(
             }
         )
         PrimaryProgressButton(
-            enabled = text.isNotEmpty(),
+            enabled = currentText.isNotEmpty(),
             onClick = {
-                onEvent(VideoScreenUiEvent.PostComment(text))
+                onEvent(VideoScreenUiEvent.SubmitComment)
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )
     }
+    ErrorDisplay(
+        error = error,
+        snackBarHostState = snackBarHostState
+    )
 }
 
 fun LocalDateTime.toPresentation(

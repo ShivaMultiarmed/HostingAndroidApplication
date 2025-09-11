@@ -34,9 +34,9 @@ fun EntryProviderBuilder<Route>.videoRoute(
     player: Player
 ) {
     // TODO navDeepLink (basePath = "https://$HOST/videos")
-    entry <Route.Video.View> { bundle ->
+    entry <Route.Video.View> { route ->
         val context = LocalContext.current
-        val videoId = bundle.videoId
+        val videoId = route.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
@@ -83,8 +83,14 @@ fun EntryProviderBuilder<Route>.videoRoute(
         )
         LaunchedEffect(state) {
             when(state.startingError) {
-                NetworkError.NOT_FOUND -> videoBackStack.clear()
+                NetworkError.NOT_FOUND -> {
+                    delay(1.seconds)
+                    videoBackStack.remove(route)
+                }
                 NetworkError.AUTHENTICATION -> rootBackStack.add(Route.Authentication)
+            }
+            if (state.isRemoved) {
+                videoBackStack.remove(route)
             }
         }
     }

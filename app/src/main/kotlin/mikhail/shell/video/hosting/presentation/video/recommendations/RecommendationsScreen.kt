@@ -89,7 +89,7 @@ fun RecommendationsScreen(
                     }
                 )
             }
-        } else if (state.isLoading) {
+        } else if (state.isStarting) {
             LoadingComponent(
                 modifier = Modifier.fillMaxSize()
             )
