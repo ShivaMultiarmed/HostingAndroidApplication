@@ -141,6 +141,8 @@ fun VideoScreen(
         }
     ) { padding ->
         if (state.video != null) {
+            var commentsVisible by rememberSaveable { mutableStateOf(false) }
+            val sheetState = rememberModalBottomSheetState()
             var isFullScreen by rememberSaveable { mutableStateOf(false) }
             var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
             val scrollState = rememberScrollState()
@@ -457,8 +459,6 @@ fun VideoScreen(
                                 }
                             )
                         }
-                        var commentsVisible by rememberSaveable { mutableStateOf(false) }
-                        val sheetState = rememberModalBottomSheetState()
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -466,15 +466,9 @@ fun VideoScreen(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.tertiaryContainer)
                                 .clickable {
-                                    coroutineScope
-                                        .launch {
-                                            sheetState.show()
-                                        }
-                                        .invokeOnCompletion {
-                                            if (sheetState.isVisible) {
-                                                commentsVisible = true
-                                            }
-                                        }
+                                    coroutineScope.launch {
+                                        sheetState.show()
+                                    }
                                 }
                                 .padding(10.dp)
                         ) {
@@ -506,24 +500,25 @@ fun VideoScreen(
                                     )
                                 }
                             }
-                            if (commentsVisible) {
-                                CommentsBottomSheet(
-                                    sheetState = sheetState,
-                                    commentsState = state.commentsState,
-                                    userId = userId,
-                                    snackBarHostState = snackBarHostState,
-                                    onEvent = onEvent
-                                )
-                            }
-                            LaunchedEffect(commentsVisible) {
-                                if (commentsVisible) {
-                                    onEvent(VideoScreenUiEvent.OpenComments)
-                                } else {
-                                    onEvent(VideoScreenUiEvent.CloseComments)
-                                }
-                            }
+
                         }
                     }
+                }
+            }
+            if (sheetState.isVisible) {
+                CommentsBottomSheet(
+                    sheetState = sheetState,
+                    commentsState = state.commentsState,
+                    userId = userId,
+                    snackBarHostState = snackBarHostState,
+                    onEvent = onEvent
+                )
+            }
+            LaunchedEffect(sheetState.isVisible) {
+                if (sheetState.isVisible) {
+                    onEvent(VideoScreenUiEvent.OpenComments)
+                } else {
+                    onEvent(VideoScreenUiEvent.CloseComments)
                 }
             }
             StandardComplexErrorHandler(
@@ -570,9 +565,13 @@ private fun CommentsBottomSheet(
     commentsState: CommentsState,
     onEvent: (VideoScreenUiEvent) -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
+            coroutineScope.launch {
+                sheetState.hide()
+            }
             onEvent(VideoScreenUiEvent.CloseComments)
         },
         modifier = Modifier.fillMaxWidth(),
@@ -584,7 +583,6 @@ private fun CommentsBottomSheet(
                 .fillMaxHeight(0.4f)
                 .padding(10.dp),
         ) {
-            var initialComment by remember { mutableStateOf(null as CommentUi?) }
             if (commentsState.comments != null) {
                 PageableBox(
                     modifier = Modifier

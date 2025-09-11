@@ -375,7 +375,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                             hasMore = comments.size == PART_SIZE,
                             isLoading = false,
                             isStarting = false
-                        ),
+                        )
                     )
                 }
             }.onFailure { error ->
