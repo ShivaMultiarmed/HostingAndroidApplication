@@ -67,7 +67,7 @@ import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.ReloadableBox
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -117,12 +117,12 @@ fun ProfileScreen(
             }
         ) { padding ->
             if (state.user != null) {
-                ReloadableBox(
+                RestartableBox(
                     modifier = Modifier.fillMaxSize(),
                     onLaunch = {
                         onEvent(ProfileScreenUiEvent.Reload)
                     },
-                    isLoading = state.isLoading
+                    isStarting = state.isLoading
                 ) {
                     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                         Column(

@@ -1,72 +1,67 @@
 package mikhail.shell.video.hosting.presentation.channel.screen.sections
 
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import mikhail.shell.video.hosting.presentation.utils.reachedBottom
+import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.PageableBox
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun VideoGridSection(
+internal fun VideoGridSection(
     modifier: Modifier = Modifier,
+    isStarting: Boolean,
     videos: List<VideoUi>,
     onVideoClick: (videoId: Long) -> Unit,
-    onScrollToBottom: () -> Unit,
-    areAllVideosLoaded: Boolean
+    onReachedBottom: () -> Unit,
+    onRestart: () -> Unit,
+    onReload: () -> Unit,
+    hasMore: Boolean
 ) {
-    val gridState = rememberLazyGridState()
-    val reachedEnd by remember { derivedStateOf { gridState.reachedBottom(4) } }
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    LazyVerticalGrid(
-        modifier = modifier
-            .then(
-                if (isWidthCompact) {
-                    Modifier
-                } else {
-                    Modifier
-                        .padding(top = 10.dp)
-                        .padding(horizontal = 10.dp)
-                }
-            ),
-        columns = GridCells.Adaptive(minSize = 300.dp),
-        state = gridState
+    RestartableBox(
+        modifier = modifier,
+        onLaunch = onRestart,
+        isStarting = isStarting,
     ) {
-        items(videos) {
-            VideoSnippet(
-                modifier = Modifier
-                    .then(
-                        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+        PageableBox(
+            modifier = Modifier.fillMaxSize(),
+            itemComponent = {
+                VideoSnippet(
+                    modifier = Modifier.then(
+                        if (isWidthCompact) {
                             Modifier
                         } else {
                             Modifier.clip(RoundedCornerShape(15.dp))
                         }
                     ),
-                video = it,
-                onClick = onVideoClick
-            )
-        }
-    }
-    LaunchedEffect(reachedEnd) {
-        if (reachedEnd && !areAllVideosLoaded) {
-            onScrollToBottom()
-        }
+                    video = it,
+                    onClick = onVideoClick
+                )
+            },
+            emptyComponent = {
+                EmptyResultComponent(
+                    modifier = Modifier.fillMaxSize(),
+                    message = stringResource(R.string.no_videos_yet)
+                )
+            },
+            items = videos,
+            hasMore = hasMore,
+            onReachedBottom = onReachedBottom,
+            onReload = onReload
+        )
     }
 }

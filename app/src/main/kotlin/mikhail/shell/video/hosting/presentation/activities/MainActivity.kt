@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.activities
 
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.media.AudioManager
 import android.media.session.MediaSession
 import android.os.Bundle
@@ -42,9 +41,10 @@ import mikhail.shell.video.hosting.presentation.navigation.authentication.authen
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
+import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
+import mikhail.shell.video.hosting.presentation.navigation.video.recommendationsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
-import mikhail.shell.video.hosting.presentation.navigation.video.videoRecommendationsGraph
 import mikhail.shell.video.hosting.presentation.utils.BackStackSaver
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
@@ -88,6 +88,26 @@ class MainActivity : ComponentActivity() {
                         mutableStateListOf((if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication))
                     }
                     val currentRoute = rootBackStack.last()
+                    val recommendationsBackStack = rememberSaveable(
+                        saver = BackStackSaver
+                    ) {
+                        mutableStateListOf(Route.Recommendations.View)
+                    }
+                    val subscriptionsBackStack = rememberSaveable(
+                        saver = BackStackSaver
+                    ) {
+                        mutableStateListOf(Route.Subscriptions.View)
+                    }
+                    val searchBackStack = rememberSaveable(
+                        saver = BackStackSaver
+                    ) {
+                        mutableStateListOf(Route.Search.View)
+                    }
+                    val userBackStack = rememberSaveable(
+                        saver = BackStackSaver
+                    ) {
+                        mutableStateListOf(Route.User.Profile(userDetailsProvider.getUserId()))
+                    }
                     val orientation = LocalConfiguration.current.orientation
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
@@ -97,22 +117,17 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     Scaffold(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         bottomBar = {
-                            if (
-                                currentRoute !in listOf(Route.Authentication.SignIn, Route.Authentication.SignUp, Route.Authentication.Reset)
-                                        && currentRoute !is Route.Video && !(orientation == Configuration.ORIENTATION_LANDSCAPE
-                                        || LocalPlayerState.current.value.fullScreen)
-                            ) {
+                            if (currentRoute != Route.Authentication && currentRoute !is Route.Video && !LocalPlayerState.current.value.fullScreen) {
                                 BottomNavBar(
                                     onClick = { navItem ->
                                         if (!rootBackStack.contains(navItem.route)) {
                                             rootBackStack.add(navItem.route)
                                         } else {
-                                            val item = rootBackStack.find { it == navItem.route }!!
-                                            rootBackStack.remove(item)
-                                            rootBackStack.add(item)
+                                            val routeToSwitch = rootBackStack.find { it == navItem.route }!!
+                                            rootBackStack.remove(routeToSwitch)
+                                            rootBackStack.add(routeToSwitch)
                                         }
                                     },
                                     userId = userDetailsProvider.getUserId()
@@ -146,23 +161,38 @@ class MainActivity : ComponentActivity() {
                                         rootBackStack = rootBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
-                                    videoRecommendationsGraph(
+                                    recommendationsGraph(
                                         rootBackStack = rootBackStack,
+                                        recommendationsBackStack = recommendationsBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
                                     subscriptionsGraph(
                                         rootBackStack = rootBackStack,
+                                        subscriptionsBackStack = subscriptionsBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
                                     searchGraph(
                                         rootBackStack = rootBackStack,
+                                        searchBackStack = searchBackStack,
+                                        userDetailsProvider = userDetailsProvider
+                                    )
+                                    userGraph(
+                                        rootBackStack = rootBackStack,
+                                        player = player,
+                                        userBackStack = userBackStack,
                                         userDetailsProvider = userDetailsProvider
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
                                         player = player,
                                         userDetailsProvider = userDetailsProvider,
-                                        currentBackStack = mutableListOf<Route>() // TODO
+                                        currentBackStack = when (currentRoute) {
+                                            Route.Recommendations -> recommendationsBackStack
+                                            Route.Subscriptions -> subscriptionsBackStack
+                                            Route.Search -> searchBackStack
+                                            Route.User -> userBackStack
+                                            else -> recommendationsBackStack
+                                        }
                                     )
                                 }
                             )
@@ -170,7 +200,7 @@ class MainActivity : ComponentActivity() {
                                 MiniPlayer(
                                     player = player,
                                     onFullScreen = {
-                                        rootBackStack.add(Route.Video.View(it))
+                                        rootBackStack.add(Route.Video(it))
                                     }
                                 )
                             }

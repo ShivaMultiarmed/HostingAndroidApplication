@@ -8,7 +8,15 @@ import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import javax.inject.Inject
 
 class EditComment @Inject constructor(
+    private val validateComment: ValidateComment,
     private val commentRepository: CommentRepository
 ) {
-    suspend operator fun invoke(comment: Comment): Result<CommentWithUser, Error> = commentRepository.edit(comment)
+    suspend operator fun invoke(comment: Comment): Result<CommentWithUser, Error> {
+        val validationResult = validateComment(comment.text)
+        return if (validationResult is Result.Failure) {
+            Result.Failure(validationResult.error)
+        } else {
+            commentRepository.edit(comment)
+        }
+    }
 }

@@ -71,7 +71,3 @@ sealed class Route: NavKey {
         data class Edit(val channelId: Long): Route()
     }
 }
-
-fun a() {
-    Route.Video.Companion
-}

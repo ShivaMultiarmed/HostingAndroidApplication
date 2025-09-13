@@ -50,7 +50,8 @@ fun EntryProviderBuilder<Route>.videoRoute(
                     VideoScreenUiEvent.Edit -> videoBackStack.add(Route.Video.Edit(videoId))
                     VideoScreenUiEvent.OpenChannel -> {
                         val channelId = state.video!!.channelId
-                        currentTabBackStack.add(Route.Channel.View(channelId))
+                        currentTabBackStack.add(Route.Channel(channelId))
+                        rootBackStack.removeLastOrNull()
                     }
                     is VideoScreenUiEvent.OpenProfile -> currentTabBackStack.add(Route.User.Profile(event.userId))
                     VideoScreenUiEvent.Remove -> {
@@ -71,8 +72,7 @@ fun EntryProviderBuilder<Route>.videoRoute(
                     }
                     VideoScreenUiEvent.DownLoad -> {
                         Intent(context, VideoDownloadingService::class.java).also {
-                            it.action =
-                                "mikhail.shell.video.hosting.ACTION_LAUNCH_DOWNLOADING"
+                            it.action = VideoDownloadingService.ACTION_LAUNCH_DOWNLOADING
                             it.putExtra("videoId", videoId)
                             context.startService(it)
                         }

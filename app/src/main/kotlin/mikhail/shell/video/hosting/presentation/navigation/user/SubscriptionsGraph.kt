@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
@@ -15,12 +13,10 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderBuilder<Route>.subscriptionsGraph(
     rootBackStack: MutableList<Route>,
+    subscriptionsBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
     entry <Route.Subscriptions> {
-        val subscriptionsBackStack = rememberSaveable {
-            mutableStateListOf<Route>(Route.Subscriptions.View)
-        }
         NavDisplay(
             backStack = subscriptionsBackStack,
             entryDecorators = listOf(
@@ -34,6 +30,7 @@ fun EntryProviderBuilder<Route>.subscriptionsGraph(
                     subscriptionsBackStack = subscriptionsBackStack
                 )
                 channelGraph(
+                    rootBackStack = rootBackStack,
                     currentTabBackStack = subscriptionsBackStack,
                     userDetailsProvider = userDetailsProvider
                 )

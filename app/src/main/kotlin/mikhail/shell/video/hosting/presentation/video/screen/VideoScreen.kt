@@ -88,6 +88,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
 import mikhail.shell.video.hosting.domain.models.Liking.NONE
@@ -132,17 +134,19 @@ fun VideoScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+    val sheetState = rememberModalBottomSheetState()
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
+            SnackbarHost(
+                modifier = Modifier,// TODO: .padding(bottom = ),
+                hostState = snackBarHostState
+            )
         }
     ) { padding ->
         if (state.video != null) {
-            var commentsVisible by rememberSaveable { mutableStateOf(false) }
-            val sheetState = rememberModalBottomSheetState()
             var isFullScreen by rememberSaveable { mutableStateOf(false) }
             var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
             val scrollState = rememberScrollState()
@@ -759,9 +763,9 @@ private fun CommentForm(
                 .clip(RoundedCornerShape(5.dp))
                 .border(
                     width = 1.dp,
-                    color = when (error) {
-                        null -> Color.Transparent
-                        else -> MaterialTheme.colorScheme.error
+                    color = when (error is TextError) {
+                        false -> Color.Transparent
+                        true -> MaterialTheme.colorScheme.error
                     },
                     shape = RoundedCornerShape(5.dp)
                 )
@@ -799,7 +803,7 @@ private fun CommentForm(
         )
     }
     ErrorDisplay(
-        error = error,
+        error = error.takeIf { it is NetworkError },
         snackBarHostState = snackBarHostState
     )
 }

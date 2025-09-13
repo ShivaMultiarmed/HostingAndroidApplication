@@ -279,4 +279,5 @@
     <string name="password_too_long">Password is too long</string>
     <string name="password_too_short">Password is too short</string>
     <string name="user_name_check_failed">Username check failed</string>
+    <string name="no_videos_yet">No videos yet</string>
 </resources>

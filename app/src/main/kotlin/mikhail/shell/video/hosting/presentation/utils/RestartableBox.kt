@@ -7,6 +7,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +35,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,10 +47,10 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun ReloadableBox(
+fun RestartableBox(
     modifier: Modifier = Modifier,
     onLaunch: () -> Unit,
-    isLoading: Boolean,
+    isStarting: Boolean,
     content: @Composable () -> Unit
 ) {
     val reloadIndicatorSize = 30
@@ -62,13 +67,13 @@ fun ReloadableBox(
     Box(
         modifier = modifier
             .clipToBounds()
-            /* .pointerInput(Unit) {
+            .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
                         val down = awaitFirstDown(pass = PointerEventPass.Initial)
                         isDragged = true
                         drag(down.id) {
-                            if (!isLoading) {
+                            if (!isStarting) {
                                 if (height < bottomPosition) {
                                     height = (height + (it.positionChange().y * density * resistance).toInt()).coerceIn(
                                             topPosition,
@@ -78,16 +83,16 @@ fun ReloadableBox(
                                 it.consume()
                             }
                         }
-                        if (height == bottomPosition && !isLoading) {
+                        if (height == bottomPosition && !isStarting) {
                             onLaunch()
                         }
-                        if (isLoading || height < bottomPosition) {
+                        if (isStarting || height < bottomPosition) {
                             height = topPosition
                         }
                         isDragged = false
                     }
                 }
-            }*/,
+            },
         contentAlignment = Alignment.TopCenter
     ) {
         content()
@@ -115,7 +120,7 @@ fun ReloadableBox(
                 modifier = Modifier
                     .size(reloadIndicatorSize.dp)
                     .rotate(
-                        if (isLoading) {
+                        if (isStarting) {
                             val infiniteRotation = rememberInfiniteTransition()
                             infiniteRotation.animateFloat(
                                 initialValue = 0f,
@@ -132,8 +137,8 @@ fun ReloadableBox(
             )
         }
     }
-    LaunchedEffect(isLoading) {
-        if (!isLoading) {
+    LaunchedEffect(isStarting) {
+        if (!isStarting) {
             height = topPosition
         }
     }
@@ -151,7 +156,7 @@ fun ReloadableBoxPreview() {
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                ReloadableBox(
+                RestartableBox(
                     modifier = Modifier
                         .fillMaxSize(),
                     onLaunch = {
@@ -161,7 +166,7 @@ fun ReloadableBoxPreview() {
                             isLoading = false
                         }
                     },
-                    isLoading = isLoading
+                    isStarting = isLoading
                 ) {
 
                 }

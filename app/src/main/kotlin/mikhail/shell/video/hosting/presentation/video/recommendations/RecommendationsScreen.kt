@@ -21,7 +21,7 @@ import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
-import mikhail.shell.video.hosting.presentation.utils.ReloadableBox
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
 
@@ -45,14 +45,14 @@ fun RecommendationsScreen(
         }
     ) { padding ->
         if (state.videos != null) {
-            ReloadableBox(
+            RestartableBox(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 onLaunch = {
                     onEvent(RecommendationsScreenUiEvent.DraggedDown)
                 },
-                isLoading = state.isStarting,
+                isStarting = state.isStarting,
             ) {
                 PageableBox(
                     modifier = Modifier

@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
@@ -15,12 +13,10 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderBuilder<Route>.searchGraph(
     rootBackStack: MutableList<Route>,
+    searchBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
     entry <Route.Search> {
-        val searchBackStack = rememberSaveable {
-            mutableStateListOf<Route>(Route.Search.View)
-        }
         NavDisplay(
             backStack = searchBackStack,
             entryDecorators = listOf(
@@ -31,6 +27,7 @@ fun EntryProviderBuilder<Route>.searchGraph(
             entryProvider = entryProvider {
                 searchRoute(rootBackStack)
                 channelGraph(
+                    rootBackStack = rootBackStack,
                     currentTabBackStack = searchBackStack,
                     userDetailsProvider = userDetailsProvider
                 )

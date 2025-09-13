@@ -80,7 +80,7 @@ fun BottomNavBar(
                 Icons.Rounded.Person
             )
         ),
-        onClick = onClick,
+        onClick = onClick
     )
 }
 

@@ -13,6 +13,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderBuilder<Route>.channelGraph(
+    rootBackStack: MutableList<Route>,
     currentTabBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
@@ -29,12 +30,12 @@ fun EntryProviderBuilder<Route>.channelGraph(
             ),
             entryProvider = entryProvider {
                 channelRoute(
-                    rootBackStack = currentTabBackStack,
+                    rootBackStack = rootBackStack,
                     channelBackStack = channelBackStack,
                     userDetailsProvider = userDetailsProvider
                 )
                 editChannelRoute(
-                    rootBackStack = currentTabBackStack,
+                    rootBackStack = rootBackStack,
                     channelBackStack = channelBackStack
                 )
             }

@@ -292,4 +292,5 @@
     <string name="password_too_long">Пароль слишком длинный</string>
     <string name="password_too_short">Пароль слишком короткий</string>
     <string name="user_name_check_failed">Не удалось проверить имя пользователя</string>
+    <string name="no_videos_yet">Здесь ещё нет видео</string>
 </resources>

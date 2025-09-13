@@ -26,6 +26,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
@@ -51,7 +52,7 @@ fun ChannelScreen(
                 .padding(padding)
         ) {
             if (state is ChannelScreenState.Success) {
-                var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
+                var shouldShowLogo by rememberSaveable { mutableStateOf(false) }
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -61,33 +62,50 @@ fun ChannelScreen(
                         onEvent = onEvent,
                         owns = userId == state.channel.channelId,
                         onShowLogo = {
-                            shouldShowAvatar = true
+                            shouldShowLogo = true
                         }
                     )
                     if (state.videoState.videos != null) {
                         VideoGridSection(
-                            modifier = Modifier,
+                            modifier = Modifier.fillMaxSize(),
                             videos = state.videoState.videos,
                             onVideoClick = {
                                 onEvent(ChannelScreenUiEvent.ClickVideo(it))
                             },
-                            onScrollToBottom = {
+                            onReachedBottom = {
                                 onEvent(ChannelScreenUiEvent.ReachedBottom)
                             },
-                            areAllVideosLoaded = !state.videoState.hasMore
+                            hasMore = state.videoState.hasMore,
+                            isStarting = state.videoState.isStarting,
+                            onRestart = {
+                                onEvent(ChannelScreenUiEvent.RestartVideos)
+                            },
+                            onReload = {
+                                onEvent(ChannelScreenUiEvent.ReachedBottom)
+                            }
                         )
-                        StandardComplexErrorHandler(
-                            error = state.videoState.error,
-                            snackBarHostState = snackBarHostState,
-                            notFoundMessage = stringResource(R.string.channel_not_found)
+                    } else if (state.videoState.isStarting) {
+                        LoadingComponent(
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else if (state.videoState.error != null) {
+                        ErrorComponent(
+                            modifier = Modifier.fillMaxSize(),
+                            onRetry = {
+                                onEvent(ChannelScreenUiEvent.RestartVideos)
+                            }
                         )
                     }
+                    ErrorDisplay(
+                        state.videoState.error,
+                        snackBarHostState = snackBarHostState
+                    )
                 }
-                if (shouldShowAvatar) {
+                if (shouldShowLogo) {
                     ImageViewerScreen(
                         state.channel.logo,
                         onPopup = {
-                            shouldShowAvatar = false
+                            shouldShowLogo = false
                         },
                         imageModifier = Modifier
                             .fillMaxWidth(0.95f)
@@ -95,7 +113,7 @@ fun ChannelScreen(
                             .clip(CircleShape)
                     )
                 }
-            } else if (state is ChannelScreenState.Loading) {
+            } else if (state is ChannelScreenState.Starting) {
                 LoadingComponent(
                     modifier = Modifier
                         .fillMaxSize()
@@ -107,7 +125,7 @@ fun ChannelScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface),
                     onRetry = {
-                        onEvent(ChannelScreenUiEvent.Reload)
+                        onEvent(ChannelScreenUiEvent.Restart)
                     }
                 )
                 StandardComplexErrorHandler(

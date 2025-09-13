@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -47,8 +48,15 @@ fun <I> PageableBox(
                 }
             }
             LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.then(
+                    if (isWidthCompact) {
+                        Modifier
+                    } else {
+                        Modifier
+                            .padding(top = 10.dp)
+                            .padding(horizontal = 10.dp)
+                    }
+                ),
                 columns = GridCells.Adaptive(300.dp),
                 state = lazyGridState,
                 verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),

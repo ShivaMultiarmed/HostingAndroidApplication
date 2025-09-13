@@ -24,9 +24,9 @@ fun EntryProviderBuilder<Route>.channelRoute(
     channelBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry <Route.Channel.View> { bundle ->
+    entry <Route.Channel.View> { route ->
         val userId = userDetailsProvider.getUserId()
-        val channelId = bundle.channelId
+        val channelId = route.channelId
         val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { it.create(channelId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
@@ -34,7 +34,7 @@ fun EntryProviderBuilder<Route>.channelRoute(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    is ChannelScreenUiEvent.ClickVideo -> rootBackStack.add(Route.Video.View(event.videoId))
+                    is ChannelScreenUiEvent.ClickVideo -> rootBackStack.add(Route.Video(event.videoId))
                     ChannelScreenUiEvent.Edit -> channelBackStack.add(Route.Channel.Edit(channelId))
                     ChannelScreenUiEvent.Remove -> coroutineScope.launch {
                         viewModel.onEvent(event)

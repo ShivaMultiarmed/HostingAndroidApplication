@@ -29,7 +29,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<ChannelScreenState>(ChannelScreenState.Loading)
+    private val _state = MutableStateFlow<ChannelScreenState>(ChannelScreenState.Idle)
     val state = _state.onStart {
         initialize()
     }.stateIn(
@@ -41,8 +41,9 @@ class ChannelScreenViewModel @AssistedInject constructor(
     fun onEvent(event: ChannelScreenUiEvent) {
         viewModelScope.launch {
             when (event) {
-                ChannelScreenUiEvent.ReachedBottom -> loadVideos()
-                ChannelScreenUiEvent.Reload -> loadChannel()
+                ChannelScreenUiEvent.ReachedBottom -> loadVideos(start = false)
+                ChannelScreenUiEvent.RestartVideos -> loadVideos(start = true)
+                ChannelScreenUiEvent.Restart -> initialize()
                 ChannelScreenUiEvent.Remove -> remove()
                 is ChannelScreenUiEvent.Subscribe -> subscribe(event.subscription)
                 else -> Unit
@@ -53,48 +54,63 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private fun initialize() {
         viewModelScope.launch {
             loadChannel()
-            loadVideos()
+            loadVideos(start = true)
         }
     }
 
     private suspend fun loadChannel() {
-        getChannelDetails(channelId)
-            .onSuccess { channel ->
-                _state.update {
-                    ChannelScreenState.Success(
-                        channel = channel.toUi(),
-                        videoState = VideoListState()
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    ChannelScreenState.Failure(error)
-                }
+        _state.update {
+            ChannelScreenState.Starting
+        }
+        getChannelDetails(channelId).onSuccess { channel ->
+            _state.update {
+                ChannelScreenState.Success(
+                    channel = channel.toUi(),
+                    videoState = VideoListState()
+                )
             }
+        }.onFailure { error ->
+            _state.update {
+                ChannelScreenState.Failure(error)
+            }
+        }
     }
 
-    private suspend fun loadVideos() {
-        _state.value as ChannelScreenState.Success
+    private suspend fun loadVideos(start: Boolean = false) {
+        val currentState = _state.value as? ChannelScreenState.Success
+        if (currentState == null) {
+            return
+        }
+        _state.update {
+            currentState.copy(
+                videoState = currentState.videoState.copy(
+                    isStarting = start,
+                    isLoading = !start
+                )
+            )
+        }
         getVideoList(
             channelId = channelId,
-            partNumber = ((_state.value as ChannelScreenState.Success).videoState.videos?.size ?: 0).toLong() / PART_SIZE,
+            partIndex = if (start) 0 else currentState.videoState.nextPartIndex,
             partSize = PART_SIZE
         ).onSuccess { videos ->
             _state.update {
-                it as ChannelScreenState.Success
-                it.copy(
-                    videoState = it.videoState.copy(
-                        videos = (it.videoState.videos?: emptyList()) + videos.map { it.toUi() },
-                        hasMore = videos.size % PART_SIZE == 0
+                currentState.copy(
+                    videoState = currentState.videoState.copy(
+                        videos = ((if (start) null else currentState.videoState.videos) ?: emptyList()) + videos.map { it.toUi() },
+                        hasMore = videos.size == PART_SIZE,
+                        nextPartIndex = (if (start) 0 else currentState.videoState.nextPartIndex) + 1,
+                        isStarting = false,
+                        isLoading = false,
+                        error = null
                     )
                 )
             }
         }.onFailure { error ->
             _state.update {
-                it as ChannelScreenState.Success
-                it.copy(
-                    videoState = it.videoState.copy(
-                        videos = it.videoState.videos,
+                currentState.copy(
+                    videoState = currentState.videoState.copy(
+                        videos = currentState.videoState.videos,
                         error = error
                     )
                 )
@@ -103,13 +119,17 @@ class ChannelScreenViewModel @AssistedInject constructor(
     }
 
     private fun subscribe(subscription: Subscription) {
+        val currentState = _state.value as? ChannelScreenState.Success
+        if (currentState == null) {
+            return
+        }
         viewModelScope.launch {
             subscribe(
-                channelId = (_state.value as ChannelScreenState.Success).channel.channelId,
+                channelId = currentState.channel.channelId,
                 subscription = subscription
             ).onSuccess { updatedChannel ->
                 _state.update {
-                    (it as ChannelScreenState.Success).copy(channel = updatedChannel.toUi())
+                    currentState.copy(channel = updatedChannel.toUi())
                 }
             }
         }
@@ -136,10 +156,11 @@ class ChannelScreenViewModel @AssistedInject constructor(
 }
 
 sealed class ChannelScreenUiEvent {
-    data object Reload: ChannelScreenUiEvent()
-    data class Subscribe(val subscription: Subscription): ChannelScreenUiEvent()
-    data class ClickVideo(val videoId: Long): ChannelScreenUiEvent()
-    data object ReachedBottom: ChannelScreenUiEvent()
-    data object Edit: ChannelScreenUiEvent()
-    data object Remove: ChannelScreenUiEvent()
+    data object Restart : ChannelScreenUiEvent()
+    data object RestartVideos : ChannelScreenUiEvent()
+    data class Subscribe(val subscription: Subscription) : ChannelScreenUiEvent()
+    data class ClickVideo(val videoId: Long) : ChannelScreenUiEvent()
+    data object ReachedBottom : ChannelScreenUiEvent()
+    data object Edit : ChannelScreenUiEvent()
+    data object Remove : ChannelScreenUiEvent()
 }

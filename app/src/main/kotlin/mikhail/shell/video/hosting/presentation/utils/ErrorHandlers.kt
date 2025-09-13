@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import mikhail.shell.video.hosting.R
@@ -19,20 +20,24 @@ fun ErrorDisplay(
     errorMessages: Map<Error, String> = emptyMap()
 ) {
     val context = LocalContext.current
-    LaunchedEffect(error) {
-        if (error != null) {
-            val message = errorMessages[error] ?: error.let { it ->
-                when (it) {
-                    is NetworkError if (it != NetworkError.AUTHENTICATION) -> context.constructNetworkErrorMessage(it)
-                    is UnexpectedError -> context.getString(R.string.unexpected_error)
-                    else -> null
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            error
+        }.collect { currentError ->
+            if (currentError != null) {
+                val message = errorMessages[currentError] ?: currentError.let { it ->
+                    when (it) {
+                        is NetworkError if (it != NetworkError.AUTHENTICATION) -> context.constructNetworkErrorMessage(it)
+                        is UnexpectedError -> context.getString(R.string.unexpected_error)
+                        else -> null
+                    }
                 }
-            }
-            message?.let {
-                snackBarHostState.showSnackbar(
-                    message = it,
-                    duration = SnackbarDuration.Short
-                )
+                message?.let {
+                    snackBarHostState.showSnackbar(
+                        message = it,
+                        duration = SnackbarDuration.Short
+                    )
+                }
             }
         }
     }
@@ -65,8 +70,12 @@ fun ErrorHandler(
     error: Error?,
     handlers: Map<Error, () -> Unit> = emptyMap()
 ) {
-    LaunchedEffect(error) {
-        handlers[error]?.invoke()
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            error
+        }.collect { currentError ->
+            handlers[currentError]?.invoke()
+        }
     }
 }
 
