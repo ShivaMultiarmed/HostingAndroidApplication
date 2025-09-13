@@ -39,15 +39,13 @@ class ChannelScreenViewModel @AssistedInject constructor(
     )
 
     fun onEvent(event: ChannelScreenUiEvent) {
-        viewModelScope.launch {
-            when (event) {
-                ChannelScreenUiEvent.ReachedBottom -> loadVideos(start = false)
-                ChannelScreenUiEvent.RestartVideos -> loadVideos(start = true)
-                ChannelScreenUiEvent.Restart -> initialize()
-                ChannelScreenUiEvent.Remove -> remove()
-                is ChannelScreenUiEvent.Subscribe -> subscribe(event.subscription)
-                else -> Unit
-            }
+        when (event) {
+            ChannelScreenUiEvent.ReachedBottom -> viewModelScope.launch { loadVideos(start = false) }
+            ChannelScreenUiEvent.RestartVideos -> viewModelScope.launch { loadVideos(start = true) }
+            ChannelScreenUiEvent.Restart -> initialize()
+            ChannelScreenUiEvent.Remove -> remove()
+            is ChannelScreenUiEvent.Subscribe -> subscribe(event.subscription)
+            else -> Unit
         }
     }
 
@@ -97,7 +95,8 @@ class ChannelScreenViewModel @AssistedInject constructor(
             _state.update {
                 currentState.copy(
                     videoState = currentState.videoState.copy(
-                        videos = ((if (start) null else currentState.videoState.videos) ?: emptyList()) + videos.map { it.toUi() },
+                        videos = ((if (start) null else currentState.videoState.videos)
+                            ?: emptyList()) + videos.map { it.toUi() },
                         hasMore = videos.size == PART_SIZE,
                         nextPartIndex = (if (start) 0 else currentState.videoState.nextPartIndex) + 1,
                         isStarting = false,
@@ -111,7 +110,9 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 currentState.copy(
                     videoState = currentState.videoState.copy(
                         videos = currentState.videoState.videos,
-                        error = error
+                        error = error,
+                        isLoading = false,
+                        isStarting = false
                     )
                 )
             }
