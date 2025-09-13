@@ -80,12 +80,13 @@ class ChannelScreenViewModel @AssistedInject constructor(
             return
         }
         _state.update {
-            currentState.copy(
-                videoState = currentState.videoState.copy(
+            val stateToUpdate = it as? ChannelScreenState.Success
+            stateToUpdate?.copy(
+                videoState = stateToUpdate.videoState.copy(
                     isStarting = start,
                     isLoading = !start
                 )
-            )
+            )?: it
         }
         getVideoList(
             channelId = channelId,
@@ -93,28 +94,30 @@ class ChannelScreenViewModel @AssistedInject constructor(
             partSize = PART_SIZE
         ).onSuccess { videos ->
             _state.update {
-                currentState.copy(
-                    videoState = currentState.videoState.copy(
-                        videos = ((if (start) null else currentState.videoState.videos)
+                val stateToUpdate = it as? ChannelScreenState.Success
+                stateToUpdate?.copy(
+                    videoState = stateToUpdate.videoState.copy(
+                        videos = ((if (start) null else stateToUpdate.videoState.videos)
                             ?: emptyList()) + videos.map { it.toUi() },
                         hasMore = videos.size == PART_SIZE,
-                        nextPartIndex = (if (start) 0 else currentState.videoState.nextPartIndex) + 1,
+                        nextPartIndex = (if (start) 0 else stateToUpdate.videoState.nextPartIndex) + 1,
                         isStarting = false,
                         isLoading = false,
                         error = null
                     )
-                )
+                )?: it
             }
         }.onFailure { error ->
             _state.update {
-                currentState.copy(
-                    videoState = currentState.videoState.copy(
-                        videos = currentState.videoState.videos,
+                val stateToUpdate = it as? ChannelScreenState.Success
+                stateToUpdate?.copy(
+                    videoState = stateToUpdate.videoState.copy(
+                        videos = stateToUpdate.videoState.videos,
                         error = error,
                         isLoading = false,
                         isStarting = false
                     )
-                )
+                )?: it
             }
         }
     }
@@ -130,7 +133,21 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 subscription = subscription
             ).onSuccess { updatedChannel ->
                 _state.update {
-                    currentState.copy(channel = updatedChannel.toUi())
+                    val stateToUpdate = _state.value as? ChannelScreenState.Success
+                    stateToUpdate?.copy(
+                        channel = updatedChannel.toUi(
+                            subscriptionError = null
+                        )
+                    )?: it
+                }
+            }.onFailure { error ->
+                _state.update {
+                    val stateToUpdate = _state.value as? ChannelScreenState.Success
+                    stateToUpdate?.copy(
+                        channel = stateToUpdate.channel.copy(
+                            subscriptionError = error
+                        )
+                    )?: it
                 }
             }
         }
@@ -141,6 +158,15 @@ class ChannelScreenViewModel @AssistedInject constructor(
             removeChannel(channelId).onSuccess {
                 _state.update {
                     ChannelScreenState.Removed
+                }
+            }.onFailure { error ->
+                _state.update {
+                    val stateToUpdate = _state.value as? ChannelScreenState.Success
+                    stateToUpdate?.copy(
+                        channel = stateToUpdate.channel.copy(
+                            removingError = error
+                        )
+                    )?: it
                 }
             }
         }

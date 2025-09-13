@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.presentation.channel.models
 
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.Subscription
@@ -29,10 +31,15 @@ data class ChannelForUserUi(
     val description: String?,
     val subscription: Subscription,
     val subscribers: Long,
-    val ownerId: Long
+    val ownerId: Long,
+    val subscriptionError: Error? = null,
+    val removingError: Error? = null
 )
 
-fun ChannelForUser.toUi() = ChannelForUserUi(
+fun ChannelForUser.toUi(
+    subscriptionError: NetworkError? = null,
+    removingError: NetworkError? = null
+) = ChannelForUserUi(
     channelId = channelId!!,
     logo = logo!!,
     headerUrl = header!!,
@@ -41,5 +48,7 @@ fun ChannelForUser.toUi() = ChannelForUserUi(
     description = description,
     subscription = subscription,
     subscribers = subscribers,
-    ownerId = ownerId
+    ownerId = ownerId,
+    subscriptionError = subscriptionError,
+    removingError = removingError
 )
