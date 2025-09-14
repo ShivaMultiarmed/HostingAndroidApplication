@@ -11,7 +11,7 @@ class GetOwnedChannels @Inject constructor(
 ) {
     suspend operator fun invoke(
         userId: Long,
-        partIndex: Long,
+        partIndex: Int,
         partSize: Int
     ): Result<List<Channel>, Error> = channelRepository.fetchChannelsByOwner(
         userId = userId,

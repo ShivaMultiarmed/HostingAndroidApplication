@@ -19,7 +19,7 @@ class SubscriptionsScreenViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(SubscriptionsScreenState())
     val state = _state.onStart {
-        load()
+        load(start = true)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(3000),
@@ -28,36 +28,31 @@ class SubscriptionsScreenViewModel @Inject constructor(
 
     fun onEvent(event: SubscriptionsScreenUiEvent) {
         when (event) {
-            is SubscriptionsScreenUiEvent.Restart -> {
-                _state.update {
-                    SubscriptionsScreenState()
-                }
-                load()
-            }
-            SubscriptionsScreenUiEvent.ReachedBottom -> load()
+            is SubscriptionsScreenUiEvent.Restart -> load(start = true)
+            SubscriptionsScreenUiEvent.EndReached, SubscriptionsScreenUiEvent.Reload -> load()
             else -> Unit
         }
     }
 
-    private fun load() {
+    private fun load(start: Boolean = false) {
         _state.update {
             it.copy(
-                isStarting = it.nextPartIndex == 0L,
-                isLoading = it.nextPartIndex > 0L
+                isStarting = start,
+                isLoading = !start
             )
         }
         viewModelScope.launch {
             getSubscriptions(
-                partIndex = _state.value.nextPartIndex,
+                partIndex = if (start) 0 else _state.value.nextPartIndex,
                 partSize = PART_SIZE
             ).onSuccess { fetchedChannels ->
                 _state.update {
                     it.copy(
-                        channels = (it.channels?: emptyList()) + fetchedChannels.map { it.toUi() },
+                        channels = ((if (start) null else it.channels)?: emptyList()) + fetchedChannels.map { it.toUi() },
                         error = null,
-                        isLoading = false,
                         isStarting = false,
-                        nextPartIndex = it.nextPartIndex + 1,
+                        isLoading = false,
+                        nextPartIndex = (if (start) 0 else it.nextPartIndex) + 1,
                         hasMore = fetchedChannels.size == PART_SIZE
                     )
                 }
@@ -65,8 +60,8 @@ class SubscriptionsScreenViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         error = err,
-                        isLoading = false,
-                        isStarting = false
+                        isStarting = false,
+                        isLoading = false
                     )
                 }
             }
@@ -79,7 +74,8 @@ class SubscriptionsScreenViewModel @Inject constructor(
 }
 
 sealed class SubscriptionsScreenUiEvent {
-    data object ReachedBottom : SubscriptionsScreenUiEvent()
-    data class ClickedChannel(val channelId: Long) : SubscriptionsScreenUiEvent()
     data object Restart : SubscriptionsScreenUiEvent()
+    data object EndReached : SubscriptionsScreenUiEvent()
+    data object Reload: SubscriptionsScreenUiEvent()
+    data class ChannelClicked(val channelId: Long) : SubscriptionsScreenUiEvent()
 }

@@ -1,9 +1,9 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -17,7 +17,7 @@ fun EntryProviderBuilder<Route>.recommendationsRoute(
 ) {
     entry <Route.Recommendations.View> {
         val viewModel = hiltViewModel<RecommendationsViewModel>()
-        val state by viewModel.state.collectAsState()
+        val state by viewModel.state.collectAsStateWithLifecycle()
         RecommendationsScreen(
             state = state,
             onEvent = { event ->

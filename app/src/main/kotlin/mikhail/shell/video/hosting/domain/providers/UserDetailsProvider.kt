@@ -12,6 +12,6 @@ interface UserDetailsProvider {
     fun get(): UserDetails
     fun getUserId(): Long
     fun getJwt(): String
-    fun save(userDetails: UserDetails)
-    fun remove()
+    suspend fun save(userDetails: UserDetails)
+    suspend fun remove()
 }

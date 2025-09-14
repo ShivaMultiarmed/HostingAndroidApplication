@@ -49,8 +49,8 @@ fun RecommendationsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                onLaunch = {
-                    onEvent(RecommendationsScreenUiEvent.DraggedDown)
+                onStart = {
+                    onEvent(RecommendationsScreenUiEvent.Restarted)
                 },
                 isStarting = state.isStarting,
             ) {
@@ -82,10 +82,10 @@ fun RecommendationsScreen(
                     error = state.error,
                     isLoading = state.isLoading,
                     onReload = {
-                        onEvent(RecommendationsScreenUiEvent.BottomReached)
+                        onEvent(RecommendationsScreenUiEvent.Reload)
                     },
                     onReachedBottom = {
-                        onEvent(RecommendationsScreenUiEvent.BottomReached)
+                        onEvent(RecommendationsScreenUiEvent.EndReached)
                     }
                 )
             }
@@ -97,7 +97,7 @@ fun RecommendationsScreen(
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
-                    onEvent(RecommendationsScreenUiEvent.Reload)
+                    onEvent(RecommendationsScreenUiEvent.Restarted)
                 }
             )
         }

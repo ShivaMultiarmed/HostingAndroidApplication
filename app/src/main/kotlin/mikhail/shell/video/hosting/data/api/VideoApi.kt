@@ -42,7 +42,7 @@ interface VideoApi {
     @GET("videos/search")
     suspend fun fetchVideoListByQuery(
         @Query("query") query: String,
-        @Query("part_number") partNumber: Long,
+        @Query("part_number") partNumber: Long?,
         @Query("part_size") partSize: Int
     ): List<VideoWithChannelDto>
     @Multipart

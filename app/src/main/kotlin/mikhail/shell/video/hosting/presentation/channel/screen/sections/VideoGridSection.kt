@@ -34,7 +34,7 @@ internal fun VideoGridSection(
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     RestartableBox(
         modifier = modifier,
-        onLaunch = onRestart,
+        onStart = onRestart,
         isStarting = isStarting,
     ) {
         PageableBox(

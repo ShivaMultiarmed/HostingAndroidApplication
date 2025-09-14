@@ -25,7 +25,7 @@ interface VideoRepository {
 
     suspend fun fetchVideosWithChannelsByQuery(
         query: String,
-        partNumber: Long,
+        cursor: Long?,
         partSize: Int
     ): Result<List<VideoWithChannel>, Error>
 

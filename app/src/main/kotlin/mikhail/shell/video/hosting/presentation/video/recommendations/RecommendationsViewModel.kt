@@ -19,7 +19,7 @@ class RecommendationsViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(RecommendationsScreenState())
     val state = _state.onStart {
-        load()
+        load(start = true)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(3000),
@@ -28,34 +28,31 @@ class RecommendationsViewModel @Inject constructor(
 
     fun onEvent(event: RecommendationsScreenUiEvent) {
         when (event) {
-            RecommendationsScreenUiEvent.BottomReached -> load()
-            RecommendationsScreenUiEvent.DraggedDown, RecommendationsScreenUiEvent.Reload -> {
-                _state.update { RecommendationsScreenState() }
-                load()
-            }
+            RecommendationsScreenUiEvent.EndReached, RecommendationsScreenUiEvent.Reload -> load(start = false)
+            RecommendationsScreenUiEvent.Restarted -> load(start = true)
             else -> Unit
         }
     }
 
-    private fun load() {
+    private fun load(start: Boolean) {
         _state.update {
             it.copy(
-                isStarting = it.nextPartIndex == 0L,
-                isLoading = it.nextPartIndex > 0L
+                isStarting = start,
+                isLoading = !start
             )
         }
         viewModelScope.launch {
             getRecommendations(
-                partIndex = _state.value.nextPartIndex,
+                partIndex = if (start) 0 else _state.value.nextPartIndex,
                 partSize = PART_SIZE
             ).onSuccess { videos ->
                 _state.update {
                     it.copy(
-                        videos = ((it.videos ?: emptyList()) + videos.map { it.toUi() }),//.distinctBy { it.videoId },
+                        videos = (((if (start) null else it.videos) ?: emptyList()) + videos.map { it.toUi() }),//.distinctBy { it.videoId },
                         isStarting = false,
                         isLoading = false,
                         hasMore = videos.size == PART_SIZE,
-                        nextPartIndex = it.nextPartIndex + 1,
+                        nextPartIndex = (if (start) 0 else it.nextPartIndex) + 1,
                         error = null
                     )
                 }
@@ -78,7 +75,7 @@ class RecommendationsViewModel @Inject constructor(
 
 sealed class RecommendationsScreenUiEvent {
     data object Reload: RecommendationsScreenUiEvent()
-    data object BottomReached : RecommendationsScreenUiEvent()
-    data object DraggedDown : RecommendationsScreenUiEvent()
+    data object EndReached : RecommendationsScreenUiEvent()
+    data object Restarted : RecommendationsScreenUiEvent()
     data class ClickedVideo(val videoId: Long) : RecommendationsScreenUiEvent()
 }

@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         mutableStateListOf((if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication))
                     }
-                    val currentRoute = rootBackStack.last()
+                    val currentRoute = rootBackStack.lastOrNull()
                     val recommendationsBackStack = rememberSaveable(
                         saver = BackStackSaver
                     ) {
@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
-                            if (currentRoute != Route.Authentication && currentRoute !is Route.Video && !LocalPlayerState.current.value.fullScreen) {
+                            if (currentRoute != null && currentRoute != Route.Authentication && currentRoute !is Route.Video && !LocalPlayerState.current.value.fullScreen) {
                                 BottomNavBar(
                                     onClick = { navItem ->
                                         if (!rootBackStack.contains(navItem.route)) {
@@ -190,7 +190,7 @@ class MainActivity : ComponentActivity() {
                                             Route.Recommendations -> recommendationsBackStack
                                             Route.Subscriptions -> subscriptionsBackStack
                                             Route.Search -> searchBackStack
-                                            Route.User -> userBackStack
+                                            is Route.User -> userBackStack
                                             else -> recommendationsBackStack
                                         }
                                     )

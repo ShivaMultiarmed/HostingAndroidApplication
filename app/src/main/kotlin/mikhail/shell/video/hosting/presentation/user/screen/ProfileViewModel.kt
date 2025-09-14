@@ -25,12 +25,9 @@ class ProfileViewModel @AssistedInject constructor(
     private val getOwnedChannels: GetOwnedChannels,
     private val signOut: SignOut
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ProfileScreenState>(ProfileScreenState())
+    private val _state = MutableStateFlow(ProfileScreenState())
     val state = _state.onStart {
-        viewModelScope.launch {
-            load()
-            loadChannels()
-        }
+        initialize()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(3000),
@@ -38,50 +35,66 @@ class ProfileViewModel @AssistedInject constructor(
     )
 
     fun onEvent(event: ProfileScreenUiEvent) {
-        when(event) {
-            ProfileScreenUiEvent.Reload -> viewModelScope.launch { load() }
-            ProfileScreenUiEvent.ReloadChannels -> viewModelScope.launch { loadChannels() }
+        when (event) {
+            ProfileScreenUiEvent.Restart -> viewModelScope.launch { initialize() }
+            ProfileScreenUiEvent.ReloadChannels, ProfileScreenUiEvent.EndReached -> viewModelScope.launch { loadChannels(start = false) }
             ProfileScreenUiEvent.SignOut -> signOut()
             else -> Unit
         }
     }
 
-    private suspend fun load() {
-        getUser(userId)
-            .onSuccess { user ->
-                _state.update {
-                    it.copy(
-                        user = user.toUi(),
-                        error = null
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        error = error
-                    )
-                }
-            }
+    private fun initialize() {
+        viewModelScope.launch {
+            load()
+            loadChannels(start = true)
+        }
     }
 
-    private suspend fun loadChannels() {
+    private suspend fun load() {
         _state.update {
             it.copy(
-                channelState = it.channelState.copy(isLoading = true)
+                isStarting = true
+            )
+        }
+        getUser(userId).onSuccess { user ->
+            _state.update {
+                it.copy(
+                    user = user.toUi(),
+                    error = null,
+                    isStarting = false
+                )
+            }
+        }.onFailure { error ->
+            _state.update {
+                it.copy(
+                    error = error,
+                    isStarting = false
+                )
+            }
+        }
+    }
+
+    private suspend fun loadChannels(start: Boolean = false) {
+        _state.update {
+            it.copy(
+                channelState = it.channelState.copy(
+                    isLoading = true
+                )
             )
         }
         getOwnedChannels(
             userId = userId,
-            partIndex = (_state.value.channelState.channels?.size ?: 0).toLong() / PART_SIZE,
+            partIndex = if (start) 0 else _state.value.channelState.nextPartIndex,
             partSize = PART_SIZE
         ).onSuccess { channels ->
             _state.update {
                 it.copy(
                     channelState = it.channelState.copy(
-                        channels = channels.map { it.toUi() },
+                        channels = ((if (start) null else _state.value.channelState.channels)?: emptyList()) + channels.map { it.toUi() },
                         error = null,
                         isLoading = false,
-                        hasMore = channels.size < PART_SIZE
+                        nextPartIndex = (if (start) 0 else _state.value.channelState.nextPartIndex) + 1,
+                        hasMore = channels.size == PART_SIZE
                     )
                 )
             }
@@ -95,15 +108,13 @@ class ProfileViewModel @AssistedInject constructor(
                 )
             }
         }
-
     }
 
     private fun signOut() {
         viewModelScope.launch {
-            signOut.invoke().onSuccess {
-                _state.update {
-                    it.copy(signedOut = true)
-                }
+            signOut.invoke()
+            _state.update {
+                it.copy(isSignedOut = true)
             }
         }
     }
@@ -119,12 +130,13 @@ class ProfileViewModel @AssistedInject constructor(
 }
 
 sealed class ProfileScreenUiEvent {
-    data class ClickedChannel(val channelId: Long): ProfileScreenUiEvent()
-    data object PublishVideo: ProfileScreenUiEvent()
-    data object CreateChannel: ProfileScreenUiEvent()
-    data object Reload: ProfileScreenUiEvent()
-    data object ReloadChannels: ProfileScreenUiEvent()
-    data object SignOut: ProfileScreenUiEvent()
-    data object Invite: ProfileScreenUiEvent()
-    data object OpenSettings: ProfileScreenUiEvent()
+    data object Restart : ProfileScreenUiEvent()
+    data object ReloadChannels : ProfileScreenUiEvent()
+    data object EndReached : ProfileScreenUiEvent()
+    data class ClickedChannel(val channelId: Long) : ProfileScreenUiEvent()
+    data object OpenSettings : ProfileScreenUiEvent()
+    data object PublishVideo : ProfileScreenUiEvent()
+    data object CreateChannel : ProfileScreenUiEvent()
+    data object SignOut : ProfileScreenUiEvent()
+    data object Invite : ProfileScreenUiEvent()
 }

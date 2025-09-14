@@ -75,7 +75,7 @@ class ChannelRepositoryWithApi @Inject constructor(
 
     override suspend fun fetchChannelsByOwner(
         userId: Long,
-        partIndex: Long,
+        partIndex: Int,
         partSize: Int
     ): Result<List<Channel>, Error> =
         request {

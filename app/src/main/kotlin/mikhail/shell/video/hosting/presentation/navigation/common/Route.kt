@@ -34,7 +34,7 @@ sealed class Route: NavKey {
         data object View: Route()
     }
     @Serializable
-    data object User: Route() {
+    data class User(val userId: Long): Route() {
         @Serializable
         data class Profile(val userId: Long): Route()
         @Serializable

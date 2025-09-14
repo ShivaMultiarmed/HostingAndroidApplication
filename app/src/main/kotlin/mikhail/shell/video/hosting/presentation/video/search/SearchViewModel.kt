@@ -14,20 +14,19 @@ import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchVideosViewModel @Inject constructor(
+class SearchViewModel @Inject constructor(
     private val searchForVideos: SearchForVideos,
     private val validateSearchQuery: ValidateSearchQuery
-): ViewModel() {
+) : ViewModel() {
 
-    private val _state = MutableStateFlow(SearchVideosScreenState())
+    private val _state = MutableStateFlow(SearchScreenState())
     val state = _state.asStateFlow()
 
     fun onEvent(event: SearchScreenUiEvent) {
-        when(event) {
+        when (event) {
             is SearchScreenUiEvent.QueryChanged -> onQueryChanged(event.query)
-            SearchScreenUiEvent.BottomReached -> load(restart = false)
-            SearchScreenUiEvent.Submit -> load(restart = true)
-            SearchScreenUiEvent.Reload -> load(restart = _state.value.videos == null)
+            SearchScreenUiEvent.Reload, SearchScreenUiEvent.BottomReached -> load(start = false)
+            SearchScreenUiEvent.Restart, SearchScreenUiEvent.Submit -> load(start = true)
             else -> Unit
         }
     }
@@ -44,41 +43,50 @@ class SearchVideosViewModel @Inject constructor(
         }
     }
 
-    private fun load(restart: Boolean = true) {
-        _state.update { it.copy(isLoading = true) }
+    private fun load(start: Boolean = true) {
+        _state.update {
+            it.copy(
+                isStarting = start,
+                isLoading = !start
+            )
+        }
         viewModelScope.launch {
             searchForVideos(
                 query = _state.value.query,
-                partNumber = if (!restart) (_state.value.videos?.size?: 0).toLong() / PART_SIZE else 0,
+                cursor = if (start) null else _state.value.videos!!.last().videoId,
                 partSize = PART_SIZE
             ).onSuccess { list ->
                 _state.update {
                     it.copy(
-                        videos = ((if (!restart) it.videos else null) ?: emptyList()) + list.map { it.toUi() },
+                        videos = ((if (!start) it.videos else null) ?: emptyList()) + list.map { it.toUi() },
                         error = null,
+                        isStarting = false,
                         isLoading = false,
-                        hasMore = list.size < PART_SIZE
+                        hasMore = list.size == PART_SIZE
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     it.copy(
                         error = error,
+                        isStarting = false,
                         isLoading = false
                     )
                 }
             }
         }
     }
+
     private companion object {
         const val PART_SIZE = 10
     }
 }
 
 sealed class SearchScreenUiEvent {
-    data class QueryChanged(val query: String): SearchScreenUiEvent()
-    data object Submit: SearchScreenUiEvent()
-    data object BottomReached: SearchScreenUiEvent()
-    data class ClickedVideo(val videoId: Long): SearchScreenUiEvent()
-    data object Reload: SearchScreenUiEvent()
+    data class QueryChanged(val query: String) : SearchScreenUiEvent()
+    data object Restart : SearchScreenUiEvent()
+    data object Submit : SearchScreenUiEvent()
+    data object BottomReached : SearchScreenUiEvent()
+    data object Reload : SearchScreenUiEvent()
+    data class ClickedVideo(val videoId: Long) : SearchScreenUiEvent()
 }

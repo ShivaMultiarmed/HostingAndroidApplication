@@ -49,7 +49,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun RestartableBox(
     modifier: Modifier = Modifier,
-    onLaunch: () -> Unit,
+    onStart: () -> Unit,
     isStarting: Boolean,
     content: @Composable () -> Unit
 ) {
@@ -84,7 +84,7 @@ fun RestartableBox(
                             }
                         }
                         if (height == bottomPosition && !isStarting) {
-                            onLaunch()
+                            onStart()
                         }
                         if (isStarting || height < bottomPosition) {
                             height = topPosition
@@ -159,7 +159,7 @@ fun ReloadableBoxPreview() {
                 RestartableBox(
                     modifier = Modifier
                         .fillMaxSize(),
-                    onLaunch = {
+                    onStart = {
                         coroutineScope.launch {
                             isLoading = true
                             delay(3000.milliseconds)

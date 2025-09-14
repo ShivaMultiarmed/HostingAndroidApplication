@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.video.search
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -12,11 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
@@ -36,9 +30,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,18 +49,19 @@ import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
-import mikhail.shell.video.hosting.presentation.utils.reachedBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun SearchVideosScreen(
-    state: SearchVideosScreenState,
+fun SearchScreen(
+    state: SearchScreenState,
     onEvent: (SearchScreenUiEvent) -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -118,94 +110,74 @@ fun SearchVideosScreen(
             SnackbarHost(hostState = snackBarHostState)
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            val lazyGridState = rememberLazyGridState()
-            val reachedBottom by remember { derivedStateOf { lazyGridState.reachedBottom(buffer = 4) } }
-            if (state.videos != null) {
-                if (state.videos.isNotEmpty()) {
-                    LazyVerticalGrid(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .then(
-                                if (isWidthCompact) {
-                                    Modifier
-                                } else {
-                                    Modifier
-                                        .padding(horizontal = 10.dp)
-                                        .padding(top = 10.dp)
-                                }
-                            ),
-                        columns = GridCells.Adaptive(300.dp),
-                        horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                        state = lazyGridState
-                    ) {
-                        items(state.videos) {
-                            VideoWithChannelSnippet(
-                                modifier = Modifier
-                                    .then(
-                                        if (isWidthCompact) {
-                                            Modifier
-                                        } else {
-                                            Modifier
-                                                .clip(RoundedCornerShape(15.dp))
-                                        }
-                                    ),
-                                videoWithChannel = it,
-                                onClick = {
-                                    onEvent(SearchScreenUiEvent.ClickedVideo(it))
-                                }
-                            )
-                        }
-                        item (
-                            span = {
-                                GridItemSpan(maxLineSpan)
-                            }
-                        ) {
-                            if (state.isLoading) {
-                                LoadingComponent(modifier = Modifier.fillMaxSize())
-                            } else if (state.error != null) {
-                                ErrorComponent(
-                                    modifier = Modifier.fillMaxSize(),
-                                    onRetry = {
-                                        onEvent(SearchScreenUiEvent.Reload)
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    LaunchedEffect(reachedBottom) {
-                        if (reachedBottom && state.hasMore) {
-                            onEvent(SearchScreenUiEvent.BottomReached)
-                        }
-                    }
-                } else {
-                    EmptyResultComponent(
-                        modifier = Modifier
-                            .padding(padding)
-                            .fillMaxSize(),
-                        message = stringResource(R.string.video_found_nothing)
-                    )
-                }
-            } else if (state.isLoading) {
-                LoadingComponent(modifier = Modifier.fillMaxSize())
-            } else if (state.error != null) {
-                ErrorComponent(
+        if (state.videos != null) {
+            RestartableBox(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                onStart = {
+                    onEvent(SearchScreenUiEvent.Restart)
+                },
+                isStarting = state.isStarting
+            ) {
+                PageableBox(
                     modifier = Modifier.fillMaxSize(),
-                    onRetry = {
+                    itemComponent = {
+                        VideoWithChannelSnippet(
+                            modifier = Modifier
+                                .then(
+                                    if (isWidthCompact) {
+                                        Modifier
+                                    } else {
+                                        Modifier.clip(RoundedCornerShape(15.dp))
+                                    }
+                                ),
+                            videoWithChannel = it,
+                            onClick = {
+                                onEvent(SearchScreenUiEvent.ClickedVideo(it))
+                            }
+                        )
+                    },
+                    emptyComponent = {
+                        EmptyResultComponent(
+                            modifier = Modifier
+                                .padding(padding)
+                                .fillMaxSize(),
+                            message = stringResource(R.string.video_found_nothing)
+                        )
+                    },
+                    items = state.videos,
+                    hasMore = state.hasMore,
+                    error = state.error,
+                    isLoading = state.isLoading,
+                    onReload = {
                         onEvent(SearchScreenUiEvent.Reload)
+                    },
+                    onReachedBottom = {
+                        onEvent(SearchScreenUiEvent.BottomReached)
                     }
                 )
             }
-            StandardComplexErrorHandler(
-                error = state.error,
-                snackBarHostState = snackBarHostState
+        } else if (state.isStarting) {
+            LoadingComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            )
+        } else if (state.error != null) {
+            ErrorComponent(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                onRetry = {
+                    onEvent(SearchScreenUiEvent.Restart)
+                }
             )
         }
+        StandardComplexErrorHandler(
+            error = state.error,
+            snackBarHostState = snackBarHostState
+        )
     }
 }
 
@@ -227,11 +199,7 @@ fun VideoWithChannelSnippet(
                 onClick(videoWithChannel.videoId)
             }
             .then(
-                if (isWidthCompact) {
-                    Modifier
-                } else {
-                    Modifier.padding(10.dp)
-                }
+                if (isWidthCompact) Modifier else Modifier.padding(10.dp)
             )
     ) {
         AsyncImage(
@@ -239,11 +207,8 @@ fun VideoWithChannelSnippet(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9)
                 .then(
-                    if (isWidthCompact)
-                        Modifier
-                    else
-                        Modifier
-                            .clip(RoundedCornerShape(10.dp))
+                    if (isWidthCompact) Modifier
+                    else Modifier.clip(RoundedCornerShape(10.dp))
                 )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
             model = videoWithChannel.videoCoverUrl,

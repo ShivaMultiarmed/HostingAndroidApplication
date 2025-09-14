@@ -82,12 +82,12 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun fetchVideosWithChannelsByQuery(
         query: String,
-        partNumber: Long,
+        cursor: Long?,
         partSize: Int
     ): Result<List<VideoWithChannel>, Error> = request {
         videoApi.fetchVideoListByQuery(
             query = query,
-            partNumber = partNumber,
+            partNumber = cursor,
             partSize = partSize
         ).map { it.toDomain() }
     }

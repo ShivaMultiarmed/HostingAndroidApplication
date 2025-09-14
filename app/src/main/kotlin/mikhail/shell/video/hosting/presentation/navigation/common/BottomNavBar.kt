@@ -74,7 +74,7 @@ fun BottomNavBar(
                 Icons.Rounded.Search
             ),
             BottomNavItem(
-                Route.User.Profile(userId),
+                Route.User(userId),
                 stringResource(R.string.nav_profile_item_label),
                 Icons.Outlined.Person,
                 Icons.Rounded.Person

@@ -56,7 +56,7 @@ fun SubscriptionsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                onLaunch = {
+                onStart = {
                     onEvent(SubscriptionsScreenUiEvent.Restart)
                 },
                 isStarting = state.isStarting
@@ -86,7 +86,7 @@ fun SubscriptionsScreen(
                                 ),
                             channel = it,
                             onClick = {
-                                onEvent(SubscriptionsScreenUiEvent.ClickedChannel(it))
+                                onEvent(SubscriptionsScreenUiEvent.ChannelClicked(it))
                             }
                         )
                     },
@@ -100,10 +100,10 @@ fun SubscriptionsScreen(
                     },
                     isLoading = state.isLoading,
                     onReload = {
-                        onEvent(SubscriptionsScreenUiEvent.ReachedBottom)
+                        onEvent(SubscriptionsScreenUiEvent.Reload)
                     },
                     onReachedBottom = {
-                        onEvent(SubscriptionsScreenUiEvent.ReachedBottom)
+                        onEvent(SubscriptionsScreenUiEvent.EndReached)
                     },
                     hasMore = state.hasMore
                 )

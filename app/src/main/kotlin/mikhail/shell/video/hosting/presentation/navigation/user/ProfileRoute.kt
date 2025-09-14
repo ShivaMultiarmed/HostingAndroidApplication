@@ -3,12 +3,14 @@ package mikhail.shell.video.hosting.presentation.navigation.user
 import android.content.Intent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
@@ -29,6 +31,7 @@ fun EntryProviderBuilder<Route>.profileRoute(
         val userId = bundle.userId
         val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val coroutineScope = rememberCoroutineScope()
         ProfileScreen(
             owns = userId == userDetailsProvider.getUserId(),
             state = state,
@@ -49,10 +52,10 @@ fun EntryProviderBuilder<Route>.profileRoute(
                     ProfileScreenUiEvent.SignOut -> {
                         player.stop()
                         player.clearMediaItems()
-
                         viewModel.onEvent(event)
-
-                        logOut(userDetailsProvider, rootBackStack)
+                        coroutineScope.launch {
+                            logOut(userDetailsProvider, rootBackStack)
+                        }
                     }
                     else -> viewModel.onEvent(event)
                 }

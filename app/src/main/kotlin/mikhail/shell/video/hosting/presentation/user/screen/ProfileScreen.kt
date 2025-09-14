@@ -20,9 +20,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,6 +64,7 @@ import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -118,17 +116,17 @@ fun ProfileScreen(
         ) { padding ->
             if (state.user != null) {
                 RestartableBox(
-                    modifier = Modifier.fillMaxSize(),
-                    onLaunch = {
-                        onEvent(ProfileScreenUiEvent.Reload)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    onStart = {
+                        onEvent(ProfileScreenUiEvent.Restart)
                     },
-                    isStarting = state.isLoading
+                    isStarting = state.isStarting
                 ) {
                     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding)
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             ProfileScreenContent(
                                 owns = owns,
@@ -141,9 +139,7 @@ fun ProfileScreen(
                         }
                     } else {
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding)
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             ProfileScreenContent(
                                 owns = owns,
@@ -160,7 +156,7 @@ fun ProfileScreen(
                     error = state.channelState.error,
                     snackBarHostState = snackBarHostState
                 )
-            } else if (state.isLoading) {
+            } else if (state.isStarting) {
                 LoadingComponent(
                     modifier = Modifier.fillMaxSize()
                 )
@@ -168,11 +164,10 @@ fun ProfileScreen(
                 ErrorComponent(
                     modifier = Modifier.fillMaxSize(),
                     onRetry = {
-                        onEvent(ProfileScreenUiEvent.Reload)
+                        onEvent(ProfileScreenUiEvent.Restart)
                     }
                 )
             }
-
             StandardComplexErrorHandler(
                 error = state.error,
                 snackBarHostState = snackBarHostState
@@ -246,68 +241,51 @@ private fun ProfileScreenContent(
                         .padding(top = 5.dp),
                     text = stringResource(R.string.user_channels_title)
                 )
-                LazyVerticalGrid(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .then(
+            }
+            PageableBox(
+                modifier = Modifier.fillMaxSize(),
+                itemComponent = {
+                    ChannelSnippet(
+                        modifier = Modifier.then(
                             if (isWidthCompact) {
                                 Modifier
                             } else {
-                                Modifier.padding(10.dp)
+                                Modifier.clip(RoundedCornerShape(15.dp))
                             }
                         ),
-                    horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
-                    columns = GridCells.Adaptive(300.dp)
-                ) {
-                    items(state.channelState.channels) { channel ->
-                        ChannelSnippet(
-                            modifier = Modifier.then(
-                                if (isWidthCompact) {
-                                    Modifier
-                                } else {
-                                    Modifier.clip(RoundedCornerShape(15.dp))
-                                }
-                            ),
-                            channel = channel,
-                            onClick = {
-                                onEvent(ProfileScreenUiEvent.ClickedChannel(it))
-                            }
-                        )
-                    }
-                    if (state.channelState.isLoading) {
-                        item {
-                            LoadingComponent(
-                                modifier = Modifier.fillMaxSize()
-                            )
+                        channel = it,
+                        onClick = {
+                            onEvent(ProfileScreenUiEvent.ClickedChannel(it))
                         }
-                    } else if (state.channelState.error != null) {
-                        item {
-                            ErrorComponent(
-                                modifier = Modifier.fillMaxSize(),
-                                onRetry = {
-                                    onEvent(ProfileScreenUiEvent.ReloadChannels)
-                                }
-                            )
-                        }
-                    }
+                    )
+                },
+                emptyComponent = {
+                    EmptyResultComponent(
+                        modifier = Modifier.fillMaxSize(),
+                        message = stringResource(R.string.user_channels_empty_message)
+                    )
+                },
+                items = state.channelState.channels,
+                hasMore = state.channelState.hasMore,
+                error = state.channelState.error.takeIf { state.channelState.hasMore },
+                isLoading = state.channelState.isLoading,
+                onReload = {
+                    onEvent(ProfileScreenUiEvent.ReloadChannels)
+                },
+                onReachedBottom = {
+                    onEvent(ProfileScreenUiEvent.EndReached)
                 }
-            } else {
-                EmptyResultComponent(
-                    modifier = Modifier.fillMaxSize(),
-                    message = stringResource(R.string.user_channels_empty_message)
-                )
-            }
+            )
+        } else if (state.channelState.isLoading) {
+            LoadingComponent(
+                modifier = Modifier.fillMaxSize()
+            )
         } else if (state.channelState.error != null) {
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
                     onEvent(ProfileScreenUiEvent.ReloadChannels)
                 }
-            )
-        } else if (state.channelState.isLoading) {
-            LoadingComponent(
-                modifier = Modifier.fillMaxSize()
             )
         }
     }

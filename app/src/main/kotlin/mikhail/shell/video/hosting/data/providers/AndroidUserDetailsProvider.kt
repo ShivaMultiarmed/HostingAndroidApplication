@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.utils.CryptoUtils
 import mikhail.shell.video.hosting.domain.providers.UserDetails
@@ -41,19 +40,15 @@ class AndroidUserDetailsProvider @Inject constructor(
         return get().token
     }
 
-    override fun save(userDetails: UserDetails) {
-        coroutineScope.launch {
-            dataStore.updateData {
-                userDetails
-            }
+    override suspend fun save(userDetails: UserDetails) {
+        dataStore.updateData {
+            userDetails
         }
     }
 
-    override fun remove() {
-        coroutineScope.launch {
-            dataStore.updateData {
-                UserDetails()
-            }
+    override suspend fun remove() {
+        dataStore.updateData {
+            UserDetails()
         }
     }
 }
@@ -79,10 +74,11 @@ class UserDetailsSerializer : Serializer<UserDetails> {
     }
 
     override suspend fun writeTo(t: UserDetails, output: OutputStream) {
-        Json.encodeToString(
-            serializer = UserDetails.serializer(),
-            value = t.copy(token = CryptoUtils.encrypt(t.token))
-        )
+        Json
+            .encodeToString(
+                serializer = UserDetails.serializer(),
+                value = t.copy(token = CryptoUtils.encrypt(t.token))
+            )
             .encodeToByteArray()
             .let { bytes ->
                 output.use {

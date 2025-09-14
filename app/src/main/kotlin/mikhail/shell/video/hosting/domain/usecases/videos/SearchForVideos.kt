@@ -11,11 +11,11 @@ class SearchForVideos @Inject constructor(
 ) {
     suspend operator fun invoke(
         query: String,
-        partNumber: Long = 0,
+        cursor: Long? = null,
         partSize: Int = 10
     ): Result<List<VideoWithChannel>, Error> = videoRepository.fetchVideosWithChannelsByQuery(
         query = query,
-        partNumber = partNumber,
+        cursor = cursor,
         partSize = partSize
     )
 }

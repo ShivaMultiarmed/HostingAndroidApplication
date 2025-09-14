@@ -30,15 +30,13 @@ fun EntryProviderBuilder<Route>.signInRoute(
                 }
             }
         )
-        LaunchedEffect(state) {
+        LaunchedEffect(state.authModel) {
             if (state.authModel != null) {
                 userDetailsProvider.save(
-                    state.authModel!!.let {
-                        UserDetails(
-                            userId = it.userId,
-                            token = it.token
-                        )
-                    }
+                    UserDetails(
+                        userId = state.authModel!!.userId,
+                        token = state.authModel!!.token
+                    )
                 )
                 rootBackStack.add(Route.Recommendations)
                 rootBackStack.remove(Route.Authentication)

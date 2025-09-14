@@ -8,17 +8,17 @@ import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.video.search.SearchScreen
 import mikhail.shell.video.hosting.presentation.video.search.SearchScreenUiEvent
-import mikhail.shell.video.hosting.presentation.video.search.SearchVideosScreen
-import mikhail.shell.video.hosting.presentation.video.search.SearchVideosViewModel
+import mikhail.shell.video.hosting.presentation.video.search.SearchViewModel
 
 fun EntryProviderBuilder<Route>.searchRoute(
     rootBackStack: MutableList<Route>
 ) {
     entry <Route.Search.View> {
-        val viewModel = hiltViewModel<SearchVideosViewModel>()
+        val viewModel = hiltViewModel<SearchViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        SearchVideosScreen(
+        SearchScreen(
             state = state,
             onEvent = { event ->
                 when (event) {
