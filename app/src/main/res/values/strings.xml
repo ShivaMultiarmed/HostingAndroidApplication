@@ -280,4 +280,6 @@
     <string name="password_too_short">Password is too short</string>
     <string name="user_name_check_failed">Username check failed</string>
     <string name="no_videos_yet">No videos yet</string>
+    <string name="channel_title_check_error">Couldn\'t check title</string>
+    <string name="channel_alias_check_error">Couldn\'t check nick</string>
 </resources>

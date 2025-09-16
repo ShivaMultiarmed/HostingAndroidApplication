@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.channel.create
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,10 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
@@ -72,7 +72,7 @@ fun ChannelCreationScreen(
                 onPopup = {
                     onEvent(ChannelCreationUiEvent.Cancel)
                 },
-                inProgress = state.isCreating,
+                inProgress = state.isLoading,
                 complete = state.channelId != null,
                 onSubmit = {
                     onEvent(ChannelCreationUiEvent.Submit)
@@ -95,21 +95,17 @@ fun ChannelCreationScreen(
                         message = context.getString(R.string.channel_create_success),
                         duration = SnackbarDuration.Long
                     )
-                    onEvent(ChannelCreationUiEvent.Success(state.channelId))
                 }
             }
-            val titleErrMsg = when (state.titleError) {
+            val titleErrMsg = when (state.title.error) {
                 TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                TextError.LONG -> stringResource(
-                    R.string.text_too_large_error,
-                    ValidationRules.MAX_TITLE_LENGTH
-                )
-
+                TextError.LONG -> stringResource(R.string.text_too_large_error,ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
+                is NetworkError -> stringResource(R.string.channel_title_check_error)
                 else -> null
             }
             EditField(
-                actionItems = if (state.title.isNotEmpty()) listOf(
+                actionItems = if (state.title.value.isNotEmpty()) listOf(
                     DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.TitleChanged("")) }
                     )
@@ -118,31 +114,28 @@ fun ChannelCreationScreen(
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Title,
-                    value = state.title,
+                    value = state.title.value,
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.TitleChanged(it))
                     },
                     placeholder = stringResource(R.string.channel_title_label),
                     errorMsg = titleErrMsg,
-                    onTypingStarted = {
-                        onEvent(ChannelCreationUiEvent.TitleTypingStarted)
+                    onFocus = {
+                        onEvent(ChannelCreationUiEvent.TitleFocused)
                     },
-                    onTypingEnded = {
-                        onEvent(ChannelCreationUiEvent.TitleTypingEnded)
+                    onBlur = {
+                        onEvent(ChannelCreationUiEvent.TitleBlurred)
                     }
                 )
             }
-            val aliasErrMsg = when (state.aliasError) {
-                TextError.LONG -> stringResource(
-                    R.string.text_too_large_error,
-                    ValidationRules.MAX_TITLE_LENGTH
-                )
-
+            val aliasErrMsg = when (state.alias.error) {
+                TextError.LONG -> stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
+                is NetworkError -> stringResource(R.string.channel_alias_check_error)
                 else -> null
             }
             EditField(
-                actionItems = if (state.alias.isNotEmpty()) listOf(
+                actionItems = if (state.alias.value.isNotEmpty()) listOf(
                     DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.AliasChanged("")) }
                     )
@@ -151,26 +144,26 @@ fun ChannelCreationScreen(
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.AlternateEmail,
-                    value = state.alias,
+                    value = state.alias.value,
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.AliasChanged(it))
                     },
                     placeholder = stringResource(R.string.channel_alias_label),
                     errorMsg = aliasErrMsg,
-                    onTypingStarted = {
-                        onEvent(ChannelCreationUiEvent.AliasTypingStarted)
+                    onFocus = {
+                        onEvent(ChannelCreationUiEvent.AliasFocused)
                     },
-                    onTypingEnded = {
-                        onEvent(ChannelCreationUiEvent.TitleTypingEnded)
+                    onBlur = {
+                        onEvent(ChannelCreationUiEvent.AliasBlurred)
                     }
                 )
             }
-            val descriptionErrMsg = when (state.descriptionError) {
+            val descriptionErrMsg = when (state.description.error) {
                 TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                 else -> null
             }
             EditField(
-                actionItems = if (state.description.isNotEmpty()) listOf(
+                actionItems = if (state.description.value.isNotEmpty()) listOf(
                     DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.DescriptionChanged("")) }
                     )
@@ -181,18 +174,18 @@ fun ChannelCreationScreen(
                         .fillMaxWidth()
                         .height(300.dp),
                     icon = Icons.Rounded.DensityMedium,
-                    value = state.description,
+                    value = state.description.value,
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.DescriptionChanged(it))
                     },
                     placeholder = stringResource(R.string.channel_description_label),
                     maxLines = 50,
                     errorMsg = descriptionErrMsg,
-                    onTypingStarted = {
-                        onEvent(ChannelCreationUiEvent.DescriptionTypingStarted)
+                    onFocus = {
+                        onEvent(ChannelCreationUiEvent.DescriptionFocused)
                     },
-                    onTypingEnded = {
-                        onEvent(ChannelCreationUiEvent.DescriptionTypingEnded)
+                    onBlur = {
+                        onEvent(ChannelCreationUiEvent.DescriptionBlurred)
                     }
                 )
             }
@@ -202,18 +195,14 @@ fun ChannelCreationScreen(
                         onEvent(ChannelCreationUiEvent.LogoChanged(it.toString()))
                     }
                 }
-            val logoErrorMsg = when (state.logoError) {
+            val logoErrorMsg = when (state.logo.error) {
                 FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(
-                    R.string.file_too_large_error,
-                    (MAX_IMAGE_SIZE.mb).toString() + " MB"
-                )
-
+                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 else -> null
             }
             EditField(
-                actionItems = if (state.logo != null) listOf(
+                actionItems = if (state.logo.value != null) listOf(
                     DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.LogoChanged(null)) }
                     )
@@ -222,7 +211,7 @@ fun ChannelCreationScreen(
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Person,
-                    placeholder = if (state.logo == null) stringResource(R.string.channel_logo_choose_label)
+                    placeholder = if (state.logo.value == null) stringResource(R.string.channel_logo_choose_label)
                     else stringResource(R.string.channel_logo_choose_another_label),
                     onClick = {
                         logoPicker.launch("image/*")
@@ -230,7 +219,7 @@ fun ChannelCreationScreen(
                     errorMsg = logoErrorMsg
                 )
             }
-            if (state.logo != null) {
+            if (state.logo.value != null) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -238,10 +227,9 @@ fun ChannelCreationScreen(
                     Text(
                         text = stringResource(R.string.channel_chosen_logo_message)
                     )
-                    val painter = rememberAsyncImagePainter(model = state.logo)
-                    Image(
-                        painter = painter,
-                        contentDescription = state.title,
+                    AsyncImage(
+                        model = state.logo.value,
+                        contentDescription = state.title.value,
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape),
@@ -255,18 +243,14 @@ fun ChannelCreationScreen(
                         onEvent(ChannelCreationUiEvent.HeaderChanged(it.toString()))
                     }
                 }
-            val headerErrorMsg = when (state.headerError) {
+            val headerErrorMsg = when (state.header.error) {
                 FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(
-                    R.string.file_too_large_error,
-                    "${MAX_IMAGE_SIZE.mb} MB"
-                )
-
+                FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 else -> null
             }
             EditField(
-                actionItems = if (state.header != null) listOf(
+                actionItems = if (state.header.value != null) listOf(
                     DeletingItem(
                         deleting = { onEvent(ChannelCreationUiEvent.HeaderChanged(null)) }
                     )
@@ -275,7 +259,7 @@ fun ChannelCreationScreen(
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Wallpaper,
-                    placeholder = when (state.header) {
+                    placeholder = when (state.header.value) {
                         null -> stringResource(R.string.channel_choose_header_label)
                         else -> stringResource(R.string.channel_header_choose_another_label)
                     },
@@ -285,7 +269,7 @@ fun ChannelCreationScreen(
                     errorMsg = headerErrorMsg
                 )
             }
-            if (state.header != null) {
+            if (state.header.value != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -295,10 +279,9 @@ fun ChannelCreationScreen(
                     Text(
                         text = stringResource(R.string.channel_chosen_header_message)
                     )
-                    val painter = rememberAsyncImagePainter(model = state.header)
-                    Image(
-                        painter = painter,
-                        contentDescription = state.title,
+                    AsyncImage(
+                        model = state.header.value,
+                        contentDescription = state.title.value,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -309,11 +292,8 @@ fun ChannelCreationScreen(
             }
         }
         StandardComplexErrorHandler(
-            error = state.creationError,
-            snackBarHostState = snackBarHostState,
-            authenticationRequiredHandler = {
-                onEvent(ChannelCreationUiEvent.AuthenticationRequired)
-            }
+            error = state.error,
+            snackBarHostState = snackBarHostState
         )
     }
 }

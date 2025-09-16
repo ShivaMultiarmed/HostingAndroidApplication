@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.utils.isBlank
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
@@ -521,7 +520,7 @@ fun ChannelSnippet(
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2
                 )
-                val alias = if (!channel.alias.isBlank()) channel.alias else channel.channelId
+                val alias = channel.alias ?: channel.channelId
                 Text(
                     text = "@$alias",
                     fontSize = 12.sp,

@@ -62,7 +62,13 @@ interface ChannelApi {
     @DELETE("channels/{channel_id}")
     suspend fun removeChannel(@Path("channel_id") channelId: Long)
     @GET("channels/existence/title")
-    fun existsByTitle(@Query("title") title: String): Boolean
+    suspend fun existsByTitle(
+        @Query("channel_id") channelId: Long?,
+        @Query("title") title: String
+    )
     @GET("channels/existence/alias")
-    fun existsByAlias(@Query("alias") alias: String): Boolean
+    suspend fun existsByAlias(
+        @Query("channel_id") channelId: Long?,
+        @Query("alias") alias: String
+    )
 }

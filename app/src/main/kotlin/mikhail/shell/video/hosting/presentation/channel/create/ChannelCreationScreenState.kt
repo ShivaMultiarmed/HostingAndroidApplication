@@ -3,20 +3,16 @@ package mikhail.shell.video.hosting.presentation.channel.create
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class ChannelCreationScreenState(
-    val title: String = "",
-    val titleError: Error? = null,
     val owner: Long,
-    val alias: String = "",
-    val aliasError: Error? = null,
-    val logo: String? = null,
-    val logoError: FileError? = null,
-    val header: String? = null,
-    val headerError: FileError? = null,
-    val description: String = "",
-    val descriptionError: TextError? = null,
+    val title: FieldState<String, Error> = FieldState(""),
+    val alias: FieldState<String, Error> = FieldState(""),
+    val logo: FieldState<String?, FileError> = FieldState(null),
+    val header: FieldState<String?, FileError> = FieldState(null),
+    val description: FieldState<String, TextError> = FieldState(""),
     val channelId: Long? = null,
-    val isCreating: Boolean = false,
-    val creationError: Error? = null
+    val isLoading: Boolean = false,
+    val error: Error? = null
 )

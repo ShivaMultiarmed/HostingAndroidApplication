@@ -8,7 +8,10 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Subscription
 
 interface ChannelRepository {
-    suspend fun existsByTitle(title: String): Result<Boolean, Error>
+    suspend fun existsByTitle(
+        channelId: Long? = null,
+        title: String
+    ): Result<Unit, Error>
 
     suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error>
 
@@ -40,10 +43,14 @@ interface ChannelRepository {
     suspend fun fetchChannel(channelId: Long): Result<Channel, Error>
 
     suspend fun removeChannel(channelId: Long): Result<Unit, Error>
-    suspend fun existsByAlias(alias: String): Result<Boolean, Error>
     suspend fun create(
         channel: Channel,
         logo: String?,
         header: String?
     ): Result<Channel, Error>
+
+    suspend fun existsByAlias(
+        channelId: Long? = null,
+        alias: String
+    ): Result<Unit, Error>
 }

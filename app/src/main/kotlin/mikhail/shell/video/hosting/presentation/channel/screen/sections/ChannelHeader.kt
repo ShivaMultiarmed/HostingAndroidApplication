@@ -54,7 +54,6 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
-import mikhail.shell.video.hosting.domain.utils.isNotBlank
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenUiEvent
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
@@ -150,7 +149,7 @@ fun ChannelHeaderCompact(
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
                     ChannelTitle(title = channel.title)
-                    ChannelAlias(alias = channel.alias)
+                    ChannelAlias(alias = channel.alias?: channel.channelId.toString())
                     SubscriberNumberText(subscribers = channel.subscribers)
                 }
                 if (owns) {
@@ -212,7 +211,7 @@ fun ChannelHeaderMedium(
             }
         ) {
             ChannelTitle(title = channel.title)
-            ChannelAlias(alias = channel.alias)
+            ChannelAlias(alias = channel.alias?: channel.channelId.toString())
             Row {
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
@@ -302,7 +301,7 @@ fun ChannelHeaderExpanded(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ChannelAlias(alias = channel.alias)
+                ChannelAlias(alias = channel.alias?: channel.channelId.toString())
                 SubscriptionButton(
                     state = channel.subscription,
                     onSubscription = {
@@ -466,7 +465,7 @@ fun ChannelTitle(
 @Composable
 fun ChannelAlias(
     modifier: Modifier = Modifier,
-    alias: String?
+    alias: String
 ) {
     if (alias.isNotBlank()) {
         Text(

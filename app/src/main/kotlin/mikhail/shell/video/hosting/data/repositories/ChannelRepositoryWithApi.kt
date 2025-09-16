@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.gson.Gson
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.api.ChannelApi
@@ -11,6 +12,7 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.models.Channel
@@ -25,24 +27,29 @@ import javax.inject.Inject
 class ChannelRepositoryWithApi @Inject constructor(
     private val channelApi: ChannelApi,
     private val fcm: FirebaseMessaging,
-    private val fileProvider: FileProvider
+    private val fileProvider: FileProvider,
+    private val gson: Gson
 ) : ChannelRepository {
 
-    override suspend fun existsByTitle(title: String): Result<Boolean, Error> = request {
-        channelApi.existsByTitle(title)
-    }
-
-    override suspend fun existsByAlias(alias: String): Result<Boolean, Error> = request {
-        channelApi.existsByAlias(alias)
+    override suspend fun existsByAlias(
+        channelId: Long?,
+        alias: String
+    ): Result<Unit, Error> = request (
+        httpExceptionHandler(409) {
+            TextError.EXISTS
+        }
+    ) {
+        channelApi.existsByAlias(channelId = channelId, alias = alias)
     }
 
     override suspend fun create(
         channel: Channel,
         logo: String?,
         header: String?
-    ): Result<Channel, Error> = request (
+    ): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
-            val response = Json.decodeFromString<ChannelCreationErrorResponse>(it.response()?.body() as String)
+            val json = it.response()?.errorBody()!!.string()
+            val response = gson.fromJson(json, ChannelCreationErrorResponse::class.java)
             ChannelCreationError(
                 titleError = response.title,
                 aliasError = response.alias,
@@ -65,6 +72,17 @@ class ChannelRepositoryWithApi @Inject constructor(
                 fileProvider.uriToPart(it, "header")
             }
         ).toDomain()
+    }
+
+    override suspend fun existsByTitle(
+        channelId: Long?,
+        title: String
+    ): Result<Unit, Error> = request(
+        httpExceptionHandler(409) {
+            TextError.EXISTS
+        }
+    ) {
+        channelApi.existsByTitle(channelId = channelId, title = title)
     }
 
     override suspend fun fetchChannelForUser(channelId: Long): Result<ChannelForUser, Error> =
@@ -121,9 +139,10 @@ class ChannelRepositoryWithApi @Inject constructor(
         header: String?,
         logoAction: EditAction,
         logo: String?
-    ): Result<Channel, Error> = request (
+    ): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
-            val response = Json.decodeFromString<ChannelEditingErrorResponse>(it.response()?.body() as String)
+            val response =
+                Json.decodeFromString<ChannelEditingErrorResponse>(it.response()?.body() as String)
             ChannelEditingError(
                 titleError = response.title,
                 aliasError = response.alias,

@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
@@ -34,16 +36,16 @@ class ChannelCreationViewModel @Inject constructor(
         viewModelScope.launch {
             when (event) {
                 is ChannelCreationUiEvent.AliasChanged -> onAliasChanged(event.alias)
-                ChannelCreationUiEvent.AliasTypingStarted -> onAliasTypingStarted()
-                ChannelCreationUiEvent.AliasTypingEnded -> onAliasTypingEnded()
+                ChannelCreationUiEvent.AliasFocused -> onAliasFocused()
+                ChannelCreationUiEvent.AliasBlurred -> onAliasBlurred()
                 is ChannelCreationUiEvent.HeaderChanged -> onHeaderChanged(event.header)
                 is ChannelCreationUiEvent.LogoChanged -> onLogoChanged(event.logo)
                 is ChannelCreationUiEvent.TitleChanged -> onTitleChanged(event.title)
-                ChannelCreationUiEvent.TitleTypingStarted -> onTitleTypingStarted()
-                ChannelCreationUiEvent.TitleTypingEnded -> onTitleTypingEnded()
+                ChannelCreationUiEvent.TitleFocused -> onTitleFocused()
+                ChannelCreationUiEvent.TitleBlurred -> onTitleBlurred()
                 is ChannelCreationUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                ChannelCreationUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
-                ChannelCreationUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
+                ChannelCreationUiEvent.DescriptionFocused -> onDescriptionFocused()
+                ChannelCreationUiEvent.DescriptionBlurred -> onDescriptionBlurred()
                 is ChannelCreationUiEvent.Submit -> onSubmit()
                 else -> Unit
             }
@@ -53,50 +55,60 @@ class ChannelCreationViewModel @Inject constructor(
     private fun onAliasChanged(alias: String) {
         _state.update {
             it.copy(
-                alias = alias
+                alias = it.alias.copy(
+                    value = alias
+                )
             )
         }
     }
 
-    private fun onAliasTypingStarted() {
+    private fun onAliasFocused() {
         _state.update {
             it.copy(
-                aliasError = null
+                alias = it.alias.copy(
+                    error = null
+                )
             )
         }
     }
 
-    private suspend fun onAliasTypingEnded() {
-        _state.update { currentState ->
-            currentState.copy(
-                aliasError = currentState.alias.takeIf { it.isNotEmpty() }?.let {
-                    val validationResult = validateChannelAlias(currentState.alias)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
-            )
-        }
-    }
-
-    private suspend fun onHeaderChanged(header: String?) {
+    private suspend fun onAliasBlurred() {
         _state.update {
             it.copy(
-                header = header,
-                headerError = header?.let {
-                    val validationResult = validateImage(header)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
+                alias = it.alias.copy(
+                    error = it.alias.value.takeIf { it.isNotEmpty() }?.let {
+                        val validationResult = validateChannelAlias(alias = it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
             )
         }
     }
 
-    private suspend fun onLogoChanged(logo: String?) {
+    private fun onHeaderChanged(header: String?) {
         _state.update {
             it.copy(
-                logo = logo,
-                logoError = logo?.let {
-                    val validationResult = validateImage(logo)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
+                header = it.header.copy(
+                    value = header,
+                    error = header?.let {
+                        val validationResult = validateImage(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
+            )
+        }
+    }
+
+    private fun onLogoChanged(logo: String?) {
+        _state.update {
+            it.copy(
+                logo = it.logo.copy(
+                    value = logo,
+                    error = logo?.let {
+                        val validationResult = validateImage(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
             )
         }
     }
@@ -104,26 +116,32 @@ class ChannelCreationViewModel @Inject constructor(
     private fun onTitleChanged(title: String) {
         _state.update {
             it.copy(
-                title = title
+                title = it.title.copy(
+                    value = title
+                )
             )
         }
     }
 
-    private fun onTitleTypingStarted() {
+    private fun onTitleFocused() {
         _state.update {
             it.copy(
-                titleError = null
+                title = it.title.copy(
+                    error = null
+                )
             )
         }
     }
 
-    private suspend fun onTitleTypingEnded() {
-        _state.update { currentState ->
-            currentState.copy(
-                titleError = currentState.title.let {
-                    val validationResult = validateChannelTitle(currentState.title)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
+    private suspend fun onTitleBlurred() {
+        _state.update {
+            it.copy(
+                title = it.title.copy(
+                    error = it.title.value.let {
+                        val validationResult = validateChannelTitle(title = it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
             )
         }
     }
@@ -131,62 +149,116 @@ class ChannelCreationViewModel @Inject constructor(
     private fun onDescriptionChanged(description: String) {
         _state.update {
             it.copy(
-                description = description
+                description = it.description.copy(
+                    value = description
+                )
             )
         }
     }
 
-    private fun onDescriptionTypingStarted() {
+    private fun onDescriptionFocused() {
         _state.update {
             it.copy(
-                descriptionError = null
+                description = it.description.copy(
+                    error = null
+                )
             )
         }
     }
-    private fun onDescriptionTypingEnded() {
-        _state.update { currentState ->
-            currentState.copy(
-                descriptionError = currentState.description.takeIf { it.isNotEmpty() }?.let {
-                    val validationResult = validateDescription(currentState.description)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
+    private fun onDescriptionBlurred() {
+        _state.update {
+            it.copy(
+                description = it.description.copy(
+                    error = it.description.value.takeIf { it.isNotEmpty() }?.let {
+                        val validationResult = validateDescription(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
             )
         }
     }
 
     private suspend fun onSubmit() {
-        if (_state.value.titleError != null
-            || _state.value.aliasError != null
-            || _state.value.logoError != null
-            || _state.value.headerError != null
+        _state.update {
+            it.copy(
+                title = it.title.copy(
+                    error = it.title.value.let {
+                        val validationResult = validateChannelTitle(title = it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                ),
+                alias = it.alias.copy(
+                    error = it.alias.value.takeIf { it.isNotEmpty() }?.let {
+                        val validationResult = validateChannelAlias(alias = it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                ),
+                logo = it.logo.copy(
+                    error = it.logo.value?.let {
+                        val validationResult = validateImage(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                ),
+                header = it.header.copy(
+                    error = it.header.value?.let {
+                        val validationResult = validateImage(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                ),
+                description = it.description.copy(
+                    error = it.description.value.takeIf { it.isNotEmpty() }?.let {
+                        val validationResult = validateDescription(it)
+                        if (validationResult is Result.Failure) validationResult.error else null
+                    }
+                )
+            )
+        }
+        if (_state.value.title.error != null
+            && state.value.title.error !is NetworkError
+            || _state.value.alias.error != null
+            && state.value.alias.error !is NetworkError
+            || _state.value.logo.error != null
+            || _state.value.header.error != null
+            || _state.value.description.error != null
         ) {
             return
         }
         _state.update {
-            it.copy(isCreating = true)
+            it.copy(isLoading = true)
         }
         createChannel(
             channel = Channel(
-                title = _state.value.title,
-                alias = _state.value.alias,
+                title = _state.value.title.value,
+                alias = _state.value.alias.value,
                 ownerId = _state.value.owner,
             ),
-            logo = _state.value.logo,
-            header = _state.value.header
+            logo = _state.value.logo.value,
+            header = _state.value.header.value
         ).onSuccess { channelId ->
             _state.update {
                 it.copy(
                     channelId = channelId,
-                    isCreating = false,
-                    creationError = null
+                    isLoading = false,
+                    error = null
                 )
             }
         }.onFailure { error ->
             _state.update {
-                it.copy(
-                    creationError = error,
-                    isCreating = false,
-                )
+                if (error is ChannelCreationError) {
+                    it.copy(
+                        title = it.title.copy(
+                            error = error.titleError
+                        ),
+                        alias = it.alias.copy(
+                            error = error.aliasError
+                        )
+                    )
+                } else {
+                    it.copy(
+                        error = error,
+                        isLoading = false,
+                    )
+                }
             }
         }
     }

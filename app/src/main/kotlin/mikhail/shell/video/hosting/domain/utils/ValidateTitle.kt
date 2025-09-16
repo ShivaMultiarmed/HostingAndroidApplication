@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class ValidateTitle @Inject constructor() {
     operator fun invoke(title: String): Result<Unit, TextError> {
-        return if (title.isEmpty()) {
+        return if (title.isBlank()) {
             Result.Failure(TextError.EMPTY)
         } else if (title.length > ValidationRules.MAX_TITLE_LENGTH) {
             Result.Failure(TextError.LONG)
