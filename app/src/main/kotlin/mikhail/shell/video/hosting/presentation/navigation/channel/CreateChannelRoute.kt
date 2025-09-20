@@ -16,14 +16,14 @@ fun EntryProviderBuilder<Route>.createChannelRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>
 ) {
-    entry <Route.User.CreateChannel> {
+    entry <Route.User.CreateChannel> { route ->
         val viewModel = hiltViewModel<ChannelCreationViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         ChannelCreationScreen(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    is ChannelCreationUiEvent.Cancel -> rootBackStack.removeLastOrNull()
+                    is ChannelCreationUiEvent.Cancel -> userBackStack.remove(route)
                     else -> viewModel.onEvent(event)
                 }
             }
@@ -36,7 +36,7 @@ fun EntryProviderBuilder<Route>.createChannelRoute(
         LaunchedEffect(state.channelId) {
             if (state.channelId != null) {
                 userBackStack.add(Route.Channel(state.channelId!!))
-                userBackStack.remove(Route.User.CreateChannel)
+                userBackStack.remove(route)
             }
         }
     }

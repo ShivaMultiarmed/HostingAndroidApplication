@@ -196,9 +196,11 @@ fun ChannelCreationScreen(
                     }
                 }
             val logoErrorMsg = when (state.logo.error) {
-                FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
+                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
+                FileError.EMPTY -> stringResource(R.string.file_empty)
+                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
                 else -> null
             }
             EditField(
@@ -244,9 +246,11 @@ fun ChannelCreationScreen(
                     }
                 }
             val headerErrorMsg = when (state.header.error) {
-                FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
+                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
+                FileError.EMPTY -> stringResource(R.string.file_empty)
+                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
                 else -> null
             }
             EditField(

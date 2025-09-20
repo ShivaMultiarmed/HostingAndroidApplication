@@ -295,4 +295,6 @@
     <string name="no_videos_yet">Здесь ещё нет видео</string>
     <string name="channel_title_check_error">Не удалось проверить название</string>
     <string name="channel_alias_check_error">Не удалось проверить ник</string>
+    <string name="file_name_not_valid">Некорректное имя файла</string>
+    <string name="file_empty">Файл пустой</string>
 </resources>

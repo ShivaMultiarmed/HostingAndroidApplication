@@ -73,12 +73,12 @@ class ChannelCreationViewModel @Inject constructor(
     }
 
     private suspend fun onAliasBlurred() {
-        _state.update {
-            it.copy(
-                alias = it.alias.copy(
-                    error = it.alias.value.takeIf { it.isNotEmpty() }?.let {
+        _state.update { screenState ->
+            screenState.copy(
+                alias = screenState.alias.copy(
+                    error = screenState.alias.value.takeIf { it.isNotEmpty() }?.let {
                         val validationResult = validateChannelAlias(alias = it)
-                        if (validationResult is Result.Failure) validationResult.error else null
+                        if (validationResult is Result.Failure && screenState.channelId == null) validationResult.error else null
                     }
                 )
             )
@@ -86,13 +86,13 @@ class ChannelCreationViewModel @Inject constructor(
     }
 
     private fun onHeaderChanged(header: String?) {
-        _state.update {
-            it.copy(
-                header = it.header.copy(
+        _state.update { screenState ->
+            screenState.copy(
+                header = screenState.header.copy(
                     value = header,
                     error = header?.let {
                         val validationResult = validateImage(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
+                        if (validationResult is Result.Failure && screenState.channelId == null) validationResult.error else null
                     }
                 )
             )
@@ -100,13 +100,13 @@ class ChannelCreationViewModel @Inject constructor(
     }
 
     private fun onLogoChanged(logo: String?) {
-        _state.update {
-            it.copy(
-                logo = it.logo.copy(
+        _state.update { screenState ->
+            screenState.copy(
+                logo = screenState.logo.copy(
                     value = logo,
                     error = logo?.let {
                         val validationResult = validateImage(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
+                        if (validationResult is Result.Failure && screenState.channelId == null) validationResult.error else null
                     }
                 )
             )
@@ -134,12 +134,12 @@ class ChannelCreationViewModel @Inject constructor(
     }
 
     private suspend fun onTitleBlurred() {
-        _state.update {
-            it.copy(
-                title = it.title.copy(
-                    error = it.title.value.let {
+        _state.update { screenState ->
+            screenState.copy(
+                title = screenState.title.copy(
+                    error = screenState.title.value.let {
                         val validationResult = validateChannelTitle(title = it)
-                        if (validationResult is Result.Failure) validationResult.error else null
+                        if (validationResult is Result.Failure && screenState.channelId == null) validationResult.error else null
                     }
                 )
             )
@@ -166,12 +166,12 @@ class ChannelCreationViewModel @Inject constructor(
         }
     }
     private fun onDescriptionBlurred() {
-        _state.update {
-            it.copy(
-                description = it.description.copy(
-                    error = it.description.value.takeIf { it.isNotEmpty() }?.let {
+        _state.update { screenState ->
+            screenState.copy(
+                description = screenState.description.copy(
+                    error = screenState.description.value.takeIf { it.isNotEmpty() }?.let {
                         val validationResult = validateDescription(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
+                        if (validationResult is Result.Failure && screenState.channelId == null) validationResult.error else null
                     }
                 )
             )
@@ -231,6 +231,7 @@ class ChannelCreationViewModel @Inject constructor(
                 title = _state.value.title.value,
                 alias = _state.value.alias.value,
                 ownerId = _state.value.owner,
+                description = _state.value.description.value
             ),
             logo = _state.value.logo.value,
             header = _state.value.header.value
@@ -251,7 +252,8 @@ class ChannelCreationViewModel @Inject constructor(
                         ),
                         alias = it.alias.copy(
                             error = error.aliasError
-                        )
+                        ),
+                        isLoading = false
                     )
                 } else {
                     it.copy(

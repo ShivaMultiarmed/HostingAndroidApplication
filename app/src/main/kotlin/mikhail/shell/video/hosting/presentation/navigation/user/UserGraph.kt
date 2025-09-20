@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.channel.createChannelRoute
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.video.uploadVideoRoute
@@ -51,6 +52,11 @@ fun EntryProviderBuilder<Route>.userGraph(
                 createChannelRoute(
                     rootBackStack = rootBackStack,
                     userBackStack = userBackStack
+                )
+                channelGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = userBackStack,
+                    userDetailsProvider = userDetailsProvider
                 )
             }
         )
