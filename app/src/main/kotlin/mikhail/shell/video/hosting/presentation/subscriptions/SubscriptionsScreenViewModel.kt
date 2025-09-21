@@ -9,13 +9,16 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.channels.GetSubscriptions
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import javax.inject.Inject
 
 @HiltViewModel
 class SubscriptionsScreenViewModel @Inject constructor(
-    private val getSubscriptions: GetSubscriptions
+    private val getSubscriptions: GetSubscriptions,
+    private val getChannelLogoUrl: GetChannelLogoUrl
 ) : ViewModel() {
     private val _state = MutableStateFlow(SubscriptionsScreenState())
     val state = _state.onStart {
@@ -48,7 +51,14 @@ class SubscriptionsScreenViewModel @Inject constructor(
             ).onSuccess { fetchedChannels ->
                 _state.update {
                     it.copy(
-                        channels = ((if (start) null else it.channels)?: emptyList()) + fetchedChannels.map { it.toUi() },
+                        channels = ((if (start) null else it.channels)?: emptyList()) + fetchedChannels.map {
+                            it.toUi(
+                                logo = getChannelLogoUrl(
+                                    channelId = it.channelId!!,
+                                    size = ImageSize.MEDIUM
+                                )
+                            )
+                        },
                         error = null,
                         isStarting = false,
                         isLoading = false,

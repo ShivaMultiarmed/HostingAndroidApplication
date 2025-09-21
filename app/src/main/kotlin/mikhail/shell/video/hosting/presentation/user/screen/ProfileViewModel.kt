@@ -12,9 +12,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.user.models.toUi
 
@@ -23,6 +25,7 @@ class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val getUser: GetUser,
     private val getOwnedChannels: GetOwnedChannels,
+    private val getChannelLogoUrl: GetChannelLogoUrl,
     private val signOut: SignOut
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
@@ -90,7 +93,14 @@ class ProfileViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     channelState = it.channelState.copy(
-                        channels = ((if (start) null else _state.value.channelState.channels)?: emptyList()) + channels.map { it.toUi() },
+                        channels = ((if (start) null else _state.value.channelState.channels)?: emptyList()) + channels.map {
+                            it.toUi(
+                                logo = getChannelLogoUrl(
+                                    channelId = it.channelId!!,
+                                    size = ImageSize.MEDIUM
+                                )
+                            )
+                        },
                         error = null,
                         isLoading = false,
                         nextPartIndex = (if (start) 0 else _state.value.channelState.nextPartIndex) + 1,

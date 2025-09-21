@@ -8,15 +8,15 @@ import mikhail.shell.video.hosting.domain.models.Subscription
 
 data class ChannelUi(
     val channelId: Long,
-    val avatarUrl: String,
+    val logo: String,
     val title: String,
     val alias: String?,
     val subscribers: Long
 )
 
-fun Channel.toUi() = ChannelUi(
+fun Channel.toUi(logo: String = "") = ChannelUi(
     channelId = channelId!!,
-    avatarUrl = logo!!,
+    logo = logo,
     title = title,
     alias = alias,
     subscribers = subscribers
@@ -38,11 +38,13 @@ data class ChannelForUserUi(
 
 fun ChannelForUser.toUi(
     subscriptionError: NetworkError? = null,
-    removingError: NetworkError? = null
+    removingError: NetworkError? = null,
+    logo: String = "",
+    header: String = ""
 ) = ChannelForUserUi(
     channelId = channelId!!,
-    logo = logo!!,
-    headerUrl = header!!,
+    logo = logo,
+    headerUrl = header,
     title = title,
     alias = alias,
     description = description,

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.repositories
 
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
@@ -53,4 +54,7 @@ interface ChannelRepository {
         channelId: Long? = null,
         alias: String
     ): Result<Unit, Error>
+
+    fun constructLogoUrl(channelId: Long, size: ImageSize): String
+    fun constructHeaderUrl(channelId: Long, size: ImageSize): String
 }

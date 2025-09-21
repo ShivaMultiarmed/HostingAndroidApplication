@@ -503,7 +503,7 @@ fun ChannelSnippet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = channel.avatarUrl,
+                model = channel.logo,
                 contentDescription = channel.title,
                 modifier = Modifier
                     .size(100.dp)

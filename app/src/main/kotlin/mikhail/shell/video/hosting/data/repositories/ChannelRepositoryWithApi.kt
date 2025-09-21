@@ -4,6 +4,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.Json
+import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
 import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
@@ -11,6 +12,7 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
@@ -40,6 +42,13 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     ) {
         channelApi.existsByAlias(channelId = channelId, alias = alias)
+    }
+
+    override fun constructHeaderUrl(
+        channelId: Long,
+        size: ImageSize
+    ): String {
+        return "$API_BASE_URL/channels/$channelId/header?size=${size.name.lowercase()}"
     }
 
     override suspend fun create(
@@ -72,6 +81,10 @@ class ChannelRepositoryWithApi @Inject constructor(
                 fileProvider.uriToPart(it, "header")
             }
         ).toDomain()
+    }
+
+    override fun constructLogoUrl(channelId: Long, size: ImageSize): String {
+        return "$API_BASE_URL/channels/$channelId/logo?size=${size.name.lowercase()}"
     }
 
     override suspend fun existsByTitle(

@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelDetails
 import mikhail.shell.video.hosting.domain.usecases.channels.RemoveChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
+import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 
@@ -25,6 +28,8 @@ class ChannelScreenViewModel @AssistedInject constructor(
     @Assisted("channelId") private val channelId: Long,
     private val getChannelDetails: GetChannelDetails,
     private val getVideoList: GetVideoList,
+    private val getChannelLogoUrl: GetChannelLogoUrl,
+    private val getChannelHeaderUrl: GetChannelHeaderUrl,
     private val subscribe: Subscribe,
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
@@ -63,7 +68,10 @@ class ChannelScreenViewModel @AssistedInject constructor(
         getChannelDetails(channelId).onSuccess { channel ->
             _state.update {
                 ChannelScreenState.Success(
-                    channel = channel.toUi(),
+                    channel = channel.toUi(
+                        logo = getChannelLogoUrl(channelId = channelId, size = ImageSize.MEDIUM),
+                        header = getChannelHeaderUrl(channelId = channelId, size = ImageSize.LARGE)
+                    ),
                     videoState = VideoListState()
                 )
             }
