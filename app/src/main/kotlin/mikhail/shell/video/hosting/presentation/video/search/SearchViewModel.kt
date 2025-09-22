@@ -7,15 +7,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.videos.SearchForVideos
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateSearchQuery
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchForVideos: SearchForVideos,
+    private val getChannelLogoUrl: GetChannelLogoUrl,
     private val validateSearchQuery: ValidateSearchQuery
 ) : ViewModel() {
 
@@ -58,7 +61,14 @@ class SearchViewModel @Inject constructor(
             ).onSuccess { list ->
                 _state.update {
                     it.copy(
-                        videos = ((if (!start) it.videos else null) ?: emptyList()) + list.map { it.toUi() },
+                        videos = ((if (!start) it.videos else null) ?: emptyList()) + list.map {
+                            it.toUi(
+                                channelLogo = getChannelLogoUrl(
+                                    channelId = it.channel.channelId!!,
+                                    size = ImageSize.MEDIUM
+                                )
+                            )
+                        },
                         error = null,
                         isStarting = false,
                         isLoading = false,

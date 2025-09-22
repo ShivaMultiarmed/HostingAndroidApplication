@@ -211,7 +211,7 @@ fun VideoWithChannelSnippet(
                     else Modifier.clip(RoundedCornerShape(10.dp))
                 )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
-            model = videoWithChannel.videoCoverUrl,
+            model = videoWithChannel.videoHeader,
             contentDescription = videoWithChannel.videoTitle,
             contentScale = ContentScale.Crop
         )
@@ -225,7 +225,7 @@ fun VideoWithChannelSnippet(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape),
-                model = videoWithChannel.channelAvatarUrl,
+                model = videoWithChannel.channelLogo,
                 contentDescription = videoWithChannel.channelTitle,
                 contentScale = ContentScale.Crop
             )

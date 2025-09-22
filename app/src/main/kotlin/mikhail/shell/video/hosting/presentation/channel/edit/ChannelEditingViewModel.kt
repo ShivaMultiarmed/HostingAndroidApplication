@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
+import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 
@@ -25,6 +28,8 @@ import mikhail.shell.video.hosting.domain.utils.ValidateImage
 class ChannelEditingViewModel @AssistedInject constructor(
     @Assisted("channelId") private val channelId: Long,
     private val getChannel: GetChannel,
+    private val getChannelLogoUrl: GetChannelLogoUrl,
+    private val getChannelHeaderUrl: GetChannelHeaderUrl,
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
@@ -55,8 +60,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
                                 title = initialChannel.title,
                                 alias = initialChannel.alias ?: "",
                                 description = initialChannel.description ?: "",
-                                logo = initialChannel.logo!!,
-                                header = initialChannel.header!!
+                                logo = getChannelLogoUrl(initialChannel.channelId!!, ImageSize.MEDIUM),
+                                header = getChannelHeaderUrl(initialChannel.channelId, ImageSize.MEDIUM)
                             ),
                             editedChannel = ChannelEditingInputState(
                                 title = initialChannel.title,

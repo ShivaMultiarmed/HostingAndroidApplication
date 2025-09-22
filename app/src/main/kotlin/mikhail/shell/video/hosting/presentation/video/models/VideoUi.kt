@@ -28,19 +28,21 @@ fun Video.toUi() = VideoUi(
 data class VideoWithChannelUi(
     val videoId: Long,
     val videoTitle: String,
-    val videoCoverUrl: String,
-    val channelAvatarUrl: String,
+    val videoHeader: String,
+    val channelLogo: String,
     val channelId: Long,
     val channelTitle: String,
     val views: Long,
     val dateTime: LocalDateTime
 )
 
-fun VideoWithChannel.toUi() = VideoWithChannelUi(
+fun VideoWithChannel.toUi(
+    channelLogo: String = ""
+) = VideoWithChannelUi(
     videoId = video.videoId!!,
     videoTitle = video.title,
-    videoCoverUrl = video.cover!!,
-    channelAvatarUrl = channel.logo!!,
+    videoHeader = video.cover!!,
+    channelLogo = channelLogo,
     channelId = channel.channelId!!,
     views = video.views,
     dateTime = video.dateTime!!.toLocalDateTime(TimeZone.currentSystemDefault()),
@@ -58,13 +60,15 @@ data class VideoDetailsUi(
     val views: Long,
     val likes: Long,
     val dislikes: Long,
-    val avatarUrl: String,
+    val channelLogo: String,
     val liking: Liking,
     val subscription: Subscription,
     val subscribers: Long
 )
 
-fun VideoWithChannelForUser.toUi() = VideoDetailsUi(
+fun VideoWithChannelForUser.toUi(
+    channelLogo: String = ""
+) = VideoDetailsUi(
     videoId = video.videoId!!,
     channelId = channel.channelId!!,
     ownerId = channel.ownerId,
@@ -75,7 +79,7 @@ fun VideoWithChannelForUser.toUi() = VideoDetailsUi(
     views = video.views,
     likes = video.likes,
     dislikes = video.dislikes,
-    avatarUrl = channel.logo!!,
+    channelLogo = channelLogo,
     liking = video.liking,
     subscription = channel.subscription,
     subscribers = channel.subscribers

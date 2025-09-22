@@ -21,6 +21,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.models.Comment
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Subscription
@@ -33,6 +34,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
+import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.models.toUi
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import kotlin.time.Clock
@@ -49,7 +51,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val postComment: PostComment,
     private val editComment: EditComment,
     private val removeComment: RemoveComment,
-    private val getComments: GetComments
+    private val getComments: GetComments,
+    private val getChannelLogoUrl: GetChannelLogoUrl
 ) : ViewModel() {
     private val _state = MutableStateFlow(VideoScreenState())
     val state = _state.onStart {
@@ -99,7 +102,12 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         isStarting = false,
-                        video = videoDetails.toUi(),
+                        video = videoDetails.toUi(
+                            channelLogo = getChannelLogoUrl(
+                                channelId = videoDetails.channel.channelId!!,
+                                size = ImageSize.MEDIUM
+                            )
+                        ),
                         startingError = null
                     )
                 }

@@ -372,7 +372,7 @@ fun VideoScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AsyncImage(
-                                    model = state.video.avatarUrl,
+                                    model = state.video.channelLogo,
                                     contentDescription = stringResource(R.string.channel_link),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier

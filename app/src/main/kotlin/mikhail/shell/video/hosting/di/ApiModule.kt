@@ -11,7 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import mikhail.shell.video.hosting.BuildConfig
+import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.CommentApi
@@ -73,7 +73,7 @@ object ApiModule {
         converterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
-        .baseUrl(BuildConfig.API_BASE_URL)
+        .baseUrl("$API_BASE_URL/")
         .addConverterFactory(converterFactory)
         .build()
 
