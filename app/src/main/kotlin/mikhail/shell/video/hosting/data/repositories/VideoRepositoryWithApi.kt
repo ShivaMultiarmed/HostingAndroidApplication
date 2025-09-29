@@ -103,10 +103,10 @@ class VideoRepositoryWithApi @Inject constructor(
                     it.response()?.body() as String
                 )
                 VideoUploadingError(
-                    titleError = response.title,
-                    sourceError = response.source,
-                    coverError = response.cover,
-                    descriptionError = response.description
+                    titleError = response.titleError,
+                    sourceError = response.sourceError,
+                    coverError = response.coverError,
+                    descriptionError = response.descriptionError
                 )
             }
         ) {
@@ -198,10 +198,10 @@ class VideoRepositoryWithApi @Inject constructor(
             val response =
                 Json.decodeFromString<VideoEditingErrorResponse>(it.response()?.body() as String)
             VideoEditingError(
-                titleError = response.title,
-                coverError = response.cover,
-                descriptionError = response.description,
-                channelId = response.channelId
+                titleError = response.titleError,
+                coverError = response.coverError,
+                descriptionError = response.descriptionError,
+                channelId = response.channelIdError
             )
         }
     ) {

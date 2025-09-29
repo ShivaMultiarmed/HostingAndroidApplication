@@ -5,8 +5,8 @@ import mikhail.shell.video.hosting.domain.errors.OptionError
 import mikhail.shell.video.hosting.domain.errors.TextError
 
 data class VideoEditingErrorResponse(
-    val title: TextError?,
-    val channelId: OptionError?,
-    val description: TextError?,
-    val cover: FileError?
+    val titleError: TextError?,
+    val channelIdError: OptionError?,
+    val descriptionError: TextError?,
+    val coverError: FileError?
 )

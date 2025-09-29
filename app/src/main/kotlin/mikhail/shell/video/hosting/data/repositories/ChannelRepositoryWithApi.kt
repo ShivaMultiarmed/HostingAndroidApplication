@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import kotlinx.coroutines.tasks.await
-import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
@@ -60,11 +59,11 @@ class ChannelRepositoryWithApi @Inject constructor(
             val json = it.response()?.errorBody()!!.string()
             val response = gson.fromJson(json, ChannelCreationErrorResponse::class.java)
             ChannelCreationError(
-                titleError = response.title,
-                aliasError = response.alias,
-                descriptionError = response.description,
-                headerError = response.header,
-                logoError = response.logo
+                titleError = response.titleError,
+                aliasError = response.aliasError,
+                descriptionError = response.descriptionError,
+                headerError = response.headerError,
+                logoError = response.logoError
             )
         }
     ) {
@@ -154,14 +153,14 @@ class ChannelRepositoryWithApi @Inject constructor(
         logo: String?
     ): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
-            val response =
-                Json.decodeFromString<ChannelEditingErrorResponse>(it.response()?.body() as String)
+            val json = it.response()?.errorBody()!!.string()
+            val response = gson.fromJson(json, ChannelEditingErrorResponse::class.java)
             ChannelEditingError(
-                titleError = response.title,
-                aliasError = response.alias,
-                descriptionError = response.description,
-                headerError = response.header,
-                logoError = response.logo
+                titleError = response.titleError,
+                aliasError = response.aliasError,
+                descriptionError = response.descriptionError,
+                headerError = response.headerError,
+                logoError = response.logoError
             )
         }
     ) {

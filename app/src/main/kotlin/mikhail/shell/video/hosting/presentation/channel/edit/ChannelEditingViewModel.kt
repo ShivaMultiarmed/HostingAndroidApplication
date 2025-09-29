@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
@@ -23,6 +25,7 @@ import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 @HiltViewModel(assistedFactory = ChannelEditingViewModel.Factory::class)
 class ChannelEditingViewModel @AssistedInject constructor(
@@ -36,9 +39,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
     private val validateDescription: ValidateDescription,
     private val editChannel: EditChannel
 ) : ViewModel() {
-
     private val _state =
-        MutableStateFlow<ChannelEditingScreenState>(ChannelEditingScreenState.Loading)
+        MutableStateFlow<ChannelEditingScreenState>(ChannelEditingScreenState.Starting)
     val state = _state
         .onStart {
             load()
@@ -60,13 +62,19 @@ class ChannelEditingViewModel @AssistedInject constructor(
                                 title = initialChannel.title,
                                 alias = initialChannel.alias ?: "",
                                 description = initialChannel.description ?: "",
-                                logo = getChannelLogoUrl(initialChannel.channelId!!, ImageSize.MEDIUM),
-                                header = getChannelHeaderUrl(initialChannel.channelId, ImageSize.MEDIUM)
+                                logo = getChannelLogoUrl(
+                                    initialChannel.channelId!!,
+                                    ImageSize.MEDIUM
+                                ),
+                                header = getChannelHeaderUrl(
+                                    initialChannel.channelId,
+                                    ImageSize.MEDIUM
+                                )
                             ),
                             editedChannel = ChannelEditingInputState(
-                                title = initialChannel.title,
-                                alias = initialChannel.alias ?: "",
-                                description = initialChannel.description ?: "",
+                                title = FieldState(initialChannel.title),
+                                alias = FieldState(initialChannel.alias ?: ""),
+                                description = FieldState(initialChannel.description ?: ""),
                             ),
                             error = null,
                             isLoading = false
@@ -81,199 +89,281 @@ class ChannelEditingViewModel @AssistedInject constructor(
     }
 
     fun onEvent(event: ChannelEditingUiEvent) {
-        viewModelScope.launch {
-            when (event) {
-                is ChannelEditingUiEvent.AliasChanged -> onAliasChanged(event.alias)
-                ChannelEditingUiEvent.AliasTypingStarted -> onAliasTypingStarted()
-                ChannelEditingUiEvent.AliasTypingEnded -> onAliasTypingEnded()
-                is ChannelEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                ChannelEditingUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
-                ChannelEditingUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
-                is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header)
-                is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo)
-                ChannelEditingUiEvent.Submit -> edit()
-                is ChannelEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
-                ChannelEditingUiEvent.TitleTypingStarted -> onTitleTypingStarted()
-                ChannelEditingUiEvent.TitleTypingEnded -> onTitleTypingEnded()
-                is ChannelEditingUiEvent.HeaderExists -> onHeaderExists(event.exists)
-                is ChannelEditingUiEvent.LogoExists -> onLogoExists(event.exists)
-                ChannelEditingUiEvent.Retry -> load()
-                else -> Unit
-            }
+        when (event) {
+            is ChannelEditingUiEvent.AliasChanged -> onAliasChanged(event.alias)
+            ChannelEditingUiEvent.AliasFocused -> onAliasFocused()
+            ChannelEditingUiEvent.AliasBlurred -> onAliasBlurred()
+            is ChannelEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
+            ChannelEditingUiEvent.DescriptionFocused -> onDescriptionFocused()
+            ChannelEditingUiEvent.DescriptionBlurred -> onDescriptionBlurred()
+            is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header)
+            is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo)
+            is ChannelEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
+            ChannelEditingUiEvent.TitleFocused -> onTitleFocused()
+            ChannelEditingUiEvent.TitleBlurred -> onTitleBlurred()
+            is ChannelEditingUiEvent.HeaderExists -> onHeaderExists(event.exists)
+            is ChannelEditingUiEvent.LogoExists -> onLogoExists(event.exists)
+            ChannelEditingUiEvent.Restart -> load()
+            ChannelEditingUiEvent.Submit -> edit()
+            else -> Unit
         }
     }
 
     private fun onHeaderExists(exists: Boolean) {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                initialChannel = it.initialChannel.copy(headerExists = exists)
-            )
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                initialChannel = currentState.initialChannel.copy(headerExists = exists)
+            ) ?: it
         }
     }
 
     private fun onLogoExists(exists: Boolean) {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                initialChannel = it.initialChannel.copy(logoExists = exists)
-            )
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                initialChannel = currentState.initialChannel.copy(logoExists = exists)
+            ) ?: it
         }
     }
 
     private fun onAliasChanged(alias: String) {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    alias = alias
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    alias = currentState.editedChannel.alias.copy(
+                        value = alias
+                    )
                 )
-            )
-        }
-    }
-    private fun onAliasTypingStarted() {
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    aliasError = null
-                )
-            )
-        }
-    }
-    private suspend fun onAliasTypingEnded() {
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    aliasError = it.editedChannel.alias.takeIf { it.isNotEmpty() }?.let {
-                        val validationResult = validateChannelAlias(channelId = channelId, alias = it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
+            ) ?: it
         }
     }
 
-    private suspend fun onTitleChanged(title: String) {
+    private fun onAliasFocused() {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    title = title
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    alias = currentState.editedChannel.alias.copy(
+                        error = null
+                    )
                 )
-            )
+            ) ?: it
         }
     }
 
-    private suspend fun onTitleTypingStarted() {
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    titleError = null
-                )
-            )
+    private fun onAliasBlurred() {
+        viewModelScope.launch {
+            _state.update {
+                val currentState = it as? ChannelEditingScreenState.Editing
+                currentState?.copy(
+                    editedChannel = currentState.editedChannel.copy(
+                        alias = currentState.editedChannel.alias.copy(
+                            error = currentState.editedChannel.alias.value.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    val validationResult =
+                                        validateChannelAlias(channelId = channelId, alias = it)
+                                    if (validationResult is Result.Failure) validationResult.error else null
+                                }
+                        )
+                    )
+                ) ?: it
+            }
         }
     }
 
-    private suspend fun onTitleTypingEnded() {
+    private fun onTitleChanged(title: String) {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    titleError = it.editedChannel.title.let {
-                        val validationResult = validateChannelTitle(channelId = channelId, title = it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    title = currentState.editedChannel.title.copy(
+                        value = title
+                    )
                 )
-            )
+            ) ?: it
+        }
+    }
+
+    private fun onTitleFocused() {
+        _state.update {
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    title = currentState.editedChannel.title.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onTitleBlurred() {
+        viewModelScope.launch {
+            _state.update {
+                val currentState = it as? ChannelEditingScreenState.Editing
+                currentState?.copy(
+                    editedChannel = currentState.editedChannel.copy(
+                        title = currentState.editedChannel.title.copy(
+                            error = currentState.editedChannel.title.value.let {
+                                val validationResult =
+                                    validateChannelTitle(channelId = channelId, title = it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        )
+                    )
+                ) ?: it
+            }
         }
     }
 
     private fun onDescriptionChanged(description: String) {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    description = description
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    description = currentState.editedChannel.description.copy(
+                        value = description
+                    )
                 )
-            )
-        }
-    }
-    private fun onDescriptionTypingStarted() {
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    descriptionError = null
-                )
-            )
-        }
-    }
-    private fun onDescriptionTypingEnded() {
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    descriptionError = it.editedChannel.description.takeIf { it.isNotEmpty() }?.let {
-                        val validationResult = validateDescription(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
+            ) ?: it
         }
     }
 
-    private suspend fun onHeaderChanged(header: String?) {
+    private fun onDescriptionFocused() {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    header = header,
-                    headerError = header?.let {
-                        val validationResult = validateImage(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    description = currentState.editedChannel.description.copy(
+                        error = null
+                    )
                 )
-            )
+            ) ?: it
         }
     }
 
-    private suspend fun onLogoChanged(logo: String?) {
+    private fun onDescriptionBlurred() {
         _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(
-                editedChannel = it.editedChannel.copy(
-                    logo = logo,
-                    logoError = logo?.let {
-                        val validationResult = validateImage(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    description = currentState.editedChannel.description.copy(
+                        error = currentState.editedChannel.description.value.takeIf { it.isNotEmpty() }
+                            ?.let {
+                                val validationResult = validateDescription(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                    )
                 )
-            )
+            ) ?: it
+        }
+    }
+
+    private fun onHeaderChanged(header: String?) {
+        _state.update {
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    header = currentState.editedChannel.header.copy(
+                        value = header,
+                        error = header?.let {
+                            val validationResult = validateImage(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onLogoChanged(logo: String?) {
+        _state.update {
+            val currentState = it as? ChannelEditingScreenState.Editing
+            currentState?.copy(
+                editedChannel = currentState.editedChannel.copy(
+                    logo = currentState.editedChannel.logo.copy(
+                        value = logo,
+                        error = logo?.let {
+                            val validationResult = validateImage(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            ) ?: it
         }
     }
 
     private fun edit() {
-        val currentState = (_state.value as ChannelEditingScreenState.Editing)
-        _state.update {
-            it as ChannelEditingScreenState.Editing
-            it.copy(isLoading = true)
-        }
         viewModelScope.launch {
+            val currentState = _state.value as ChannelEditingScreenState.Editing
+            _state.update {
+                val currentState = it as? ChannelEditingScreenState.Editing
+                currentState?.copy(
+                    editedChannel = currentState.editedChannel.copy(
+                        title = currentState.editedChannel.title.copy(
+                            error = currentState.editedChannel.title.value.let {
+                                val validationResult =
+                                    validateChannelTitle(channelId = channelId, title = it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        alias = currentState.editedChannel.alias.copy(
+                            error = currentState.editedChannel.alias.value.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    val validationResult =
+                                        validateChannelAlias(channelId = channelId, alias = it)
+                                    if (validationResult is Result.Failure) validationResult.error else null
+                                }
+                        ),
+                        logo = currentState.editedChannel.logo.copy(
+                            value = currentState.editedChannel.logo.value,
+                            error = currentState.editedChannel.logo.value?.let {
+                                val validationResult = validateImage(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        header = currentState.editedChannel.header.copy(
+                            value = currentState.editedChannel.header.value,
+                            error = currentState.editedChannel.header.value?.let {
+                                val validationResult = validateImage(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        description = currentState.editedChannel.description.copy(
+                            error = currentState.editedChannel.description.value.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    val validationResult = validateDescription(it)
+                                    if (validationResult is Result.Failure) validationResult.error else null
+                                }
+                        )
+                    )
+                ) ?: it
+            }
+            if (currentState.editedChannel.title.error != null && currentState.editedChannel.title.error !is NetworkError
+                || currentState.editedChannel.alias.error != null && currentState.editedChannel.alias.error !is NetworkError
+                || currentState.editedChannel.header.error != null
+                || currentState.editedChannel.logo.error != null
+                || currentState.editedChannel.description.error != null) {
+                return@launch
+            }
+            _state.update {
+                val currentState = it as? ChannelEditingScreenState.Editing
+                currentState?.copy(isLoading = true) ?: it
+            }
             val channel = Channel(
                 channelId = channelId,
                 ownerId = currentState.initialChannel.ownerId,
-                title = currentState.editedChannel.title,
-                alias = currentState.editedChannel.alias.ifEmpty { null },
-                description = currentState.editedChannel.description.ifEmpty { null },
+                title = currentState.editedChannel.title.value,
+                alias = currentState.editedChannel.alias.value.ifEmpty { null },
+                description = currentState.editedChannel.description.value.ifEmpty { null }
             )
             editChannel(
                 channel = channel,
-                header = currentState.editedChannel.header,
+                header = currentState.editedChannel.header.value,
                 headerAction = currentState.editedChannel.headerAction,
-                logo = currentState.editedChannel.logo,
+                logo = currentState.editedChannel.logo.value,
                 logoAction = currentState.editedChannel.logoAction
             ).onSuccess { editedChannel ->
                 _state.update {
@@ -281,11 +371,34 @@ class ChannelEditingViewModel @AssistedInject constructor(
                 }
             }.onFailure { error ->
                 _state.update {
-                    it as ChannelEditingScreenState.Editing
-                    it.copy(
-                        error = error,
-                        isLoading = false
-                    )
+                    val currentState = it as? ChannelEditingScreenState.Editing
+                    if (error !is ChannelEditingError) {
+                        currentState?.copy(
+                            error = error,
+                            isLoading = false
+                        ) ?: it
+                    } else {
+                        currentState?.copy(
+                            editedChannel = currentState.editedChannel.copy(
+                                title = currentState.editedChannel.title.copy(
+                                    error = error.titleError
+                                ),
+                                alias = currentState.editedChannel.alias.copy(
+                                    error = error.aliasError
+                                ),
+                                logo = currentState.editedChannel.logo.copy(
+                                    error = error.logoError
+                                ),
+                                header = currentState.editedChannel.header.copy(
+                                    error = error.headerError
+                                ),
+                                description = currentState.editedChannel.description.copy(
+                                    error = error.descriptionError
+                                )
+                            ),
+                            isLoading = false
+                        ) ?: it
+                    }
                 }
             }
         }

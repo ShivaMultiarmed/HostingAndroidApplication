@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationUi
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun EntryProviderBuilder<Route>.createChannelRoute(
+fun EntryProviderBuilder<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>
 ) {

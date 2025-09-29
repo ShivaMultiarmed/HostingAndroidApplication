@@ -34,7 +34,7 @@ fun EntryProviderBuilder<Route>.channelGraph(
                     channelBackStack = channelBackStack,
                     userDetailsProvider = userDetailsProvider
                 )
-                editChannelRoute(
+                channelEditingRoute(
                     rootBackStack = rootBackStack,
                     channelBackStack = channelBackStack
                 )

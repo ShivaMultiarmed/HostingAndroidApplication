@@ -3,7 +3,7 @@ package mikhail.shell.video.hosting.presentation.channel.edit
 import mikhail.shell.video.hosting.domain.errors.Error
 
 sealed class ChannelEditingScreenState {
-    data object Loading: ChannelEditingScreenState()
+    data object Starting: ChannelEditingScreenState()
     data class Failure(val error: Error): ChannelEditingScreenState()
     data class Editing(
         val initialChannel: EditableChannelUi,

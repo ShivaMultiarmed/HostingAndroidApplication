@@ -1,7 +1,11 @@
 package mikhail.shell.video.hosting.presentation.utils
 
 import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.FileError
+import mikhail.shell.video.hosting.domain.validation.mb
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -54,4 +58,16 @@ fun Double.round(n: Int) = round(this * n) / n
 
 fun Double.hasPortion():Boolean {
     return floor(this) < this
+}
+
+@Composable
+fun getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): String? {
+    return when(error) {
+        FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
+        FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
+        FileError.EMPTY -> stringResource(R.string.file_empty)
+        FileError.LARGE -> stringResource(R.string.file_too_large_error, "${maxSize.mb} MB")
+        FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+        else -> null
+    }
 }

@@ -4,18 +4,14 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class ChannelEditingInputState(
-    val title: String,
-    val titleError: Error? = null,
-    val alias: String,
-    val aliasError: Error? = null,
-    val description: String,
-    val descriptionError: TextError? = null,
-    val header: String? = null,
+    val title: FieldState<String, Error> = FieldState(""),
+    val alias: FieldState<String, Error> = FieldState(""),
+    val description: FieldState<String, TextError> = FieldState(""),
+    val header: FieldState<String?, FileError> = FieldState(null),
     val headerAction: EditAction = EditAction.KEEP,
-    val headerError: FileError? = null,
-    val logo: String? = null,
-    val logoAction: EditAction = EditAction.KEEP,
-    val logoError: FileError? = null
+    val logo: FieldState<String?, FileError> = FieldState(null),
+    val logoAction: EditAction = EditAction.KEEP
 )

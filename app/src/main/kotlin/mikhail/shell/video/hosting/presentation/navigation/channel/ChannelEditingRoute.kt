@@ -13,12 +13,12 @@ import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingUiEve
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun EntryProviderBuilder<Route>.editChannelRoute(
+fun EntryProviderBuilder<Route>.channelEditingRoute(
     rootBackStack: MutableList<Route>,
     channelBackStack: MutableList<Route>
 ) {
-    entry <Route.Channel.Edit> { bundle ->
-        val viewModel = hiltViewModel<ChannelEditingViewModel, ChannelEditingViewModel.Factory> { it.create(bundle.channelId) }
+    entry <Route.Channel.Edit> { route ->
+        val viewModel = hiltViewModel<ChannelEditingViewModel, ChannelEditingViewModel.Factory> { it.create(route.channelId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         ChannelEditingScreen(
             state = state,
@@ -38,7 +38,8 @@ fun EntryProviderBuilder<Route>.editChannelRoute(
                 }
             } else if (state is ChannelEditingScreenState.Success) {
                 channelBackStack.removeIf { it is Route.Channel.View }
-                channelBackStack.add(Route.Channel.View(bundle.channelId))
+                channelBackStack.remove(route)
+                channelBackStack.add(Route.Channel.View(route.channelId))
             }
         }
     }
