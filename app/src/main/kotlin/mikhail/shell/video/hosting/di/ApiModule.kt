@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
+import mikhail.shell.video.hosting.data.converters.EnumConverter
 import mikhail.shell.video.hosting.data.converters.InstantConverter
 import mikhail.shell.video.hosting.data.player.TokenInterceptor
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
@@ -55,10 +56,16 @@ object ApiModule {
 
     @Provides
     @Singleton
+    fun provideEnumConverter() = EnumConverter()
+
+    @Provides
+    @Singleton
     fun provideGson(
-        instantConverter: InstantConverter
+        instantConverter: InstantConverter,
+        enumConverter: EnumConverter
     ) = GsonBuilder()
         .registerTypeAdapter(Instant::class.java, instantConverter)
+        .registerTypeHierarchyAdapter(Enum::class.java, enumConverter)
         .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
@@ -103,3 +110,6 @@ object ApiModule {
         isAutoInitEnabled = false
     }
 }
+
+@JvmInline
+value class EnumWrapper<T: Enum<T>>(val value: T)

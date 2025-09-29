@@ -4,7 +4,6 @@ import mikhail.shell.video.hosting.data.dto.ChannelDto
 import mikhail.shell.video.hosting.data.dto.ChannelWithUserDto
 import mikhail.shell.video.hosting.data.repositories.ChannelCreationRequest
 import mikhail.shell.video.hosting.data.repositories.ChannelEditingRequest
-import mikhail.shell.video.hosting.domain.models.Subscription
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -46,7 +45,7 @@ interface ChannelApi {
     @PATCH("channels/{channel_id}/subscription")
     suspend fun subscribe(
         @Path("channel_id") channelId: Long,
-        @Query("subscription") subscription: Subscription,
+        @Query("subscription") subscription: String,
         @Query("fcm_token") fcmToken: String
     ): ChannelWithUserDto
     @POST("channels/notifications/subscription")

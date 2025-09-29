@@ -132,7 +132,7 @@ class ChannelRepositoryWithApi @Inject constructor(
     ): Result<ChannelForUser, Error> = request {
         channelApi.subscribe(
             channelId = channelId,
-            subscription = subscription,
+            subscription = subscription.name.lowercase(),
             fcmToken = fcm.token.await()
         ).toDomain()
     }
