@@ -172,6 +172,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
+                channelId = channel.channelId!!,
                 title = channel.title,
                 alias = channel.alias,
                 description = channel.description,
@@ -199,6 +200,7 @@ data class ChannelCreationRequest(
 )
 
 data class ChannelEditingRequest(
+    val channelId: Long,
     val title: String,
     val alias: String?,
     val description: String?,

@@ -16,6 +16,7 @@ import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannel
@@ -96,8 +97,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
             is ChannelEditingUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
             ChannelEditingUiEvent.DescriptionFocused -> onDescriptionFocused()
             ChannelEditingUiEvent.DescriptionBlurred -> onDescriptionBlurred()
-            is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header)
-            is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo)
+            is ChannelEditingUiEvent.HeaderChanged -> onHeaderChanged(event.header, event.action)
+            is ChannelEditingUiEvent.LogoChanged -> onLogoChanged(event.logo, event.action)
             is ChannelEditingUiEvent.TitleChanged -> onTitleChanged(event.title)
             ChannelEditingUiEvent.TitleFocused -> onTitleFocused()
             ChannelEditingUiEvent.TitleBlurred -> onTitleBlurred()
@@ -261,7 +262,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onHeaderChanged(header: String?) {
+    private fun onHeaderChanged(header: String?, action: EditAction) {
         _state.update {
             val currentState = it as? ChannelEditingScreenState.Editing
             currentState?.copy(
@@ -272,13 +273,14 @@ class ChannelEditingViewModel @AssistedInject constructor(
                             val validationResult = validateImage(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
-                    )
+                    ),
+                    headerAction = action
                 )
             ) ?: it
         }
     }
 
-    private fun onLogoChanged(logo: String?) {
+    private fun onLogoChanged(logo: String?, action: EditAction) {
         _state.update {
             val currentState = it as? ChannelEditingScreenState.Editing
             currentState?.copy(
@@ -289,7 +291,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
                             val validationResult = validateImage(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
-                    )
+                    ),
+                    logoAction = action
                 )
             ) ?: it
         }
@@ -297,7 +300,6 @@ class ChannelEditingViewModel @AssistedInject constructor(
 
     private fun edit() {
         viewModelScope.launch {
-            val currentState = _state.value as ChannelEditingScreenState.Editing
             _state.update {
                 val currentState = it as? ChannelEditingScreenState.Editing
                 currentState?.copy(
@@ -341,7 +343,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     )
                 ) ?: it
             }
-            if (currentState.editedChannel.title.error != null && currentState.editedChannel.title.error !is NetworkError
+            val currentState = _state.value as? ChannelEditingScreenState.Editing
+            if (currentState == null || currentState.editedChannel.title.error != null && currentState.editedChannel.title.error !is NetworkError
                 || currentState.editedChannel.alias.error != null && currentState.editedChannel.alias.error !is NetworkError
                 || currentState.editedChannel.header.error != null
                 || currentState.editedChannel.logo.error != null

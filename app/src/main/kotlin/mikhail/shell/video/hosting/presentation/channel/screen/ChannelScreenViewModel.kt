@@ -143,8 +143,9 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 _state.update {
                     val stateToUpdate = _state.value as? ChannelScreenState.Success
                     stateToUpdate?.copy(
-                        channel = updatedChannel.toUi(
-                            subscriptionError = null
+                        channel = stateToUpdate.channel.copy(
+                            subscription = updatedChannel.subscription,
+                            subscribers = updatedChannel.subscribers
                         )
                     )?: it
                 }

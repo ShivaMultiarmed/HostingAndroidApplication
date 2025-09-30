@@ -60,7 +60,7 @@ fun ChannelScreen(
                         modifier = Modifier.padding(10.dp),
                         channel = state.channel,
                         onEvent = onEvent,
-                        owns = userId == state.channel.channelId,
+                        owns = userId == state.channel.ownerId,
                         onShowLogo = {
                             shouldShowLogo = true
                         }

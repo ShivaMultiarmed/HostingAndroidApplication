@@ -15,7 +15,7 @@ class ValidateChannelTitle @Inject constructor(
         return if (localResult is Result.Failure) {
             Result.Failure(localResult.error)
         } else {
-            channelRepository.existsByTitle(title = title)
+            channelRepository.existsByTitle(channelId = channelId, title = title)
         }
     }
 }

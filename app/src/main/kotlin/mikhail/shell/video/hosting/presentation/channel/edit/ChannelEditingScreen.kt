@@ -25,7 +25,6 @@ import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -33,7 +32,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
@@ -84,7 +83,6 @@ fun ChannelEditingScreen(
                         onEvent(ChannelEditingUiEvent.Cancel)
                     },
                     inProgress = state.isLoading,
-                    complete = !state.isLoading && state.error == null,
                     onSubmit = {
                         onEvent(ChannelEditingUiEvent.Submit)
                     }
@@ -100,18 +98,11 @@ fun ChannelEditingScreen(
                     .padding(it)
                     .verticalScroll(scrollState)
             ) {
-                LaunchedEffect(state.error, state.isLoading) {
-                    if (state.error == null && !state.isLoading) {
-                        snackBarHostState.showSnackbar(
-                            message = activity.resources.getString(R.string.channel_edit_success),
-                            duration = SnackbarDuration.Long
-                        )
-                    }
-                }
                 val titleErrMsg = when(current.title.error) {
                     TextError.EMPTY -> stringResource(R.string.text_empty_error)
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
+                    is NetworkError -> stringResource(R.string.channel_title_check_error)
                     else -> null
                 }
                 StandardEditField(
@@ -146,6 +137,7 @@ fun ChannelEditingScreen(
                 val aliasErrMsg = when (current.alias.error) {
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
+                    is NetworkError -> stringResource(R.string.channel_alias_check_error)
                     else -> null
                 }
                 StandardEditField(
@@ -316,10 +308,10 @@ fun ChannelEditingScreen(
                         updated = current.headerAction == UPDATE || current.headerAction == REMOVE && initial.headerExists == true,
                         empty = !(current.header.value != null || initial.headerExists == true && current.headerAction != REMOVE),
                         onRevert = {
-                            onEvent(ChannelEditingUiEvent.LogoChanged(null, KEEP))
+                            onEvent(ChannelEditingUiEvent.HeaderChanged(null, KEEP))
                         },
                         onDelete = {
-                            onEvent(ChannelEditingUiEvent.LogoChanged(null, REMOVE))
+                            onEvent(ChannelEditingUiEvent.HeaderChanged(null, REMOVE))
                         }
                     ) {
                         FileInputField(
@@ -368,7 +360,7 @@ fun ChannelEditingScreen(
                                         onEvent(ChannelEditingUiEvent.HeaderExists(true))
                                     },
                                     onError = {
-                                        onEvent(ChannelEditingUiEvent.HeaderExists(true))
+                                        onEvent(ChannelEditingUiEvent.HeaderExists(false))
                                     }
                                 )
                             }

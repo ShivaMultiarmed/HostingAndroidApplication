@@ -65,7 +65,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ChannelHeader(
+internal fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
@@ -107,7 +107,7 @@ fun ChannelHeader(
 }
 
 @Composable
-fun ChannelHeaderCompact(
+private fun ChannelHeaderCompact(
     modifier: Modifier = Modifier,
     hasHeader: Boolean?,
     headerUrlAssignment: (Boolean) -> Unit,
@@ -182,7 +182,7 @@ fun ChannelHeaderCompact(
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ChannelHeaderMedium(
+private fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
     onEvent: (ChannelScreenUiEvent) -> Unit,
@@ -243,7 +243,7 @@ fun ChannelHeaderMedium(
 }
 
 @Composable
-fun ChannelHeaderExpanded(
+private fun ChannelHeaderExpanded(
     modifier: Modifier = Modifier,
     hasHeader: Boolean?,
     headerUrlAssignment: (Boolean) -> Unit,
@@ -331,7 +331,7 @@ fun ChannelHeaderExpanded(
 }
 
 @Composable
-fun ChannelHeader(
+private fun ChannelHeader(
     modifier: Modifier = Modifier,
     hasHeader: Boolean?,
     headerUrlAssignment: (Boolean) -> Unit,
@@ -405,7 +405,7 @@ fun ChannelLogo(
 
 
 @Composable
-fun ChannelDescription(
+private fun ChannelDescription(
     modifier: Modifier = Modifier,
     description: String
 ) {
@@ -435,7 +435,7 @@ fun SubscriptionButton(
 }
 
 @Composable
-fun SubscriberNumberText(
+private fun SubscriberNumberText(
     modifier: Modifier = Modifier,
     subscribers: Long
 ) {
@@ -449,7 +449,7 @@ fun SubscriberNumberText(
 }
 
 @Composable
-fun ChannelTitle(
+private fun ChannelTitle(
     modifier: Modifier = Modifier,
     title: String
 ) {
@@ -463,7 +463,7 @@ fun ChannelTitle(
 }
 
 @Composable
-fun ChannelAlias(
+private fun ChannelAlias(
     modifier: Modifier = Modifier,
     alias: String
 ) {
@@ -478,7 +478,7 @@ fun ChannelAlias(
 }
 
 @Composable
-fun ChannelDescriptionSection(
+private fun ChannelDescriptionSection(
     description: String
 ) {
     if (description.isNotEmpty()) {
@@ -520,7 +520,7 @@ fun ChannelDescriptionSection(
 }
 
 @Composable
-fun ChannelActionsButton(
+private fun ChannelActionsButton(
     channelId: Long,
     onEdit: (channelId: Long) -> Unit,
     onRemove: (channelId: Long) -> Unit
