@@ -110,6 +110,3 @@ object ApiModule {
         isAutoInitEnabled = false
     }
 }
-
-@JvmInline
-value class EnumWrapper<T: Enum<T>>(val value: T)
