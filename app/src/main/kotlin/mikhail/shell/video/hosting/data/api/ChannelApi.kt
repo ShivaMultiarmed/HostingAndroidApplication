@@ -60,12 +60,12 @@ interface ChannelApi {
     suspend fun fetchChannel(@Path("channel_id") channelId: Long): ChannelDto
     @DELETE("channels/{channel_id}")
     suspend fun removeChannel(@Path("channel_id") channelId: Long)
-    @GET("channels/existence/title")
+    @GET("channels/existence")
     suspend fun existsByTitle(
         @Query("channel_id") channelId: Long?,
         @Query("title") title: String
     )
-    @GET("channels/existence/alias")
+    @GET("channels/existence")
     suspend fun existsByAlias(
         @Query("channel_id") channelId: Long?,
         @Query("alias") alias: String

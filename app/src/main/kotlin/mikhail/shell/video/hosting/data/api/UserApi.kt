@@ -9,6 +9,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface UserApi {
     @GET("users/{user_id}")
@@ -21,4 +22,9 @@ interface UserApi {
     ): UserDto
     @DELETE("users")
     suspend fun remove()
+    @GET("users/existence")
+    suspend fun existsByNick(
+        @Query("nick") nick: String,
+        @Query("user_id") userId: Long?
+    ): Boolean
 }

@@ -16,14 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -76,6 +77,7 @@ class MainActivity : ComponentActivity() {
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme {
+                val userData by userDetailsProvider.userDetails.collectAsStateWithLifecycle()
                 val playerState = rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState
@@ -108,7 +110,13 @@ class MainActivity : ComponentActivity() {
                     ) {
                         mutableStateListOf(Route.User.Profile(userDetailsProvider.getUserId()))
                     }
-                    val orientation = LocalConfiguration.current.orientation
+                    val currentBackStack = when (currentRoute) {
+                        Route.Recommendations -> recommendationsBackStack
+                        Route.Subscriptions -> subscriptionsBackStack
+                        Route.Search -> searchBackStack
+                        is Route.User -> userBackStack
+                        else -> recommendationsBackStack
+                    }
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
                         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = when {
@@ -126,11 +134,15 @@ class MainActivity : ComponentActivity() {
                                             rootBackStack.add(navItem.route)
                                         } else {
                                             val routeToSwitch = rootBackStack.find { it == navItem.route }!!
-                                            rootBackStack.remove(routeToSwitch)
-                                            rootBackStack.add(routeToSwitch)
+                                            if (currentRoute == routeToSwitch) {
+                                                currentBackStack.subList(1, currentBackStack.size).clear()
+                                            } else {
+                                                rootBackStack.remove(routeToSwitch)
+                                                rootBackStack.add(routeToSwitch)
+                                            }
                                         }
                                     },
-                                    userId = userDetailsProvider.getUserId()
+                                    userId = userData.userId
                                 )
                             }
                         }
@@ -186,13 +198,7 @@ class MainActivity : ComponentActivity() {
                                         rootBackStack = rootBackStack,
                                         player = player,
                                         userDetailsProvider = userDetailsProvider,
-                                        currentBackStack = when (currentRoute) {
-                                            Route.Recommendations -> recommendationsBackStack
-                                            Route.Subscriptions -> subscriptionsBackStack
-                                            Route.Search -> searchBackStack
-                                            is Route.User -> userBackStack
-                                            else -> recommendationsBackStack
-                                        }
+                                        currentBackStack = currentBackStack
                                     )
                                 }
                             )

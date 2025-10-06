@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.providers
 
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,6 +10,7 @@ data class UserDetails(
 )
 
 interface UserDetailsProvider {
+    val userDetails: StateFlow<UserDetails>
     fun get(): UserDetails
     fun getUserId(): Long
     fun getJwt(): String

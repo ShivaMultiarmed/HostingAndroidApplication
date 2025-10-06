@@ -340,6 +340,7 @@ fun UserEditingScreen(
                     )
                 }
                 val bioError = when (state.editedUser.bio.error) {
+                    TextError.EMPTY -> stringResource(R.string.bio_empty)
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                     else -> null
                 }

@@ -66,6 +66,10 @@ class UserRepositoryWithApi @Inject constructor(
     override suspend fun remove(): Result<Unit, Error> = request {
         userApi.remove()
     }
+
+    override suspend fun existsByNick(nick: String, userId: Long?): Result<Boolean, Error> = request {
+        userApi.existsByNick(nick, userId)
+    }
 }
 
 data class UserEditingErrorResponse(

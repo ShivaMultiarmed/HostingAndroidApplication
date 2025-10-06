@@ -9,4 +9,5 @@ interface UserRepository {
     suspend fun get(userId: Long): Result<User, Error>
     suspend fun edit(user: User, avatar: String?, avatarAction: EditAction): Result<User, Error>
     suspend fun remove(): Result<Unit, Error>
+    suspend fun existsByNick(nick: String, userId: Long?): Result<Boolean, Error>
 }

@@ -22,7 +22,7 @@ class AndroidUserDetailsProvider @Inject constructor(
 ) : UserDetailsProvider {
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val dataStore = appContext.userDetailsDataStore
-    private val userDetails = dataStore.data.stateIn(
+    override val userDetails = dataStore.data.stateIn(
         scope = coroutineScope,
         started = SharingStarted.Eagerly,
         initialValue = UserDetails()

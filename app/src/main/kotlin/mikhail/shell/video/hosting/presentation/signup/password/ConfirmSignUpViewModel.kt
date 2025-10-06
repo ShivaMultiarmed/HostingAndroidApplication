@@ -84,9 +84,7 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
                                 validationResult as Result.Success
                                 if (validationResult.data) {
                                     TextError.EXISTS
-                                } else {
-                                    null
-                                }
+                                } else null
                             }
                         }
                     )

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UserEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -110,8 +111,15 @@ class UserEditingViewModel @AssistedInject constructor(
                     editedUser = currentState.editedUser.copy(
                         nick = currentState.editedUser.nick.copy(
                             error = currentState.editedUser.nick.value.let {
-                                val validationResult = validateNick(it)
-                                if (validationResult is Result.Failure) validationResult.error else null
+                                val validationResult = validateNick(it, userId)
+                                if (validationResult is Result.Failure) {
+                                    validationResult.error
+                                } else {
+                                    validationResult as Result.Success
+                                    if (validationResult.data) {
+                                        TextError.EXISTS
+                                    } else null
+                                }
                             }
                         )
                     )
@@ -332,18 +340,21 @@ class UserEditingViewModel @AssistedInject constructor(
 
     private fun edit() {
         viewModelScope.launch {
-            val currentState = (_state.value as? UserEditingScreenState.Editing) ?: return@launch
-            val input = currentState.editedUser
             _state.update {
-                currentState.copy(isLoading = true)
-            }
-            _state.update {
-                currentState.copy(
+                val currentState = it as? UserEditingScreenState.Editing
+                currentState?.copy(
                     editedUser = currentState.editedUser.copy(
                         nick = currentState.editedUser.nick.copy(
                             error = currentState.editedUser.nick.value.let {
-                                val validationResult = validateNick(it)
-                                if (validationResult is Result.Failure) validationResult.error else null
+                                val validationResult = validateNick(it, userId)
+                                if (validationResult is Result.Failure) {
+                                    validationResult.error
+                                } else {
+                                    validationResult as Result.Success
+                                    if (validationResult.data) {
+                                        TextError.EXISTS
+                                    } else null
+                                }
                             }
                         ),
                         name = currentState.editedUser.name.copy(
@@ -378,15 +389,17 @@ class UserEditingViewModel @AssistedInject constructor(
                             }
                         )
                     )
-                )
+                )?: it
             }
+            val currentState = (_state.value as? UserEditingScreenState.Editing) ?: return@launch
+            val input = currentState.editedUser
             if (
-                currentState.editedUser.nick.error != null && currentState.editedUser.nick.error !is NetworkError
-                || currentState.editedUser.name.error != null
-                || currentState.editedUser.bio.error != null
-                || currentState.editedUser.avatar.error != null
-                || currentState.editedUser.email.error != null
-                || currentState.editedUser.tel.error != null
+                input.nick.error != null && input.nick.error !is NetworkError
+                || input.name.error != null
+                || input.bio.error != null
+                || input.avatar.error != null
+                || input.email.error != null
+                || input.tel.error != null
                 ) {
                 return@launch
             }
