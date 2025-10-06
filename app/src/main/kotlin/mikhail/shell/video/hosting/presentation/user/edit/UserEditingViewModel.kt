@@ -12,23 +12,39 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.UserEditingError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUser
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateBio
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateEmail
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateName
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateNick
+import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateTelephone
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 @HiltViewModel(assistedFactory = UserEditingViewModel.Factory::class)
 class UserEditingViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
-    private val _getUser: GetUser,
-    private val _editUser: EditUser,
-    private val _removeUser: RemoveUser
+    private val getUser: GetUser,
+    private val validateNick: ValidateNick,
+    private val validateName: ValidateName,
+    private val validateBio: ValidateBio,
+    private val validateImage: ValidateImage,
+    private val validateEmail: ValidateEmail,
+    private val validateTelephone: ValidateTelephone,
+    private val editUser: EditUser,
+    private val removeUser: RemoveUser
 ) : ViewModel() {
-    private val _state = MutableStateFlow<UserEditingScreenState>(UserEditingScreenState.Loading)
+    private val _state = MutableStateFlow<UserEditingScreenState>(UserEditingScreenState.Starting)
     val state = _state
         .onStart {
-            load()
+            start()
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(3000),
@@ -37,31 +53,272 @@ class UserEditingViewModel @AssistedInject constructor(
 
     fun onEvent(event: UserEditingUiEvent) {
         when (event) {
-            is UserEditingUiEvent.AvatarChanged -> TODO()
-            is UserEditingUiEvent.BioChanged -> TODO()
-            UserEditingUiEvent.Cancel -> TODO()
-            is UserEditingUiEvent.EmailChanged -> TODO()
-            is UserEditingUiEvent.NameChanged -> TODO()
-            is UserEditingUiEvent.NickChanged -> TODO()
-            UserEditingUiEvent.Reload -> TODO()
-            UserEditingUiEvent.Remove -> TODO()
-            UserEditingUiEvent.Submit -> TODO()
-            is UserEditingUiEvent.TelChanged -> TODO()
+            is UserEditingUiEvent.NickChanged -> onNickChanged(event.nick)
+            UserEditingUiEvent.NickFocused -> onNickFocused()
+            UserEditingUiEvent.NickBlurred -> onNickBlurred()
+            is UserEditingUiEvent.NameChanged -> onNameChanged(event.name)
+            UserEditingUiEvent.NameFocused -> onNameFocused()
+            UserEditingUiEvent.NameBlurred -> onNameBlurred()
+            is UserEditingUiEvent.AvatarChanged -> onAvatarChanged(event.avatar, event.action)
+            is UserEditingUiEvent.BioChanged -> onBioChanged(event.bio)
+            UserEditingUiEvent.BioFocused -> onBioFocused()
+            UserEditingUiEvent.BioBlurred -> onBioBlurred()
+            is UserEditingUiEvent.EmailChanged -> onEmailChanged(event.email)
+            UserEditingUiEvent.EmailFocused -> onEmailFocused()
+            UserEditingUiEvent.EmailBlurred -> onEmailBlurred()
+            is UserEditingUiEvent.TelChanged -> onTelChanged(event.tel)
+            UserEditingUiEvent.TelFocused -> onTelFocused()
+            UserEditingUiEvent.TelBlurred -> onTelBlurred()
+            UserEditingUiEvent.Restart -> start()
+            UserEditingUiEvent.Remove -> remove()
+            UserEditingUiEvent.Submit -> edit()
+            else -> Unit
         }
     }
 
-    private fun load() {
+    private fun onNickChanged(nick: String) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    nick = currentState.editedUser.nick.copy(
+                        value = nick
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onNickFocused() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    nick = currentState.editedUser.nick.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onNickBlurred() {
         viewModelScope.launch {
-            _getUser(userId).onSuccess { initialUser ->
+            _state.update {
+                val currentState = it as? UserEditingScreenState.Editing
+                currentState?.copy(
+                    editedUser = currentState.editedUser.copy(
+                        nick = currentState.editedUser.nick.copy(
+                            error = currentState.editedUser.nick.value.let {
+                                val validationResult = validateNick(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        )
+                    )
+                ) ?: it
+            }
+        }
+    }
+
+    private fun onNameChanged(name: String) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    name = currentState.editedUser.name.copy(
+                        value = name
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onNameFocused() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    name = currentState.editedUser.name.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onNameBlurred() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    name = currentState.editedUser.name.copy(
+                        error = currentState.editedUser.name.value.let {
+                            val validationResult = validateName(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onBioChanged(bio: String) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    bio = currentState.editedUser.name.copy(
+                        value = bio
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onBioFocused() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    bio = currentState.editedUser.bio.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onBioBlurred() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    bio = currentState.editedUser.bio.copy(
+                        error = currentState.editedUser.bio.value.let {
+                            val validationResult = validateBio(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onTelChanged(tel: String) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    tel = currentState.editedUser.tel.copy(
+                        value = tel
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onTelFocused() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    tel = currentState.editedUser.tel.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onTelBlurred() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    tel = currentState.editedUser.tel.copy(
+                        error = currentState.editedUser.tel.value.takeIf { it.isNotEmpty() }?.let {
+                            val validationResult = validateTelephone(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onEmailChanged(email: String) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    email = currentState.editedUser.email.copy(
+                        value = email
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onEmailFocused() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    email = currentState.editedUser.email.copy(
+                        error = null
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onEmailBlurred() {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    email = currentState.editedUser.email.copy(
+                        error = currentState.editedUser.email.value.takeIf { it.isNotEmpty() }
+                            ?.let {
+                                val validationResult = validateEmail(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                    )
+                )
+            ) ?: it
+        }
+    }
+
+    private fun onAvatarChanged(avatar: String?, action: EditAction) {
+        _state.update {
+            val currentState = it as? UserEditingScreenState.Editing
+            currentState?.copy(
+                editedUser = currentState.editedUser.copy(
+                    avatar = currentState.editedUser.avatar.copy(
+                        value = avatar,
+                        error = avatar?.let {
+                            val validationResult = validateImage(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    ),
+                    avatarAction = action
+                )
+            ) ?: it
+        }
+    }
+
+    private fun start() {
+        viewModelScope.launch {
+            getUser(userId).onSuccess { initialUser ->
                 _state.update {
                     UserEditingScreenState.Editing(
                         initialUser = initialUser.toEditUi(),
                         editedUser = UserEditingInputState(
-                            nick = initialUser.nick,
-                            name = initialUser.name ?: "",
-                            bio = initialUser.bio ?: "",
-                            tel = initialUser.tel ?: "",
-                            email = initialUser.email ?: ""
+                            nick = FieldState(initialUser.nick),
+                            name = FieldState(initialUser.name ?: ""),
+                            bio = FieldState(initialUser.bio ?: ""),
+                            tel = FieldState(initialUser.tel ?: ""),
+                            email = FieldState(initialUser.email ?: "")
                         )
                     )
                 }
@@ -74,56 +331,132 @@ class UserEditingViewModel @AssistedInject constructor(
     }
 
     private fun edit() {
-        _state.update {
-            it as UserEditingScreenState.Editing
-            it.copy(isLoading = true)
-        }
-        val input = (_state.value as UserEditingScreenState.Editing).editedUser
-        val user = User(
-            userId = userId,
-            nick = input.nick,
-            name = input.name.takeIf { it.isNotEmpty() },
-            avatar = input.avatar,
-            bio = input.bio.takeIf { it.isNotEmpty() },
-            tel = input.tel.takeIf { it.isNotEmpty() }?.substring(1),
-            email = input.email.takeIf { it.isNotEmpty() }
-        )
         viewModelScope.launch {
-            _editUser(
+            val currentState = (_state.value as? UserEditingScreenState.Editing) ?: return@launch
+            val input = currentState.editedUser
+            _state.update {
+                currentState.copy(isLoading = true)
+            }
+            _state.update {
+                currentState.copy(
+                    editedUser = currentState.editedUser.copy(
+                        nick = currentState.editedUser.nick.copy(
+                            error = currentState.editedUser.nick.value.let {
+                                val validationResult = validateNick(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        name = currentState.editedUser.name.copy(
+                            error = currentState.editedUser.name.value.let {
+                                val validationResult = validateName(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        bio = currentState.editedUser.bio.copy(
+                            error = currentState.editedUser.bio.value.let {
+                                val validationResult = validateBio(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        email = currentState.editedUser.email.copy(
+                            error = currentState.editedUser.email.value.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    val validationResult = validateEmail(it)
+                                    if (validationResult is Result.Failure) validationResult.error else null
+                                }
+                        ),
+                        tel = currentState.editedUser.tel.copy(
+                            error = currentState.editedUser.tel.value.takeIf { it.isNotEmpty() }?.let {
+                                val validationResult = validateTelephone(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        ),
+                        avatar = currentState.editedUser.avatar.copy(
+                            error = currentState.editedUser.avatar.value?.let {
+                                val validationResult = validateImage(it)
+                                if (validationResult is Result.Failure) validationResult.error else null
+                            }
+                        )
+                    )
+                )
+            }
+            if (
+                currentState.editedUser.nick.error != null && currentState.editedUser.nick.error !is NetworkError
+                || currentState.editedUser.name.error != null
+                || currentState.editedUser.bio.error != null
+                || currentState.editedUser.avatar.error != null
+                || currentState.editedUser.email.error != null
+                || currentState.editedUser.tel.error != null
+                ) {
+                return@launch
+            }
+            val user = User(
+                userId = userId,
+                nick = input.nick.value,
+                name = input.name.value.takeIf { it.isNotEmpty() },
+                avatar = input.avatar.value,
+                bio = input.bio.value.takeIf { it.isNotEmpty() },
+                tel = input.tel.value.takeIf { it.isNotEmpty() }?.substring(1),
+                email = input.email.value.takeIf { it.isNotEmpty() }
+            )
+            editUser(
                 user = user,
-                avatar = input.avatar,
+                avatar = input.avatar.value,
                 avatarAction = input.avatarAction
-            ).onSuccess { editedUser ->
+            ).onSuccess {
                 _state.update {
                     UserEditingScreenState.Success
                 }
             }.onFailure { error ->
                 _state.update {
-                    it as UserEditingScreenState.Editing
-                    it.copy(
-                        error = error,
-                        isLoading = false
-                    )
+                    if (error !is UserEditingError) {
+                        currentState.copy(
+                            error = error,
+                            isLoading = false
+                        )
+                    } else {
+                        currentState.copy(
+                            editedUser = currentState.editedUser.copy(
+                                nick = currentState.editedUser.nick.copy(
+                                    error = error.nickError
+                                ),
+                                name = currentState.editedUser.name.copy(
+                                    error = error.nameError
+                                ),
+                                bio = currentState.editedUser.bio.copy(
+                                    error = error.bioError
+                                ),
+                                email = currentState.editedUser.email.copy(
+                                    error = error.emailError
+                                ),
+                                tel = currentState.editedUser.tel.copy(
+                                    error = error.telError
+                                ),
+                                avatar = currentState.editedUser.avatar.copy(
+                                    error = error.avatarError
+                                )
+                            ),
+                            isLoading = false
+                        )
+                    }
                 }
             }
         }
-
     }
 
     private fun remove() {
+        val currentState = (_state.value as? UserEditingScreenState.Editing) ?: return
         _state.update {
-            it as UserEditingScreenState.Editing
-            it.copy(isRemoving = true)
+            currentState.copy(isRemoving = true)
         }
         viewModelScope.launch {
-            _removeUser().onSuccess {
+            removeUser().onSuccess {
                 _state.update {
                     UserEditingScreenState.Removed
                 }
             }.onFailure { error ->
                 _state.update {
-                    it as UserEditingScreenState.Editing
-                    it.copy(
+                    currentState.copy(
                         isRemoving = false,
                         removingError = error
                     )
@@ -139,14 +472,24 @@ class UserEditingViewModel @AssistedInject constructor(
 }
 
 sealed class UserEditingUiEvent {
-    data class NickChanged(val nick: String): UserEditingUiEvent()
-    data class NameChanged(val name: String): UserEditingUiEvent()
-    data class AvatarChanged(val avatar: String?, val action: EditAction): UserEditingUiEvent()
-    data class BioChanged(val bio: String): UserEditingUiEvent()
-    data class TelChanged(val tel: String): UserEditingUiEvent()
-    data class EmailChanged(val email: String): UserEditingUiEvent()
-    data object Submit: UserEditingUiEvent()
-    data object Cancel: UserEditingUiEvent()
-    data object Reload: UserEditingUiEvent()
-    data object Remove: UserEditingUiEvent()
+    data class NickChanged(val nick: String) : UserEditingUiEvent()
+    data object NickFocused : UserEditingUiEvent()
+    data object NickBlurred : UserEditingUiEvent()
+    data class NameChanged(val name: String) : UserEditingUiEvent()
+    data object NameFocused : UserEditingUiEvent()
+    data object NameBlurred : UserEditingUiEvent()
+    data class AvatarChanged(val avatar: String?, val action: EditAction) : UserEditingUiEvent()
+    data class BioChanged(val bio: String) : UserEditingUiEvent()
+    data object BioFocused : UserEditingUiEvent()
+    data object BioBlurred : UserEditingUiEvent()
+    data class TelChanged(val tel: String) : UserEditingUiEvent()
+    data object TelFocused : UserEditingUiEvent()
+    data object TelBlurred : UserEditingUiEvent()
+    data class EmailChanged(val email: String) : UserEditingUiEvent()
+    data object EmailFocused : UserEditingUiEvent()
+    data object EmailBlurred : UserEditingUiEvent()
+    data object Submit : UserEditingUiEvent()
+    data object Cancel : UserEditingUiEvent()
+    data object Restart : UserEditingUiEvent()
+    data object Remove : UserEditingUiEvent()
 }

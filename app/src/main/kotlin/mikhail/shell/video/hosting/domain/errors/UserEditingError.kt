@@ -5,5 +5,6 @@ data class UserEditingError(
     val nameError: TextError?,
     val bioError: TextError?,
     val telError: TextError?,
-    val emailError: TextError?
+    val emailError: TextError?,
+    val avatarError: FileError?
 ): Error

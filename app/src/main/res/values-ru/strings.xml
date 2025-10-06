@@ -297,4 +297,5 @@
     <string name="channel_alias_check_error">Не удалось проверить ник</string>
     <string name="file_name_not_valid">Некорректное имя файла</string>
     <string name="file_empty">Файл пустой</string>
+    <string name="name_empty">Name is empty</string>
 </resources>

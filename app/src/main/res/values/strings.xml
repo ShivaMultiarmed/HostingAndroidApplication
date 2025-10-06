@@ -284,4 +284,5 @@
     <string name="channel_alias_check_error">Couldn\'t check nick</string>
     <string name="file_name_not_valid">File name is not valid</string>
     <string name="file_empty">File is empty</string>
+    <string name="name_empty">Name is empty</string>
 </resources>

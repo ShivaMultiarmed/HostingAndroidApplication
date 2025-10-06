@@ -10,13 +10,13 @@ import javax.inject.Inject
 class ValidateNick @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(nick: String): Result<Boolean, Error> {
+    suspend operator fun invoke(nick: String): Result<Unit, Error> {
         return if (nick.isEmpty()) {
             Result.Failure(TextError.EMPTY)
         } else if (nick.length > ValidationRules.MAX_USERNAME_LENGTH) {
             Result.Failure(TextError.LONG)
         } else {
-            Result.Success(true) // TODO
+            Result.Success(Unit) // TODO
         }
     }
 }

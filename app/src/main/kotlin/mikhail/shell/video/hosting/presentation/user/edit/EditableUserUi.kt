@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.presentation.user.edit
 
 import mikhail.shell.video.hosting.domain.models.User
 
-data class EditUserUi(
+data class EditableUserUi(
     val userId: Long,
     val nick: String,
     val name: String,
@@ -12,7 +12,7 @@ data class EditUserUi(
     val email: String
 )
 
-fun User.toEditUi() = EditUserUi(
+fun User.toEditUi() = EditableUserUi(
     userId = userId!!,
     nick = nick,
     name = name?: "",

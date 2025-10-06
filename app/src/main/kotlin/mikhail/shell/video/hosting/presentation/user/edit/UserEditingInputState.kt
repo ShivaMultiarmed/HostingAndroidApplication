@@ -4,19 +4,14 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class UserEditingInputState(
-    val nick: String,
-    val nickError: Error? = null,
-    val name: String,
-    val nameError: TextError? = null,
-    val avatar: String? = null,
-    val avatarError: FileError? = null,
+    val nick: FieldState<String, Error>,
+    val name: FieldState<String, TextError>,
+    val avatar: FieldState<String?, FileError> = FieldState(null),
     val avatarAction: EditAction = EditAction.KEEP,
-    val bio: String,
-    val bioError: TextError? = null,
-    val tel: String,
-    val telError: TextError? = null,
-    val email: String,
-    val emailError: TextError? = null
+    val bio: FieldState<String, TextError>,
+    val tel: FieldState<String, TextError>,
+    val email: FieldState<String, TextError>
 )

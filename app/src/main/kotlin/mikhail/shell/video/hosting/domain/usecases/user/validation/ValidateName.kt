@@ -11,8 +11,6 @@ class ValidateName @Inject constructor() {
             Result.Failure(TextError.EMPTY)
         } else if (name.length > MAX_NAME_LENGTH) {
             Result.Failure(TextError.LONG)
-        } else if (false) { // TODO: uniqueness validation
-            Result.Failure(TextError.EXISTS)
         } else {
             Result.Success(Unit)
         }

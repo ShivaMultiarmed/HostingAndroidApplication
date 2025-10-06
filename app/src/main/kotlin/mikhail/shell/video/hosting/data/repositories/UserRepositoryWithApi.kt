@@ -1,12 +1,13 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.webkit.MimeTypeMap
-import kotlinx.serialization.json.Json
+import com.google.gson.Gson
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
+import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
@@ -14,14 +15,12 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.UserRepository
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
     private val userApi: UserApi,
-    private val fileProvider: FileProvider
+    private val fileProvider: FileProvider,
+    private val gson: Gson
 ) : UserRepository {
 
     override suspend fun get(userId: Long): Result<User, Error> = request {
@@ -35,32 +34,23 @@ class UserRepositoryWithApi @Inject constructor(
     ): Result<User, Error> {
         return request (
             httpExceptionHandler(400) {
-                val response = Json.decodeFromString<UserEditingErrorResponse>(it.response()?.body() as String)
+                val json = it.response()?.body() as String
+                val response = gson.fromJson(json, UserEditingErrorResponse::class.java)
                 UserEditingError(
-                    nickError = response.nick,
-                    nameError = response.name,
-                    bioError = response.bio,
-                    telError = response.tel,
-                    emailError = response.email
+                    nickError = response.nickError,
+                    nameError = response.nameError,
+                    bioError = response.bioError,
+                    telError = response.telError,
+                    emailError = response.emailError,
+                    avatarError = response.avatarError
                 )
             }
         ) {
-            val avatarPart = avatar?.let { uri ->
-                val bytes = fileProvider.getFileAsInputStream(uri).use { it?.readBytes() }
-                val mimeType = fileProvider.getFileMimeType(uri)
-                val mediaType = mimeType?.toMediaTypeOrNull()
-                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                val requestBody = bytes?.toRequestBody(contentType = mediaType)
-                requestBody?.let {
-                    MultipartBody.Part.createFormData(
-                        name = "avatar",
-                        filename = "avatar.$extension",
-                        body = it
-                    )
-                }
+            val avatarPart = avatar?.let {
+                fileProvider.uriToPart(uri = it, partName = "avatar")
             }
             userApi.edit(
-                request = UserEditingRequest(
+                user = UserEditingRequest(
                     nick = user.nick,
                     name = user.name,
                     bio = user.bio,
@@ -79,11 +69,12 @@ class UserRepositoryWithApi @Inject constructor(
 }
 
 data class UserEditingErrorResponse(
-    val nick: TextError?,
-    val name: TextError?,
-    val bio: TextError?,
-    val tel: TextError?,
-    val email: TextError?
+    val nickError: TextError?,
+    val nameError: TextError?,
+    val bioError: TextError?,
+    val telError: TextError?,
+    val emailError: TextError?,
+    val avatarError: FileError?
 )
 
 data class UserEditingRequest(

@@ -16,7 +16,7 @@ interface UserApi {
     @PATCH("users")
     @Multipart
     suspend fun edit(
-        @Part("user") request: UserEditingRequest,
+        @Part("user") user: UserEditingRequest,
         @Part avatar: MultipartBody.Part?
     ): UserDto
     @DELETE("users")

@@ -22,7 +22,7 @@ fun EntryProviderBuilder<Route>.editUserRoute(
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    entry<Route.User.Edit> {
+    entry<Route.User.Edit> { route ->
         val userId = userDetailsProvider.getUserId()
         val viewModel = hiltViewModel<UserEditingViewModel, UserEditingViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -30,14 +30,14 @@ fun EntryProviderBuilder<Route>.editUserRoute(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    UserEditingUiEvent.Cancel -> userBackStack.removeLastOrNull()
+                    UserEditingUiEvent.Cancel -> userBackStack.remove(route)
                     else -> viewModel.onEvent(event)
                 }
             }
         )
         LaunchedEffect(state) {
             if (state is UserEditingScreenState.Success) {
-                userBackStack.removeFirstOrNull()
+                userBackStack.remove(route)
                 userBackStack.add(Route.User.Profile(userId))
             } else if (state is UserEditingScreenState.Removed) {
                 player.stop()
