@@ -12,7 +12,7 @@ data class UserUi(
     val email: String? = null
 )
 
-fun User.toUi() = UserUi(
+fun User.toUi(avatar: String) = UserUi(
     userId = userId,
     nick = nick,
     name = name,
@@ -26,7 +26,6 @@ fun UserUi.toDomain() = User(
     userId = userId,
     nick = nick,
     name = name,
-    avatar = avatar,
     bio = bio,
     tel = tel?.replace("+",""),
     email = email

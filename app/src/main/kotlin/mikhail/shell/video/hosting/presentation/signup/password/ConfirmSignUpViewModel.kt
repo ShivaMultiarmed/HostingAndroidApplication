@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.ConfirmSignUpWithPassword
@@ -77,15 +78,8 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
                 currentState.copy(
                     input = currentState.input.copy(
                         nickError = currentState.input.nick.let {
-                            val validationResult = validateNick(it)
-                            if (validationResult is Result.Failure) {
-                                validationResult.error
-                            } else {
-                                validationResult as Result.Success
-                                if (validationResult.data) {
-                                    TextError.EXISTS
-                                } else null
-                            }
+                            val validationResult = validateNick(NickCheckPurpose.SIGN_UP,it)
+                            if (validationResult is Result.Failure) validationResult.error else null
                         }
                     )
                 )

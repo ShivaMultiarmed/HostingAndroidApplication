@@ -42,6 +42,7 @@ suspend fun <D> request(
             401 -> NetworkError.AUTHENTICATION
             403 -> NetworkError.FORBIDDEN
             404 -> NetworkError.NOT_FOUND
+            409 -> NetworkError.CONFLICT
             500 -> NetworkError.SERVER_ERROR
             else -> unexpectedExceptionHandler(e)
         }

@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
+import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
@@ -24,6 +25,7 @@ import mikhail.shell.video.hosting.presentation.user.models.toUi
 class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val getUser: GetUser,
+    private val constructAvatarUrl: ConstructAvatarUrl,
     private val getOwnedChannels: GetOwnedChannels,
     private val getChannelLogoUrl: GetChannelLogoUrl,
     private val signOut: SignOut
@@ -62,7 +64,7 @@ class ProfileViewModel @AssistedInject constructor(
         getUser(userId).onSuccess { user ->
             _state.update {
                 it.copy(
-                    user = user.toUi(),
+                    user = user.toUi(avatar = constructAvatarUrl(userId, MEDIUM)),
                     error = null,
                     isStarting = false
                 )
@@ -97,7 +99,7 @@ class ProfileViewModel @AssistedInject constructor(
                             it.toUi(
                                 logo = getChannelLogoUrl(
                                     channelId = it.channelId!!,
-                                    size = ImageSize.MEDIUM
+                                    size = MEDIUM
                                 )
                             )
                         },

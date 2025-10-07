@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.errors.UserEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
+import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUser
@@ -39,6 +41,7 @@ class UserEditingViewModel @AssistedInject constructor(
     private val validateImage: ValidateImage,
     private val validateEmail: ValidateEmail,
     private val validateTelephone: ValidateTelephone,
+    private val constructAvatarUrl: ConstructAvatarUrl,
     private val editUser: EditUser,
     private val removeUser: RemoveUser
 ) : ViewModel() {
@@ -111,15 +114,8 @@ class UserEditingViewModel @AssistedInject constructor(
                     editedUser = currentState.editedUser.copy(
                         nick = currentState.editedUser.nick.copy(
                             error = currentState.editedUser.nick.value.let {
-                                val validationResult = validateNick(it, userId)
-                                if (validationResult is Result.Failure) {
-                                    validationResult.error
-                                } else {
-                                    validationResult as Result.Success
-                                    if (validationResult.data) {
-                                        TextError.EXISTS
-                                    } else null
-                                }
+                                val validationResult = validateNick(NickCheckPurpose.EDIT,it)
+                                if (validationResult is Result.Failure) validationResult.error else null
                             }
                         )
                     )
@@ -320,7 +316,7 @@ class UserEditingViewModel @AssistedInject constructor(
             getUser(userId).onSuccess { initialUser ->
                 _state.update {
                     UserEditingScreenState.Editing(
-                        initialUser = initialUser.toEditUi(),
+                        initialUser = initialUser.toEditUi(avatar = constructAvatarUrl(userId, MEDIUM)),
                         editedUser = UserEditingInputState(
                             nick = FieldState(initialUser.nick),
                             name = FieldState(initialUser.name ?: ""),
@@ -346,15 +342,8 @@ class UserEditingViewModel @AssistedInject constructor(
                     editedUser = currentState.editedUser.copy(
                         nick = currentState.editedUser.nick.copy(
                             error = currentState.editedUser.nick.value.let {
-                                val validationResult = validateNick(it, userId)
-                                if (validationResult is Result.Failure) {
-                                    validationResult.error
-                                } else {
-                                    validationResult as Result.Success
-                                    if (validationResult.data) {
-                                        TextError.EXISTS
-                                    } else null
-                                }
+                                val validationResult = validateNick(NickCheckPurpose.EDIT,it)
+                                if (validationResult is Result.Failure) validationResult.error else null
                             }
                         ),
                         name = currentState.editedUser.name.copy(
@@ -407,9 +396,8 @@ class UserEditingViewModel @AssistedInject constructor(
                 userId = userId,
                 nick = input.nick.value,
                 name = input.name.value.takeIf { it.isNotEmpty() },
-                avatar = input.avatar.value,
                 bio = input.bio.value.takeIf { it.isNotEmpty() },
-                tel = input.tel.value.takeIf { it.isNotEmpty() }?.substring(1),
+                tel = input.tel.value.takeIf { it.isNotEmpty() }?.removePrefix("+"),
                 email = input.email.value.takeIf { it.isNotEmpty() }
             )
             editUser(

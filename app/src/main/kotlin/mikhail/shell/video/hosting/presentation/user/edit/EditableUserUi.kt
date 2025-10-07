@@ -6,18 +6,20 @@ data class EditableUserUi(
     val userId: Long,
     val nick: String,
     val name: String,
-    val avatar: String? = null,
+    val avatar: String?,
     val bio: String,
     val tel: String,
     val email: String
 )
 
-fun User.toEditUi() = EditableUserUi(
+fun User.toEditUi(
+    avatar: String
+) = EditableUserUi(
     userId = userId!!,
     nick = nick,
     name = name?: "",
-    avatar = avatar,
     bio = bio?: "",
     tel = tel?.let { "+$it" }?: "",
-    email = email?: ""
+    email = email?: "",
+    avatar = avatar
 )

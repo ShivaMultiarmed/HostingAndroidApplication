@@ -30,6 +30,7 @@ import mikhail.shell.video.hosting.domain.usecases.comments.EditComment
 import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.PostComment
 import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
+import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
@@ -44,6 +45,7 @@ class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
     @Assisted("player") val player: Player,
     private val getVideoDetails: GetVideoDetails,
+    private val constructAvatarUrl: ConstructAvatarUrl,
     private val rateVideo: RateVideo,
     private val subscribe: Subscribe,
     private val incrementViews: IncrementViews,
@@ -253,8 +255,9 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.update {
                     it.copy(
                         commentsState = it.commentsState.copy(
-                            comments = listOf(comment.toUi()) + (it.commentsState.comments
-                                ?: emptyList()),
+                            comments = listOf(
+                                comment.toUi(avatar = constructAvatarUrl(comment.user.userId!!, ImageSize.SMALL))
+                            ) + (it.commentsState.comments ?: emptyList()),
                             actionError = null,
                             currentText = ""
                         )
@@ -311,7 +314,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 _state.update {
                     val editedCommentPosition = it.commentsState.comments!!.indexOfFirst { it.commentId == commentId }
                     val editedComments = it.commentsState.comments.toMutableList().apply {
-                        this[editedCommentPosition] = comment.toUi()
+                        this[editedCommentPosition] = comment.toUi(avatar = constructAvatarUrl(comment.user.userId!!, ImageSize.SMALL))
                     }
                     it.copy(
                         commentsState = it.commentsState.copy(
@@ -378,7 +381,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                         commentsState = it.commentsState.copy(
                             loadingError = null,
                             comments = (
-                                    (it.commentsState.comments ?: listOf()) + comments.map { it.toUi() }
+                                    (it.commentsState.comments ?: listOf()) + comments.map { it.toUi(avatar = constructAvatarUrl(it.user.userId!!, ImageSize.SMALL)) }
                                     ).distinct(),
                             hasMore = comments.size == PART_SIZE,
                             isLoading = false,

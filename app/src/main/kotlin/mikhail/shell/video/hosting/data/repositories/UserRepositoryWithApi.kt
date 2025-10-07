@@ -1,16 +1,19 @@
 package mikhail.shell.video.hosting.data.repositories
 
 import com.google.gson.Gson
+import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.providers.FileProvider
@@ -67,8 +70,22 @@ class UserRepositoryWithApi @Inject constructor(
         userApi.remove()
     }
 
-    override suspend fun existsByNick(nick: String, userId: Long?): Result<Boolean, Error> = request {
-        userApi.existsByNick(nick, userId)
+    override suspend fun existsByNick(purpose: NickCheckPurpose, nick: String): Result<Unit, Error> = request (
+        httpExceptionHandler(409) {
+            TextError.EXISTS
+        }
+    ) {
+        userApi.existsByNick(
+            purpose = purpose.name.lowercase(),
+            nick = nick
+        )
+    }
+
+    override fun constructAvatarUrl(
+        userId: Long,
+        size: ImageSize
+    ): String {
+        return "$API_BASE_URL/users/$userId/avatar?size=${size.name.lowercase()}"
     }
 }
 
