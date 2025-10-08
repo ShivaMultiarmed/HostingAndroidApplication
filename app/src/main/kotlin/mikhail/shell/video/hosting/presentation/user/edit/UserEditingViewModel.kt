@@ -156,7 +156,7 @@ class UserEditingViewModel @AssistedInject constructor(
             currentState?.copy(
                 editedUser = currentState.editedUser.copy(
                     name = currentState.editedUser.name.copy(
-                        error = currentState.editedUser.name.value.let {
+                        error = currentState.editedUser.name.value.takeIf { it.isNotEmpty() }?.let {
                             val validationResult = validateName(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
@@ -198,7 +198,7 @@ class UserEditingViewModel @AssistedInject constructor(
             currentState?.copy(
                 editedUser = currentState.editedUser.copy(
                     bio = currentState.editedUser.bio.copy(
-                        error = currentState.editedUser.bio.value.let {
+                        error = currentState.editedUser.bio.value.takeIf { it.isNotEmpty() }?.let {
                             val validationResult = validateBio(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
@@ -347,13 +347,13 @@ class UserEditingViewModel @AssistedInject constructor(
                             }
                         ),
                         name = currentState.editedUser.name.copy(
-                            error = currentState.editedUser.name.value.let {
+                            error = currentState.editedUser.name.value.takeIf { it.isNotEmpty() }?.let {
                                 val validationResult = validateName(it)
                                 if (validationResult is Result.Failure) validationResult.error else null
                             }
                         ),
                         bio = currentState.editedUser.bio.copy(
-                            error = currentState.editedUser.bio.value.let {
+                            error = currentState.editedUser.bio.value.takeIf { it.isNotEmpty() }?.let {
                                 val validationResult = validateBio(it)
                                 if (validationResult is Result.Failure) validationResult.error else null
                             }

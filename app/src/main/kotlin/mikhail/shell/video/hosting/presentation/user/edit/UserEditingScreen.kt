@@ -270,6 +270,7 @@ fun UserEditingScreen(
                     }
                 }
                 val telError = when (state.editedUser.tel.error) {
+                    TextError.EMPTY -> stringResource(R.string.tel_empty)
                     TextError.SHORT -> stringResource(R.string.phone_number_short_error)
                     TextError.LONG -> stringResource(R.string.phone_number_long_error)
                     TextError.PATTERN -> stringResource(R.string.phone_number_malformed_error)
@@ -306,6 +307,7 @@ fun UserEditingScreen(
                     )
                 }
                 val emailError = when (state.editedUser.email.error) {
+                    TextError.EMPTY -> stringResource(R.string.email_empty)
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_USERNAME_LENGTH)
                     TextError.PATTERN -> stringResource(R.string.email_malformed_error)
                     else -> null

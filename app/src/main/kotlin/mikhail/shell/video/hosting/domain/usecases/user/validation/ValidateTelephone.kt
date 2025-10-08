@@ -9,7 +9,9 @@ import javax.inject.Inject
 
 class ValidateTelephone @Inject constructor() {
     operator fun invoke(telephone: String): Result<Unit, TextError> {
-        return if (telephone.length < MIN_TEL_LENGTH) {
+        return if (telephone.isBlank()) {
+            Result.Failure(TextError.EMPTY)
+        } else if (telephone.length < MIN_TEL_LENGTH) {
             Result.Failure(TextError.SHORT)
         } else if (telephone.length > MAX_TEL_LENGTH) {
             Result.Failure(TextError.LONG)

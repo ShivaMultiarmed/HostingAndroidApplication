@@ -7,7 +7,9 @@ import javax.inject.Inject
 
 class ValidateEmail @Inject constructor() {
     operator fun invoke(email: String): Result<Unit, TextError> {
-        return if (email.length > MAX_EMAIL_LENGTH) {
+        return if (email.isBlank()) {
+            Result.Failure(TextError.EMPTY)
+        } else if (email.length > MAX_EMAIL_LENGTH) {
             Result.Failure(TextError.LONG)
         } else if (!email.matches(regex)) {
             Result.Failure(TextError.PATTERN)

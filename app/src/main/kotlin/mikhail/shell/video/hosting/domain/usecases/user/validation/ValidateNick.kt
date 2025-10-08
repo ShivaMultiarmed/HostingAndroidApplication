@@ -12,7 +12,7 @@ class ValidateNick @Inject constructor(
     private val userRepository: UserRepository
 ) {
     suspend operator fun invoke(purpose: NickCheckPurpose, nick: String): Result<Unit, Error> {
-        return if (nick.isEmpty()) {
+        return if (nick.isBlank()) {
             Result.Failure(TextError.EMPTY)
         } else if (nick.length > ValidationRules.MAX_USERNAME_LENGTH) {
             Result.Failure(TextError.LONG)

@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class ValidateName @Inject constructor() {
     operator fun invoke(name: String): Result<Unit, TextError> {
-        return if (name.isNotEmpty() && name.isBlank()) {
+        return if (name.isBlank()) {
             Result.Failure(TextError.EMPTY)
         } else if (name.length > MAX_NAME_LENGTH) {
             Result.Failure(TextError.LONG)

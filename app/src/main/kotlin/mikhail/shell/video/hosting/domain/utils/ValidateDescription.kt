@@ -7,7 +7,9 @@ import javax.inject.Inject
 
 class ValidateDescription @Inject constructor() {
     operator fun invoke(description: String): Result<Unit, TextError> {
-        return if (description.length > MAX_TEXT_LENGTH) {
+        return if (description.isBlank()) {
+            Result.Failure(TextError.EMPTY)
+        } else if (description.length > MAX_TEXT_LENGTH) {
             Result.Failure(TextError.LONG)
         } else {
             Result.Success(Unit)
