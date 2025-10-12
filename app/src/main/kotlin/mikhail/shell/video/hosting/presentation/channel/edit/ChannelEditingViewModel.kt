@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.channels.EditChannel
@@ -355,19 +355,17 @@ class ChannelEditingViewModel @AssistedInject constructor(
                 val currentState = it as? ChannelEditingScreenState.Editing
                 currentState?.copy(isLoading = true) ?: it
             }
-            val channel = Channel(
-                channelId = channelId,
-                ownerId = currentState.initialChannel.ownerId,
-                title = currentState.editedChannel.title.value,
-                alias = currentState.editedChannel.alias.value.ifEmpty { null },
-                description = currentState.editedChannel.description.value.ifEmpty { null }
-            )
             editChannel(
-                channel = channel,
-                header = currentState.editedChannel.header.value,
-                headerAction = currentState.editedChannel.headerAction,
-                logo = currentState.editedChannel.logo.value,
-                logoAction = currentState.editedChannel.logoAction
+                channel = ChannelEditingModel(
+                    channelId = channelId,
+                    title = currentState.editedChannel.title.value,
+                    alias = currentState.editedChannel.alias.value.takeIf { it.isNotEmpty() },
+                    description = currentState.editedChannel.description.value.takeIf { it.isNotEmpty() },
+                    header = currentState.editedChannel.header.value,
+                    headerAction = currentState.editedChannel.headerAction,
+                    logo = currentState.editedChannel.logo.value,
+                    logoAction = currentState.editedChannel.logoAction
+                )
             ).onSuccess { editedChannel ->
                 _state.update {
                     ChannelEditingScreenState.Success

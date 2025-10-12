@@ -50,7 +50,7 @@ import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
+import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(UnstableApi::class)
@@ -295,7 +295,7 @@ fun ChannelCreationScreen(
                 }
             }
         }
-        StandardComplexErrorHandler(
+        StandardErrorDisplay(
             error = state.error,
             snackBarHostState = snackBarHostState
         )

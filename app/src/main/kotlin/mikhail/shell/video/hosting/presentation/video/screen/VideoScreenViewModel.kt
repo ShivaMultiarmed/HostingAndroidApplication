@@ -22,7 +22,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.ImageSize
-import mikhail.shell.video.hosting.domain.models.Comment
+import mikhail.shell.video.hosting.domain.models.CommentCreationModel
+import mikhail.shell.video.hosting.domain.models.CommentEditingModel
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
@@ -43,6 +44,7 @@ import kotlin.time.Clock
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
+    @Assisted("userId") private val userId: Long,
     @Assisted("player") val player: Player,
     private val getVideoDetails: GetVideoDetails,
     private val constructAvatarUrl: ConstructAvatarUrl,
@@ -246,9 +248,8 @@ class VideoScreenViewModel @AssistedInject constructor(
     private fun postComment(text: String) {
         viewModelScope.launch {
             postComment(
-                Comment(
+                CommentCreationModel(
                     videoId = videoId,
-                    userId = 0,
                     text = text
                 )
             ).onSuccess { comment ->
@@ -304,11 +305,9 @@ class VideoScreenViewModel @AssistedInject constructor(
     ) {
         viewModelScope.launch {
             editComment(
-                Comment(
+                CommentEditingModel(
                     commentId = commentId,
-                    userId = 0,
-                    text = text,
-                    videoId = videoId
+                    text = text
                 )
             ).onSuccess { comment ->
                 _state.update {
@@ -411,6 +410,7 @@ class VideoScreenViewModel @AssistedInject constructor(
     interface Factory {
         fun create(
             @Assisted("videoId") videoId: Long,
+            @Assisted("userId") userId: Long,
             @Assisted("player") player: Player
         ): VideoScreenViewModel
     }

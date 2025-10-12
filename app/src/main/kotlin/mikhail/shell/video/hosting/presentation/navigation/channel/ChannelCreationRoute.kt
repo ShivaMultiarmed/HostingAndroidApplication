@@ -4,15 +4,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationUiEvent
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun EntryProviderBuilder<Route>.channelCreationRoute(
+fun EntryProviderScope<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>
 ) {

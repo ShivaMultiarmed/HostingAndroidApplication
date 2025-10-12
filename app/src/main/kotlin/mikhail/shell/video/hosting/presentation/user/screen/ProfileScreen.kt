@@ -65,7 +65,7 @@ import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
+import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
@@ -151,9 +151,10 @@ fun ProfileScreen(
                         }
                     }
                 }
-                StandardComplexErrorHandler(
+                StandardErrorDisplay(
                     error = state.channelState.error,
-                    snackBarHostState = snackBarHostState
+                    snackBarHostState = snackBarHostState,
+                    notFoundMessage = stringResource(R.string.user_not_found)
                 )
             } else if (state.isStarting) {
                 LoadingComponent(
@@ -166,11 +167,12 @@ fun ProfileScreen(
                         onEvent(ProfileScreenUiEvent.Restart)
                     }
                 )
+                StandardErrorDisplay(
+                    error = state.channelState.error,
+                    snackBarHostState = snackBarHostState,
+                    notFoundMessage = stringResource(R.string.user_not_found)
+                )
             }
-            StandardComplexErrorHandler(
-                error = state.error,
-                snackBarHostState = snackBarHostState
-            )
         }
         if (state.user != null && shouldShowAvatar) {
             ImageViewerScreen(

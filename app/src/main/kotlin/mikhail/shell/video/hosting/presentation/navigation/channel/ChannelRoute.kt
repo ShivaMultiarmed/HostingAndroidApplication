@@ -5,8 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -19,7 +18,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-fun EntryProviderBuilder<Route>.channelRoute(
+fun EntryProviderScope<Route>.channelRoute(
     rootBackStack: MutableList<Route>,
     channelBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider

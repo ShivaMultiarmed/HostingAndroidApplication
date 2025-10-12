@@ -4,8 +4,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -13,7 +12,7 @@ import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
 import mikhail.shell.video.hosting.presentation.signin.password.SignInUiEvent
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
 
-fun EntryProviderBuilder<Route>.signInRoute(
+fun EntryProviderScope<Route>.signInRoute(
     rootBackStack: MutableList<Route>,
     authBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider

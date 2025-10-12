@@ -44,7 +44,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
@@ -418,13 +417,11 @@ fun UserEditingScreen(
             snackBarHostState = snackBarHostState,
             notFoundMessage = stringResource(R.string.user_not_found)
         )
-    }
-    else if (state is UserEditingScreenState.Starting) {
+    } else if (state is UserEditingScreenState.Starting) {
         LoadingComponent(
             modifier = Modifier.fillMaxSize()
         )
-    }
-    else if (state is UserEditingScreenState.Failure) {
+    } else if (state is UserEditingScreenState.Failure) {
         ErrorComponent(
             modifier = Modifier.fillMaxSize(),
             onRetry = {
@@ -436,14 +433,13 @@ fun UserEditingScreen(
             snackBarHostState = snackBarHostState,
             notFoundMessage = stringResource(R.string.user_not_found)
         )
+    } else if (state is UserEditingScreenState.Removed) {
+        AccountRemovedScreen()
     }
-    else if (state is UserEditingScreenState.Removed) AccountRemovedScreen()
-    else if (state is UserEditingScreenState.Success) Unit
 }
 
 @Composable
-@Preview
-fun AccountRemovedScreen() {
+private fun AccountRemovedScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.User
+import mikhail.shell.video.hosting.domain.models.UserEditingModel
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
@@ -392,18 +392,17 @@ class UserEditingViewModel @AssistedInject constructor(
                 ) {
                 return@launch
             }
-            val user = User(
-                userId = userId,
-                nick = input.nick.value,
-                name = input.name.value.takeIf { it.isNotEmpty() },
-                bio = input.bio.value.takeIf { it.isNotEmpty() },
-                tel = input.tel.value.takeIf { it.isNotEmpty() }?.removePrefix("+"),
-                email = input.email.value.takeIf { it.isNotEmpty() }
-            )
             editUser(
-                user = user,
-                avatar = input.avatar.value,
-                avatarAction = input.avatarAction
+                user = UserEditingModel(
+                    userId = userId,
+                    nick = input.nick.value,
+                    name = input.name.value.takeIf { it.isNotEmpty() },
+                    bio = input.bio.value.takeIf { it.isNotEmpty() },
+                    tel = input.tel.value.takeIf { it.isNotEmpty() }?.removePrefix("+"),
+                    email = input.email.value.takeIf { it.isNotEmpty() },
+                    avatar = input.avatar.value,
+                    avatarAction = input.avatarAction
+                )
             ).onSuccess {
                 _state.update {
                     UserEditingScreenState.Success

@@ -123,10 +123,10 @@ fun SubscriptionsScreen(
                     onEvent(SubscriptionsScreenUiEvent.Restart)
                 }
             )
+            ErrorDisplay(
+                error = state.error,
+                snackBarHostState = snackBarHostState
+            )
         }
-        ErrorDisplay(
-            error = state.error,
-            snackBarHostState = snackBarHostState
-        )
     }
 }

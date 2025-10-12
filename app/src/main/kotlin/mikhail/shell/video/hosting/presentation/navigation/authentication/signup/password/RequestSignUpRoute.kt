@@ -5,13 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpViewModel
 
-fun EntryProviderBuilder<Route>.requestSignUpRoute(
+fun EntryProviderScope<Route>.requestSignUpRoute(
     signUpBackStack: SnapshotStateList<Route>
 ) {
     entry<Route.Authentication.SignUp.Request> {

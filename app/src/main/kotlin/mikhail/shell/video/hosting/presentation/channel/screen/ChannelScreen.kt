@@ -20,16 +20,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 
 @Composable
 fun ChannelScreen(
@@ -128,10 +125,9 @@ fun ChannelScreen(
                         onEvent(ChannelScreenUiEvent.Restart)
                     }
                 )
-                StandardComplexErrorHandler(
+                ErrorDisplay(
                     error = state.error,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.channel_not_found)
+                    snackBarHostState = snackBarHostState
                 )
             }
         }

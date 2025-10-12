@@ -10,8 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
@@ -26,7 +25,7 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewMode
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
-fun EntryProviderBuilder<Route>.videoRoute(
+fun EntryProviderScope<Route>.videoRoute(
     rootBackStack: MutableList<Route>,
     currentTabBackStack: MutableList<Route>,
     videoBackStack: MutableList<Route>,
@@ -39,7 +38,7 @@ fun EntryProviderBuilder<Route>.videoRoute(
         val videoId = route.videoId
         val coroutineScope = rememberCoroutineScope()
         val userId = userDetailsProvider.getUserId()
-        val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, player) }
+        val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { it.create(videoId, userId, player) }
         val state by viewModel.state.collectAsState()
         VideoScreen(
             userId = userId,

@@ -4,7 +4,8 @@ import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.models.Comment
+import mikhail.shell.video.hosting.domain.models.CommentCreationModel
+import mikhail.shell.video.hosting.domain.models.CommentEditingModel
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
@@ -15,7 +16,7 @@ class CommentRepositoryWithApi @Inject constructor(
     private val commentApi: CommentApi
 ): CommentRepository {
 
-    override suspend fun post(comment: Comment): Result<CommentWithUser, Error> = request {
+    override suspend fun post(comment: CommentCreationModel): Result<CommentWithUser, Error> = request {
         commentApi.save(
             CommentCreationRequest(
                 videoId = comment.videoId,
@@ -24,10 +25,10 @@ class CommentRepositoryWithApi @Inject constructor(
         ).toDomain()
     }
 
-    override suspend fun edit(comment: Comment): Result<CommentWithUser, Error> = request {
+    override suspend fun edit(comment: CommentEditingModel): Result<CommentWithUser, Error> = request {
         commentApi.edit(
             CommentEditingRequest(
-                commentId = comment.commentId!!,
+                commentId = comment.commentId,
                 text = comment.text
             )
         ).toDomain()

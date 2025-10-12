@@ -49,11 +49,11 @@ import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
+import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
 
@@ -399,6 +399,11 @@ fun ChannelEditingScreen(
                 }
             }
         }
+        StandardErrorDisplay(
+            error = state.error,
+            snackBarHostState = snackBarHostState,
+            notFoundMessage = stringResource(R.string.channel_not_found)
+        )
     } else if (state is ChannelEditingScreenState.Failure) {
         ErrorComponent(
             modifier = Modifier.fillMaxSize(),
@@ -406,9 +411,10 @@ fun ChannelEditingScreen(
                 onEvent(ChannelEditingUiEvent.Restart)
             }
         )
-        ErrorDisplay(
+        StandardErrorDisplay(
             error = state.error,
-            snackBarHostState = snackBarHostState
+            snackBarHostState = snackBarHostState,
+            notFoundMessage = stringResource(R.string.channel_not_found)
         )
     } else if (state is ChannelEditingScreenState.Starting) {
         LoadingComponent(

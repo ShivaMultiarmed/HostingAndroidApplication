@@ -16,6 +16,7 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
+import mikhail.shell.video.hosting.domain.models.UserEditingModel
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import javax.inject.Inject
@@ -30,11 +31,7 @@ class UserRepositoryWithApi @Inject constructor(
         userApi.get(userId).toDomain()
     }
 
-    override suspend fun edit(
-        user: User,
-        avatar: String?,
-        avatarAction: EditAction
-    ): Result<User, Error> {
+    override suspend fun edit(user: UserEditingModel): Result<User, Error> {
         return request (
             httpExceptionHandler(400) {
                 val json = it.response()?.body() as String
@@ -49,7 +46,7 @@ class UserRepositoryWithApi @Inject constructor(
                 )
             }
         ) {
-            val avatarPart = avatar?.let {
+            val avatarPart = user.avatar?.let {
                 fileProvider.uriToPart(uri = it, partName = "avatar")
             }
             userApi.edit(
@@ -59,7 +56,7 @@ class UserRepositoryWithApi @Inject constructor(
                     bio = user.bio,
                     tel = user.tel,
                     email = user.email,
-                    avatarAction = avatarAction
+                    avatarAction = user.avatarAction
                 ),
                 avatar = avatarPart
             ).toDomain()

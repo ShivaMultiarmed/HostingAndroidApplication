@@ -2,12 +2,11 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.UserDto
 import mikhail.shell.video.hosting.data.repositories.UserEditingRequest
-import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
-import retrofit2.http.PATCH
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -15,7 +14,7 @@ import retrofit2.http.Query
 interface UserApi {
     @GET("users/{user_id}")
     suspend fun get(@Path("user_id") userId: Long): UserDto
-    @PATCH("users")
+    @PUT("users")
     @Multipart
     suspend fun edit(
         @Part("user") user: UserEditingRequest,

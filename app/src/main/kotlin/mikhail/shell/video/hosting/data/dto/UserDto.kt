@@ -3,12 +3,12 @@ package mikhail.shell.video.hosting.data.dto
 import mikhail.shell.video.hosting.domain.models.User
 
 data class UserDto(
-    val userId: Long? = null,
+    val userId: Long,
     val nick: String,
-    val name: String? = null,
-    val bio: String? = null,
-    val tel: String? = null,
-    val email: String? = null
+    val name: String?,
+    val bio: String?,
+    val tel: String?,
+    val email: String?
 )
 
 fun User.toDto() = UserDto(

@@ -5,8 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -16,7 +15,7 @@ import mikhail.shell.video.hosting.presentation.user.edit.UserEditingUiEvent
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 
-fun EntryProviderBuilder<Route>.editUserRoute(
+fun EntryProviderScope<Route>.editUserRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,

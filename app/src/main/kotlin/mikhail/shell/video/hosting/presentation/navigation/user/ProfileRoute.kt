@@ -8,8 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -20,7 +19,7 @@ import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenUiEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 
-fun EntryProviderBuilder<Route>.profileRoute(
+fun EntryProviderScope<Route>.profileRoute(
     rootBackStack: MutableList<Route>,
     currentTabBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,

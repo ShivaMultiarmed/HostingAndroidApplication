@@ -4,14 +4,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpScreenState
 import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpViewModel
 
-fun EntryProviderBuilder<Route>.confirmSignUpRoute(
+fun EntryProviderScope<Route>.confirmSignUpRoute(
     rootBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.SignUp.Confirmation> { bundle ->

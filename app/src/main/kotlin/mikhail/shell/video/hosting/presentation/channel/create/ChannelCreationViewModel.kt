@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
@@ -227,14 +227,14 @@ class ChannelCreationViewModel @Inject constructor(
             it.copy(isLoading = true)
         }
         createChannel(
-            channel = Channel(
+            channel = ChannelCreationModel(
                 title = _state.value.title.value,
                 alias = _state.value.alias.value,
                 ownerId = _state.value.owner,
-                description = _state.value.description.value
-            ),
-            logo = _state.value.logo.value,
-            header = _state.value.header.value
+                description = _state.value.description.value,
+                logo = _state.value.logo.value,
+                header = _state.value.header.value
+            )
         ).onSuccess { channelId ->
             _state.update {
                 it.copy(

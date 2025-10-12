@@ -10,8 +10,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -24,7 +23,7 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
 import kotlin.time.Duration.Companion.milliseconds
 
-fun EntryProviderBuilder<Route>.uploadVideoRoute(
+fun EntryProviderScope<Route>.uploadVideoRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider

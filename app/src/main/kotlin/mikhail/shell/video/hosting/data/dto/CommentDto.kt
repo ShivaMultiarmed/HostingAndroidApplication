@@ -5,10 +5,10 @@ import mikhail.shell.video.hosting.domain.models.CommentWithUser
 import kotlin.time.Instant
 
 data class CommentDto(
-    val commentId: Long? = null,
+    val commentId: Long,
     val videoId: Long,
     val userId: Long,
-    val dateTime: Instant? = null,
+    val dateTime: Instant,
     val text: String,
 )
 
@@ -17,7 +17,25 @@ data class CommentWithUserDto(
     val user: UserDto
 )
 
-fun Comment.toDto() = CommentDto(commentId, videoId, userId, dateTime, text)
-fun CommentDto.toDomain() = Comment(commentId, videoId, userId, dateTime, text)
-fun CommentWithUser.toDto() = CommentWithUserDto(comment.toDto(), user.toDto())
-fun CommentWithUserDto.toDomain() = CommentWithUser(comment.toDomain(), user.toDomain())
+fun Comment.toDto() = CommentDto(
+    commentId = commentId,
+    videoId = videoId,
+    userId = userId,
+    dateTime = dateTime,
+    text = text
+)
+fun CommentDto.toDomain() = Comment(
+    commentId = commentId,
+    videoId = videoId,
+    userId = userId,
+    dateTime = dateTime,
+    text = text
+)
+fun CommentWithUser.toDto() = CommentWithUserDto(
+    comment = comment.toDto(),
+    user = user.toDto()
+)
+fun CommentWithUserDto.toDomain() = CommentWithUser(
+    comment = comment.toDomain(),
+    user = user.toDomain()
+)

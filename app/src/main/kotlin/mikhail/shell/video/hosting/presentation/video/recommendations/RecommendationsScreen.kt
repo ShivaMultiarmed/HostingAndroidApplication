@@ -100,10 +100,10 @@ fun RecommendationsScreen(
                     onEvent(RecommendationsScreenUiEvent.Restarted)
                 }
             )
+            ErrorDisplay(
+                error = state.error,
+                snackBarHostState = snackBarHostState
+            )
         }
-        ErrorDisplay(
-            error = state.error,
-            snackBarHostState = snackBarHostState
-        )
     }
 }

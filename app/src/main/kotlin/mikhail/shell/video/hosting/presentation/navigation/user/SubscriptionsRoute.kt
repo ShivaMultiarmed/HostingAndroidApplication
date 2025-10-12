@@ -4,15 +4,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreen
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenUiEvent
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenViewModel
 
-fun EntryProviderBuilder<Route>.subscriptionsRoute(
+fun EntryProviderScope<Route>.subscriptionsRoute(
     rootBackStack: MutableList<Route>,
     subscriptionsBackStack: MutableList<Route>
 ) {

@@ -4,15 +4,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.RequestResetScreen
 import mikhail.shell.video.hosting.presentation.reset.RequestResetScreenState
 import mikhail.shell.video.hosting.presentation.reset.RequestResetUiEvent
 import mikhail.shell.video.hosting.presentation.reset.RequestResetViewModel
 
-fun EntryProviderBuilder<Route>.requestResetRoute(
+fun EntryProviderScope<Route>.requestResetRoute(
     resettingBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.Reset.Request> {

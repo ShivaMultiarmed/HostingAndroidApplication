@@ -3,13 +3,13 @@ package mikhail.shell.video.hosting.presentation.user.models
 import mikhail.shell.video.hosting.domain.models.User
 
 data class UserUi(
-    val userId: Long? = null,
+    val userId: Long,
     val nick: String,
-    val name: String? = null,
-    val avatar: String? = null,
-    val bio: String? = null,
-    val tel: String? = null,
-    val email: String? = null
+    val name: String?,
+    val avatar: String?,
+    val bio: String?,
+    val tel: String?,
+    val email: String?
 )
 
 fun User.toUi(avatar: String) = UserUi(
@@ -27,6 +27,6 @@ fun UserUi.toDomain() = User(
     nick = nick,
     name = name,
     bio = bio,
-    tel = tel?.replace("+",""),
+    tel = tel?.removePrefix("+"),
     email = email
 )

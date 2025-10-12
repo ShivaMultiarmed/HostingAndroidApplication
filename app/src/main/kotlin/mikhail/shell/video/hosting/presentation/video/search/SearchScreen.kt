@@ -47,12 +47,12 @@ import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
@@ -173,11 +173,11 @@ fun SearchScreen(
                     onEvent(SearchScreenUiEvent.Restart)
                 }
             )
+            ErrorDisplay(
+                error = state.error,
+                snackBarHostState = snackBarHostState
+            )
         }
-        StandardComplexErrorHandler(
-            error = state.error,
-            snackBarHostState = snackBarHostState
-        )
     }
 }
 

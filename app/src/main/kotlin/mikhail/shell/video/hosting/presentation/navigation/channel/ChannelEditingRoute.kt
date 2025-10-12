@@ -4,8 +4,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreen
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenState
@@ -13,7 +12,7 @@ import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingUiEve
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-fun EntryProviderBuilder<Route>.channelEditingRoute(
+fun EntryProviderScope<Route>.channelEditingRoute(
     rootBackStack: MutableList<Route>,
     channelBackStack: MutableList<Route>
 ) {

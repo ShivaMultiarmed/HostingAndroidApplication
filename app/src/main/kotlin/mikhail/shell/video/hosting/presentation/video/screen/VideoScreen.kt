@@ -110,7 +110,7 @@ import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
+import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -525,12 +525,12 @@ fun VideoScreen(
                     onEvent(VideoScreenUiEvent.CloseComments)
                 }
             }
-            StandardComplexErrorHandler(
+            StandardErrorDisplay(
                 error = state.likingError,
                 snackBarHostState = snackBarHostState,
                 notFoundMessage = stringResource(R.string.video_not_found)
             )
-            StandardComplexErrorHandler(
+            StandardErrorDisplay(
                 error = state.subscriptionError,
                 snackBarHostState = snackBarHostState,
                 notFoundMessage = stringResource(R.string.video_not_found)
@@ -550,7 +550,7 @@ fun VideoScreen(
                     onEvent(VideoScreenUiEvent.Restart)
                 }
             )
-            StandardComplexErrorHandler(
+            StandardErrorDisplay(
                 error = state.startingError,
                 snackBarHostState = snackBarHostState,
                 notFoundMessage = stringResource(R.string.video_not_found)

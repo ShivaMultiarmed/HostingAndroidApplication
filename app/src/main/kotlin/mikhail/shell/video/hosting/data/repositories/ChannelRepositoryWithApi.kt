@@ -17,6 +17,8 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.models.Channel
+import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
+import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
@@ -50,11 +52,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         return "$API_BASE_URL/channels/$channelId/header?size=${size.name.lowercase()}"
     }
 
-    override suspend fun create(
-        channel: Channel,
-        logo: String?,
-        header: String?
-    ): Result<Channel, Error> = request(
+    override suspend fun create(channel: ChannelCreationModel): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
             val json = it.response()?.errorBody()!!.string()
             val response = gson.fromJson(json, ChannelCreationErrorResponse::class.java)
@@ -73,10 +71,10 @@ class ChannelRepositoryWithApi @Inject constructor(
                 alias = channel.alias,
                 description = channel.description
             ),
-            logo = logo?.let {
+            logo = channel.logo?.let {
                 fileProvider.uriToPart(it, "logo")
             },
-            header = header?.let {
+            header = channel.header?.let {
                 fileProvider.uriToPart(it, "header")
             }
         ).toDomain()
@@ -145,13 +143,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         channelApi.unsubscribeFromChannelNotifications(fcm.token.await())
     }
 
-    override suspend fun editChannel(
-        channel: Channel,
-        headerAction: EditAction,
-        header: String?,
-        logoAction: EditAction,
-        logo: String?
-    ): Result<Channel, Error> = request(
+    override suspend fun editChannel(channel: ChannelEditingModel): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
             val json = it.response()?.errorBody()!!.string()
             val response = gson.fromJson(json, ChannelEditingErrorResponse::class.java)
@@ -164,20 +156,20 @@ class ChannelRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        val headerPart = header?.let {
+        val headerPart = channel.header?.let {
             fileProvider.uriToPart(uri = it, partName = "header")
         }
-        val logoPart = logo?.let {
+        val logoPart = channel.logo?.let {
             fileProvider.uriToPart(uri = it, partName = "logo")
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
-                channelId = channel.channelId!!,
+                channelId = channel.channelId,
                 title = channel.title,
                 alias = channel.alias,
                 description = channel.description,
-                headerAction = headerAction,
-                logoAction = logoAction
+                headerAction = channel.headerAction,
+                logoAction = channel.logoAction
             ),
             logo = logoPart,
             header = headerPart

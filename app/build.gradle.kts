@@ -71,14 +71,12 @@ android {
         compose = true
         buildConfig = true
     }
-    kotlinOptions {
-        freeCompilerArgs = listOf("-XXLanguage:+WhenGuards")
-    }
 }
 
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+        freeCompilerArgs.add("-XXLanguage:+WhenGuards")
         jvmTarget.set(JvmTarget.JVM_11)
     }
 }
@@ -117,7 +115,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.navigation.compose)
+    // implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.material3.window.size.klass.android)

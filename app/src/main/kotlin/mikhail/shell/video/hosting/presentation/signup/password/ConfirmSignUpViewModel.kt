@@ -10,10 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.ConfirmSignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateNick
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
@@ -163,32 +161,32 @@ class ConfirmSignUpViewModel @AssistedInject constructor(
     }
 
     private fun confirm() {
-        val currentState = _state.value as ConfirmSignUpScreenState.Entering
-        val user = User(
-            nick = currentState.input.nick
-        )
-        viewModelScope.launch {
-            confirm(
-                token = token,
-                password = currentState.input.password,
-                user = user
-            ).onSuccess { authModel ->
-                _state.update {
-                    ConfirmSignUpScreenState.Success(authModel)
-                }
-            }.onFailure { error ->
-                _state.update {
-                    if (error != TextError.NOT_VALID) {
-                        it as ConfirmSignUpScreenState.Entering
-                        it.copy(
-                            error = error
-                        )
-                    } else {
-                        ConfirmSignUpScreenState.Expired
-                    }
-                }
-            }
-        }
+//        val currentState = _state.value as ConfirmSignUpScreenState.Entering
+//        val user = User(
+//            nick = currentState.input.nick
+//        )
+//        viewModelScope.launch {
+//            confirm(
+//                token = token,
+//                password = currentState.input.password,
+//                user = user
+//            ).onSuccess { authModel ->
+//                _state.update {
+//                    ConfirmSignUpScreenState.Success(authModel)
+//                }
+//            }.onFailure { error ->
+//                _state.update {
+//                    if (error != TextError.NOT_VALID) {
+//                        it as ConfirmSignUpScreenState.Entering
+//                        it.copy(
+//                            error = error
+//                        )
+//                    } else {
+//                        ConfirmSignUpScreenState.Expired
+//                    }
+//                }
+//            }
+//        }
     }
 
     @AssistedFactory
