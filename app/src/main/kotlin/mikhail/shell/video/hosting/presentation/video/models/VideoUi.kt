@@ -11,24 +11,24 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 
 data class VideoUi(
     val videoId: Long,
-    val coverUrl: String,
+    val cover: String,
     val title: String,
     val views: Long,
     val dateTime: LocalDateTime
 )
 
-fun Video.toUi() = VideoUi(
-    videoId = videoId!!,
-    coverUrl = cover!!,
+fun Video.toUi(cover: String) = VideoUi(
+    videoId = videoId,
+    cover = cover,
     title = title,
     views = views,
-    dateTime = dateTime?.toLocalDateTime(TimeZone.currentSystemDefault())!!
+    dateTime = dateTime.toLocalDateTime(TimeZone.currentSystemDefault())
 )
 
 data class VideoWithChannelUi(
     val videoId: Long,
     val videoTitle: String,
-    val videoHeader: String,
+    val videoCover: String,
     val channelLogo: String,
     val channelId: Long,
     val channelTitle: String,
@@ -37,15 +37,16 @@ data class VideoWithChannelUi(
 )
 
 fun VideoWithChannel.toUi(
-    channelLogo: String = ""
+    videoCover: String,
+    channelLogo: String
 ) = VideoWithChannelUi(
-    videoId = video.videoId!!,
+    videoId = video.videoId,
     videoTitle = video.title,
-    videoHeader = video.cover!!,
+    videoCover = videoCover,
     channelLogo = channelLogo,
-    channelId = channel.channelId!!,
+    channelId = channel.channelId,
     views = video.views,
-    dateTime = video.dateTime!!.toLocalDateTime(TimeZone.currentSystemDefault()),
+    dateTime = video.dateTime.toLocalDateTime(TimeZone.currentSystemDefault()),
     channelTitle = channel.title
 )
 
@@ -55,7 +56,6 @@ data class VideoDetailsUi(
     val ownerId: Long,
     val videoTitle: String,
     val channelTitle: String,
-    val sourceUrl: String,
     val dateTime: LocalDateTime,
     val views: Long,
     val likes: Long,
@@ -67,15 +67,14 @@ data class VideoDetailsUi(
 )
 
 fun VideoWithChannelForUser.toUi(
-    channelLogo: String = ""
+    channelLogo: String
 ) = VideoDetailsUi(
-    videoId = video.videoId!!,
-    channelId = channel.channelId!!,
+    videoId = video.videoId,
+    channelId = channel.channelId,
     ownerId = channel.ownerId,
     videoTitle = video.title,
     channelTitle = channel.title,
-    sourceUrl = video.sourceUrl!!,
-    dateTime = video.dateTime!!.toLocalDateTime(TimeZone.currentSystemDefault()),
+    dateTime = video.dateTime.toLocalDateTime(TimeZone.currentSystemDefault()),
     views = video.views,
     likes = video.likes,
     dislikes = video.dislikes,

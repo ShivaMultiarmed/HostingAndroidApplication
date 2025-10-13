@@ -27,7 +27,7 @@ fun EntryProviderScope<Route>.searchRoute(
             }
         )
         LaunchedEffect(state) {
-            if (state.error == NetworkError.AUTHENTICATION) {
+            if (state.startingError == NetworkError.AUTHENTICATION || state.loadingError == NetworkError.AUTHENTICATION) {
                 rootBackStack.add(Route.Authentication)
             }
         }

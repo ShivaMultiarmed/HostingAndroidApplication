@@ -41,8 +41,8 @@ class AndroidFileProvider(context: Context) : FileProvider {
     override fun getFile(uri: String): File? {
         return File(
             uri = uri,
-            mimeType = getFileMimeType(uri),
-            size = getFileSize(uri)
+            mimeType = getFileMimeType(uri)?: "application/octet-stream",
+            size = getFileSize(uri)?: 0
         )
     }
 

@@ -12,14 +12,16 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import mikhail.shell.video.hosting.domain.models.VideoEditingModel
 import mikhail.shell.video.hosting.domain.usecases.videos.EditVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 
 @HiltViewModel(assistedFactory = VideoEditingViewModel.Factory::class)
@@ -28,6 +30,7 @@ class VideoEditingViewModel @AssistedInject constructor(
     private val getVideo: GetVideo,
     private val validateTitle: ValidateTitle,
     private val validateDescription: ValidateDescription,
+    private val getVideoCoverUrl: GetVideoCoverUrl,
     private val validateImage: ValidateImage,
     private val editVideo: EditVideo
 ) : ViewModel() {
@@ -152,13 +155,16 @@ class VideoEditingViewModel @AssistedInject constructor(
                             initialVideo = EditableVideoUi(
                                 videoId = videoId,
                                 title = video.title,
-                                cover = video.cover,
+                                cover = getVideoCoverUrl(
+                                    videoId = videoId,
+                                    size = ImageSize.MEDIUM
+                                ),
                                 channelId = video.channelId,
-                                description = video.description ?: ""
+                                description = video.description
                             ),
                             currentVideo = VideoEditingInputState(
                                 title = video.title,
-                                description = video.description ?: ""
+                                description = video.description?: ""
                             )
                         )
                     }
@@ -176,17 +182,15 @@ class VideoEditingViewModel @AssistedInject constructor(
             it.copy(isLoading = true)
         }
         val currentState = _state.value as VideoEditingScreenState.Editing
-        val video = Video(
-            videoId = videoId,
-            channelId = currentState.initialVideo.channelId,
-            title = currentState.currentVideo.title,
-            description = currentState.currentVideo.description
-        )
         viewModelScope.launch {
             editVideo(
-                video = video,
-                coverAction = currentState.currentVideo.coverAction,
-                cover = currentState.currentVideo.cover
+                video = VideoEditingModel(
+                    videoId = videoId,
+                    title = currentState.currentVideo.title,
+                    description = currentState.currentVideo.description,
+                    cover = currentState.currentVideo.cover,
+                    coverAction = currentState.currentVideo.coverAction
+                )
             ).onSuccess { updatedVideo ->
                 _state.update {
                     VideoEditingScreenState.Success

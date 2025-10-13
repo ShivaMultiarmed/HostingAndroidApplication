@@ -4,6 +4,6 @@ data class EditableVideoUi(
     val videoId: Long,
     val channelId: Long,
     val title: String,
-    val cover: String?,
-    val description: String
+    val cover: String,
+    val description: String?
 )

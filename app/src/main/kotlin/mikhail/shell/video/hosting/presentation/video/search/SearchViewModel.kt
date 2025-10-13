@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.SearchForVideos
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateSearchQuery
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val searchForVideos: SearchForVideos,
     private val getChannelLogoUrl: GetChannelLogoUrl,
+    private val getVideoCoverUrl: GetVideoCoverUrl,
     private val validateSearchQuery: ValidateSearchQuery
 ) : ViewModel() {
 
@@ -64,12 +66,17 @@ class SearchViewModel @Inject constructor(
                         videos = ((if (!start) it.videos else null) ?: emptyList()) + list.map {
                             it.toUi(
                                 channelLogo = getChannelLogoUrl(
-                                    channelId = it.channel.channelId!!,
+                                    channelId = it.channel.channelId,
+                                    size = ImageSize.MEDIUM
+                                ),
+                                videoCover = getVideoCoverUrl(
+                                    videoId = it.video.videoId,
                                     size = ImageSize.MEDIUM
                                 )
                             )
                         },
-                        error = null,
+                        startingError = null,
+                        loadingError = null,
                         isStarting = false,
                         isLoading = false,
                         hasMore = list.size == PART_SIZE
@@ -78,7 +85,8 @@ class SearchViewModel @Inject constructor(
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        error = error,
+                        startingError = if (start) error else it.startingError,
+                        loadingError = if (!start) error else it.loadingError,
                         isStarting = false,
                         isLoading = false
                     )

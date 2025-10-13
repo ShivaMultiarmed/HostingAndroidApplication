@@ -1,11 +1,12 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.data.repositories.VideoMetaData
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoCreationModel
+import mikhail.shell.video.hosting.domain.models.VideoEditingModel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
@@ -33,11 +34,7 @@ interface VideoRepository {
 
     suspend fun deleteVideo(videoId: Long): Result<Unit, Error>
 
-    suspend fun editVideo(
-        video: Video,
-        coverAction: EditAction,
-        cover: String?
-    ): Result<Video, Error>
+    suspend fun editVideo(video: VideoEditingModel): Result<Video, Error>
 
     suspend fun downloadVideo(
         videoId: Long,
@@ -55,9 +52,8 @@ interface VideoRepository {
         onProgress: (Float) -> Unit
     ): Result<Unit, Error>
 
-    suspend fun uploadVideo(
-        video: Video,
-        videoMetaData: VideoMetaData,
-        cover: String?
-    ): Result<Video, Error>
+    suspend fun uploadVideo(video: VideoCreationModel): Result<Video, Error>
+
+    fun getCoverUrl(videoId: Long, size: ImageSize): String
+    fun getSourceUrl(videoId: Long): String
 }

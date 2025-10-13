@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelDetails
 import mikhail.shell.video.hosting.domain.usecases.channels.RemoveChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
 import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
@@ -30,6 +31,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private val getVideoList: GetVideoList,
     private val getChannelLogoUrl: GetChannelLogoUrl,
     private val getChannelHeaderUrl: GetChannelHeaderUrl,
+    private val getVideoCoverUrl: GetVideoCoverUrl,
     private val subscribe: Subscribe,
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
@@ -106,7 +108,12 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 stateToUpdate?.copy(
                     videoState = stateToUpdate.videoState.copy(
                         videos = ((if (start) null else stateToUpdate.videoState.videos)
-                            ?: emptyList()) + videos.map { it.toUi() },
+                            ?: emptyList()) + videos.map { it.toUi(
+                                cover = getVideoCoverUrl(
+                                    videoId = it.videoId,
+                                    size = ImageSize.LARGE
+                                )
+                            ) },
                         hasMore = videos.size == PART_SIZE,
                         nextPartIndex = (if (start) 0 else stateToUpdate.videoState.nextPartIndex) + 1,
                         isStarting = false,

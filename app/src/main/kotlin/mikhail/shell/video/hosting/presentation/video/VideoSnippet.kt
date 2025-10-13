@@ -45,7 +45,7 @@ fun VideoSnippet(
             .padding(10.dp)
     ) {
         AsyncImage(
-            model = video.coverUrl,
+            model = video.cover,
             contentDescription = video.title,
             modifier = Modifier
                 .fillMaxWidth(0.45f)

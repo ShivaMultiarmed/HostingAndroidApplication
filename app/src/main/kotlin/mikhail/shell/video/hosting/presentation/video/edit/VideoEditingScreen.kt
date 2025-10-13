@@ -251,7 +251,7 @@ fun VideoEditingScreen(
                         onEvent(VideoEditingUiEvent.DescriptionChanged(""))
                     },
                     onRevert = {
-                        onEvent(VideoEditingUiEvent.DescriptionChanged(state.initialVideo.description))
+                        onEvent(VideoEditingUiEvent.DescriptionChanged(state.initialVideo.description?: ""))
                     }
                 ) {
                     InputField(

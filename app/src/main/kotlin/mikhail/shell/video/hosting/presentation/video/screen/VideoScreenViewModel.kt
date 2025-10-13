@@ -32,6 +32,7 @@ import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.PostComment
 import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoSourceUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
@@ -48,6 +49,7 @@ class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("player") val player: Player,
     private val getVideoDetails: GetVideoDetails,
     private val constructAvatarUrl: ConstructAvatarUrl,
+    private val getVideoSourceUrl: GetVideoSourceUrl,
     private val rateVideo: RateVideo,
     private val subscribe: Subscribe,
     private val incrementViews: IncrementViews,
@@ -108,17 +110,17 @@ class VideoScreenViewModel @AssistedInject constructor(
                         isStarting = false,
                         video = videoDetails.toUi(
                             channelLogo = getChannelLogoUrl(
-                                channelId = videoDetails.channel.channelId!!,
+                                channelId = videoDetails.channel.channelId,
                                 size = ImageSize.MEDIUM
                             )
                         ),
                         startingError = null
                     )
                 }
-                val url = videoDetails.video.sourceUrl
+                val url = getVideoSourceUrl(videoId)
                 val previousUri = player.currentMediaItem?.localConfiguration?.uri?.toString()
                 if (url != previousUri) {
-                    val uri = url!!.toUri()
+                    val uri = url.toUri()
                     val mediaItem = MediaItem.fromUri(uri)
                     player.setMediaItem(mediaItem)
                     player.prepare()

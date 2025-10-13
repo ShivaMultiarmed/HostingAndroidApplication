@@ -3,16 +3,14 @@ package mikhail.shell.video.hosting.domain.models
 import kotlin.time.Instant
 
 data class Video(
-    val videoId: Long? = null,
+    val videoId: Long,
     val channelId: Long,
     val title: String,
-    val dateTime: Instant? = null,
-    val views: Long = 0,
-    val likes: Long = 0,
-    val dislikes: Long = 0,
-    val description: String? = null,
-    val sourceUrl: String? = null,
-    val cover: String? = null
+    val dateTime: Instant,
+    val views: Long,
+    val likes: Long,
+    val dislikes: Long,
+    val description: String?
 )
 
 data class VideoWithChannel(
@@ -21,20 +19,34 @@ data class VideoWithChannel(
 )
 
 data class VideoForUser(
-    val videoId: Long? = null,
+    val videoId: Long,
     val channelId: Long,
     val title: String,
-    val dateTime: Instant? = null,
-    val views: Long = 0,
-    val likes: Long = 0,
-    val dislikes: Long = 0,
-    val liking: Liking = Liking.NONE,
-    val description: String? = null,
-    val sourceUrl: String? = null,
-    val coverUrl: String? = null,
+    val dateTime: Instant,
+    val views: Long,
+    val likes: Long,
+    val dislikes: Long,
+    val liking: Liking,
+    val description: String?
 )
 
 data class VideoWithChannelForUser(
     val video: VideoForUser,
     val channel: ChannelForUser
+)
+
+data class VideoCreationModel(
+    val channelId: Long,
+    val title: String,
+    val description: String?,
+    val cover: String?,
+    val metaData: File
+)
+
+data class VideoEditingModel(
+    val videoId: Long,
+    val title: String,
+    val description: String?,
+    val cover: String?,
+    val coverAction: EditAction
 )

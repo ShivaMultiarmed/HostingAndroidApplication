@@ -11,5 +11,6 @@ data class SearchScreenState(
     val isStarting: Boolean = false,
     val isLoading: Boolean = false,
     val hasMore: Boolean = true,
-    val error: Error? = null
+    val startingError: Error? = null,
+    val loadingError: Error? = null
 )

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.videos.GetRecommendations
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class RecommendationsViewModel @Inject constructor(
     private val getRecommendations: GetRecommendations,
-    private val getChannelLogoUrl: GetChannelLogoUrl
+    private val getChannelLogoUrl: GetChannelLogoUrl,
+    private val getVideoCoverUrl: GetVideoCoverUrl,
 ) : ViewModel() {
     private val _state = MutableStateFlow(RecommendationsScreenState())
     val state = _state.onStart {
@@ -54,7 +56,11 @@ class RecommendationsViewModel @Inject constructor(
                         videos = (((if (start) null else it.videos) ?: emptyList()) + videos.map {
                             it.toUi(
                                 channelLogo = getChannelLogoUrl(
-                                    channelId = it.channel.channelId!!,
+                                    channelId = it.channel.channelId,
+                                    size = ImageSize.MEDIUM
+                                ),
+                                videoCover = getVideoCoverUrl(
+                                    videoId = it.video.videoId,
                                     size = ImageSize.MEDIUM
                                 )
                             )

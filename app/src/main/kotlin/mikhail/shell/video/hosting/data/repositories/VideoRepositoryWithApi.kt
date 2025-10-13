@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.VideoEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.VideoUploadingErrorResponse
@@ -17,6 +18,7 @@ import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.toRequestBody
+import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -26,6 +28,8 @@ import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoCreationModel
+import mikhail.shell.video.hosting.domain.models.VideoEditingModel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
@@ -92,11 +96,7 @@ class VideoRepositoryWithApi @Inject constructor(
         ).map { it.toDomain() }
     }
 
-    override suspend fun uploadVideo(
-        video: Video,
-        videoMetaData: VideoMetaData,
-        cover: String?
-    ): Result<Video, Error> {
+    override suspend fun uploadVideo(video: VideoCreationModel): Result<Video, Error> {
         return request(
             httpExceptionHandler(400) {
                 val response = Json.decodeFromString<VideoUploadingErrorResponse>(
@@ -110,7 +110,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 )
             }
         ) {
-            val coverPart = cover?.let {
+            val coverPart = video.cover?.let {
                 val mime = fileProvider.getFileMimeType(it)!!
                 val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
                 fileProvider.getFileAsInputStream(it)?.use {
@@ -127,12 +127,24 @@ class VideoRepositoryWithApi @Inject constructor(
                 video = VideoUploadingRequest(
                     title = video.title,
                     channelId = video.channelId,
-                    description = video.description
+                    description = video.description,
+                    source = VideoMetaData(
+                        fileName = video.metaData.uri.substringAfterLast("/"),
+                        mimeType = video.metaData.mimeType,
+                        size = video.metaData.size
+                    ),
                 ),
-                source = videoMetaData,
                 cover = coverPart
             ).toDomain()
         }
+    }
+
+    override fun getSourceUrl(videoId: Long): String {
+        return "$API_BASE_URL/videos/$videoId/source"
+    }
+
+    override fun getCoverUrl(videoId: Long, size: ImageSize): String {
+        return "$API_BASE_URL/videos/$videoId/cover?size=${size.name.lowercase()}"
     }
 
     override suspend fun uploadVideo(
@@ -189,47 +201,47 @@ class VideoRepositoryWithApi @Inject constructor(
         videoApi.deleteVideo(videoId)
     }
 
-    override suspend fun editVideo(
-        video: Video,
-        coverAction: EditAction,
-        cover: String?
-    ): Result<Video, Error> = request(
-        httpExceptionHandler(400) {
-            val response =
-                Json.decodeFromString<VideoEditingErrorResponse>(it.response()?.body() as String)
-            VideoEditingError(
-                titleError = response.titleError,
-                coverError = response.coverError,
-                descriptionError = response.descriptionError,
-                channelId = response.channelIdError
-            )
-        }
-    ) {
-        val coverPart = cover?.let {
-            val mime = fileProvider.getFileMimeType(it)!!
-            fileProvider.getFileAsInputStream(it)
-                ?.use { it.readBytes() }!!
-                .toRequestBody(mimeType = mime)
-                .let {
-                    val extension = MimeTypeMap
-                        .getSingleton()
-                        .getExtensionFromMimeType(mime)
-                    MultipartBody.Part.createFormData(
-                        name = "cover",
-                        filename = "cover.$extension",
-                        body = it
+    override suspend fun editVideo(video: VideoEditingModel): Result<Video, Error> {
+        return request(
+            httpExceptionHandler(400) {
+                val response =
+                    Json.decodeFromString<VideoEditingErrorResponse>(
+                        it.response()?.body() as String
                     )
-                }
+                VideoEditingError(
+                    titleError = response.titleError,
+                    coverError = response.coverError,
+                    descriptionError = response.descriptionError,
+                    channelId = response.channelIdError
+                )
+            }
+        ) {
+            val coverPart = video.cover?.let {
+                val mime = fileProvider.getFileMimeType(it)!!
+                fileProvider.getFileAsInputStream(it)
+                    ?.use { it.readBytes() }!!
+                    .toRequestBody(mimeType = mime)
+                    .let {
+                        val extension = MimeTypeMap
+                            .getSingleton()
+                            .getExtensionFromMimeType(mime)
+                        MultipartBody.Part.createFormData(
+                            name = "cover",
+                            filename = "cover.$extension",
+                            body = it
+                        )
+                    }
+            }
+            videoApi.editVideo(
+                video = VideoEditingRequest(
+                    videoId = video.videoId,
+                    title = video.title,
+                    description = video.description,
+                    coverAction = video.coverAction
+                ),
+                cover = coverPart
+            ).toDomain()
         }
-        videoApi.editVideo(
-            video = VideoEditingRequest(
-                videoId = video.videoId!!,
-                title = video.title,
-                channelId = video.channelId,
-                description = video.description
-            ),
-            cover = coverPart
-        ).toDomain()
     }
 
     override suspend fun downloadVideo(
@@ -294,7 +306,8 @@ class VideoRepositoryWithApi @Inject constructor(
 data class VideoUploadingRequest(
     val title: String,
     val channelId: Long,
-    val description: String?
+    val description: String?,
+    val source: VideoMetaData
 )
 
 data class VideoMetaData(
@@ -306,6 +319,6 @@ data class VideoMetaData(
 data class VideoEditingRequest(
     val videoId: Long,
     val title: String,
-    val channelId: Long,
-    val description: String?
+    val description: String?,
+    val coverAction: EditAction
 )

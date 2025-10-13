@@ -15,14 +15,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.models.VideoCreationModel
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
-import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoMetaData
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
-import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
+import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
+import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
 class VideoUploadingViewModel @AssistedInject constructor(
@@ -34,6 +35,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val validateVideoSource: ValidateVideoSource,
     private val validateTitle: ValidateTitle,
     private val validateDescription: ValidateDescription,
+    private val getVideoMetaData: GetVideoMetaData,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
     private val _state =
@@ -187,19 +189,20 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private fun upload() {
         val input = (_state.value as VideoUploadingScreenState.Editing).input
         viewModelScope.launch {
+            val videoMetaData = getVideoMetaData(input.source!!) as Result.Success
             uploadVideo(
-                video = Video(
+                video = VideoCreationModel(
                     channelId = input.channelId!!,
                     description = input.description,
                     title = input.title,
-                ),
-                source = input.source!!,
-                cover = input.cover
+                    cover = input.cover,
+                    metaData = videoMetaData.data
+                )
             ).onSuccess { video ->
                 _state.update {
                     it as VideoUploadingScreenState.Editing
                     VideoUploadingScreenState.Success(
-                        videoId = video.videoId!!,
+                        videoId = video.videoId,
                         source = it.input.source!!
                     )
                 }
@@ -237,7 +240,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     VideoUploadingScreenState.Editing(
                         channels = channels.map {
                             ChannelOptionUi(
-                                channelId = it.channelId!!,
+                                channelId = it.channelId,
                                 title = it.title
                             )
                         },

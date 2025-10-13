@@ -148,7 +148,7 @@ fun SearchScreen(
                     },
                     items = state.videos,
                     hasMore = state.hasMore,
-                    error = state.error,
+                    error = state.loadingError.takeIf { state.hasMore },
                     isLoading = state.isLoading,
                     onReload = {
                         onEvent(SearchScreenUiEvent.Reload)
@@ -164,7 +164,7 @@ fun SearchScreen(
                     .fillMaxSize()
                     .padding(padding)
             )
-        } else if (state.error != null) {
+        } else if (state.startingError != null) {
             ErrorComponent(
                 modifier = Modifier
                     .fillMaxSize()
@@ -174,7 +174,7 @@ fun SearchScreen(
                 }
             )
             ErrorDisplay(
-                error = state.error,
+                error = state.startingError,
                 snackBarHostState = snackBarHostState
             )
         }
@@ -211,7 +211,7 @@ fun VideoWithChannelSnippet(
                     else Modifier.clip(RoundedCornerShape(10.dp))
                 )
                 .background(MaterialTheme.colorScheme.secondaryContainer),
-            model = videoWithChannel.videoHeader,
+            model = videoWithChannel.videoCover,
             contentDescription = videoWithChannel.videoTitle,
             contentScale = ContentScale.Crop
         )

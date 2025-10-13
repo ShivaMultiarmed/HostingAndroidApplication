@@ -1,21 +1,20 @@
 package mikhail.shell.video.hosting.data.dto
 
-import kotlin.time.Instant
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.Video
-import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
+import mikhail.shell.video.hosting.domain.models.VideoWithChannel
+import kotlin.time.Instant
 
 data class VideoDto(
-    val videoId: Long? = null,
+    val videoId: Long,
     val channelId: Long,
     val title: String,
-    val dateTime: Instant? = null,
-    val views: Long = 0,
-    val likes: Long = 0,
-    val dislikes: Long = 0,
-    val sourceUrl: String? = null,
-    val coverUrl: String? = null
+    val dateTime: Instant,
+    val views: Long,
+    val likes: Long,
+    val dislikes: Long,
+    val description: String?,
 )
 
 fun Video.toDto() = VideoDto(
@@ -26,8 +25,7 @@ fun Video.toDto() = VideoDto(
     views = views,
     likes = likes,
     dislikes = dislikes,
-    sourceUrl = sourceUrl,
-    coverUrl = cover
+    description = description
 )
 
 fun VideoDto.toDomain() = Video(
@@ -38,21 +36,19 @@ fun VideoDto.toDomain() = Video(
     views = views,
     likes = likes,
     dislikes = dislikes,
-    sourceUrl = sourceUrl,
-    cover = coverUrl
+    description = description
 )
 
 data class VideoWithUserDto(
-    val videoId: Long? = null,
+    val videoId: Long,
     val channelId: Long,
     val title: String,
-    val dateTime: Instant? = null,
-    val views: Long = 0,
-    val likes: Long = 0,
-    val liking: Liking = Liking.NONE,
+    val dateTime: Instant,
+    val views: Long,
+    val likes: Long,
+    val liking: Liking,
     val dislikes: Long,
-    val sourceUrl: String? = null,
-    val coverUrl: String? = null
+    val description: String?
 )
 
 fun VideoForUser.toDto() = VideoWithUserDto(
@@ -64,8 +60,7 @@ fun VideoForUser.toDto() = VideoWithUserDto(
     likes = likes,
     liking = liking,
     dislikes = dislikes,
-    sourceUrl = sourceUrl,
-    coverUrl = coverUrl
+    description = description
 )
 
 fun VideoWithUserDto.toDomain() = VideoForUser(
@@ -77,8 +72,7 @@ fun VideoWithUserDto.toDomain() = VideoForUser(
     likes = likes,
     dislikes = dislikes,
     liking = liking,
-    sourceUrl = sourceUrl,
-    coverUrl = coverUrl
+    description = description
 )
 
 data class VideoWithChannelDto(
