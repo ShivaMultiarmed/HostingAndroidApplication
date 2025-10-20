@@ -8,9 +8,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
@@ -24,6 +22,7 @@ import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
+import mikhail.shell.video.hosting.presentation.utils.stateIn
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
 class VideoUploadingViewModel @AssistedInject constructor(
@@ -38,198 +37,29 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val getVideoMetaData: GetVideoMetaData,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
-    private val _state =
-        MutableStateFlow<VideoUploadingScreenState>(VideoUploadingScreenState.Loading)
-    val state = _state
-        .onStart {
-            load()
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(3000),
-            initialValue = _state.value
-        )
+    private val _state = MutableStateFlow<VideoUploadingScreenState>(VideoUploadingScreenState.Loading)
+    val state = _state.onStart { start() }.stateIn(_state.value)
 
     fun onEvent(event: VideoUploadingScreenUiEvent) {
         viewModelScope.launch {
             when (event) {
+                VideoUploadingScreenUiEvent.Restart -> start()
                 is VideoUploadingScreenUiEvent.ChannelChanged -> onChannelChanged(event.channelId)
-                is VideoUploadingScreenUiEvent.CoverChanged -> onCoverChanged(event.cover)
-                VideoUploadingScreenUiEvent.Reload -> load()
-                is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
-                VideoUploadingScreenUiEvent.Submit -> upload()
                 is VideoUploadingScreenUiEvent.TitleChanged -> onTitleChanged(event.title)
-                VideoUploadingScreenUiEvent.TitleTypingStarted -> onTitleTypingStarted()
-                VideoUploadingScreenUiEvent.TitleTypingEnded -> onTitleTypingEnded()
+                VideoUploadingScreenUiEvent.TitleTypingStarted -> onTitleFocused()
+                VideoUploadingScreenUiEvent.TitleTypingEnded -> onTitleBlurred()
+                is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
+                is VideoUploadingScreenUiEvent.CoverChanged -> onCoverChanged(event.cover)
                 is VideoUploadingScreenUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                VideoUploadingScreenUiEvent.DescriptionTypingStarted -> onDescriptionTypingStarted()
-                VideoUploadingScreenUiEvent.DescriptionTypingEnded -> onDescriptionTypingEnded()
+                VideoUploadingScreenUiEvent.DescriptionTypingStarted -> onDescriptionFocused()
+                VideoUploadingScreenUiEvent.DescriptionTypingEnded -> onDescriptionBlurred()
+                VideoUploadingScreenUiEvent.Submit -> upload()
                 else -> null
             }
         }
     }
 
-
-    private fun onDescriptionChanged(description: String) {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    description = description,
-                )
-            )
-        }
-    }
-
-    private fun onDescriptionTypingStarted() {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    descriptionError = null
-                )
-            )
-        }
-    }
-
-    private fun onDescriptionTypingEnded() {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    descriptionError = it.input.description.let {
-                        val validationResult = validateDescription(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
-        }
-    }
-
-    private fun onChannelChanged(channelId: Long?) {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    channelId = channelId,
-                    channelError = channelId.let {
-                        val validationResult = validateChannel(channelId)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
-        }
-    }
-
-    private fun onCoverChanged(cover: String?) {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    cover = cover,
-                    coverError = cover?.let {
-                        val validationResult = validateImage(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
-        }
-    }
-
-    private fun onSourceChanged(source: String?) {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    source = source,
-                    sourceError = source.let {
-                        val validationResult = validateVideoSource(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
-        }
-    }
-
-    private fun onTitleChanged(title: String) {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    title = title
-                )
-            )
-        }
-    }
-
-    private fun onTitleTypingStarted() {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    titleError = null
-                )
-            )
-        }
-    }
-
-    private fun onTitleTypingEnded() {
-        _state.update {
-            it as VideoUploadingScreenState.Editing
-            it.copy(
-                input = it.input.copy(
-                    titleError = it.input.title.let {
-                        val validationResult = validateTitle(it)
-                        if (validationResult is Result.Failure) validationResult.error else null
-                    }
-                )
-            )
-        }
-    }
-
-    private fun upload() {
-        val input = (_state.value as VideoUploadingScreenState.Editing).input
-        viewModelScope.launch {
-            val videoMetaData = getVideoMetaData(input.source!!) as Result.Success
-            uploadVideo(
-                video = VideoCreationModel(
-                    channelId = input.channelId!!,
-                    description = input.description,
-                    title = input.title,
-                    cover = input.cover,
-                    metaData = videoMetaData.data
-                )
-            ).onSuccess { video ->
-                _state.update {
-                    it as VideoUploadingScreenState.Editing
-                    VideoUploadingScreenState.Success(
-                        videoId = video.videoId,
-                        source = it.input.source!!
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it as VideoUploadingScreenState.Editing
-                    if (error is VideoUploadingError) {
-                        it.copy(
-                            input = it.input.copy(
-                                titleError = error.titleError,
-                                coverError = error.coverError,
-                                channelError = error.channelError,
-                                sourceError = error.sourceError,
-                                descriptionError = error.descriptionError
-                            )
-                        )
-                    } else {
-                        it.copy(
-                            error = error
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun load() {
+    private fun start() {
         viewModelScope.launch {
             getOwnedChannels(
                 userId = userId,
@@ -244,12 +74,252 @@ class VideoUploadingViewModel @AssistedInject constructor(
                                 title = it.title
                             )
                         },
-                        input = VideoUploadingInput()
+                        video = VideoUploadingInput()
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     VideoUploadingScreenState.Failure(error)
+                }
+            }
+        }
+    }
+
+    private fun onChannelChanged(channelId: Long?) {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    channelId = currentState.video.channelId.copy(
+                        value = channelId,
+                        error = channelId.let {
+                            val validationResult = validateChannel(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onTitleChanged(title: String) {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(
+                        value = title
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onTitleFocused() {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(
+                        error = null
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onTitleBlurred() {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(
+                        error = currentState.video.title.value.let {
+                            val validationResult = validateTitle(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onSourceChanged(source: String?) {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    source = currentState.video.source.copy(
+                        value = source,
+                        error = source.let {
+                            val validationResult = validateVideoSource(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onCoverChanged(cover: String?) {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    cover = currentState.video.cover.copy(
+                        value = cover,
+                        error = cover?.let {
+                            val validationResult = validateImage(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onDescriptionChanged(description: String) {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(
+                        value = description
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onDescriptionFocused() {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(
+                        error = null
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun onDescriptionBlurred() {
+        _state.update {
+            val currentState = it as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(
+                        error = currentState.video.description.value.let {
+                            val validationResult = validateDescription(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+            )?: it
+        }
+    }
+
+    private fun upload() {
+        _state.update {
+            val currentState = _state.value as? VideoUploadingScreenState.Editing
+            currentState?.copy(
+                video = currentState.video.copy(
+                    channelId = currentState.video.channelId.copy(
+                        error = currentState.video.channelId.value.let {
+                            val validationResult = validateChannel(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    ),
+                    title = currentState.video.title.copy(
+                        error = currentState.video.title.value.let {
+                            val validationResult = validateTitle(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    ),
+                    source = currentState.video.source.copy(
+                        error = currentState.video.source.value.let {
+                            val validationResult = validateVideoSource(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    ),
+                    cover = currentState.video.cover.copy(
+                        error = currentState.video.cover.value?.let {
+                            val validationResult = validateImage(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    ),
+                    description = currentState.video.description.copy(
+                        error = currentState.video.description.value.let {
+                            val validationResult = validateDescription(it)
+                            if (validationResult is Result.Failure) validationResult.error else null
+                        }
+                    )
+                )
+
+            )?: it
+        }
+        val currentState = _state.value as? VideoUploadingScreenState.Editing
+        if (currentState == null) {
+            return
+        }
+        val video = currentState.video
+        viewModelScope.launch {
+            val videoMetaData = getVideoMetaData(video.source.value!!) as Result.Success // TODO: handle failure cases
+            _state.update {
+                val currentState = _state.value as? VideoUploadingScreenState.Editing
+                currentState?.copy(
+                    isLoading = true
+                )?: it
+            }
+            uploadVideo(
+                video = VideoCreationModel(
+                    channelId = video.channelId.value!!,
+                    description = video.description.value.takeIf { it.isNotEmpty() },
+                    title = video.title.value,
+                    cover = video.cover.value,
+                    metaData = videoMetaData.data
+                )
+            ).onSuccess { video ->
+                _state.update {
+                    val currentState = it as? VideoUploadingScreenState.Editing
+                    if (currentState != null) {
+                        VideoUploadingScreenState.Success(
+                            videoId = video.videoId,
+                            source = currentState.video.source.value!!
+                        )
+                    } else it
+                }
+            }.onFailure { error ->
+                _state.update {
+                    val currentState = it as? VideoUploadingScreenState.Editing
+                    if (error is VideoUploadingError) {
+                        currentState?.copy(
+                            video = currentState.video.copy(
+                                channelId = currentState.video.channelId.copy(
+                                    error = error.channelError
+                                ),
+                                title = currentState.video.title.copy(
+                                    error = error.titleError
+                                ),
+                                source = currentState.video.source.copy(
+                                    error = error.sourceError
+                                ),
+                                cover = currentState.video.cover.copy(
+                                    error = error.coverError
+                                ),
+                                description = currentState.video.description.copy(
+                                    error = error.descriptionError
+                                )
+                            ),
+                            isLoading = false
+                        )?: it
+                    } else {
+                        currentState?.copy(
+                            error = error,
+                            isLoading = false
+                        )?: it
+                    }
                 }
             }
         }
@@ -266,16 +336,15 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
 sealed class VideoUploadingScreenUiEvent {
     data object Cancel : VideoUploadingScreenUiEvent()
-    data object Reload : VideoUploadingScreenUiEvent()
+    data object Restart : VideoUploadingScreenUiEvent()
+    data class ChannelChanged(val channelId: Long?) : VideoUploadingScreenUiEvent()
     data class TitleChanged(val title: String) : VideoUploadingScreenUiEvent()
     data object TitleTypingEnded : VideoUploadingScreenUiEvent()
     data object TitleTypingStarted : VideoUploadingScreenUiEvent()
     data class SourceChanged(val source: String?) : VideoUploadingScreenUiEvent()
     data class CoverChanged(val cover: String?) : VideoUploadingScreenUiEvent()
-    data class ChannelChanged(val channelId: Long?) : VideoUploadingScreenUiEvent()
     data class DescriptionChanged(val description: String) : VideoUploadingScreenUiEvent()
     data object DescriptionTypingEnded : VideoUploadingScreenUiEvent()
     data object DescriptionTypingStarted : VideoUploadingScreenUiEvent()
     data object Submit : VideoUploadingScreenUiEvent()
-    data class Success(val videoId: Long, val source: String) : VideoUploadingScreenUiEvent()
 }

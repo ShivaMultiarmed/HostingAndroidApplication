@@ -77,6 +77,7 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
         freeCompilerArgs.add("-XXLanguage:+WhenGuards")
+        freeCompilerArgs.add("-Xcontext-parameters")
         jvmTarget.set(JvmTarget.JVM_11)
     }
 }

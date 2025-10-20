@@ -480,7 +480,7 @@ fun VideoUploadingScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
                 onRetry = {
-                    onEvent(VideoUploadingScreenUiEvent.Reload)
+                    onEvent(VideoUploadingScreenUiEvent.Restart)
                 }
             )
         }

@@ -52,9 +52,9 @@ class NotificationService: FirebaseMessagingService() {
         val topic = message.from
         val data = message.data
         if (topic?.startsWith(CHANNEL_TOPIC_PREFIX) == true) {
-            val videoId = data["videoId"]
-            val channelTitle = data["channelTitle"]
-            val videoTitle = data["videoTitle"]
+            val videoId = data["video_id"]
+            val channelTitle = data["channel_title"]
+            val videoTitle = data["video_title"]
             showNotification(videoId!!.toLong(), channelTitle, videoTitle)
         }
     }

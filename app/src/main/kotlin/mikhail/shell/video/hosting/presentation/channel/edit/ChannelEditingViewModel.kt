@@ -306,8 +306,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     editedChannel = currentState.editedChannel.copy(
                         title = currentState.editedChannel.title.copy(
                             error = currentState.editedChannel.title.value.let {
-                                val validationResult =
-                                    validateChannelTitle(channelId = channelId, title = it)
+                                val validationResult = validateChannelTitle(channelId = channelId, title = it)
                                 if (validationResult is Result.Failure) validationResult.error else null
                             }
                         ),
