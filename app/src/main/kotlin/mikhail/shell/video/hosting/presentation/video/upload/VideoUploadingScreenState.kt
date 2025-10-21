@@ -12,7 +12,7 @@ sealed class VideoUploadingScreenState {
     ): VideoUploadingScreenState()
     data class Failure(val error: Error): VideoUploadingScreenState()
     data class Success(
-        val videoId: Long,
+        val uploadId: Long,
         val source: String
     ): VideoUploadingScreenState()
 }

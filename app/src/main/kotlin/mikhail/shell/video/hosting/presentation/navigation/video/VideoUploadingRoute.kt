@@ -20,7 +20,7 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenUiEvent
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
 
-fun EntryProviderScope<Route>.uploadVideoRoute(
+fun EntryProviderScope<Route>.videoUploadingRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
@@ -53,7 +53,7 @@ fun EntryProviderScope<Route>.uploadVideoRoute(
                 }
             } else if (state is VideoUploadingScreenState.Success) {
                 val successState = state as VideoUploadingScreenState.Success
-                if (!successState.source.contains(context.packageName + ".fileprovider")) {
+                if (!successState.source.contains("${context.packageName}.fileprovider")) {
                     context.contentResolver.takePersistableUriPermission(successState.source.toUri(), FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startService(
@@ -62,7 +62,7 @@ fun EntryProviderScope<Route>.uploadVideoRoute(
                         intent.putExtra("source", successState.source)
                     }
                 )
-                userBackStack.add(Route.Channel(successState.videoId))
+                userBackStack.add(Route.Channel(successState.uploadId))
             }
         }
     }

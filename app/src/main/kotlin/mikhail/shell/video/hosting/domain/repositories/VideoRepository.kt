@@ -47,12 +47,12 @@ interface VideoRepository {
     ): Result<List<VideoWithChannel>, Error>
 
     suspend fun uploadVideo(
-        videoId: Long,
+        uploadId: Long,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error>
 
-    suspend fun uploadVideo(video: VideoCreationModel): Result<Video, Error>
+    suspend fun uploadVideo(video: VideoCreationModel): Result<Long, Error>
 
     fun getCoverUrl(videoId: Long, size: ImageSize): String
     fun getSourceUrl(videoId: Long): String

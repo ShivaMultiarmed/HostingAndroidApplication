@@ -254,15 +254,15 @@ fun StandardEditField(
     firstTime: Boolean = true,
     updated: Boolean = true,
     empty: Boolean,
-    onDelete: () -> Unit,
-    onRevert: () -> Unit,
+    onDelete: (() -> Unit)? = null,
+    onRevert: (() -> Unit)? = null,
     field: @Composable () -> Unit
 ) {
     val actionList = mutableListOf<ActionItem>()
-    if (!firstTime && updated) {
+    if (!firstTime && updated && onRevert != null) {
         actionList.add(RevertingItem(reverting = onRevert))
     }
-    if (!empty) {
+    if (!empty && onDelete != null) {
         actionList.add(DeletingItem(deleting = onDelete))
     }
     EditField(

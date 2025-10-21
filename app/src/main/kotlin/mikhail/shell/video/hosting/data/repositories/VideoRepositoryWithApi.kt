@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.repositories
 
 import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
+import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,9 +16,9 @@ import mikhail.shell.video.hosting.data.dto.VideoUploadingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.parseFileSize
-import mikhail.shell.video.hosting.data.utils.process
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.toRequestBody
+import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
@@ -44,7 +45,8 @@ import javax.inject.Inject
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
-    private val fileProvider: FileProvider
+    private val fileProvider: FileProvider,
+    private val gson: Gson
 ) : VideoRepository {
 
     override suspend fun fetchVideoInfo(videoId: Long): Result<Video, Error> = request {
@@ -96,12 +98,11 @@ class VideoRepositoryWithApi @Inject constructor(
         ).map { it.toDomain() }
     }
 
-    override suspend fun uploadVideo(video: VideoCreationModel): Result<Video, Error> {
+    override suspend fun uploadVideo(video: VideoCreationModel): Result<Long, Error> {
         return request(
             httpExceptionHandler(400) {
-                val response = Json.decodeFromString<VideoUploadingErrorResponse>(
-                    it.response()?.body() as String
-                )
+                val json = it.response()?.body() as String
+                val response = gson.fromJson(json, VideoUploadingErrorResponse::class.java)
                 VideoUploadingError(
                     titleError = response.titleError,
                     sourceError = response.sourceError,
@@ -111,31 +112,21 @@ class VideoRepositoryWithApi @Inject constructor(
             }
         ) {
             val coverPart = video.cover?.let {
-                val mime = fileProvider.getFileMimeType(it)!!
-                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
-                fileProvider.getFileAsInputStream(it)?.use {
-                    it.readBytes().toRequestBody().let {
-                        MultipartBody.Part.createFormData(
-                            name = "cover",
-                            filename = "cover.$extension",
-                            body = it
-                        )
-                    }
-                }
+                fileProvider.uriToPart(it, "cover")
             }
             videoApi.uploadVideoDetails(
                 video = VideoUploadingRequest(
                     title = video.title,
                     channelId = video.channelId,
-                    description = video.description,
-                    source = VideoMetaData(
-                        fileName = video.metaData.uri.substringAfterLast("/"),
-                        mimeType = video.metaData.mimeType,
-                        size = video.metaData.size
-                    ),
+                    description = video.description
+                ),
+                source = VideoMetaData(
+                    fileName = video.metaData.uri.substringAfterLast("/"),
+                    mimeType = video.metaData.mimeType,
+                    size = video.metaData.size
                 ),
                 cover = coverPart
-            ).toDomain()
+            )
         }
     }
 
@@ -148,30 +139,36 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun uploadVideo(
-        videoId: Long,
+        uploadId: Long,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
         return try {
+            val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
             val sourceSize = fileProvider.getFileSize(source)!!
             var bytesTransferred = 0
-            var chunkIndex = 0L
-            val sourceInputStream = fileProvider.getFileAsInputStream(source)
             val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-            sourceInputStream!!.process { bytesRead, buffer ->
-                coroutineScope.launch {
-                    videoApi.uploadVideoSource(
-                        videoId = videoId,
-                        chunkIndex = chunkIndex,
-                        source = buffer.toRequestBody(bytesNumber = bytesRead)
-                    )
+            coroutineScope.launch {
+                val buffer = ByteArray(BUFFER_SIZE)
+                var start = 0
+                var bytesRead: Int
+                do {
+                    bytesRead = sourceInputStream.read(buffer)
                     bytesTransferred += bytesRead
-                    val progress = bytesTransferred.toFloat() / sourceSize
-                    onProgress(progress)
-                }
-                chunkIndex++
+                    val end = start + bytesRead
+                    launch {
+                        videoApi.uploadVideoSource(
+                            uploadId = uploadId,
+                            contentRange = "bytes $start-$end/$sourceSize",
+                            source = buffer.toRequestBody(bytesNumber = bytesRead)
+                        )
+                        val progress = bytesTransferred.toFloat() / sourceSize
+                        onProgress(progress)
+                    }
+                    start = end
+                } while(bytesTransferred < sourceSize)
             }
-            videoApi.confirmVideoUpload(videoId)
+            videoApi.confirmVideoUpload(uploadId)
             Result.Success(Unit)
         } catch (e: HttpException) {
             val error = when (e.code()) {
@@ -301,13 +298,15 @@ class VideoRepositoryWithApi @Inject constructor(
             return Result.Failure(error)
         }
     }
+    private companion object {
+        const val BUFFER_SIZE = 10 * 1024 * 1024
+    }
 }
 
 data class VideoUploadingRequest(
     val title: String,
     val channelId: Long,
-    val description: String?,
-    val source: VideoMetaData
+    val description: String?
 )
 
 data class VideoMetaData(

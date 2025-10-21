@@ -46,13 +46,13 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 VideoUploadingScreenUiEvent.Restart -> start()
                 is VideoUploadingScreenUiEvent.ChannelChanged -> onChannelChanged(event.channelId)
                 is VideoUploadingScreenUiEvent.TitleChanged -> onTitleChanged(event.title)
-                VideoUploadingScreenUiEvent.TitleTypingStarted -> onTitleFocused()
-                VideoUploadingScreenUiEvent.TitleTypingEnded -> onTitleBlurred()
+                VideoUploadingScreenUiEvent.TitleFocused -> onTitleFocused()
+                VideoUploadingScreenUiEvent.TitleBlurred -> onTitleBlurred()
                 is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
                 is VideoUploadingScreenUiEvent.CoverChanged -> onCoverChanged(event.cover)
                 is VideoUploadingScreenUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                VideoUploadingScreenUiEvent.DescriptionTypingStarted -> onDescriptionFocused()
-                VideoUploadingScreenUiEvent.DescriptionTypingEnded -> onDescriptionBlurred()
+                VideoUploadingScreenUiEvent.DescriptionFocused -> onDescriptionFocused()
+                VideoUploadingScreenUiEvent.DescriptionBlurred -> onDescriptionBlurred()
                 VideoUploadingScreenUiEvent.Submit -> upload()
                 else -> null
             }
@@ -280,12 +280,12 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     cover = video.cover.value,
                     metaData = videoMetaData.data
                 )
-            ).onSuccess { video ->
+            ).onSuccess { uploadId ->
                 _state.update {
                     val currentState = it as? VideoUploadingScreenState.Editing
                     if (currentState != null) {
                         VideoUploadingScreenState.Success(
-                            videoId = video.videoId,
+                            uploadId = uploadId,
                             source = currentState.video.source.value!!
                         )
                     } else it
@@ -339,12 +339,12 @@ sealed class VideoUploadingScreenUiEvent {
     data object Restart : VideoUploadingScreenUiEvent()
     data class ChannelChanged(val channelId: Long?) : VideoUploadingScreenUiEvent()
     data class TitleChanged(val title: String) : VideoUploadingScreenUiEvent()
-    data object TitleTypingEnded : VideoUploadingScreenUiEvent()
-    data object TitleTypingStarted : VideoUploadingScreenUiEvent()
+    data object TitleBlurred : VideoUploadingScreenUiEvent()
+    data object TitleFocused : VideoUploadingScreenUiEvent()
     data class SourceChanged(val source: String?) : VideoUploadingScreenUiEvent()
     data class CoverChanged(val cover: String?) : VideoUploadingScreenUiEvent()
     data class DescriptionChanged(val description: String) : VideoUploadingScreenUiEvent()
-    data object DescriptionTypingEnded : VideoUploadingScreenUiEvent()
-    data object DescriptionTypingStarted : VideoUploadingScreenUiEvent()
+    data object DescriptionBlurred : VideoUploadingScreenUiEvent()
+    data object DescriptionFocused : VideoUploadingScreenUiEvent()
     data object Submit : VideoUploadingScreenUiEvent()
 }

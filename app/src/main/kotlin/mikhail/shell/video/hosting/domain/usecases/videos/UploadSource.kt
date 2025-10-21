@@ -9,11 +9,11 @@ class UploadSource @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
     suspend operator fun invoke(
-        videoId: Long,
+        uploadId: Long,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> = videoRepository.uploadVideo(
-        videoId = videoId,
+        uploadId = uploadId,
         source = source,
         onProgress = onProgress
     )

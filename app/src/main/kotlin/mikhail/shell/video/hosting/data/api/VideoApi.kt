@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
 import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
 import mikhail.shell.video.hosting.data.repositories.VideoEditingRequest
+import mikhail.shell.video.hosting.data.repositories.VideoMetaData
 import mikhail.shell.video.hosting.data.repositories.VideoUploadingRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -48,18 +49,17 @@ interface VideoApi {
     @POST("videos")
     suspend fun uploadVideoDetails(
         @Part("video") video: VideoUploadingRequest,
+        @Part("source") source: VideoMetaData,
         @Part cover: MultipartBody.Part?
-    ): VideoDto
-    @POST("videos/upload/{videoId}/chunk")
+    ): Long
+    @POST("videos/{upload_id}")
     suspend fun uploadVideoSource(
-        @Path("video_id") videoId: Long,
-        @Query("chunk_index") chunkIndex: Long,
+        @Path("upload_id") uploadId: Long,
+        @Header("Content-Range") contentRange: String,
         @Body source: RequestBody
     )
-    @POST("videos/upload/{video_id}/confirmation")
-    suspend fun confirmVideoUpload(
-        @Path("video_id") videoId: Long
-    )
+    @POST("videos/{upload_id}/confirmation")
+    suspend fun confirmVideoUpload(@Path("upload_id") uploadId: Long)
     @PATCH("videos/{video_id}/views")
     suspend fun incrementViews(@Path("video_id") videoId: Long): VideoDto
     @Multipart

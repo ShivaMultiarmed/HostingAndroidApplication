@@ -10,7 +10,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelCreationRoute
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.navigation.video.uploadVideoRoute
+import mikhail.shell.video.hosting.presentation.navigation.video.videoUploadingRoute
 
 fun EntryProviderScope<Route>.userGraph(
     rootBackStack: MutableList<Route>,
@@ -41,7 +41,7 @@ fun EntryProviderScope<Route>.userGraph(
                     userDetailsProvider = userDetailsProvider,
                     player = player
                 )
-                uploadVideoRoute(
+                videoUploadingRoute(
                     rootBackStack = rootBackStack,
                     userBackStack = userBackStack,
                     userDetailsProvider = userDetailsProvider

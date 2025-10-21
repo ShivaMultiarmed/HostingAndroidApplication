@@ -75,13 +75,12 @@ class VideoUploadingService : Service() {
                     uploadJob = coroutineScope.launch {
                         try {
                             uploadSource(
-                                videoId = videoId,
+                                uploadId = videoId,
                                 source = bundle.getString("source")!!
                             ) {
                                 updateProgressNotification((it * 100).toInt())
                             }.onSuccess {
                                 stopUploading()
-                                // displaySuccessNotification(videoId) TODO
                             }.onFailure { err ->
                                 stopUploading()
                                 displayFailureNotification(err)
@@ -114,7 +113,7 @@ class VideoUploadingService : Service() {
     @OptIn(UnstableApi::class)
     private fun displaySuccessNotification(video: Video) {
         val deepLinkIntent = Intent(this, MainActivity::class.java).apply {
-            data = "https://$HOST/videos/${video.videoId!!}".toUri()
+            data = "https://$HOST/videos/${video.videoId}".toUri()
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -133,8 +132,7 @@ class VideoUploadingService : Service() {
     }
 
     private fun displayFailureNotification(error: Error) {
-        val errorMessage =
-            if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
+        val errorMessage = if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))
@@ -179,12 +177,6 @@ class VideoUploadingService : Service() {
             if (!sourceUri.toString().contains("$packageName.fileprovider")) {
                 releasePersistableUriPermission(
                     sourceUri!!,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }
-            coverUri?.let {
-                releasePersistableUriPermission(
-                    it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             }
