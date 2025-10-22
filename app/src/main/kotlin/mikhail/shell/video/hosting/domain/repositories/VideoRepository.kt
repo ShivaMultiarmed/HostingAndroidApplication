@@ -10,6 +10,8 @@ import mikhail.shell.video.hosting.domain.models.VideoEditingModel
 import mikhail.shell.video.hosting.domain.models.VideoForUser
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 interface VideoRepository {
     suspend fun fetchVideoInfo(videoId: Long) : Result<Video, Error>
@@ -46,13 +48,18 @@ interface VideoRepository {
         partSize: Int
     ): Result<List<VideoWithChannel>, Error>
 
-    suspend fun uploadVideo(
-        uploadId: Long,
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun uploadVideoSource(
+        uploadId: Uuid,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error>
 
-    suspend fun uploadVideo(video: VideoCreationModel): Result<Long, Error>
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun uploadVideo(video: VideoCreationModel): Result<Uuid, Error>
+
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error>
 
     fun getCoverUrl(videoId: Long, size: ImageSize): String
     fun getSourceUrl(videoId: Long): String

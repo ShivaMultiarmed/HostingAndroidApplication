@@ -5,11 +5,14 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class UploadVideo @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
-    suspend operator fun invoke(video: VideoCreationModel): Result<Long, Error> {
+    @OptIn(ExperimentalUuidApi::class)
+    suspend operator fun invoke(video: VideoCreationModel): Result<Uuid, Error> {
         return videoRepository.uploadVideo(video)
     }
 }

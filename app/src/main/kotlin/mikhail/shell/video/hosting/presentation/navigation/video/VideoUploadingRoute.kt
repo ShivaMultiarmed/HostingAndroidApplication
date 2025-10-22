@@ -59,6 +59,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                 context.startService(
                     Intent(context, VideoUploadingService::class.java).also { intent ->
                         intent.action = VideoUploadingService.ACTION_LAUNCH_UPLOADING
+                        intent.putExtra("upload_id", successState.uploadId)
                         intent.putExtra("source", successState.source)
                     }
                 )

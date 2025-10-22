@@ -23,6 +23,7 @@ import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
 import mikhail.shell.video.hosting.presentation.utils.stateIn
+import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
 class VideoUploadingViewModel @AssistedInject constructor(
@@ -220,6 +221,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun upload() {
         _state.update {
             val currentState = _state.value as? VideoUploadingScreenState.Editing

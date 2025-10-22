@@ -22,6 +22,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 interface VideoApi {
     @GET("videos/{video_id}")
@@ -51,15 +53,17 @@ interface VideoApi {
         @Part("video") video: VideoUploadingRequest,
         @Part("source") source: VideoMetaData,
         @Part cover: MultipartBody.Part?
-    ): Long
+    ): String
+    @OptIn(ExperimentalUuidApi::class)
     @POST("videos/{upload_id}")
     suspend fun uploadVideoSource(
-        @Path("upload_id") uploadId: Long,
+        @Path("upload_id") uploadId: Uuid,
         @Header("Content-Range") contentRange: String,
         @Body source: RequestBody
     )
+    @OptIn(ExperimentalUuidApi::class)
     @POST("videos/{upload_id}/confirmation")
-    suspend fun confirmVideoUpload(@Path("upload_id") uploadId: Long)
+    suspend fun confirmVideoUpload(@Path("upload_id") uploadId: Uuid): VideoDto
     @PATCH("videos/{video_id}/views")
     suspend fun incrementViews(@Path("video_id") videoId: Long): VideoDto
     @Multipart

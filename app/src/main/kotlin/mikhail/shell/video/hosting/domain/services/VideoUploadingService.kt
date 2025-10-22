@@ -29,15 +29,19 @@ import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Video
+import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
 import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @AndroidEntryPoint
 class VideoUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
     private lateinit var uploadSource: UploadSource
+    private lateinit var confirmUpload: ConfirmVideoUpload
     private lateinit var removeVideo: DeleteVideo
     private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
@@ -46,16 +50,17 @@ class VideoUploadingService : Service() {
 
     private val videoIdState = MutableStateFlow<Long?>(null)
     private var sourceUri: Uri? = null
-    private var coverUri: Uri? = null
 
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
         videoUploadingEntryPoint =
             EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
-        uploadSource = videoUploadingEntryPoint.getUploadVideo()
+        confirmUpload = videoUploadingEntryPoint.getConfirmVideoUpload()
+        uploadSource = videoUploadingEntryPoint.getUploadVideoSource()
         removeVideo = videoUploadingEntryPoint.getRemoveVideo()
     }
 
+    @kotlin.OptIn(ExperimentalUuidApi::class)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let { notNullIntent ->
             if (notNullIntent.action == ACTION_LAUNCH_UPLOADING) {
@@ -69,23 +74,32 @@ class VideoUploadingService : Service() {
                     } else {
                         startForeground(++NOTIFICATION_COUNT, createProgressNotification())
                     }
-                    val videoId = bundle.getLong("source")
+                    val uploadId = Uuid.parse(bundle.getString("upload_id")!!)
                     sourceUri = bundle.getString("source")!!.toUri()
-                    coverUri = bundle.getString("cover")?.toUri()
                     uploadJob = coroutineScope.launch {
                         try {
                             uploadSource(
-                                uploadId = videoId,
+                                uploadId = uploadId,
                                 source = bundle.getString("source")!!
                             ) {
                                 updateProgressNotification((it * 100).toInt())
-                            }.onSuccess {
-                                stopUploading()
                             }.onFailure { err ->
                                 stopUploading()
                                 displayFailureNotification(err)
+                            }.onSuccess {
+                                stopUploading()
+                                coroutineScope.launch {
+                                    confirmUpload(uploadId).onSuccess {
+                                        displaySuccessNotification(it)
+                                    }.onFailure {
+                                        displayFailureNotification(it)
+                                        // TODO (?)
+                                    }
+                                }
                             }
-                        } catch (_: CancellationException) { }
+                        } catch (_: CancellationException) {
+                            // TODO
+                        }
                     }
                 }
             } else if (notNullIntent.action == ACTION_CANCEL_UPLOADING) {
@@ -132,7 +146,8 @@ class VideoUploadingService : Service() {
     }
 
     private fun displayFailureNotification(error: Error) {
-        val errorMessage = if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
+        val errorMessage =
+            if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))

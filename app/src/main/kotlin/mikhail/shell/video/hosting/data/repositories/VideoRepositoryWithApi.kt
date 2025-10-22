@@ -42,6 +42,8 @@ import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class VideoRepositoryWithApi @Inject constructor(
     private val videoApi: VideoApi,
@@ -98,7 +100,8 @@ class VideoRepositoryWithApi @Inject constructor(
         ).map { it.toDomain() }
     }
 
-    override suspend fun uploadVideo(video: VideoCreationModel): Result<Long, Error> {
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun uploadVideo(video: VideoCreationModel): Result<Uuid, Error> {
         return request(
             httpExceptionHandler(400) {
                 val json = it.response()?.body() as String
@@ -126,20 +129,13 @@ class VideoRepositoryWithApi @Inject constructor(
                     size = video.metaData.size
                 ),
                 cover = coverPart
-            )
+            ).let { Uuid.parse(it) }
         }
     }
 
-    override fun getSourceUrl(videoId: Long): String {
-        return "$API_BASE_URL/videos/$videoId/source"
-    }
-
-    override fun getCoverUrl(videoId: Long, size: ImageSize): String {
-        return "$API_BASE_URL/videos/$videoId/cover?size=${size.name.lowercase()}"
-    }
-
-    override suspend fun uploadVideo(
-        uploadId: Long,
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun uploadVideoSource(
+        uploadId: Uuid,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
@@ -188,6 +184,30 @@ class VideoRepositoryWithApi @Inject constructor(
             }
             Result.Failure(error)
         }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error> = request (
+        httpExceptionHandler(400) {
+            val json = it.response()?.body() as String
+            val response = gson.fromJson(json, VideoUploadingErrorResponse::class.java)
+            VideoUploadingError(
+                titleError = response.titleError,
+                sourceError = response.sourceError,
+                coverError = response.coverError,
+                descriptionError = response.descriptionError
+            )
+        }
+    ) {
+        videoApi.confirmVideoUpload(uploadId).toDomain()
+    }
+
+    override fun getSourceUrl(videoId: Long): String {
+        return "$API_BASE_URL/videos/$videoId/source"
+    }
+
+    override fun getCoverUrl(videoId: Long, size: ImageSize): String {
+        return "$API_BASE_URL/videos/$videoId/cover?size=${size.name.lowercase()}"
     }
 
     override suspend fun incrementViews(videoId: Long): Result<Video, Error> = request {
