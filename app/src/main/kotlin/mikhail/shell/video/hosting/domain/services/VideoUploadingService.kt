@@ -74,12 +74,12 @@ class VideoUploadingService : Service() {
                     } else {
                         startForeground(++NOTIFICATION_COUNT, createProgressNotification())
                     }
-                    val uploadId = Uuid.parse(bundle.getString("upload_id")!!)
+                    val tmpId = Uuid.parse(bundle.getString("tmp_id")!!)
                     sourceUri = bundle.getString("source")!!.toUri()
                     uploadJob = coroutineScope.launch {
                         try {
                             uploadSource(
-                                uploadId = uploadId,
+                                tmpId = tmpId,
                                 source = bundle.getString("source")!!
                             ) {
                                 updateProgressNotification((it * 100).toInt())
@@ -89,7 +89,7 @@ class VideoUploadingService : Service() {
                             }.onSuccess {
                                 stopUploading()
                                 coroutineScope.launch {
-                                    confirmUpload(uploadId).onSuccess {
+                                    confirmUpload(tmpId).onSuccess {
                                         displaySuccessNotification(it)
                                     }.onFailure {
                                         displayFailureNotification(it)

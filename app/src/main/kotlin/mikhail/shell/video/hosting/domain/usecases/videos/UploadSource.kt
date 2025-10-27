@@ -12,11 +12,11 @@ class UploadSource @Inject constructor(
 ) {
     @OptIn(ExperimentalUuidApi::class)
     suspend operator fun invoke(
-        uploadId: Uuid,
+        tmpId: Uuid,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> = videoRepository.uploadVideoSource(
-        uploadId = uploadId,
+        tmpId = tmpId,
         source = source,
         onProgress = onProgress
     )

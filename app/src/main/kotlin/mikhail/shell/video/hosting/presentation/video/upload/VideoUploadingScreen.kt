@@ -42,7 +42,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -86,14 +85,18 @@ import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Editing
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Failure
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Starting
 import java.io.File
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoUploadingScreen(
-    state: VideoUploadingScreenState,
+    state: State,
     player: Player,
-    onEvent: (VideoUploadingScreenUiEvent) -> Unit
+    onAction: (Action) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
     val playerState = LocalPlayerState.current
@@ -104,22 +107,21 @@ fun VideoUploadingScreen(
         ActivityCompat.requestPermissions(activity, arrayOf("android.permission.POST_NOTIFICATIONS"), 0)
     }
     val scrollState = rememberScrollState()
-    if (state is VideoUploadingScreenState.Editing) {
+    if (state is Editing) {
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         var isFullScreen by rememberSaveable { mutableStateOf(false) }
-        val snackBarHostState = remember { SnackbarHostState() }
         Scaffold(
             topBar = {
                 if (!isFullScreen) {
                     TopBar(
                         onPopup = {
-                            onEvent(VideoUploadingScreenUiEvent.Cancel)
+                            onAction(VideoUploadingScreenAction.Cancel)
                         },
                         title = stringResource(R.string.video_upload_title),
                         inProgress = state.isLoading,
                         complete = false,
                         onSubmit = {
-                            onEvent(VideoUploadingScreenUiEvent.Submit)
+                            onAction(VideoUploadingScreenAction.Submit)
                         }
                     )
                 }
@@ -144,20 +146,19 @@ fun VideoUploadingScreen(
                         }
                     )
             ) {
-
                 if (!isFullScreen) {
                     val sourceCreator = rememberLauncherForActivityResult(
                         ActivityResultContracts.CaptureVideo()
                     ) {
                         if (it) {
-                            onEvent(VideoUploadingScreenUiEvent.SourceChanged(state.video.source.value!!))
+                            onAction(VideoUploadingScreenAction.SourceChanged(state.video.source.value!!))
                         }
                     }
                     val sourcePicker = rememberLauncherForActivityResult(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
-                            onEvent(VideoUploadingScreenUiEvent.SourceChanged(it.toString()))
+                            onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
                         }
                     }
                     val sourceErrMsg = when (state.video.source.error) {
@@ -173,7 +174,7 @@ fun VideoUploadingScreen(
                         else -> listOf(
                             DeletingItem(
                                 deleting = {
-                                    onEvent(VideoUploadingScreenUiEvent.SourceChanged(null))
+                                    onAction(VideoUploadingScreenAction.SourceChanged(null))
                                 }
                             )
                         )
@@ -220,7 +221,7 @@ fun VideoUploadingScreen(
                                                 "${context.packageName}.fileprovider",
                                                 file
                                             )
-                                            onEvent(VideoUploadingScreenUiEvent.SourceChanged(uri.toString()))
+                                            onAction(VideoUploadingScreenAction.SourceChanged(uri.toString()))
                                             sourceCreator.launch(uri)
                                         } else {
                                             if (ActivityCompat
@@ -246,7 +247,9 @@ fun VideoUploadingScreen(
                                 ),
                                 MenuItem(
                                     title = stringResource(R.string.video_upload_choose_source_label),
-                                    onClick = { sourcePicker.launch("video/*") }
+                                    onClick = {
+                                        sourcePicker.launch("video/*")
+                                    }
                                 )
                             )
                         )
@@ -328,7 +331,7 @@ fun VideoUploadingScreen(
                         ActionItem(
                             icon = Icons.Rounded.Delete,
                             action = {
-                                onEvent(VideoUploadingScreenUiEvent.TitleChanged(""))
+                                onAction(VideoUploadingScreenAction.TitleChanged(""))
                             }
                         )
                     )
@@ -339,16 +342,16 @@ fun VideoUploadingScreen(
                             modifier = Modifier.fillMaxWidth(),
                             value = state.video.title.value,
                             onValueChange = {
-                                onEvent(VideoUploadingScreenUiEvent.TitleChanged(it))
+                                onAction(VideoUploadingScreenAction.TitleChanged(it))
                             },
                             errorMsg = titleErrMsg,
                             placeholder = stringResource(R.string.video_title_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
-                                onEvent(VideoUploadingScreenUiEvent.TitleFocused)
+                                onAction(VideoUploadingScreenAction.TitleFocused)
                             },
                             onBlur = {
-                                onEvent(VideoUploadingScreenUiEvent.TitleBlurred)
+                                onAction(VideoUploadingScreenAction.TitleBlurred)
                             }
                         )
                     }
@@ -358,12 +361,12 @@ fun VideoUploadingScreen(
                         else -> null
                     }
                     val channelActionItems = when (state.video.channelId.value) {
-                        state.video.channelId.value -> emptyList()
+                        null -> emptyList()
                         else -> listOf(
                             ActionItem(
                                 icon = Icons.Rounded.Delete,
                                 action = {
-                                    onEvent(VideoUploadingScreenUiEvent.ChannelChanged(null))
+                                    onAction(VideoUploadingScreenAction.ChannelChanged(null))
                                 }
                             )
                         )
@@ -377,7 +380,7 @@ fun VideoUploadingScreen(
                             placeHolder = stringResource(R.string.video_upload_channel_label),
                             values = state.channels.associate { it.channelId to it.title },
                             onValueChange = {
-                                onEvent(VideoUploadingScreenUiEvent.ChannelChanged(it))
+                                onAction(VideoUploadingScreenAction.ChannelChanged(it))
                             },
                             errorMsg = channelErrMsg,
                             icon = Icons.Rounded.Apps,
@@ -387,7 +390,7 @@ fun VideoUploadingScreen(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
-                            onEvent(VideoUploadingScreenUiEvent.CoverChanged(it.toString()))
+                            onAction(VideoUploadingScreenAction.CoverChanged(it.toString()))
                         }
                     }
                     val coverErrMsg = when (state.video.cover.error) {
@@ -400,12 +403,12 @@ fun VideoUploadingScreen(
                     }
                     EditField(
                         actionItems = when (state.video.cover.value) {
-                            state.video.cover.value -> emptyList()
+                            null -> emptyList()
                             else -> listOf(
                                 ActionItem(
                                     icon = Icons.Rounded.Delete,
                                     action = {
-                                        onEvent(VideoUploadingScreenUiEvent.CoverChanged(null))
+                                        onAction(VideoUploadingScreenAction.CoverChanged(null))
                                     }
                                 )
                             )
@@ -424,7 +427,7 @@ fun VideoUploadingScreen(
                             errorMsg = coverErrMsg
                         )
                     }
-                    if (state.video.cover.error != null) {
+                    if (state.video.cover.value != null) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -458,41 +461,40 @@ fun VideoUploadingScreen(
                     StandardEditField(
                         empty = state.video.description.value.isEmpty(),
                         onDelete = {
-                            onEvent(VideoUploadingScreenUiEvent.DescriptionChanged(""))
+                            onAction(VideoUploadingScreenAction.DescriptionChanged(""))
                         }
                     ) {
                         InputField(
                             modifier = Modifier.fillMaxWidth(),
                             value = state.video.description.value,
                             onValueChange = {
-                                onEvent(VideoUploadingScreenUiEvent.TitleChanged(it))
+                                onAction(VideoUploadingScreenAction.DescriptionChanged(it))
                             },
                             errorMsg = descriptionErrMsg,
-                            placeholder = stringResource(R.string.video_title_label),
+                            placeholder = stringResource(R.string.video_description_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
-                                onEvent(VideoUploadingScreenUiEvent.DescriptionFocused)
+                                onAction(VideoUploadingScreenAction.DescriptionFocused)
                             },
                             onBlur = {
-                                onEvent(VideoUploadingScreenUiEvent.DescriptionBlurred)
+                                onAction(VideoUploadingScreenAction.DescriptionBlurred)
                             }
                         )
                     }
                 }
             }
         }
-    }
-    else if (state is VideoUploadingScreenState.Failure) {
+    } else if (state is Failure) {
         ErrorComponent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
             onRetry = {
-                onEvent(VideoUploadingScreenUiEvent.Restart)
+                onAction(VideoUploadingScreenAction.Restart)
             }
         )
     }
-    else if (state is VideoUploadingScreenState.Loading) {
+    else if (state is Starting) {
         LoadingComponent(
             modifier = Modifier
                 .fillMaxSize()

@@ -77,13 +77,14 @@ fun httpExceptionHandler(
     return code to processing
 }
 
-fun unexpectedExceptionHandler(
-    processing: (Exception) -> Error
-) = processing
+fun unexpectedExceptionHandler(processing: (Exception) -> Error) = processing
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
-fun FileProvider.uriToPart(uri: String, partName: String): MultipartBody.Part {
+fun FileProvider.uriToPart(
+    uri: String,
+    partName: String
+): MultipartBody.Part {
     val mimeType = getFileMimeType(uri)
     val extension = MimeTypeMap
         .getSingleton()
@@ -125,7 +126,10 @@ fun ByteArray.toRequestBody(
 }
 
 suspend fun InputStream.process(
-    onChunkRead: suspend (bytesRead: Int, buffer: ByteArray) -> Unit
+    onChunkRead: suspend (
+        bytesRead: Int,
+        buffer: ByteArray
+    ) -> Unit
 ) {
     use {
         val buffer = ByteArray(TRANSFER_BUFFER_SIZE)

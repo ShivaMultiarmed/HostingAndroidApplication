@@ -7,10 +7,13 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
@@ -23,6 +26,21 @@ import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
 import mikhail.shell.video.hosting.domain.utils.ValidateVideoSource
 import mikhail.shell.video.hosting.presentation.utils.stateIn
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChannelChanged
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.CoverChanged
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.DescriptionBlurred
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.DescriptionChanged
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.DescriptionFocused
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.Restart
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.SourceChanged
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.Submit
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.TitleBlurred
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.TitleChanged
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.TitleFocused
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenEvent.Success
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Editing
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Failure
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Starting
 import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
@@ -38,24 +56,26 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val getVideoMetaData: GetVideoMetaData,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow<VideoUploadingScreenState>(VideoUploadingScreenState.Loading)
+    private val _state = MutableStateFlow<State>(Starting)
     val state = _state.onStart { start() }.stateIn(_state.value)
+    private val _events = MutableSharedFlow<Event>()
+    val events = _events.asSharedFlow()
 
-    fun onEvent(event: VideoUploadingScreenUiEvent) {
+    fun onAction(action: Action) {
         viewModelScope.launch {
-            when (event) {
-                VideoUploadingScreenUiEvent.Restart -> start()
-                is VideoUploadingScreenUiEvent.ChannelChanged -> onChannelChanged(event.channelId)
-                is VideoUploadingScreenUiEvent.TitleChanged -> onTitleChanged(event.title)
-                VideoUploadingScreenUiEvent.TitleFocused -> onTitleFocused()
-                VideoUploadingScreenUiEvent.TitleBlurred -> onTitleBlurred()
-                is VideoUploadingScreenUiEvent.SourceChanged -> onSourceChanged(event.source)
-                is VideoUploadingScreenUiEvent.CoverChanged -> onCoverChanged(event.cover)
-                is VideoUploadingScreenUiEvent.DescriptionChanged -> onDescriptionChanged(event.description)
-                VideoUploadingScreenUiEvent.DescriptionFocused -> onDescriptionFocused()
-                VideoUploadingScreenUiEvent.DescriptionBlurred -> onDescriptionBlurred()
-                VideoUploadingScreenUiEvent.Submit -> upload()
-                else -> null
+            when (action) {
+                Restart -> start()
+                is ChannelChanged -> onChannelChanged(action.channelId)
+                is TitleChanged -> onTitleChanged(action.title)
+                TitleFocused -> onTitleFocused()
+                TitleBlurred -> onTitleBlurred()
+                is SourceChanged -> onSourceChanged(action.source)
+                is CoverChanged -> onCoverChanged(action.cover)
+                is DescriptionChanged -> onDescriptionChanged(action.description)
+                DescriptionFocused -> onDescriptionFocused()
+                DescriptionBlurred -> onDescriptionBlurred()
+                Submit -> upload()
+                VideoUploadingScreenAction.Cancel -> _events.emit(VideoUploadingScreenEvent.NavigateBack)
             }
         }
     }
@@ -68,7 +88,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 partSize = 100
             ).onSuccess { channels -> // TODO all channels fetch here?
                 _state.update {
-                    VideoUploadingScreenState.Editing(
+                    Editing(
                         channels = channels.map {
                             ChannelOptionUi(
                                 channelId = it.channelId,
@@ -80,7 +100,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 }
             }.onFailure { error ->
                 _state.update {
-                    VideoUploadingScreenState.Failure(error)
+                    Failure(error)
                 }
             }
         }
@@ -88,7 +108,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onChannelChanged(channelId: Long?) {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     channelId = currentState.video.channelId.copy(
@@ -105,7 +125,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onTitleChanged(title: String) {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     title = currentState.video.title.copy(
@@ -118,7 +138,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onTitleFocused() {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     title = currentState.video.title.copy(
@@ -131,7 +151,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onTitleBlurred() {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     title = currentState.video.title.copy(
@@ -147,7 +167,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onSourceChanged(source: String?) {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     source = currentState.video.source.copy(
@@ -164,7 +184,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onCoverChanged(cover: String?) {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     cover = currentState.video.cover.copy(
@@ -181,7 +201,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onDescriptionChanged(description: String) {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     description = currentState.video.description.copy(
@@ -194,7 +214,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onDescriptionFocused() {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     description = currentState.video.description.copy(
@@ -207,7 +227,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     private fun onDescriptionBlurred() {
         _state.update {
-            val currentState = it as? VideoUploadingScreenState.Editing
+            val currentState = it as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     description = currentState.video.description.copy(
@@ -224,7 +244,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
     @OptIn(ExperimentalUuidApi::class)
     private fun upload() {
         _state.update {
-            val currentState = _state.value as? VideoUploadingScreenState.Editing
+            val currentState = _state.value as? Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     channelId = currentState.video.channelId.copy(
@@ -261,7 +281,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
             )?: it
         }
-        val currentState = _state.value as? VideoUploadingScreenState.Editing
+        val currentState = _state.value as? Editing
         if (currentState == null) {
             return
         }
@@ -269,7 +289,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val videoMetaData = getVideoMetaData(video.source.value!!) as Result.Success // TODO: handle failure cases
             _state.update {
-                val currentState = _state.value as? VideoUploadingScreenState.Editing
+                val currentState = _state.value as? Editing
                 currentState?.copy(
                     isLoading = true
                 )?: it
@@ -283,18 +303,17 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     metaData = videoMetaData.data
                 )
             ).onSuccess { uploadId ->
-                _state.update {
-                    val currentState = it as? VideoUploadingScreenState.Editing
-                    if (currentState != null) {
-                        VideoUploadingScreenState.Success(
-                            uploadId = uploadId,
-                            source = currentState.video.source.value!!
+                viewModelScope.launch {
+                    _events.emit(
+                        Success(
+                            tmpId = uploadId,
+                            source = currentState.video.source.value
                         )
-                    } else it
+                    )
                 }
             }.onFailure { error ->
                 _state.update {
-                    val currentState = it as? VideoUploadingScreenState.Editing
+                    val currentState = it as? Editing
                     if (error is VideoUploadingError) {
                         currentState?.copy(
                             video = currentState.video.copy(
@@ -318,9 +337,17 @@ class VideoUploadingViewModel @AssistedInject constructor(
                         )?: it
                     } else {
                         currentState?.copy(
-                            error = error,
                             isLoading = false
                         )?: it
+                    }
+                }
+                if (error !is VideoUploadingError) {
+                    viewModelScope.launch {
+                        if (error == NetworkError.AUTHENTICATION) {
+                            _events.emit(VideoUploadingScreenEvent.RequireAuthentication)
+                        } else {
+                            _events.emit(VideoUploadingScreenEvent.Failure(error))
+                        }
                     }
                 }
             }
@@ -336,17 +363,3 @@ class VideoUploadingViewModel @AssistedInject constructor(
     }
 }
 
-sealed class VideoUploadingScreenUiEvent {
-    data object Cancel : VideoUploadingScreenUiEvent()
-    data object Restart : VideoUploadingScreenUiEvent()
-    data class ChannelChanged(val channelId: Long?) : VideoUploadingScreenUiEvent()
-    data class TitleChanged(val title: String) : VideoUploadingScreenUiEvent()
-    data object TitleBlurred : VideoUploadingScreenUiEvent()
-    data object TitleFocused : VideoUploadingScreenUiEvent()
-    data class SourceChanged(val source: String?) : VideoUploadingScreenUiEvent()
-    data class CoverChanged(val cover: String?) : VideoUploadingScreenUiEvent()
-    data class DescriptionChanged(val description: String) : VideoUploadingScreenUiEvent()
-    data object DescriptionBlurred : VideoUploadingScreenUiEvent()
-    data object DescriptionFocused : VideoUploadingScreenUiEvent()
-    data object Submit : VideoUploadingScreenUiEvent()
-}

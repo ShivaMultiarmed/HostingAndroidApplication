@@ -288,4 +288,5 @@
     <string name="bio_empty">Bio is empty</string>
     <string name="email_empty">Email is empty</string>
     <string name="tel_empty">Phone number is empty</string>
+    <string name="video_description_label">Description</string>
 </resources>

@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.validation.mb
+import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -18,9 +19,8 @@ fun Long.toCorrectSuffix(): String {
     }
 }
 
-fun Long.toSubscribers(): String {
-    return this.toRoundString() + this.toCorrectSuffix()
-}
+fun Long.toSubscribers() = toRoundString() + toCorrectSuffix()
+
 
 fun Long.toFullSubscribers(context: Context): String {
     val quantityForWordForm = (if (this < 1000) this else this / 1000 * 1000).toInt()
@@ -31,9 +31,7 @@ fun Long.toFullSubscribers(context: Context): String {
     )
 }
 
-fun Long.toViews(): String {
-    return this.toRoundString() + this.toCorrectSuffix()
-}
+fun Long.toViews() = toRoundString() + toCorrectSuffix()
 
 fun Long.toRoundString(): String {
     val roundedNumber = when {
@@ -46,7 +44,7 @@ fun Long.toRoundString(): String {
         roundedNumber.toLong().toString()
     } else {
         if (roundedNumber.hasPortion()) {
-            String.format("%.2f", roundedNumber)
+            String.format(Locale.getAvailableLocales().firstOrNull(),"%.2f", roundedNumber)
         }
         else {
             roundedNumber.toLong().toString()
@@ -56,9 +54,7 @@ fun Long.toRoundString(): String {
 
 fun Double.round(n: Int) = round(this * n) / n
 
-fun Double.hasPortion():Boolean {
-    return floor(this) < this
-}
+fun Double.hasPortion() = floor(this) < this
 
 @Composable
 fun getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): String? {

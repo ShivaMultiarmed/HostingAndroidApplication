@@ -50,7 +50,7 @@ interface VideoRepository {
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun uploadVideoSource(
-        uploadId: Uuid,
+        tmpId: Uuid,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error>

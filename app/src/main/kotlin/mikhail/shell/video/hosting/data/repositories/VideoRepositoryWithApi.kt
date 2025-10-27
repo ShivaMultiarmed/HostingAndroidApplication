@@ -6,7 +6,10 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
@@ -65,9 +68,10 @@ class VideoRepositoryWithApi @Inject constructor(
         ).map { it.toDomain() }
     }
 
-    override suspend fun fetchVideoDetails(videoId: Long): Result<VideoWithChannelForUser, Error> = request {
-        videoApi.fetchVideoDetails(videoId).toDomain()
-    }
+    override suspend fun fetchVideoDetails(videoId: Long): Result<VideoWithChannelForUser, Error> =
+        request {
+            videoApi.fetchVideoDetails(videoId).toDomain()
+        }
 
     override suspend fun rateVideo(
         videoId: Long,
@@ -117,6 +121,13 @@ class VideoRepositoryWithApi @Inject constructor(
             val coverPart = video.cover?.let {
                 fileProvider.uriToPart(it, "cover")
             }
+            val sourceFileName = video.metaData.uri.let {
+                val mimeType = fileProvider.getFileMimeType(video.metaData.uri)!!
+                val extension = MimeTypeMap
+                    .getSingleton()
+                    .getExtensionFromMimeType(mimeType)
+                "source.$extension"
+            }
             videoApi.uploadVideoDetails(
                 video = VideoUploadingRequest(
                     title = video.title,
@@ -124,7 +135,7 @@ class VideoRepositoryWithApi @Inject constructor(
                     description = video.description
                 ),
                 source = VideoMetaData(
-                    fileName = video.metaData.uri.substringAfterLast("/"),
+                    fileName = sourceFileName,
                     mimeType = video.metaData.mimeType,
                     size = video.metaData.size
                 ),
@@ -135,7 +146,7 @@ class VideoRepositoryWithApi @Inject constructor(
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun uploadVideoSource(
-        uploadId: Uuid,
+        tmpId: Uuid,
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
@@ -144,28 +155,30 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceSize = fileProvider.getFileSize(source)!!
             var bytesTransferred = 0
             val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-            coroutineScope.launch {
+            coroutineScope.async {
+                val uploadJobs = mutableListOf<Job>()
                 val buffer = ByteArray(BUFFER_SIZE)
                 var start = 0
-                var bytesRead: Int
                 do {
-                    bytesRead = sourceInputStream.read(buffer)
+                    val bytesRead = sourceInputStream.read(buffer)
                     bytesTransferred += bytesRead
-                    val end = start + bytesRead
+                    val end = start + bytesRead - 1
                     launch {
                         videoApi.uploadVideoSource(
-                            uploadId = uploadId,
+                            tmpId = tmpId,
                             contentRange = "bytes $start-$end/$sourceSize",
                             source = buffer.toRequestBody(bytesNumber = bytesRead)
                         )
                         val progress = bytesTransferred.toFloat() / sourceSize
                         onProgress(progress)
+                    }.let {
+                        uploadJobs += it
                     }
-                    start = end
-                } while(bytesTransferred < sourceSize)
-            }
-            videoApi.confirmVideoUpload(uploadId)
-            Result.Success(Unit)
+                    start = end + 1
+                } while (bytesTransferred < sourceSize)
+                uploadJobs.joinAll()
+                Result.Success(Unit)
+            }.await()
         } catch (e: HttpException) {
             val error = when (e.code()) {
                 401 -> NetworkError.AUTHENTICATION
@@ -187,7 +200,7 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error> = request (
+    override suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error> = request(
         httpExceptionHandler(400) {
             val json = it.response()?.body() as String
             val response = gson.fromJson(json, VideoUploadingErrorResponse::class.java)
@@ -318,6 +331,7 @@ class VideoRepositoryWithApi @Inject constructor(
             return Result.Failure(error)
         }
     }
+
     private companion object {
         const val BUFFER_SIZE = 10 * 1024 * 1024
     }

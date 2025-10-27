@@ -26,6 +26,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
 import javax.inject.Singleton
 import kotlin.time.Instant
@@ -75,13 +76,19 @@ object ApiModule {
 
     @Provides
     @Singleton
+    fun provideScalarsConverterFactory() = ScalarsConverterFactory.create()
+
+    @Provides
+    @Singleton
     fun provideRetrofit(
         httpClient: OkHttpClient,
-        converterFactory: GsonConverterFactory
+        scalarsConverterFactory: ScalarsConverterFactory,
+        gsonConverterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
         .baseUrl("$API_BASE_URL/")
-        .addConverterFactory(converterFactory)
+        .addConverterFactory(scalarsConverterFactory)
+        .addConverterFactory(gsonConverterFactory)
         .build()
 
     @Provides

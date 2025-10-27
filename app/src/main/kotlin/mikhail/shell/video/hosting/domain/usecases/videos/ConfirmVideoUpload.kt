@@ -12,7 +12,7 @@ class ConfirmVideoUpload @Inject constructor(
     private val videoRepository: VideoRepository
 ) {
     @OptIn(ExperimentalUuidApi::class)
-    suspend operator fun invoke(uploadId: Uuid): Result<Video, Error> {
-        return videoRepository.confirmVideoUpload(uploadId)
+    suspend operator fun invoke(tmpId: Uuid): Result<Video, Error> {
+        return videoRepository.confirmVideoUpload(tmpId)
     }
 }

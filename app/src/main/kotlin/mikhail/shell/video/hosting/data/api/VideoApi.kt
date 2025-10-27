@@ -55,15 +55,15 @@ interface VideoApi {
         @Part cover: MultipartBody.Part?
     ): String
     @OptIn(ExperimentalUuidApi::class)
-    @POST("videos/{upload_id}")
+    @POST("videos/{tmp_id}/source")
     suspend fun uploadVideoSource(
-        @Path("upload_id") uploadId: Uuid,
+        @Path("tmp_id") tmpId: Uuid,
         @Header("Content-Range") contentRange: String,
         @Body source: RequestBody
     )
     @OptIn(ExperimentalUuidApi::class)
-    @POST("videos/{upload_id}/confirmation")
-    suspend fun confirmVideoUpload(@Path("upload_id") uploadId: Uuid): VideoDto
+    @POST("videos/{tmp_id}/confirmation")
+    suspend fun confirmVideoUpload(@Path("tmp_id") tmpId: Uuid): VideoDto
     @PATCH("videos/{video_id}/views")
     suspend fun incrementViews(@Path("video_id") videoId: Long): VideoDto
     @Multipart
