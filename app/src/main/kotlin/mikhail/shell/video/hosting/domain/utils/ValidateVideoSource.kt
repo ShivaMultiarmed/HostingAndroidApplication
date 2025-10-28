@@ -10,16 +10,16 @@ import javax.inject.Inject
 class ValidateVideoSource @Inject constructor(
     private val fileProvider: FileProvider
 ) {
-    operator fun invoke(video: String?): Result<Unit, FileError> {
-        return if (video == null || fileProvider.getFileSize(video) == 0L) {
+    operator fun invoke(source: String?): Result<Unit, FileError> {
+        return if (source == null || fileProvider.getFileSize(source) == 0L) {
             Result.Failure(FileError.EMPTY)
-        } else if (!fileProvider.exists(video)) {
+        } else if (!fileProvider.exists(source)) {
             Result.Failure(FileError.NOT_FOUND)
-        } else if (fileProvider.getFileName(video) == null || !fileProvider.getFileName(video)!!.matches(FILE_NAME_REGEX.toRegex())) {
+        } else if (fileProvider.getFileName(source) == null || !fileProvider.getFileName(source)!!.matches(FILE_NAME_REGEX.toRegex())) {
             Result.Failure(FileError.NAME_NOT_VALID)
-        } else if (fileProvider.getFileMimeType(video) == null || !(fileProvider.getFileMimeType(video)?:"").startsWith("video")) {
+        } else if (fileProvider.getFileMimeType(source) == null || !(fileProvider.getFileMimeType(source)?:"").startsWith("video")) {
             Result.Failure(FileError.NOT_SUPPORTED)
-        } else if (fileProvider.getFileSize(video)!! > ValidationRules.MAX_VIDEO_SIZE) {
+        } else if (fileProvider.getFileSize(source)!! > ValidationRules.MAX_VIDEO_SIZE) {
             Result.Failure(FileError.LARGE)
         } else {
             Result.Success(Unit)

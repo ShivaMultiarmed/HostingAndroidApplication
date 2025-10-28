@@ -25,5 +25,6 @@ enum class FileError: Error {
 enum class NumericError: Error {
     EMPTY,
     LOW,
-    HIGH
+    HIGH,
+    NOT_EXISTS
 }

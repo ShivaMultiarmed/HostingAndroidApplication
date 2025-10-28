@@ -57,9 +57,7 @@ class ProfileViewModel @AssistedInject constructor(
 
     private suspend fun load() {
         _state.update {
-            it.copy(
-                isStarting = true
-            )
+            it.copy(isStarting = true)
         }
         getUser(userId).onSuccess { user ->
             _state.update {
@@ -82,9 +80,7 @@ class ProfileViewModel @AssistedInject constructor(
     private suspend fun loadChannels(start: Boolean = false) {
         _state.update {
             it.copy(
-                channelState = it.channelState.copy(
-                    isLoading = true
-                )
+                channelState = it.channelState.copy(isLoading = true)
             )
         }
         getOwnedChannels(

@@ -272,7 +272,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                         }
                     ),
                     description = currentState.video.description.copy(
-                        error = currentState.video.description.value.let {
+                        error = currentState.video.description.value.takeIf { it.isNotEmpty() }?.let {
                             val validationResult = validateDescription(it)
                             if (validationResult is Result.Failure) validationResult.error else null
                         }
@@ -282,7 +282,14 @@ class VideoUploadingViewModel @AssistedInject constructor(
             )?: it
         }
         val currentState = _state.value as? Editing
-        if (currentState == null) {
+        if (
+            currentState == null
+            || currentState.video.title.error != null
+            || currentState.video.channelId.error != null
+            || currentState.video.source.error != null
+            || currentState.video.description.error != null
+            || currentState.video.cover.error != null
+            ) {
             return
         }
         val video = currentState.video
@@ -290,9 +297,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
             val videoMetaData = getVideoMetaData(video.source.value!!) as Result.Success // TODO: handle failure cases
             _state.update {
                 val currentState = _state.value as? Editing
-                currentState?.copy(
-                    isLoading = true
-                )?: it
+                currentState?.copy(isLoading = true)?: it
             }
             uploadVideo(
                 video = VideoCreationModel(
@@ -302,11 +307,12 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     cover = video.cover.value,
                     metaData = videoMetaData.data
                 )
-            ).onSuccess { uploadId ->
+            ).onSuccess { pendingVideo ->
                 viewModelScope.launch {
                     _events.emit(
                         Success(
-                            tmpId = uploadId,
+                            tmpId = pendingVideo.tmpId,
+                            channelId = video.channelId.value,
                             source = currentState.video.source.value
                         )
                     )
@@ -336,9 +342,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                             isLoading = false
                         )?: it
                     } else {
-                        currentState?.copy(
-                            isLoading = false
-                        )?: it
+                        currentState?.copy(isLoading = false)?: it
                     }
                 }
                 if (error !is VideoUploadingError) {

@@ -13,6 +13,7 @@ sealed class VideoUploadingScreenEvent {
     @OptIn(ExperimentalUuidApi::class)
     data class Success(
         val tmpId: Uuid,
+        val channelId: Long,
         val source: String
     ): VideoUploadingScreenEvent()
 }

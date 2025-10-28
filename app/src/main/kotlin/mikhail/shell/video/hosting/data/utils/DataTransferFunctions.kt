@@ -60,7 +60,7 @@ suspend fun <D> request(
 
 suspend fun <D> request(
     vararg httpExceptionHandlers: Pair<Int, (HttpException) -> Error>,
-    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler{ UnexpectedError },
+    unexpectedExceptionHandler: (Exception) -> Error = unexpectedExceptionHandler { UnexpectedError },
     resultHandler: suspend () -> D
 ): Result<D, Error> {
     return request(
@@ -116,7 +116,7 @@ fun File.toPart(partName: String): MultipartBody.Part {
 }
 
 fun ByteArray.toRequestBody(
-    bytesNumber: Int = this.size,
+    bytesNumber: Int = size,
     mimeType: String = "application/octet-stream"
 ): RequestBody {
     return toRequestBody(

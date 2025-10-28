@@ -32,7 +32,7 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -147,7 +147,7 @@ class VideoUploadingService : Service() {
 
     private fun displayFailureNotification(error: Error) {
         val errorMessage =
-            if (error is NetworkError) constructNetworkErrorMessage(error) else getString(R.string.unexpected_error)
+            if (error is NetworkError) getNetworkErrorMessage(error) else getString(R.string.unexpected_error)
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.video_upload_failure))

@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.domain.repositories
 import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Liking
+import mikhail.shell.video.hosting.domain.models.PendingVideo
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
@@ -56,7 +57,7 @@ interface VideoRepository {
     ): Result<Unit, Error>
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun uploadVideo(video: VideoCreationModel): Result<Uuid, Error>
+    suspend fun uploadVideo(video: VideoCreationModel): Result<PendingVideo, Error>
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error>

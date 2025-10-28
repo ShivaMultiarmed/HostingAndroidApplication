@@ -15,7 +15,7 @@ fun <T: Error> constructInfoMessage(error: T?, errorMessages: Map<T, String>): S
     return null
 }
 
-fun Context.constructNetworkErrorMessage(error: NetworkError): String {
+fun Context.getNetworkErrorMessage(error: NetworkError): String {
     return constructInfoMessage(
         error,
         mapOf(

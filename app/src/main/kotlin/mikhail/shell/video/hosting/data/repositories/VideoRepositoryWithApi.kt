@@ -30,6 +30,7 @@ import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.Liking
+import mikhail.shell.video.hosting.domain.models.PendingVideo
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
@@ -45,6 +46,7 @@ import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -105,10 +107,10 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun uploadVideo(video: VideoCreationModel): Result<Uuid, Error> {
+    override suspend fun uploadVideo(video: VideoCreationModel): Result<PendingVideo, Error> {
         return request(
             httpExceptionHandler(400) {
-                val json = it.response()?.body() as String
+                val json = it.response()?.errorBody()!!.string()
                 val response = gson.fromJson(json, VideoUploadingErrorResponse::class.java)
                 VideoUploadingError(
                     titleError = response.titleError,
@@ -140,11 +142,13 @@ class VideoRepositoryWithApi @Inject constructor(
                     size = video.metaData.size
                 ),
                 cover = coverPart
-            ).let { Uuid.parse(it) }
+            ).let {
+                PendingVideo(tmpId = Uuid.parse(it.tmpId))
+            }
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalAtomicApi::class)
     override suspend fun uploadVideoSource(
         tmpId: Uuid,
         source: String,
@@ -154,16 +158,19 @@ class VideoRepositoryWithApi @Inject constructor(
             val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
             val sourceSize = fileProvider.getFileSize(source)!!
             var bytesTransferred = 0
-            val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-            coroutineScope.async {
+            CoroutineScope(Dispatchers.IO + SupervisorJob()).async {
                 val uploadJobs = mutableListOf<Job>()
                 val buffer = ByteArray(BUFFER_SIZE)
-                var start = 0
+                var cursor = 0L
                 do {
                     val bytesRead = sourceInputStream.read(buffer)
+                    if (bytesRead <= 0) {
+                        break
+                    }
                     bytesTransferred += bytesRead
+                    val start = cursor
                     val end = start + bytesRead - 1
-                    launch {
+                    uploadJobs += launch {
                         videoApi.uploadVideoSource(
                             tmpId = tmpId,
                             contentRange = "bytes $start-$end/$sourceSize",
@@ -171,11 +178,9 @@ class VideoRepositoryWithApi @Inject constructor(
                         )
                         val progress = bytesTransferred.toFloat() / sourceSize
                         onProgress(progress)
-                    }.let {
-                        uploadJobs += it
                     }
-                    start = end + 1
-                } while (bytesTransferred < sourceSize)
+                    cursor = end + 1
+                } while (true)
                 uploadJobs.joinAll()
                 Result.Success(Unit)
             }.await()

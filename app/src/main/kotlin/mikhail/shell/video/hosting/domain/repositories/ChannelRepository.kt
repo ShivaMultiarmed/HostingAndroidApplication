@@ -34,7 +34,7 @@ interface ChannelRepository {
 
     suspend fun unsubscribeFromNotifications(): Result<Unit, Error>
 
-    suspend fun editChannel(channel: ChannelEditingModel): Result<Channel, Error>
+    suspend fun edit(channel: ChannelEditingModel): Result<Channel, Error>
 
     suspend fun fetchChannel(channelId: Long): Result<Channel, Error>
 

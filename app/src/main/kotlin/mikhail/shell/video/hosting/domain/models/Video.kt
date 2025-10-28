@@ -1,6 +1,8 @@
 package mikhail.shell.video.hosting.domain.models
 
 import kotlin.time.Instant
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 data class Video(
     val videoId: Long,
@@ -50,3 +52,6 @@ data class VideoEditingModel(
     val cover: String?,
     val coverAction: EditAction
 )
+
+@OptIn(ExperimentalUuidApi::class)
+data class PendingVideo(val tmpId: Uuid)

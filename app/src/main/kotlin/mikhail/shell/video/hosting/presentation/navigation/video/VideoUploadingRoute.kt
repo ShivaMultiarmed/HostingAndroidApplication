@@ -16,7 +16,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observeAsEvents
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreen
@@ -68,10 +68,10 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                             intent.putExtra("source", event.source)
                         }
                     )
-                    // userBackStack.add(Route.Channel()) TODO
+                    userBackStack.add(Route.Channel(event.channelId))
                 }
                 is VideoUploadingScreenEvent.Failure if (event.error is NetworkError) -> {
-                    val errorMessage = context.constructNetworkErrorMessage(event.error)
+                    val errorMessage = context.getNetworkErrorMessage(event.error)
                     snackBarHostState.showSnackbar(
                         message = errorMessage,
                         duration = SnackbarDuration.Short

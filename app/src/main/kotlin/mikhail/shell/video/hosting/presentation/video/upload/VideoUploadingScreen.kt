@@ -65,7 +65,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
-import mikhail.shell.video.hosting.domain.errors.OptionError
+import mikhail.shell.video.hosting.domain.errors.NumericError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
@@ -357,7 +357,8 @@ fun VideoUploadingScreen(
                     }
 
                     val channelErrMsg = when (state.video.channelId.error) {
-                        OptionError.EMPTY -> stringResource(R.string.video_upload_channel_not_valid_error)
+                        NumericError.EMPTY -> stringResource(R.string.video_upload_channel_not_valid_error)
+                        NumericError.NOT_EXISTS -> stringResource(R.string.channel_not_found)
                         else -> null
                     }
                     val channelActionItems = when (state.video.channelId.value) {

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.data.api
 
+import mikhail.shell.video.hosting.data.dto.PendingVideoDto
 import mikhail.shell.video.hosting.data.dto.VideoDetailsDto
 import mikhail.shell.video.hosting.data.dto.VideoDto
 import mikhail.shell.video.hosting.data.dto.VideoWithChannelDto
@@ -53,7 +54,7 @@ interface VideoApi {
         @Part("video") video: VideoUploadingRequest,
         @Part("source") source: VideoMetaData,
         @Part cover: MultipartBody.Part?
-    ): String
+    ): PendingVideoDto
     @OptIn(ExperimentalUuidApi::class)
     @POST("videos/{tmp_id}/source")
     suspend fun uploadVideoSource(

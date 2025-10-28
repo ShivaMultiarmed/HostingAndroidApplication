@@ -143,7 +143,7 @@ class ChannelRepositoryWithApi @Inject constructor(
         channelApi.unsubscribeFromChannelNotifications(fcm.token.await())
     }
 
-    override suspend fun editChannel(channel: ChannelEditingModel): Result<Channel, Error> = request(
+    override suspend fun edit(channel: ChannelEditingModel): Result<Channel, Error> = request(
         httpExceptionHandler(400) {
             val json = it.response()?.errorBody()!!.string()
             val response = gson.fromJson(json, ChannelEditingErrorResponse::class.java)

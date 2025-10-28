@@ -11,6 +11,6 @@ class EditChannel @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(channel: ChannelEditingModel): Result<Channel, Error> {
-        return channelRepository.editChannel(channel)
+        return channelRepository.edit(channel)
     }
 }

@@ -11,7 +11,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.validation.constructNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 
 @Composable
 fun ErrorDisplay(
@@ -27,7 +27,7 @@ fun ErrorDisplay(
             if (currentError != null) {
                 val message = errorMessages[currentError] ?: currentError.let { it ->
                     when (it) {
-                        is NetworkError if (it != NetworkError.AUTHENTICATION) -> context.constructNetworkErrorMessage(it)
+                        is NetworkError if (it != NetworkError.AUTHENTICATION) -> context.getNetworkErrorMessage(it)
                         is UnexpectedError -> context.getString(R.string.unexpected_error)
                         else -> null
                     }
