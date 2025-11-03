@@ -27,15 +27,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mikhail.shell.video.hosting.R
@@ -53,39 +56,49 @@ fun BottomNavBar(
     onClick: (BottomNavItem) -> Unit,
     userId: Long
 ) {
-    BottomNavBar(
-        navItems = listOf(
+    val context = LocalContext.current
+    val navItems = remember {
+        mutableStateListOf(
             BottomNavItem(
                 Route.Recommendations,
-                stringResource(R.string.recommendations_title),
+                context.getString(R.string.recommendations_title),
                 Icons.Outlined.Dataset,
                 Icons.Rounded.Dataset
             ),
             BottomNavItem(
                 Route.Subscriptions,
-                stringResource(R.string.nav_subscribers_item_label),
+                context.getString(R.string.nav_subscribers_item_label),
                 Icons.Outlined.Subscriptions,
                 Icons.Rounded.Subscriptions
             ),
             BottomNavItem(
                 Route.Search,
-                stringResource(R.string.nav_search_item_label),
+                context.getString(R.string.nav_search_item_label),
                 Icons.Outlined.Search,
                 Icons.Rounded.Search
             ),
             BottomNavItem(
                 Route.User(userId),
-                stringResource(R.string.nav_profile_item_label),
+                context.getString(R.string.nav_profile_item_label),
                 Icons.Outlined.Person,
                 Icons.Rounded.Person
             )
-        ),
-        onClick = onClick
+        )
+    }
+    BottomNavBar(
+        navItems = navItems,
+        onClick = rememberUpdatedState(onClick).value
     )
+    LaunchedEffect(userId) {
+        navItems.first { it.route is Route.User }.also {
+            navItems.remove(it)
+            navItems.add(it.copy(route = Route.User(userId)))
+        }
+    }
 }
 
 @Composable
-fun BottomNavBar(
+private fun BottomNavBar(
     navItems: List<BottomNavItem>,
     onClick: (BottomNavItem) -> Unit
 ) {

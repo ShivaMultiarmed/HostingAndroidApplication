@@ -25,9 +25,9 @@ fun EntryProviderScope<Route>.profileRoute(
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    entry<Route.User.Profile> { bundle ->
+    entry<Route.User.Profile> { route ->
         val context = LocalContext.current
-        val userId = bundle.userId
+        val userId = route.userId
         val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()

@@ -7,9 +7,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize.MEDIUM
@@ -20,6 +18,7 @@ import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.user.models.toUi
+import mikhail.shell.video.hosting.presentation.utils.stateIn
 
 @HiltViewModel(assistedFactory = ProfileViewModel.Factory::class)
 class ProfileViewModel @AssistedInject constructor(
@@ -31,31 +30,25 @@ class ProfileViewModel @AssistedInject constructor(
     private val signOut: SignOut
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState())
-    val state = _state.onStart {
-        initialize()
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = _state.value
-    )
+    val state = _state.onStart { startAll() }.stateIn( _state.value)
 
     fun onEvent(event: ProfileScreenUiEvent) {
         when (event) {
-            ProfileScreenUiEvent.Restart -> viewModelScope.launch { initialize() }
+            ProfileScreenUiEvent.Restart -> viewModelScope.launch { startAll() }
             ProfileScreenUiEvent.ReloadChannels, ProfileScreenUiEvent.EndReached -> viewModelScope.launch { loadChannels(start = false) }
             ProfileScreenUiEvent.SignOut -> signOut()
             else -> Unit
         }
     }
 
-    private fun initialize() {
+    private fun startAll() {
         viewModelScope.launch {
-            load()
+            start()
             loadChannels(start = true)
         }
     }
 
-    private suspend fun load() {
+    private suspend fun start() {
         _state.update {
             it.copy(isStarting = true)
         }

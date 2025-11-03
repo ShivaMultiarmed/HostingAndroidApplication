@@ -188,7 +188,7 @@ class VideoUploadingService : Service() {
     )
 
     private fun stopUploading() {
-        contentResolver.apply {
+        applicationContext.contentResolver.apply {
             if (!sourceUri.toString().contains("$packageName.fileprovider")) {
                 releasePersistableUriPermission(
                     sourceUri!!,

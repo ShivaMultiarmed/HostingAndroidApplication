@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -154,11 +155,12 @@ class VideoRepositoryWithApi @Inject constructor(
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
+        val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         return try {
             val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
             val sourceSize = fileProvider.getFileSize(source)!!
-            var bytesTransferred = 0
-            CoroutineScope(Dispatchers.IO + SupervisorJob()).async {
+            var bytesTransferred = 0L
+            coroutineScope.async {
                 val uploadJobs = mutableListOf<Job>()
                 val buffer = ByteArray(BUFFER_SIZE)
                 var cursor = 0L
@@ -174,7 +176,9 @@ class VideoRepositoryWithApi @Inject constructor(
                         videoApi.uploadVideoSource(
                             tmpId = tmpId,
                             contentRange = "bytes $start-$end/$sourceSize",
-                            source = buffer.toRequestBody(bytesNumber = bytesRead)
+                            source = buffer
+                                .copyOf(bytesRead)
+                                .toRequestBody(bytesNumber = bytesRead)
                         )
                         val progress = bytesTransferred.toFloat() / sourceSize
                         onProgress(progress)
@@ -201,6 +205,8 @@ class VideoRepositoryWithApi @Inject constructor(
                 else -> UnexpectedError
             }
             Result.Failure(error)
+        } finally {
+            coroutineScope.cancel()
         }
     }
 

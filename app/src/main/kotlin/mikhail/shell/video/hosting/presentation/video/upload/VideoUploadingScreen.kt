@@ -155,7 +155,7 @@ fun VideoUploadingScreen(
                         }
                     }
                     val sourcePicker = rememberLauncherForActivityResult(
-                        ActivityResultContracts.GetContent()
+                        ActivityResultContracts.OpenDocument()
                     ) {
                         if (it != null) {
                             onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
@@ -248,7 +248,7 @@ fun VideoUploadingScreen(
                                 MenuItem(
                                     title = stringResource(R.string.video_upload_choose_source_label),
                                     onClick = {
-                                        sourcePicker.launch("video/*")
+                                        sourcePicker.launch(arrayOf("video/*"))
                                     }
                                 )
                             )

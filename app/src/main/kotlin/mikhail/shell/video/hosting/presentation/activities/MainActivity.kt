@@ -83,30 +83,20 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val rootBackStack = rememberSaveable(
-                        saver = BackStackSaver
-                    ) {
+                    val rootBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf((if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication))
                     }
                     val currentRoute = rootBackStack.lastOrNull()
-                    val recommendationsBackStack = rememberSaveable(
-                        saver = BackStackSaver
-                    ) {
+                    val recommendationsBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(Route.Recommendations.View)
                     }
-                    val subscriptionsBackStack = rememberSaveable(
-                        saver = BackStackSaver
-                    ) {
+                    val subscriptionsBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(Route.Subscriptions.View)
                     }
-                    val searchBackStack = rememberSaveable(
-                        saver = BackStackSaver
-                    ) {
+                    val searchBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(Route.Search.View)
                     }
-                    val userBackStack = rememberSaveable(
-                        saver = BackStackSaver
-                    ) {
+                    val userBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(Route.User.Profile(userDetailsProvider.getUserId()))
                     }
                     val currentBackStack = when (currentRoute) {
@@ -126,7 +116,12 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
-                            if (currentRoute != null && currentRoute != Route.Authentication && currentRoute !is Route.Video && !LocalPlayerState.current.value.fullScreen) {
+                            if (
+                                currentRoute != null
+                                && currentRoute != Route.Authentication
+                                && currentRoute !is Route.Video
+                                && !LocalPlayerState.current.value.fullScreen
+                                ) {
                                 BottomNavBar(
                                     onClick = { navItem ->
                                         if (!rootBackStack.contains(navItem.route)) {

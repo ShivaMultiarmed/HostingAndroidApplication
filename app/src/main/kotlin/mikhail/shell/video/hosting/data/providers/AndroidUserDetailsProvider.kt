@@ -28,17 +28,11 @@ class AndroidUserDetailsProvider @Inject constructor(
         initialValue = UserDetails()
     )
 
-    override fun get(): UserDetails {
-        return userDetails.value
-    }
+    override fun get() = userDetails.value
 
-    override fun getUserId(): Long {
-        return get().userId
-    }
+    override fun getUserId() = get().userId
 
-    override fun getJwt(): String {
-        return get().token
-    }
+    override fun getJwt() = get().token
 
     override suspend fun save(userDetails: UserDetails) {
         dataStore.updateData {

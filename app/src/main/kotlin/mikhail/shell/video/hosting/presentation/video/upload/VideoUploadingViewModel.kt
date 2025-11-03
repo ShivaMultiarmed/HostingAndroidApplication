@@ -278,7 +278,6 @@ class VideoUploadingViewModel @AssistedInject constructor(
                         }
                     )
                 )
-
             )?: it
         }
         val currentState = _state.value as? Editing

@@ -56,7 +56,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                 VideoUploadingScreenEvent.NavigateBack -> userBackStack.removeLastOrNull()
                 is VideoUploadingScreenEvent.Success -> {
                     if (!event.source.contains("${context.packageName}.fileprovider")) {
-                        context.contentResolver.takePersistableUriPermission(
+                        context.applicationContext.contentResolver.takePersistableUriPermission(
                             event.source.toUri(),
                             FLAG_GRANT_READ_URI_PERMISSION
                         )
