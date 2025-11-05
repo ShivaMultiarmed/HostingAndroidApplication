@@ -302,4 +302,6 @@
     <string name="email_empty">Email пустой</string>
     <string name="tel_empty">Введите номер телефона</string>
     <string name="video_description_label">Описание</string>
+    <string name="wait_for_video_title">Видео находится в обработке</string>
+    <string name="wait_for_video_hint">Подождите, пока видео обрабатывается</string>
 </resources>

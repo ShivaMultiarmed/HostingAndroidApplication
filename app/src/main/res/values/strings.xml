@@ -289,4 +289,6 @@
     <string name="email_empty">Email is empty</string>
     <string name="tel_empty">Phone number is empty</string>
     <string name="video_description_label">Description</string>
+    <string name="wait_for_video_title">Video is processing</string>
+    <string name="wait_for_video_hint">Please wait for video to process</string>
 </resources>

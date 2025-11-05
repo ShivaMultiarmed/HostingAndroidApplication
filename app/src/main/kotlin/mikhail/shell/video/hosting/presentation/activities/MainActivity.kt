@@ -77,14 +77,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             VideoHostingTheme {
                 val userData by userDetailsProvider.userDetails.collectAsStateWithLifecycle()
-                val playerState = rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
+                val playerState =
+                    rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
                     val rootBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf((if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication))
+                        mutableStateListOf(if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication)
                     }
                     val currentRoute = rootBackStack.lastOrNull()
                     val recommendationsBackStack = rememberSaveable(saver = BackStackSaver) {
@@ -96,8 +97,8 @@ class MainActivity : ComponentActivity() {
                     val searchBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(Route.Search.View)
                     }
-                    val userBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(Route.User.Profile(userDetailsProvider.getUserId()))
+                    val userBackStack = rememberSaveable(saver = BackStackSaver, inputs = arrayOf(userData.userId)) {
+                        mutableStateListOf(Route.User.Profile(userData.userId))
                     }
                     val currentBackStack = when (currentRoute) {
                         Route.Recommendations -> recommendationsBackStack
@@ -108,7 +109,10 @@ class MainActivity : ComponentActivity() {
                     }
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRoute) {
-                        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = when {
+                        WindowCompat.getInsetsController(
+                            activity.window,
+                            view
+                        ).isAppearanceLightStatusBars = when {
                             currentRoute is Route.Video.View -> false
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
@@ -121,15 +125,19 @@ class MainActivity : ComponentActivity() {
                                 && currentRoute != Route.Authentication
                                 && currentRoute !is Route.Video
                                 && !LocalPlayerState.current.value.fullScreen
-                                ) {
+                            ) {
                                 BottomNavBar(
                                     onClick = { navItem ->
                                         if (!rootBackStack.contains(navItem.route)) {
                                             rootBackStack.add(navItem.route)
                                         } else {
-                                            val routeToSwitch = rootBackStack.find { it == navItem.route }!!
+                                            val routeToSwitch =
+                                                rootBackStack.find { it == navItem.route }!!
                                             if (currentRoute == routeToSwitch) {
-                                                currentBackStack.subList(1, currentBackStack.size).clear()
+                                                currentBackStack.subList(
+                                                    1,
+                                                    currentBackStack.size
+                                                ).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
                                                 rootBackStack.add(routeToSwitch)

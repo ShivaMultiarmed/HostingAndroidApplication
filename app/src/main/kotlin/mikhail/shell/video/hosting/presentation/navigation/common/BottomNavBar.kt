@@ -27,12 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.borderTop
 
-data class BottomNavItem(
+data class BottomNavItem (
     val route: Route,
     val title: String,
     val baseIcon: ImageVector,
@@ -57,7 +55,7 @@ fun BottomNavBar(
     userId: Long
 ) {
     val context = LocalContext.current
-    val navItems = remember {
+    val navItems = remember(userId) {
         mutableStateListOf(
             BottomNavItem(
                 Route.Recommendations,
@@ -87,14 +85,8 @@ fun BottomNavBar(
     }
     BottomNavBar(
         navItems = navItems,
-        onClick = rememberUpdatedState(onClick).value
+        onClick = onClick
     )
-    LaunchedEffect(userId) {
-        navItems.first { it.route is Route.User }.also {
-            navItems.remove(it)
-            navItems.add(it.copy(route = Route.User(userId)))
-        }
-    }
 }
 
 @Composable

@@ -9,10 +9,8 @@ import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
-import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CancellationException
@@ -24,16 +22,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
-import mikhail.shell.video.hosting.presentation.activities.MainActivity
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -90,7 +85,7 @@ class VideoUploadingService : Service() {
                                 stopUploading()
                                 coroutineScope.launch {
                                     confirmUpload(tmpId).onSuccess {
-                                        updateProgressNotification(progress = 101)
+                                        displayWaitHintNotification()
                                     }.onFailure {
                                         displayFailureNotification(it)
                                         // TODO (?)
@@ -124,22 +119,11 @@ class VideoUploadingService : Service() {
         return null
     }
 
-    @OptIn(UnstableApi::class)
-    private fun displaySuccessNotification(video: Video) {
-        val deepLinkIntent = Intent(this, MainActivity::class.java).apply {
-            data = "https://$HOST/videos/${video.videoId}".toUri()
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            deepLinkIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+    private fun displayWaitHintNotification() {
         val notification = NotificationCompat.Builder(this, "video_uploading")
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(getString(R.string.video_upload_success))
-            .setContentText(getString(R.string.video_upload_success_hint))
-            .setContentIntent(pendingIntent)
+            .setContentTitle(getString(R.string.wait_for_video_title))
+            .setContentText(getString(R.string.wait_for_video_hint))
             .setAutoCancel(true)
             .build()
         notificationManager.notify(++NOTIFICATION_COUNT, notification)
@@ -168,7 +152,7 @@ class VideoUploadingService : Service() {
             .setContentTitle(getString(R.string.video_upload_progress_title))
             .setContentText(getString(R.string.video_upload_progress_hint))
             .setSilent(true)
-            .setProgress(100, progress.coerceIn(0, 100), progress < 0 || progress > 1)
+            .setProgress(100, progress.coerceIn(0, 100), false)
             .setOngoing(true)
             .addAction(createCancelAction())
             .build()

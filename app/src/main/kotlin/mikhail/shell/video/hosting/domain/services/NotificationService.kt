@@ -20,9 +20,14 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.NotificationEntryPoint
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.FileError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
 @AndroidEntryPoint
@@ -51,16 +56,35 @@ class NotificationService: FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         val topic = message.from
         val data = message.data
-        if (topic?.startsWith(CHANNEL_TOPIC_PREFIX) == true) {
-            val videoId = data["video_id"]
-            val channelTitle = data["channel_title"]
-            val videoTitle = data["video_title"]
-            showNotification(videoId!!.toLong(), channelTitle, videoTitle)
+        if (topic?.contains("subscribers") == true) {
+            val videoId = data["video_id"]!!.toLong()
+            val channelTitle = data["channel_title"]!!
+            val videoTitle = data["video_title"]!!
+            postNewVideoNotification(videoId, channelTitle, videoTitle)
+        } else if (topic?.contains("uploads") == true) {
+            if (data.contains("source_error")) {
+                val sourceError =
+                    try {
+                        FileError.valueOf(data["source_error"]!!)
+                    } catch (_: Exception) {
+                        UnexpectedError
+                    }
+                postVideoUploadFailureNotification(sourceError)
+            } else {
+                val videoId = data["video_id"]!!.toLong()
+                val channelTitle = data["channel_title"]!!
+                val videoTitle = data["video_title"]!!
+                postVideoUploadSuccessNotification(videoId, videoTitle)
+            }
         }
     }
 
     @OptIn(UnstableApi::class)
-    private fun showNotification(videoId: Long, channelTitle: String?, videoTitle: String?) {
+    private fun postNewVideoNotification(
+        videoId: Long,
+        channelTitle: String,
+        videoTitle: String
+    ) {
         val intent = Intent(this, MainActivity::class.java).apply{
             data = "https://$HOST/videos/$videoId".toUri()
         }
@@ -70,6 +94,39 @@ class NotificationService: FirebaseMessagingService() {
             .setContentTitle(getString(R.string.new_video_title, channelTitle))
             .setContentText(videoTitle)
             .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+        notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun postVideoUploadSuccessNotification(
+        videoId: Long,
+        videoTitle: String
+    ) {
+        val intent = Intent(this, MainActivity::class.java).apply{
+            data = "https://$HOST/videos/$videoId".toUri()
+        }
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val notification = NotificationCompat.Builder(this, "channel_subscriptions")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(getString(R.string.video_upload_success))
+            .setContentText(videoTitle)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+        notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
+    }
+
+    private fun postVideoUploadFailureNotification(error: Error) {
+        val errorText = when (error) {
+            is NetworkError -> getNetworkErrorMessage(error)
+            else -> getString(R.string.unexpected_error)
+        }
+        val notification = NotificationCompat.Builder(this, "video_uploading")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(getString(R.string.video_upload_failure))
+            .setContentText(errorText)
             .setAutoCancel(true)
             .build()
         notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
@@ -91,11 +148,5 @@ class NotificationService: FirebaseMessagingService() {
             result = result.replace("{$key}", value.toString())
         }
         return result
-    }
-
-    private companion object {
-        const val CHANNEL_TOPIC_PREFIX = "/topics/channels"
-        const val COMMENTS_TOPIC_TEMPLATE = "videos.{video_id}.comments"
-        val COMMENTS_TOPIC_REGEX = "^/topics/videos\\..+\\.comments$".toRegex()
     }
 }

@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Environment
@@ -63,6 +62,7 @@ import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
@@ -106,7 +106,11 @@ fun VideoUploadingScreen(
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(activity, arrayOf("android.permission.POST_NOTIFICATIONS"), 0)
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf("android.permission.POST_NOTIFICATIONS"),
+                0
+            )
         }
     }
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
@@ -150,22 +154,28 @@ fun VideoUploadingScreen(
                     )
             ) {
                 if (!isFullScreen) {
-                    val sourceCreator = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) {
-                        if (!it) {
-                            onAction(VideoUploadingScreenAction.SourceChanged(null))
+                    val sourceCreator =
+                        rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) {
+                            if (it) {
+                                onAction(VideoUploadingScreenAction.SourceChanged(state.video.source.value))
+                            }
                         }
-                    }
-                    val sourcePicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
-                        if (it != null) {
-                            onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
+                    val sourcePicker =
+                        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
+                            if (it != null) {
+                                onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
+                            }
                         }
-                    }
                     val sourceErrMsg = when (state.video.source.error) {
                         FileError.EMPTY -> stringResource(R.string.video_upload_source_empty)
                         FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
                         FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
                         FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-                        FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_VIDEO_SIZE.mb} MB")
+                        FileError.LARGE -> stringResource(
+                            R.string.file_too_large_error,
+                            "${MAX_VIDEO_SIZE.mb} MB"
+                        )
+
                         else -> null
                     }
                     val sourceActionItems = when (state.video.source.value) {
@@ -196,7 +206,8 @@ fun VideoUploadingScreen(
                                 errorMsg = sourceErrMsg
                             )
                         }
-                        val recordedVideoDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                        val recordedVideoDir =
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
                         val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
                         ContextMenu(
                             isExpanded = isVideoDialogOpen,
@@ -222,38 +233,32 @@ fun VideoUploadingScreen(
                                             )
                                             onAction(VideoUploadingScreenAction.SourceChanged(uri.toString()))
                                             sourceCreator.launch(uri)
-                                        } else {
-                                            if (ActivityCompat
-                                                    .shouldShowRequestPermissionRationale(
-                                                        context as Activity,
-                                                        "android.permission.CAMERA")
-                                            ) {
-                                                coroutineScope.launch {
-                                                    snackBarHostState.showSnackbar(
-                                                        message = context.getString(R.string.video_upload_camera_permission_rationale),
-                                                        duration = SnackbarDuration.Short
-                                                    )
-                                                }
-                                            } else {
-                                                ActivityCompat.requestPermissions(
-                                                    context,
-                                                    arrayOf("android.permission.CAMERA"),
-                                                    0
+                                        } else if (cameraPermission.status.shouldShowRationale) {
+                                            coroutineScope.launch {
+                                                snackBarHostState.showSnackbar(
+                                                    message = context.getString(R.string.video_upload_camera_permission_rationale),
+                                                    duration = SnackbarDuration.Short
                                                 )
                                             }
+                                        } else {
+                                            cameraPermission.launchPermissionRequest()
                                         }
                                     }
                                 ),
                                 MenuItem(
                                     title = stringResource(R.string.video_upload_choose_source_label),
                                     onClick = {
-                                        sourcePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+                                        sourcePicker.launch(
+                                            PickVisualMediaRequest(
+                                                ActivityResultContracts.PickVisualMedia.VideoOnly
+                                            )
+                                        )
                                     }
                                 )
                             )
                         )
                     }
-                 }
+                }
 
                 LaunchedEffect(state.video.source.value) {
                     if (state.video.source.value != null) {
@@ -322,19 +327,24 @@ fun VideoUploadingScreen(
                     }
                 }
                 if (!isFullScreen) {
-                    val titleErrMsg = when(state.video.title.error) {
+                    val titleErrMsg = when (state.video.title.error) {
                         TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                        TextError.LONG -> stringResource(
+                            R.string.text_too_large_error,
+                            MAX_TITLE_LENGTH
+                        )
+
                         else -> null
                     }
-                    val titleActionItems = if (state.video.title.value.isEmpty()) emptyList() else listOf(
-                        ActionItem(
-                            icon = Icons.Rounded.Delete,
-                            action = {
-                                onAction(VideoUploadingScreenAction.TitleChanged(""))
-                            }
+                    val titleActionItems =
+                        if (state.video.title.value.isEmpty()) emptyList() else listOf(
+                            ActionItem(
+                                icon = Icons.Rounded.Delete,
+                                action = {
+                                    onAction(VideoUploadingScreenAction.TitleChanged(""))
+                                }
+                            )
                         )
-                    )
                     EditField(
                         actionItems = titleActionItems
                     ) {
@@ -399,7 +409,11 @@ fun VideoUploadingScreen(
                         FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                         FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
                         FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                        FileError.LARGE -> stringResource(R.string.file_too_large_error, "${MAX_IMAGE_SIZE.mb} MB")
+                        FileError.LARGE -> stringResource(
+                            R.string.file_too_large_error,
+                            "${MAX_IMAGE_SIZE.mb} MB"
+                        )
+
                         else -> null
                     }
                     EditField(
@@ -456,7 +470,11 @@ fun VideoUploadingScreen(
                         }
                     }
                     val descriptionErrMsg = when (state.video.description.error) {
-                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
+                        TextError.LONG -> stringResource(
+                            R.string.text_too_large_error,
+                            MAX_TITLE_LENGTH
+                        )
+
                         else -> null
                     }
                     StandardEditField(
@@ -494,8 +512,7 @@ fun VideoUploadingScreen(
                 onAction(VideoUploadingScreenAction.Restart)
             }
         )
-    }
-    else if (state is Starting) {
+    } else if (state is Starting) {
         LoadingComponent(
             modifier = Modifier
                 .fillMaxSize()
