@@ -60,7 +60,7 @@ interface VideoRepository {
     suspend fun uploadVideo(video: VideoCreationModel): Result<PendingVideo, Error>
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error>
+    suspend fun confirmVideoUpload(tmpId: Uuid): Result<Unit, Error>
 
     fun getCoverUrl(videoId: Long, size: ImageSize): String
     fun getSourceUrl(videoId: Long): String

@@ -47,7 +47,9 @@ import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.plusAssign
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -155,11 +157,11 @@ class VideoRepositoryWithApi @Inject constructor(
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
-        val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(4) + SupervisorJob())
         return try {
             val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
             val sourceSize = fileProvider.getFileSize(source)!!
-            var bytesTransferred = 0L
+            val bytesTransferred = AtomicLong(0)
             coroutineScope.async {
                 val uploadJobs = mutableListOf<Job>()
                 val buffer = ByteArray(BUFFER_SIZE)
@@ -169,18 +171,17 @@ class VideoRepositoryWithApi @Inject constructor(
                     if (bytesRead <= 0) {
                         break
                     }
-                    bytesTransferred += bytesRead
                     val start = cursor
                     val end = start + bytesRead - 1
+                    val bytesToSend = buffer.copyOf(bytesRead)
                     uploadJobs += launch {
+                        bytesTransferred += bytesRead.toLong()
                         videoApi.uploadVideoSource(
                             tmpId = tmpId,
                             contentRange = "bytes $start-$end/$sourceSize",
-                            source = buffer
-                                .copyOf(bytesRead)
-                                .toRequestBody(bytesNumber = bytesRead)
+                            source = bytesToSend.toRequestBody(bytesNumber = bytesRead)
                         )
-                        val progress = bytesTransferred.toFloat() / sourceSize
+                        val progress = bytesTransferred.load().toFloat() / sourceSize
                         onProgress(progress)
                     }
                     cursor = end + 1
@@ -211,7 +212,7 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun confirmVideoUpload(uploadId: Uuid): Result<Video, Error> = request(
+    override suspend fun confirmVideoUpload(tmpId: Uuid): Result<Unit, Error> = request(
         httpExceptionHandler(400) {
             val json = it.response()?.body() as String
             val response = gson.fromJson(json, VideoUploadingErrorResponse::class.java)
@@ -223,7 +224,7 @@ class VideoRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        videoApi.confirmVideoUpload(uploadId).toDomain()
+        videoApi.confirmVideoUpload(tmpId)
     }
 
     override fun getSourceUrl(videoId: Long): String {

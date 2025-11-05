@@ -91,11 +91,11 @@ fun ChannelEditingScreen(
             snackbarHost = {
                 SnackbarHost(snackBarHostState)
             }
-        ) {
+        ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(it)
+                    .padding(padding)
                     .verticalScroll(scrollState)
             ) {
                 val titleErrMsg = when(current.title.error) {

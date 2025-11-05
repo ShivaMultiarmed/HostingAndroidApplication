@@ -90,7 +90,7 @@ class VideoUploadingService : Service() {
                                 stopUploading()
                                 coroutineScope.launch {
                                     confirmUpload(tmpId).onSuccess {
-                                        displaySuccessNotification(it)
+                                        updateProgressNotification(progress = 101)
                                     }.onFailure {
                                         displayFailureNotification(it)
                                         // TODO (?)
@@ -168,7 +168,7 @@ class VideoUploadingService : Service() {
             .setContentTitle(getString(R.string.video_upload_progress_title))
             .setContentText(getString(R.string.video_upload_progress_hint))
             .setSilent(true)
-            .setProgress(100, progress, false)
+            .setProgress(100, progress.coerceIn(0, 100), progress < 0 || progress > 1)
             .setOngoing(true)
             .addAction(createCancelAction())
             .build()

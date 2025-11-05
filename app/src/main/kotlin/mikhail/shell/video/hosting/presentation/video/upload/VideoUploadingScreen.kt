@@ -8,6 +8,7 @@ import android.os.Environment
 import android.view.WindowInsetsController
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -103,13 +104,15 @@ fun VideoUploadingScreen(
     val windowSize = calculateWindowSizeClass(activity)
     val context = activity as Context
     val coroutineScope = rememberCoroutineScope()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        ActivityCompat.requestPermissions(activity, arrayOf("android.permission.POST_NOTIFICATIONS"), 0)
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(activity, arrayOf("android.permission.POST_NOTIFICATIONS"), 0)
+        }
     }
-    val scrollState = rememberScrollState()
+    var isFullScreen by rememberSaveable { mutableStateOf(false) }
     if (state is Editing) {
+        val scrollState = rememberScrollState()
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-        var isFullScreen by rememberSaveable { mutableStateOf(false) }
         Scaffold(
             topBar = {
                 if (!isFullScreen) {
@@ -147,16 +150,12 @@ fun VideoUploadingScreen(
                     )
             ) {
                 if (!isFullScreen) {
-                    val sourceCreator = rememberLauncherForActivityResult(
-                        ActivityResultContracts.CaptureVideo()
-                    ) {
-                        if (it) {
-                            onAction(VideoUploadingScreenAction.SourceChanged(state.video.source.value!!))
+                    val sourceCreator = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) {
+                        if (!it) {
+                            onAction(VideoUploadingScreenAction.SourceChanged(null))
                         }
                     }
-                    val sourcePicker = rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenDocument()
-                    ) {
+                    val sourcePicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
                         if (it != null) {
                             onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
                         }
@@ -170,7 +169,7 @@ fun VideoUploadingScreen(
                         else -> null
                     }
                     val sourceActionItems = when (state.video.source.value) {
-                        state.video.source.value -> listOf()
+                        null -> listOf()
                         else -> listOf(
                             DeletingItem(
                                 deleting = {
@@ -248,13 +247,14 @@ fun VideoUploadingScreen(
                                 MenuItem(
                                     title = stringResource(R.string.video_upload_choose_source_label),
                                     onClick = {
-                                        sourcePicker.launch(arrayOf("video/*"))
+                                        sourcePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
                                     }
                                 )
                             )
                         )
                     }
-                }
+                 }
+
                 LaunchedEffect(state.video.source.value) {
                     if (state.video.source.value != null) {
                         val newMediaItem = MediaItem.fromUri(state.video.source.value)

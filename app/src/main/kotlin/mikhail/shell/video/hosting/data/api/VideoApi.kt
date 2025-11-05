@@ -64,7 +64,7 @@ interface VideoApi {
     )
     @OptIn(ExperimentalUuidApi::class)
     @POST("videos/{tmp_id}/confirmation")
-    suspend fun confirmVideoUpload(@Path("tmp_id") tmpId: Uuid): VideoDto
+    suspend fun confirmVideoUpload(@Path("tmp_id") tmpId: Uuid)
     @PATCH("videos/{video_id}/views")
     suspend fun incrementViews(@Path("video_id") videoId: Long): VideoDto
     @Multipart
