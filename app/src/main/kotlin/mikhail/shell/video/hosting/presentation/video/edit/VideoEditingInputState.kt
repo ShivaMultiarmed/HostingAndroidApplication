@@ -3,13 +3,11 @@ package mikhail.shell.video.hosting.presentation.video.edit
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class VideoEditingInputState(
-    val title: String,
-    val titleError: TextError? = null,
-    val cover: String? = null,
-    val coverError: FileError? = null,
+    val title: FieldState<String, TextError>,
+    val cover: FieldState<String?, FileError>,
     val coverAction: EditAction = EditAction.KEEP,
-    val description: String,
-    val descriptionError: TextError? = null
+    val description: FieldState<String, TextError>
 )

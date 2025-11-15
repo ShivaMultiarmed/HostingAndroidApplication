@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.presentation.video.edit
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +30,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,41 +39,35 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
 import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
-import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
-import mikhail.shell.video.hosting.domain.validation.mb
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoEditingScreen(
     state: VideoEditingScreenState,
-    onEvent: (VideoEditingUiEvent) -> Unit
+    onAction: (VideoEditingAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
     val windowSize = calculateWindowSizeClass(activity)
     val scrollState = rememberScrollState()
-    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
-        snackbarHost = {
-            SnackbarHost(snackBarHostState)
-        }
+        snackbarHost = { SnackbarHost(snackBarHostState) }
     ) { padding ->
         if (state is VideoEditingScreenState.Editing) {
             Column(
@@ -85,81 +77,56 @@ fun VideoEditingScreen(
             ) {
                 TopBar(
                     title = stringResource(R.string.video_edit_title),
-                    onPopup = {
-                        onEvent(VideoEditingUiEvent.Cancel)
-                    },
+                    onPopup = { onAction(VideoEditingAction.Cancel) },
                     inProgress = state.isLoading,
                     complete = false,
-                    onSubmit = {
-                        onEvent(VideoEditingUiEvent.Submit)
-                    }
+                    onSubmit = { onAction(VideoEditingAction.Submit) }
                 )
-                val titleErrMsg = when (state.currentVideo.titleError) {
+                val titleErrMsg = when (state.currentVideo.title.error) {
                     TextError.EMPTY -> stringResource(R.string.text_empty_error)
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     else -> null
                 }
                 StandardEditField(
                     firstTime = false,
-                    updated = state.currentVideo.title != state.initialVideo.title,
-                    empty = state.currentVideo.title.isEmpty(),
-                    onDelete = {
-                        onEvent(VideoEditingUiEvent.TitleChanged(""))
-                    },
-                    onRevert = {
-                        onEvent(VideoEditingUiEvent.TitleChanged(state.initialVideo.title))
-                    }
+                    updated = state.currentVideo.title.value != state.initialVideo.title,
+                    empty = state.currentVideo.title.value.isEmpty(),
+                    onDelete = { onAction(VideoEditingAction.TitleChanged("")) },
+                    onRevert = { onAction(VideoEditingAction.TitleChanged(state.initialVideo.title)) }
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = state.currentVideo.title,
-                        onValueChange = {
-                            onEvent(VideoEditingUiEvent.TitleChanged(it))
-                        },
+                        value = state.currentVideo.title.value,
+                        onValueChange = { onAction(VideoEditingAction.TitleChanged(it)) },
                         errorMsg = titleErrMsg,
                         placeholder = stringResource(R.string.video_title_label),
                         icon = Icons.Rounded.Title,
-                        onTypingStarted = {
-                            onEvent(VideoEditingUiEvent.TitleTypingStarted)
-                        },
-                        onTypingEnded = {
-                            onEvent(VideoEditingUiEvent.TitleTypingEnded)
-                        }
+                        onFocus = { onAction(VideoEditingAction.TitleFocused) },
+                        onBlur = { onAction(VideoEditingAction.TitleBlurred) }
                     )
                 }
                 val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        onEvent(VideoEditingUiEvent.CoverChanged(it.toString(), UPDATE))
+                        onAction(VideoEditingAction.CoverChanged(it.toString(), UPDATE))
                     }
                 }
                 var coverExists by rememberSaveable { mutableStateOf<Boolean?>(null) }
-                val coverErrMsg = when (state.currentVideo.coverError) {
-                    FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                    FileError.LARGE -> stringResource(R.string.file_too_large_error, "${(MAX_IMAGE_SIZE.mb)} MB")
-                    FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-                    else -> null
-                }
+                val coverErrMsg = getFileErrorMessage(state.currentVideo.cover.error)
                 Column {
                     StandardEditField(
                         firstTime = false,
                         updated = state.currentVideo.coverAction == state.currentVideo.coverAction || state.currentVideo.coverAction == REMOVE && coverExists == true,
-                        empty = !(state.currentVideo.cover != null || coverExists == true && state.currentVideo.coverAction != REMOVE),
-                        onRevert = {
-                            onEvent(VideoEditingUiEvent.CoverChanged(null, KEEP))
-
-                        },
-                        onDelete = {
-                            onEvent(VideoEditingUiEvent.CoverChanged(null, REMOVE))
-                        }
+                        empty = !(state.currentVideo.cover.value != null || coverExists == true && state.currentVideo.coverAction != REMOVE),
+                        onRevert = { onAction(VideoEditingAction.CoverChanged(null, KEEP)) },
+                        onDelete = { onAction(VideoEditingAction.CoverChanged(null, REMOVE)) }
                     ) {
                         FileInputField(
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = {
-                                coverPicker.launch("image/*")
+                            onClick = { coverPicker.launch("image/*") },
+                            placeholder = when {
+                                state.currentVideo.cover.value != null || coverExists == true && state.currentVideo.coverAction == KEEP -> stringResource(R.string.video_cover_choose_another_label)
+                                else -> stringResource(R.string.video_cover_choose_label)
                             },
-                            placeholder = if (state.currentVideo.cover != null || coverExists == true && state.currentVideo.coverAction == KEEP)
-                                stringResource(R.string.video_cover_choose_another_label)
-                            else stringResource(R.string.video_cover_choose_label),
                             icon = Icons.Rounded.Wallpaper,
                             errorMsg = coverErrMsg
                         )
@@ -169,8 +136,8 @@ fun VideoEditingScreen(
                             .fillMaxWidth()
                             .padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(
-                            30.dp,
-                            Alignment.CenterHorizontally
+                            space = 30.dp,
+                            alignment = Alignment.CenterHorizontally
                         ),
                     ) {
                         if (coverExists != false) {
@@ -200,7 +167,7 @@ fun VideoEditingScreen(
                                 )
                             }
                         }
-                        if (state.currentVideo.cover != null) {
+                        if (state.currentVideo.cover.value != null) {
                             Column(
                                 modifier = Modifier.then(
                                     if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -214,9 +181,8 @@ fun VideoEditingScreen(
                                 Text(
                                     text = stringResource(R.string.video_cover_chosen_label)
                                 )
-                                val painter = rememberAsyncImagePainter(model = state.currentVideo.cover)
-                                Image(
-                                    painter = painter,
+                                AsyncImage(
+                                    model = state.currentVideo.cover.value,
                                     contentDescription = state.initialVideo.title,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -229,8 +195,7 @@ fun VideoEditingScreen(
                     }
                     if (coverExists == true && state.currentVideo.coverAction == REMOVE) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
@@ -239,36 +204,26 @@ fun VideoEditingScreen(
                         }
                     }
                 }
-                val descriptionErrMsg = when (state.currentVideo.descriptionError) {
+                val descriptionErrMsg = when (state.currentVideo.description.error) {
                     TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TITLE_LENGTH)
                     else -> null
                 }
                 StandardEditField(
                     firstTime = false,
-                    updated = state.currentVideo.description != state.initialVideo.description,
-                    empty = state.currentVideo.description.isEmpty(),
-                    onDelete = {
-                        onEvent(VideoEditingUiEvent.DescriptionChanged(""))
-                    },
-                    onRevert = {
-                        onEvent(VideoEditingUiEvent.DescriptionChanged(state.initialVideo.description?: ""))
-                    }
+                    updated = state.currentVideo.description.value != state.initialVideo.description,
+                    empty = state.currentVideo.description.value.isEmpty(),
+                    onDelete = { onAction(VideoEditingAction.DescriptionChanged("")) },
+                    onRevert = { onAction(VideoEditingAction.DescriptionChanged(state.initialVideo.description)) }
                 ) {
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = state.currentVideo.description,
-                        onValueChange = {
-                            onEvent(VideoEditingUiEvent.TitleChanged(it))
-                        },
+                        value = state.currentVideo.description.value,
+                        onValueChange = { onAction(VideoEditingAction.TitleChanged(it)) },
                         errorMsg = descriptionErrMsg,
                         placeholder = stringResource(R.string.video_title_label),
                         icon = Icons.Rounded.Title,
-                        onTypingStarted = {
-                            onEvent(VideoEditingUiEvent.DescriptionTypingStarted)
-                        },
-                        onTypingEnded = {
-                            onEvent(VideoEditingUiEvent.DescriptionTypingEnded)
-                        }
+                        onFocus = { onAction(VideoEditingAction.DescriptionFocused) },
+                        onBlur = { onAction(VideoEditingAction.DescriptionBlurred) }
                     )
                 }
             }
@@ -278,7 +233,7 @@ fun VideoEditingScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                if (state is VideoEditingScreenState.Loading) {
+                if (state is VideoEditingScreenState.Starting) {
                     LoadingComponent(
                         modifier = Modifier
                             .fillMaxSize()
@@ -289,17 +244,7 @@ fun VideoEditingScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface),
-                        onRetry = {
-                            onEvent(VideoEditingUiEvent.Reload)
-                        }
-                    )
-                    StandardComplexErrorHandler(
-                        error = state.error,
-                        snackBarHostState = snackBarHostState,
-                        notFoundMessage = stringResource(R.string.video_not_found),
-                        notFoundHandler = {
-                            onEvent(VideoEditingUiEvent.Cancel)
-                        }
+                        onRetry = { onAction(VideoEditingAction.Restart) }
                     )
                 }
             }

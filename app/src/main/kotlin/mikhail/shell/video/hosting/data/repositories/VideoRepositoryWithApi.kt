@@ -12,7 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.dto.VideoEditingErrorResponse
@@ -41,7 +40,6 @@ import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.VideoRepository
-import okhttp3.MultipartBody
 import okio.IOException
 import retrofit2.HttpException
 import java.net.ConnectException
@@ -246,34 +244,16 @@ class VideoRepositoryWithApi @Inject constructor(
     override suspend fun editVideo(video: VideoEditingModel): Result<Video, Error> {
         return request(
             httpExceptionHandler(400) {
-                val response =
-                    Json.decodeFromString<VideoEditingErrorResponse>(
-                        it.response()?.body() as String
-                    )
+                val json = it.response()!!.errorBody()!!.string()
+                val response = gson.fromJson(json, VideoEditingErrorResponse::class.java)
                 VideoEditingError(
                     titleError = response.titleError,
                     coverError = response.coverError,
-                    descriptionError = response.descriptionError,
-                    channelId = response.channelIdError
+                    descriptionError = response.descriptionError
                 )
             }
         ) {
-            val coverPart = video.cover?.let {
-                val mime = fileProvider.getFileMimeType(it)!!
-                fileProvider.getFileAsInputStream(it)
-                    ?.use { it.readBytes() }!!
-                    .toRequestBody(mimeType = mime)
-                    .let {
-                        val extension = MimeTypeMap
-                            .getSingleton()
-                            .getExtensionFromMimeType(mime)
-                        MultipartBody.Part.createFormData(
-                            name = "cover",
-                            filename = "cover.$extension",
-                            body = it
-                        )
-                    }
-            }
+            val coverPart = video.cover?.let { fileProvider.uriToPart(it, "cover") }
             videoApi.editVideo(
                 video = VideoEditingRequest(
                     videoId = video.videoId,
