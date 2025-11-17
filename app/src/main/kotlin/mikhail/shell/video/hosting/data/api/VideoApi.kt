@@ -39,13 +39,13 @@ interface VideoApi {
     @GET("videos/channel/{channel_id}")
     suspend fun fetchVideoList(
         @Path("channel_id") channelId: Long,
-        @Query("part_number") partNumber: Long,
+        @Query("part_index") partIndex: Long,
         @Query("part_size") partSize: Int
     ): List<VideoDto>
     @GET("videos/search")
     suspend fun fetchVideoListByQuery(
         @Query("query") query: String,
-        @Query("part_number") partNumber: Long?,
+        @Query("cursor") cursor: Long?,
         @Query("part_size") partSize: Int
     ): List<VideoWithChannelDto>
     @Multipart

@@ -85,12 +85,12 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun fetchChannelVideoList(
         channelId: Long,
-        partNumber: Long,
+        partIndex: Long,
         partSize: Int
     ): Result<List<Video>, Error> = request {
         videoApi.fetchVideoList(
             channelId = channelId,
-            partNumber = partNumber,
+            partIndex = partIndex,
             partSize = partSize
         ).map { it.toDomain() }
     }
@@ -102,7 +102,7 @@ class VideoRepositoryWithApi @Inject constructor(
     ): Result<List<VideoWithChannel>, Error> = request {
         videoApi.fetchVideoListByQuery(
             query = query,
-            partNumber = cursor,
+            cursor = cursor,
             partSize = partSize
         ).map { it.toDomain() }
     }

@@ -669,32 +669,30 @@ private fun CommentBox(
         modifier = modifier.background(MaterialTheme.colorScheme.background)
     ) {
         var isMenuVisible by rememberSaveable { mutableStateOf(false) }
-        if (isMenuVisible) {
-            ContextMenu(
-                isExpanded = isMenuVisible,
-                menuItems = listOf(
-                    MenuItem(
-                        title = stringResource(R.string.comment_edit_button),
-                        onClick = {
-                            onEvent(
-                                VideoScreenUiEvent.EditComment(comment.commentId)
-                            )
-                            isMenuVisible = false
-                        }
-                    ),
-                    MenuItem(
-                        title = stringResource(R.string.comment_delete_button),
-                        onClick = {
-                            onEvent(VideoScreenUiEvent.RemoveComment(comment.commentId))
-                            isMenuVisible = false
-                        }
-                    )
+        ContextMenu(
+            isExpanded = isMenuVisible,
+            menuItems = listOf(
+                MenuItem(
+                    title = stringResource(R.string.comment_edit_button),
+                    onClick = {
+                        onEvent(
+                            VideoScreenUiEvent.EditComment(comment.commentId)
+                        )
+                        isMenuVisible = false
+                    }
                 ),
-                onDismiss = {
-                    isMenuVisible = false
-                }
-            )
-        }
+                MenuItem(
+                    title = stringResource(R.string.comment_delete_button),
+                    onClick = {
+                        onEvent(VideoScreenUiEvent.RemoveComment(comment.commentId))
+                        isMenuVisible = false
+                    }
+                )
+            ),
+            onDismiss = {
+                isMenuVisible = false
+            }
+        )
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
