@@ -17,9 +17,9 @@ fun EntryProviderScope<Route>.videoGraph(
     currentBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry<Route.Video> { bundle ->
+    entry<Route.Video> { graph ->
         val videoBackStack = rememberSaveable {
-            mutableStateListOf<Route>(Route.Video.View(bundle.videoId))
+            mutableStateListOf<Route>(Route.Video.View(graph.videoId))
         }
         NavDisplay(
             backStack = videoBackStack,

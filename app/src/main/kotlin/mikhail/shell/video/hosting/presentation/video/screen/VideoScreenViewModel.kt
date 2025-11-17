@@ -32,9 +32,9 @@ import mikhail.shell.video.hosting.domain.usecases.comments.GetComments
 import mikhail.shell.video.hosting.domain.usecases.comments.PostComment
 import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
-import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoSourceUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
+import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoSourceUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
@@ -217,9 +217,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
             }.onFailure { error ->
                 _state.update {
-                    it.copy(
-                        removingError = error
-                    )
+                    it.copy(removingError = error)
                 }
             }
         }

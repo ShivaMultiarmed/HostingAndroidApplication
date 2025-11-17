@@ -12,7 +12,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -53,13 +52,7 @@ fun EntryProviderScope<Route>.videoRoute(
                         rootBackStack.removeLastOrNull()
                     }
                     is VideoScreenUiEvent.OpenProfile -> currentTabBackStack.add(Route.User.Profile(event.userId))
-                    VideoScreenUiEvent.Remove -> {
-                        coroutineScope.launch {
-                            viewModel.onEvent(event)
-                            delay(1.seconds)
-                            videoBackStack.clear()
-                        }
-                    }
+                    VideoScreenUiEvent.Remove -> viewModel.onEvent(event)
                     VideoScreenUiEvent.Share -> {
                         Intent(Intent.ACTION_SEND).apply {
                             setType("text/plain")
@@ -84,12 +77,12 @@ fun EntryProviderScope<Route>.videoRoute(
             when(state.startingError) {
                 NetworkError.NOT_FOUND -> {
                     delay(1.seconds)
-                    videoBackStack.remove(route)
+                    rootBackStack.removeLastOrNull()
                 }
                 NetworkError.AUTHENTICATION -> rootBackStack.add(Route.Authentication)
             }
             if (state.isRemoved) {
-                videoBackStack.remove(route)
+                rootBackStack.removeLastOrNull()
             }
         }
     }

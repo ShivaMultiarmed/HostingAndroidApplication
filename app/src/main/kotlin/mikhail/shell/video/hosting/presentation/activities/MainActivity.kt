@@ -131,13 +131,9 @@ class MainActivity : ComponentActivity() {
                                         if (!rootBackStack.contains(navItem.route)) {
                                             rootBackStack.add(navItem.route)
                                         } else {
-                                            val routeToSwitch =
-                                                rootBackStack.find { it == navItem.route }!!
+                                            val routeToSwitch = rootBackStack.find { it == navItem.route }!!
                                             if (currentRoute == routeToSwitch) {
-                                                currentBackStack.subList(
-                                                    1,
-                                                    currentBackStack.size
-                                                ).clear()
+                                                currentBackStack.subList(1, currentBackStack.size).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
                                                 rootBackStack.add(routeToSwitch)
