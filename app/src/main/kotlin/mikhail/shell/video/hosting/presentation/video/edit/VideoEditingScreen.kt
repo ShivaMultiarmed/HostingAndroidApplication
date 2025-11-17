@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Title
+import androidx.compose.material.icons.rounded.ViewHeadline
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -218,10 +219,10 @@ fun VideoEditingScreen(
                     InputField(
                         modifier = Modifier.fillMaxWidth(),
                         value = state.currentVideo.description.value,
-                        onValueChange = { onAction(VideoEditingAction.TitleChanged(it)) },
+                        onValueChange = { onAction(VideoEditingAction.DescriptionChanged(it)) },
                         errorMsg = descriptionErrMsg,
-                        placeholder = stringResource(R.string.video_title_label),
-                        icon = Icons.Rounded.Title,
+                        placeholder = stringResource(R.string.video_description_label),
+                        icon = Icons.Rounded.ViewHeadline,
                         onFocus = { onAction(VideoEditingAction.DescriptionFocused) },
                         onBlur = { onAction(VideoEditingAction.DescriptionBlurred) }
                     )

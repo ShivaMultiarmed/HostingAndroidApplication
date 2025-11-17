@@ -61,31 +61,38 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun start() {
         viewModelScope.launch {
-            getVideo(videoId)
-                .onSuccess { video ->
-                    _state.update {
-                        VideoEditingScreenState.Editing(
-                            initialVideo = EditableVideoUi(
+            getVideo(videoId).onSuccess { video ->
+                _state.update {
+                    VideoEditingScreenState.Editing(
+                        initialVideo = EditableVideoUi(
+                            videoId = videoId,
+                            title = video.title,
+                            cover = getVideoCoverUrl(
                                 videoId = videoId,
-                                title = video.title,
-                                cover = getVideoCoverUrl(
-                                    videoId = videoId,
-                                    size = ImageSize.MEDIUM
-                                ),
-                                description = video.description ?: ""
+                                size = ImageSize.MEDIUM
                             ),
-                            currentVideo = VideoEditingInputState(
-                                title = FieldState(value = video.title),
-                                cover = FieldState(value = null),
-                                description = FieldState(value = video.description ?: "")
-                            )
+                            description = video.description ?: ""
+                        ),
+                        currentVideo = VideoEditingInputState(
+                            title = FieldState(value = video.title),
+                            cover = FieldState(value = null),
+                            description = FieldState(value = video.description ?: "")
                         )
-                    }
-                }.onFailure { error ->
-                    _state.update {
-                        VideoEditingScreenState.Failure(error)
-                    }
+                    )
                 }
+            }.onFailure { error ->
+                _state.update {
+                    VideoEditingScreenState.Failure(error)
+                }
+                val eventToEmit = when (error) {
+                    NetworkError.AUTHENTICATION -> VideoEditingEvent.RequireAuthentication
+                    NetworkError.NOT_FOUND -> VideoEditingEvent.NavigateBack
+                    else -> VideoEditingEvent.Failure(error)
+                }
+                viewModelScope.launch {
+                    _events.emit(eventToEmit)
+                }
+            }
         }
     }
 
@@ -145,7 +152,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                     ),
                     coverAction = action
                 )
-            )?: it
+            ) ?: it
         }
     }
 
@@ -158,7 +165,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                         value = description
                     )
                 )
-            )?: it
+            ) ?: it
         }
     }
 
@@ -171,7 +178,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                         error = null
                     )
                 )
-            )?: it
+            ) ?: it
         }
     }
 
@@ -187,7 +194,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                         }
                     )
                 )
-            )?: it
+            ) ?: it
         }
     }
 
@@ -215,7 +222,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                         }
                     )
                 )
-            )?: it
+            ) ?: it
         }
         val currentState = _state.value as? VideoEditingScreenState.Editing
         if (
@@ -223,13 +230,13 @@ class VideoEditingViewModel @AssistedInject constructor(
             || currentState.currentVideo.title.error != null
             || currentState.currentVideo.description.error != null
             || currentState.currentVideo.cover.error != null
-            ) {
+        ) {
             return
         }
         viewModelScope.launch {
             _state.update {
                 val currentState = it as? VideoEditingScreenState.Editing
-                currentState?.copy(isLoading = true)?: it
+                currentState?.copy(isLoading = true) ?: it
             }
             editVideo(
                 video = VideoEditingModel(
@@ -246,7 +253,7 @@ class VideoEditingViewModel @AssistedInject constructor(
             }.onFailure { error ->
                 _state.update {
                     val currentState = it as? VideoEditingScreenState.Editing
-                    currentState?.copy(isLoading = false)?: it
+                    currentState?.copy(isLoading = false) ?: it
                 }
                 if (error is VideoEditingError) {
                     _state.update {
@@ -263,7 +270,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                                     error = error.descriptionError
                                 )
                             )
-                        )?: it
+                        ) ?: it
                     }
                 } else {
                     viewModelScope.launch {

@@ -46,7 +46,7 @@ fun EntryProviderScope<Route>.editVideoRoute(
                 VideoEditingEvent.NavigateBack -> videoBackStack.removeLastOrNull()
                 VideoEditingEvent.RequireAuthentication -> rootBackStack.add(Route.Authentication)
                 VideoEditingEvent.Success -> {
-                    val videoRoute = videoBackStack.find { it is Route.Video } as Route.Video
+                    val videoRoute = videoBackStack.find { it is Route.Video.View } as Route.Video.View
                     videoBackStack.clear()
                     videoBackStack.add(videoRoute.copy())
                 }
