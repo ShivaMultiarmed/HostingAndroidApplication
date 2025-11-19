@@ -77,7 +77,7 @@ fun RequestResetScreen(
                         onEvent(RequestResetUiEvent.UserNameChanged(it))
                     },
                     errorMsg = userNameErrorMsg,
-                    placeholder = "E-mail",
+                    label = "E-mail",
                     onTypingStarted = {
                         onEvent(RequestResetUiEvent.UserNameTypingStarted)
                     },

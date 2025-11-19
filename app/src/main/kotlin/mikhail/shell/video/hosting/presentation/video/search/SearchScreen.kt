@@ -89,7 +89,7 @@ fun SearchScreen(
                         onEvent(SearchScreenUiEvent.QueryChanged(it))
                     },
                     errorMsg = errorMsg,
-                    placeholder = stringResource(R.string.video_search_label),
+                    label = stringResource(R.string.video_search_label),
                     icon = Icons.Rounded.Search
                 )
                 PrimaryProgressButton(

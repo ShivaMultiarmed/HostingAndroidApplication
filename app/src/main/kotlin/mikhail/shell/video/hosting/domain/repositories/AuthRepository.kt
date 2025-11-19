@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
+import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 
 interface AuthRepository {
     suspend fun signInWithPassword(
@@ -11,7 +12,7 @@ interface AuthRepository {
         password: String
     ): Result<AuthModel, Error>
 
-    suspend fun existsByUserName(userName: String): Result<Boolean, Error>
+    suspend fun checkUserName(purpose: UserNameCheckPurpose, userName: String): Result<Unit, Error>
 
     suspend fun requestSignUpWithPassword(userName: String): Result<Unit, Error>
 

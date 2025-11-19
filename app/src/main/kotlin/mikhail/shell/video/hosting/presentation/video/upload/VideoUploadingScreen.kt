@@ -355,7 +355,7 @@ fun VideoUploadingScreen(
                                 onAction(VideoUploadingScreenAction.TitleChanged(it))
                             },
                             errorMsg = titleErrMsg,
-                            placeholder = stringResource(R.string.video_title_label),
+                            label = stringResource(R.string.video_title_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
                                 onAction(VideoUploadingScreenAction.TitleFocused)
@@ -490,7 +490,7 @@ fun VideoUploadingScreen(
                                 onAction(VideoUploadingScreenAction.DescriptionChanged(it))
                             },
                             errorMsg = descriptionErrMsg,
-                            placeholder = stringResource(R.string.video_description_label),
+                            label = stringResource(R.string.video_description_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
                                 onAction(VideoUploadingScreenAction.DescriptionFocused)

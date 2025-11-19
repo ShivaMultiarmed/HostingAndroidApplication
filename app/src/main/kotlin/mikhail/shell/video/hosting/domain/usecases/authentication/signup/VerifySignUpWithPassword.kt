@@ -8,7 +8,10 @@ import javax.inject.Inject
 class VerifySignUpWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(userName: String, code: String): Result<String, Error> {
+    suspend operator fun invoke(
+        userName: String,
+        code: String
+    ): Result<String, Error> {
         return authRepository.verifySignUpWithPassword(userName, code)
     }
 }

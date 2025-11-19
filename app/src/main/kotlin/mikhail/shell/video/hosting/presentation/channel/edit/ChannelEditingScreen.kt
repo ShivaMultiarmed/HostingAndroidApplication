@@ -124,7 +124,7 @@ fun ChannelEditingScreen(
                         onValueChange = {
                             onEvent(ChannelEditingUiEvent.TitleChanged(it))
                         },
-                        placeholder = stringResource(R.string.channel_title_label),
+                        label = stringResource(R.string.channel_title_label),
                         errorMsg = titleErrMsg,
                         onFocus = {
                             onEvent(ChannelEditingUiEvent.TitleFocused)
@@ -159,7 +159,7 @@ fun ChannelEditingScreen(
                         onValueChange = {
                             onEvent(ChannelEditingUiEvent.AliasChanged(it))
                         },
-                        placeholder = stringResource(R.string.channel_alias_label),
+                        label = stringResource(R.string.channel_alias_label),
                         errorMsg = aliasErrMsg,
                         onFocus = {
                             onEvent(ChannelEditingUiEvent.AliasFocused)
@@ -194,7 +194,7 @@ fun ChannelEditingScreen(
                         onValueChange = {
                             onEvent(ChannelEditingUiEvent.DescriptionChanged(it))
                         },
-                        placeholder = stringResource(R.string.channel_description_label),
+                        label = stringResource(R.string.channel_description_label),
                         maxLines = 50,
                         errorMsg = descriptionErrMsg,
                         onFocus = {

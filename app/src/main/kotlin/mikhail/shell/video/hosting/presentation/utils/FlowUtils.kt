@@ -19,7 +19,7 @@ fun <T> Flow<T>.stateIn(initialValue: T) = stateIn(
 )
 
 @Composable
-fun <T> Flow<T>.observeAsEvents(onEvent: suspend (T) -> Unit) {
+fun <T> Flow<T>.observe(onEvent: suspend (T) -> Unit) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

@@ -10,17 +10,17 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
-import mikhail.shell.video.hosting.domain.validation.CheckUserName
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
     private val validateUserName: ValidateUserName,
-    private val checkUserName: CheckUserName,
     private val validatePassword: ValidatePassword,
     private val signInWithPassword: SignInWithPassword,
     private val subscribeToNotifications: SubscribeToNotifications
@@ -84,9 +84,7 @@ class SignInWithPasswordViewModel @Inject constructor(
         _state.update {
             it.copy(
                 input = it.input.copy(
-                    userName = it.input.userName.copy(
-                        value = userName
-                    )
+                    userName = it.input.userName.copy(value = userName)
                 )
             )
         }
@@ -96,9 +94,7 @@ class SignInWithPasswordViewModel @Inject constructor(
         _state.update {
             it.copy(
                 input = it.input.copy(
-                    userName = it.input.userName.copy(
-                        error = null
-                    )
+                    userName = it.input.userName.copy(error = null)
                 )
             )
         }
@@ -111,17 +107,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
                             error = it.input.userName.value.let {
-                                val validationResult = validateUserName(it)
-                                if (validationResult is Result.Failure) {
-                                    validationResult.error
-                                } else {
-                                    val checkResult = checkUserName(it)
-                                    when (checkResult) {
-                                        is Result.Failure -> checkResult.error
-                                        is Result.Success if (!checkResult.data) -> TextError.NOT_EXISTS
-                                        else -> null
-                                    }
-                                }
+                                validateUserName(UserNameCheckPurpose.SIGN_IN,it).errorOrNull()
                             }
                         )
                     )
@@ -138,9 +124,7 @@ class SignInWithPasswordViewModel @Inject constructor(
             return
         }
         _state.update {
-            it.copy(
-                isLoading = true
-            )
+            it.copy(isLoading = true)
         }
         viewModelScope.launch {
             signInWithPassword(

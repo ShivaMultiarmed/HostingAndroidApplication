@@ -75,7 +75,7 @@ fun ConfirmResetScreen(
                     },
                     errorMsg = passwordErrorMsg,
                     secured = true,
-                    placeholder = stringResource(R.string.password_label),
+                    label = stringResource(R.string.password_label),
                     onTypingStarted = {
                         onEvent(ConfirmResetUiEvent.PasswordTypingStarted)
                     },
@@ -98,7 +98,7 @@ fun ConfirmResetScreen(
                     },
                     errorMsg = passwordDuplicateErrorMsg,
                     secured = true,
-                    placeholder = stringResource(R.string.password_again_label),
+                    label = stringResource(R.string.password_again_label),
                     onTypingStarted = {
                         onEvent(ConfirmResetUiEvent.PasswordDuplicatedTypingStarted)
                     },

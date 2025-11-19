@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.utils.observeAsEvents
+import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreen
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenEvent
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
@@ -48,7 +48,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState
         )
-        viewModel.events.observeAsEvents { event ->
+        viewModel.events.observe { event ->
             when (event) {
                 VideoUploadingScreenEvent.RequireAuthentication -> {
                     rootBackStack.add(Route.Authentication)

@@ -12,7 +12,6 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderScope<Route>.signUpGraph(
     rootBackStack: MutableList<Route>,
-    authBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
     entry<Route.Authentication.SignUp> {
@@ -28,7 +27,7 @@ fun EntryProviderScope<Route>.signUpGraph(
             entryProvider = entryProvider {
                 requestSignUpRoute(signUpBackStack)
                 verifySignUpRoute(signUpBackStack)
-                confirmSignUpRoute(rootBackStack)
+                confirmSignUpRoute(rootBackStack, userDetailsProvider)
             }
         )
     }

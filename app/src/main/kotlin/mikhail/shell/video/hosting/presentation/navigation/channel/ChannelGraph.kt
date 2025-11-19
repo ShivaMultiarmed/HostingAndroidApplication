@@ -15,9 +15,9 @@ fun EntryProviderScope<Route>.channelGraph(
     currentTabBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry<Route.Channel> {
+    entry<Route.Channel> { graph ->
         val channelBackStack = rememberSaveable {
-            mutableStateListOf<Route>(Route.Channel.View(it.channelId))
+            mutableStateListOf<Route>(Route.Channel.View(graph.channelId))
         }
         NavDisplay(
             backStack = channelBackStack,

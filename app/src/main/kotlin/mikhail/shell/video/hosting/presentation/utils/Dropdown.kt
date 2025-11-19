@@ -42,7 +42,7 @@ fun <T> Dropdown(
                     value = values[selected] ?: "",
                     onValueChange = {},
                     icon = icon,
-                    placeholder = placeHolder,
+                    label = placeHolder,
                     errorMsg = errorMsg
                 )
                 ExposedDropdownMenu(

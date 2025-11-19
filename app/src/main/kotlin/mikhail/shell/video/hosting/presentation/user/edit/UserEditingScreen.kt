@@ -136,7 +136,7 @@ fun UserEditingScreen(
                         onBlur = {
                             onEvent(UserEditingUiEvent.NickBlurred)
                         },
-                        placeholder = stringResource(R.string.nick_label),
+                        label = stringResource(R.string.nick_label),
                         errorMsg = nickErrMsg
                     )
                 }
@@ -170,7 +170,7 @@ fun UserEditingScreen(
                         onBlur = {
                             onEvent(UserEditingUiEvent.NameBlurred)
                         },
-                        placeholder = stringResource(R.string.name_label),
+                        label = stringResource(R.string.name_label),
                         errorMsg = nameErrMsg
                     )
                 }
@@ -301,7 +301,7 @@ fun UserEditingScreen(
                         onBlur = {
                             onEvent(UserEditingUiEvent.TelBlurred)
                         },
-                        placeholder = stringResource(R.string.profile_telephone_label),
+                        label = stringResource(R.string.profile_telephone_label),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                 }
@@ -336,7 +336,7 @@ fun UserEditingScreen(
                         onBlur = {
                             onEvent(UserEditingUiEvent.EmailBlurred)
                         },
-                        placeholder = stringResource(R.string.email_label),
+                        label = stringResource(R.string.email_label),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                 }
@@ -369,7 +369,7 @@ fun UserEditingScreen(
                         onBlur = {
                             onEvent(UserEditingUiEvent.BioBlurred)
                         },
-                        placeholder = stringResource(R.string.profile_bio),
+                        label = stringResource(R.string.profile_bio),
                         errorMsg = bioError,
                         maxLines = 50,
                     )

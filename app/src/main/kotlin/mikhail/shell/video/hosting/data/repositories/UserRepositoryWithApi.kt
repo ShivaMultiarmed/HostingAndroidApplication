@@ -11,7 +11,7 @@ import mikhail.shell.video.hosting.domain.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.UserEditingError
+import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result

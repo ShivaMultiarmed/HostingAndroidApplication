@@ -15,7 +15,6 @@ import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenStat
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenUiEvent
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 fun EntryProviderScope<Route>.channelRoute(
@@ -35,11 +34,7 @@ fun EntryProviderScope<Route>.channelRoute(
                 when (event) {
                     is ChannelScreenUiEvent.ClickVideo -> rootBackStack.add(Route.Video(event.videoId))
                     ChannelScreenUiEvent.Edit -> channelBackStack.add(Route.Channel.Edit(channelId))
-                    ChannelScreenUiEvent.Remove -> coroutineScope.launch {
-                        viewModel.onEvent(event)
-                        delay(800.milliseconds)
-                        channelBackStack.removeLastOrNull()
-                    }
+                    ChannelScreenUiEvent.Remove -> viewModel.onEvent(event)
                     else -> viewModel.onEvent(event)
                 }
             },
@@ -55,6 +50,8 @@ fun EntryProviderScope<Route>.channelRoute(
                 } else if ((state as ChannelScreenState.Failure).error == NetworkError.AUTHENTICATION) {
                     rootBackStack.add(Route.Authentication)
                 }
+            } else if (state is ChannelScreenState.Removed) {
+                channelBackStack.removeLastOrNull()
             }
         }
     }

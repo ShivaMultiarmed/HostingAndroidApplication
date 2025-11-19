@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.utils.observeAsEvents
+import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
@@ -34,7 +34,7 @@ fun EntryProviderScope<Route>.editVideoRoute(
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState
         )
-        events.observeAsEvents { event ->
+        events.observe { event ->
             when (event) {
                 is VideoEditingEvent.Failure if (event.error is NetworkError) -> coroutineScope.launch {
                     val errorMessage = context.getNetworkErrorMessage(event.error)

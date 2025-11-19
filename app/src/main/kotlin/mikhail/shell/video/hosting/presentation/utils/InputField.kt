@@ -69,7 +69,7 @@ import kotlin.time.Duration.Companion.seconds
 fun InputField(
     modifier: Modifier = Modifier,
     value: String,
-    placeholder: String = "",
+    label: String = "",
     onValueChange: (String) -> Unit,
     errorMsg: String? = null,
     secured: Boolean = false,
@@ -114,7 +114,7 @@ fun InputField(
             label = {
                 Box {
                     Text(
-                        text = placeholder
+                        text = label
                     )
                 }
             },
@@ -125,7 +125,7 @@ fun InputField(
                     ) {
                         Icon(
                             imageVector = icon,
-                            contentDescription = placeholder,
+                            contentDescription = label,
                             modifier = Modifier.size(22.dp),
                             tint = when {
                                 errorMsg != null -> MaterialTheme.colorScheme.error
@@ -206,7 +206,7 @@ fun FileInputField(
         InputField(
             modifier = modifier,
             value = "",
-            placeholder = placeholder,
+            label = placeholder,
             onValueChange = { },
             errorMsg = errorMsg,
             icon = icon,
@@ -347,7 +347,7 @@ fun InputFieldPreview() {
             onValueChange = {
                 value = it
             },
-            placeholder = "Имя",
+            label = "Имя",
             icon = Icons.Outlined.Person,
             errorMsg = "Ошибка"
         )

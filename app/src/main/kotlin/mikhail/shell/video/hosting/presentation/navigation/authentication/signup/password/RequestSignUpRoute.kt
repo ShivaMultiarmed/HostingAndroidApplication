@@ -1,30 +1,49 @@
 package mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password
 
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
+import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpScreen
-import mikhail.shell.video.hosting.presentation.signup.password.RequestSignUpViewModel
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingScreen
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingViewModel
+import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.requestSignUpRoute(
     signUpBackStack: SnapshotStateList<Route>
 ) {
     entry<Route.Authentication.SignUp.Request> {
-        val viewModel = hiltViewModel<RequestSignUpViewModel>()
+        val viewModel = hiltViewModel<SignUpRequestingViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        RequestSignUpScreen(
+        val events = viewModel.events
+        val snackBarHostState = remember { SnackbarHostState() }
+        val context = LocalContext.current
+        SignUpRequestingScreen(
             state = state,
-            onEvent = { event ->
-                viewModel.onEvent(event)
-            }
+            onAction = viewModel::onAction,
+            snackBarHostState = snackBarHostState
         )
-        LaunchedEffect(state.isAccepted) {
-            if (state.isAccepted) {
-                signUpBackStack.add(Route.Authentication.SignUp.Verification(state.userName))
+        events.observe { event ->
+            when (event) {
+                is SignUpRequestingEvent.Failure -> {
+                    val errorMessage = when (event.error) {
+                        is NetworkError -> context.getNetworkErrorMessage(event.error)
+                        else -> context.getString(R.string.unexpected_error)
+                    }
+                    snackBarHostState.showSnackbar(message = errorMessage, duration = SnackbarDuration.Short)
+                }
+                is SignUpRequestingEvent.Success -> signUpBackStack.add(
+                    Route.Authentication.SignUp.Verification(event.userName)
+                )
             }
         }
     }

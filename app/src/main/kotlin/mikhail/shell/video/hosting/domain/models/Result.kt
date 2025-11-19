@@ -18,3 +18,11 @@ sealed class Result <out D, out E: Error> {
         return this
     }
 }
+
+fun <E: Error> Result<*, E>.errorOrNull(): E? {
+    return if (this is Result.Failure) error else null
+}
+
+fun <D> Result<D, *>.dataOrNull(): D? {
+    return if (this is Result.Success) data else null
+}

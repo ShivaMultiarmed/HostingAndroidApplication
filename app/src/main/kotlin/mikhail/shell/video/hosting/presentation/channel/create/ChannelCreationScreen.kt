@@ -118,7 +118,7 @@ fun ChannelCreationScreen(
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.TitleChanged(it))
                     },
-                    placeholder = stringResource(R.string.channel_title_label),
+                    label = stringResource(R.string.channel_title_label),
                     errorMsg = titleErrMsg,
                     onFocus = {
                         onEvent(ChannelCreationUiEvent.TitleFocused)
@@ -148,7 +148,7 @@ fun ChannelCreationScreen(
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.AliasChanged(it))
                     },
-                    placeholder = stringResource(R.string.channel_alias_label),
+                    label = stringResource(R.string.channel_alias_label),
                     errorMsg = aliasErrMsg,
                     onFocus = {
                         onEvent(ChannelCreationUiEvent.AliasFocused)
@@ -178,7 +178,7 @@ fun ChannelCreationScreen(
                     onValueChange = {
                         onEvent(ChannelCreationUiEvent.DescriptionChanged(it))
                     },
-                    placeholder = stringResource(R.string.channel_description_label),
+                    label = stringResource(R.string.channel_description_label),
                     maxLines = 50,
                     errorMsg = descriptionErrMsg,
                     onFocus = {

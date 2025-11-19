@@ -100,7 +100,7 @@ fun VideoEditingScreen(
                         value = state.currentVideo.title.value,
                         onValueChange = { onAction(VideoEditingAction.TitleChanged(it)) },
                         errorMsg = titleErrMsg,
-                        placeholder = stringResource(R.string.video_title_label),
+                        label = stringResource(R.string.video_title_label),
                         icon = Icons.Rounded.Title,
                         onFocus = { onAction(VideoEditingAction.TitleFocused) },
                         onBlur = { onAction(VideoEditingAction.TitleBlurred) }
@@ -221,7 +221,7 @@ fun VideoEditingScreen(
                         value = state.currentVideo.description.value,
                         onValueChange = { onAction(VideoEditingAction.DescriptionChanged(it)) },
                         errorMsg = descriptionErrMsg,
-                        placeholder = stringResource(R.string.video_description_label),
+                        label = stringResource(R.string.video_description_label),
                         icon = Icons.Rounded.ViewHeadline,
                         onFocus = { onAction(VideoEditingAction.DescriptionFocused) },
                         onBlur = { onAction(VideoEditingAction.DescriptionBlurred) }

@@ -78,7 +78,7 @@ fun SignInScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Email,
-                placeholder = stringResource(R.string.email_label),
+                label = stringResource(R.string.email_label),
                 value = state.input.userName.value,
                 onValueChange = {
                     onEvent(SignInUiEvent.UserNameChanged(it))
@@ -104,7 +104,7 @@ fun SignInScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
-                placeholder = stringResource(R.string.password_label),
+                label = stringResource(R.string.password_label),
                 value = state.input.password.value,
                 onValueChange = {
                     onEvent(SignInUiEvent.PasswordChanged(it))

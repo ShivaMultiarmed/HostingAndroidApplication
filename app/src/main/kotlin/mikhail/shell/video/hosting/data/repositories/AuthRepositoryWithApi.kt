@@ -9,6 +9,7 @@ import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
@@ -16,6 +17,7 @@ import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
+import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import javax.inject.Inject
 
 class AuthRepositoryWithApi @Inject constructor(
@@ -29,8 +31,15 @@ class AuthRepositoryWithApi @Inject constructor(
         authApi.signInWithPassword(email, password)
     }
 
-    override suspend fun existsByUserName(userName: String): Result<Boolean, Error> = request {
-        authApi.existsByUserName(userName)
+    override suspend fun checkUserName(purpose: UserNameCheckPurpose, userName: String): Result<Unit, Error> = request (
+        httpExceptionHandler(409) {
+            TextError.EXISTS
+        },
+        httpExceptionHandler(404) {
+            TextError.NOT_EXISTS
+        }
+    ) {
+        authApi.checkUserName(purpose, userName)
     }
 
     override suspend fun requestSignUpWithPassword(userName: String): Result<Unit, Error> = request (

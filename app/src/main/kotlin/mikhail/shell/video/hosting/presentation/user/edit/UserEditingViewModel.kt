@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.ImageSize.MEDIUM
-import mikhail.shell.video.hosting.domain.errors.UserEditingError
+import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose

@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.SignUpDto
 import mikhail.shell.video.hosting.domain.models.AuthModel
+import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -41,5 +42,8 @@ interface AuthApi {
         @Query("password") password: String
     ): AuthModel
     @GET("auth/existence")
-    suspend fun existsByUserName(@Query("user_name") userName: String): Boolean
+    suspend fun checkUserName(
+        @Query("purpose") purpose: UserNameCheckPurpose,
+        @Query("user_name") userName: String
+    )
 }

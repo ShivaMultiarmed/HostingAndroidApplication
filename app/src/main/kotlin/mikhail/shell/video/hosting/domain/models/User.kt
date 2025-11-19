@@ -8,6 +8,11 @@ data class User(
     val tel: String?,
     val email: String?
 )
+
+data class UserCreationModel(
+    val nick: String
+)
+
 data class UserEditingModel(
     val userId: Long,
     val nick: String,
