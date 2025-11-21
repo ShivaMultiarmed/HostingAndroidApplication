@@ -14,7 +14,7 @@ import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationEvent
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationViewModel
-import mikhail.shell.video.hosting.presentation.signup.password.VerifySignUpScreen
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreen
 import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.verifySignUpRoute(
@@ -28,7 +28,7 @@ fun EntryProviderScope<Route>.verifySignUpRoute(
         val events = viewModel.events
         val context = LocalContext.current
         val snackBarHostState = remember { SnackbarHostState() }
-        VerifySignUpScreen(
+        SignUpVerificationScreen(
             state = state,
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState

@@ -27,7 +27,7 @@ fun EntryProviderScope<Route>.signUpGraph(
             entryProvider = entryProvider {
                 requestSignUpRoute(signUpBackStack)
                 verifySignUpRoute(signUpBackStack)
-                confirmSignUpRoute(rootBackStack, userDetailsProvider)
+                signUpConfirmationRoute(rootBackStack, userDetailsProvider)
             }
         )
     }

@@ -7,7 +7,7 @@ class ValidationException(val error: Error): RuntimeException()
 interface Error
 
 data object UnexpectedError: Error {
-    override fun toString() = "UnexpectedError"
+    override fun toString() = "UNEXPECTED_ERROR"
 }
 
 class CompoundError<T: Error>(): Error {

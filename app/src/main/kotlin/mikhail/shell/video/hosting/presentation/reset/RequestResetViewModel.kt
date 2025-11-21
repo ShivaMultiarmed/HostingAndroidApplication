@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.RequestResetPassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
@@ -58,17 +56,18 @@ class RequestResetViewModel @Inject constructor(
                 it as RequestResetScreenState.Entering
                 it.copy(
                     userNameError = it.userName.let {
-                        val validationResult = validateUserName(it)
-                        if (validationResult is Result.Failure<TextError>) {
-                            validationResult.error
-                        } else {
-                            validationResult as Result.Success<Boolean>
-                            if (!validationResult.data) {
-                                TextError.NOT_EXISTS
-                            } else {
-                                null
-                            }
-                        }
+                        null // TODO
+//                        val validationResult = validateUserName(it)
+//                        if (validationResult is Result.Failure<TextError>) {
+//                            validationResult.error
+//                        } else {
+//                            validationResult as Result.Success<Boolean>
+//                            if (!validationResult.data) {
+//                                TextError.NOT_EXISTS
+//                            } else {
+//                                null
+//                            }
+//                        }
                     }
                 )
             }

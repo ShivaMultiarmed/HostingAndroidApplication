@@ -36,22 +36,18 @@ class SignUpRequestingViewModel @Inject constructor(
     }
 
     private fun onUserNameChanged(userName: String) {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    userName = it.userName.copy(value = userName)
-                )
-            }
+        _state.update {
+            it.copy(
+                userName = it.userName.copy(value = userName)
+            )
         }
     }
 
     private fun onUserNameFocused() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    userName = it.userName.copy(error = null)
-                )
-            }
+        _state.update {
+            it.copy(
+                userName = it.userName.copy(error = null)
+            )
         }
     }
 
@@ -61,7 +57,7 @@ class SignUpRequestingViewModel @Inject constructor(
                 it.copy(
                     userName = it.userName.copy(
                         error = it.userName.value.let {
-                            validateUserName(UserNameCheckPurpose.SIGN_UP,it).errorOrNull()
+                            validateUserName(UserNameCheckPurpose.SIGN_UP, it).errorOrNull()
                         }
                     )
                 )
@@ -93,5 +89,5 @@ sealed class SignUpRequestingAction {
 
 sealed class SignUpRequestingEvent {
     data class Success(val userName: String) : SignUpRequestingEvent()
-    data class Failure(val error: Error): SignUpRequestingEvent()
+    data class Failure(val error: Error) : SignUpRequestingEvent()
 }

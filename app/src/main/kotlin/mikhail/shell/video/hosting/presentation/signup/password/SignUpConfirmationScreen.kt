@@ -30,7 +30,7 @@ import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 
 @Composable
-fun ConfirmSignUpScreen(
+internal fun SignUpConfirmationScreen(
     state: SignUpConfirmationState,
     onAction: (SignUpConfirmationAction) -> Unit,
     snackBarHostState: SnackbarHostState

@@ -3,21 +3,21 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.AuthApi
-import mikhail.shell.video.hosting.data.dto.SignUpDto
-import mikhail.shell.video.hosting.data.dto.toDto
+import mikhail.shell.video.hosting.data.dto.SignUpRequest
+import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
-import mikhail.shell.video.hosting.domain.errors.CompoundError
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
-import mikhail.shell.video.hosting.domain.errors.authentication.SignUpError
+import mikhail.shell.video.hosting.domain.errors.user.UserCreationError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
-import mikhail.shell.video.hosting.domain.models.User
+import mikhail.shell.video.hosting.domain.models.UserCreationModel
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
+import retrofit2.Response
 import javax.inject.Inject
 
 class AuthRepositoryWithApi @Inject constructor(
@@ -43,10 +43,9 @@ class AuthRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun requestSignUpWithPassword(userName: String): Result<Unit, Error> = request (
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-            gson.fromJson(json, type) ?: UnexpectedError
+        httpExceptionHandler(400) {
+            val errors = it.response()?.getErrors<TextError>()
+            errors?.get("user_name_error")?: UnexpectedError
         }
     ) {
         authApi.requestSignUpWithPassword(userName)
@@ -56,10 +55,9 @@ class AuthRepositoryWithApi @Inject constructor(
         userName: String,
         code: String
     ): Result<String, Error> = request(
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-            gson.fromJson(json, type) ?: UnexpectedError
+        httpExceptionHandler(400) {
+            val errors = it.response()?.getErrors<TextError>()
+            errors?.get("code_error")?: UnexpectedError
         }
     ) {
         authApi.verifySignUpWithPassword(userName, code)
@@ -68,21 +66,26 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun confirmSignUpWithPassword(
         token: String,
         password: String,
-        user: User
+        user: UserCreationModel
     ): Result<AuthModel, Error> = request (
         httpExceptionHandler(400) { e ->
             val json = e.response()?.errorBody()?.string()
-            val type = object : TypeToken<CompoundError<SignUpError>>() {}.type
-            gson.fromJson(json, type) ?: UnexpectedError
+            val response = gson.fromJson(json, UserCreationErrorResponse::class.java)
+            UserCreationError(
+                nickError = response.nickError,
+                passwordError = response.passwordError
+            )
         }
     ) {
-        val signUpDto = SignUpDto(
+        val signUpRequest = SignUpRequest(
             password = password,
-            userDto = user.toDto()
+            user = UserCreationRequest(
+                nick = user.nick
+            )
         )
         authApi.confirmSignUpWithPassword(
             token = "Bearer $token",
-            signUpDto = signUpDto
+            user = signUpRequest
         )
     }
 
@@ -91,8 +94,8 @@ class AuthRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun requestResetPassword(userName: String): Result<Unit, Error> = request(
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
+        httpExceptionHandler(400) {
+            val json = it.response()?.errorBody()?.string()
             gson.fromJson(json, ResetError::class.java)?: UnexpectedError
         }
     ) {
@@ -127,5 +130,17 @@ class AuthRepositoryWithApi @Inject constructor(
             token = token,
             password = password
         )
+    }
+
+    private inline fun <reified T: Enum<*>> Response<*>.getErrors(): Map<String, T> {
+        val json = errorBody()?.string()
+        val type = object : TypeToken<Map<String, String>>() {}.type
+        return gson.fromJson<Map<String, String>>(json, type).mapErrors<T>()
+    }
+
+    private inline fun <reified T: Enum<*>> Map<String, String>.mapErrors(): Map<String, T> {
+        return map {
+            it.key to java.lang.Enum.valueOf(T::class.java as Class<out Enum<*>>, it.value.uppercase())
+        }.toMap() as Map<String, T>
     }
 }

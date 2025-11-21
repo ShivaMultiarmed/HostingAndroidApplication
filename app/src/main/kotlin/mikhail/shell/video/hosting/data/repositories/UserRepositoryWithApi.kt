@@ -86,13 +86,9 @@ class UserRepositoryWithApi @Inject constructor(
     }
 }
 
-data class UserEditingErrorResponse(
+data class UserCreationErrorResponse(
     val nickError: TextError?,
-    val nameError: TextError?,
-    val bioError: TextError?,
-    val telError: TextError?,
-    val emailError: TextError?,
-    val avatarError: FileError?
+    val passwordError: TextError?
 )
 
 data class UserEditingRequest(
@@ -102,4 +98,13 @@ data class UserEditingRequest(
     val tel: String?,
     val email: String?,
     val avatarAction: EditAction
+)
+
+data class UserEditingErrorResponse(
+    val nickError: TextError?,
+    val nameError: TextError?,
+    val bioError: TextError?,
+    val telError: TextError?,
+    val emailError: TextError?,
+    val avatarError: FileError?
 )

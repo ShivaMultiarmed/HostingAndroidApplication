@@ -14,12 +14,12 @@ import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.ConfirmSignUpScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
-fun EntryProviderScope<Route>.confirmSignUpRoute(
+fun EntryProviderScope<Route>.signUpConfirmationRoute(
     rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
@@ -29,7 +29,7 @@ fun EntryProviderScope<Route>.confirmSignUpRoute(
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
         val context = LocalContext.current
-        ConfirmSignUpScreen(
+        SignUpConfirmationScreen(
             state = state,
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState

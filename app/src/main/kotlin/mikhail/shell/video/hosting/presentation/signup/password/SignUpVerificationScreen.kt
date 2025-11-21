@@ -24,7 +24,7 @@ import mikhail.shell.video.hosting.presentation.utils.CodeInputField
 import mikhail.shell.video.hosting.presentation.utils.Title
 
 @Composable
-fun VerifySignUpScreen(
+internal fun SignUpVerificationScreen(
     state: SignUpVerificationScreenState,
     onAction: (SignUpVerificationAction) -> Unit,
     snackBarHostState: SnackbarHostState

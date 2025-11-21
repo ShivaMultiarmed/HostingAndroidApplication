@@ -42,7 +42,10 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
             is SignUpConfirmationAction.PasswordChanged -> onPasswordChanged(action.password)
             SignUpConfirmationAction.PasswordFocused -> onPasswordFocused()
             SignUpConfirmationAction.PasswordBlurred -> onPasswordBlurred()
-            is SignUpConfirmationAction.PasswordDuplicateChanged -> onPasswordDuplicateChanged(action.passwordDuplicate)
+            is SignUpConfirmationAction.PasswordDuplicateChanged -> onPasswordDuplicateChanged(
+                action.passwordDuplicate
+            )
+
             SignUpConfirmationAction.PasswordDuplicateFocused -> onPasswordDuplicateFocused()
             SignUpConfirmationAction.PasswordDuplicateBlurred -> onPasswordDuplicateBlurred()
             SignUpConfirmationAction.Submit -> confirm()
@@ -50,26 +53,22 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
     }
 
     private fun onNickChanged(nick: String) {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    user = it.user.copy(
-                        nick = it.user.nick.copy(value = nick)
-                    )
+        _state.update {
+            it.copy(
+                user = it.user.copy(
+                    nick = it.user.nick.copy(value = nick)
                 )
-            }
+            )
         }
     }
 
     private fun onNickFocused() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    user = it.user.copy(
-                        nick = it.user.nick.copy(error = null)
-                    )
+        _state.update {
+            it.copy(
+                user = it.user.copy(
+                    nick = it.user.nick.copy(error = null)
                 )
-            }
+            )
         }
     }
 
@@ -80,7 +79,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                     user = it.user.copy(
                         nick = it.user.nick.copy(
                             error = it.user.nick.value.let {
-                                validateNick(NickCheckPurpose.SIGN_UP,it).errorOrNull()
+                                validateNick(NickCheckPurpose.SIGN_UP, it).errorOrNull()
                             }
                         )
                     )
@@ -160,7 +159,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
         }
     }
 
-    private fun confirm() {
+    private fun confirm() { // TODO: validate again
         viewModelScope.launch {
             confirm(
                 token = token,
@@ -202,14 +201,14 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
 }
 
 sealed class SignUpConfirmationAction {
-    data class NickChanged(val nick: String): SignUpConfirmationAction()
-    data object NickFocused: SignUpConfirmationAction()
-    data object NickBlurred: SignUpConfirmationAction()
-    data class PasswordChanged(val password: String): SignUpConfirmationAction()
-    data object PasswordFocused: SignUpConfirmationAction()
-    data object PasswordBlurred: SignUpConfirmationAction()
-    data class PasswordDuplicateChanged(val passwordDuplicate: String): SignUpConfirmationAction()
-    data object PasswordDuplicateFocused: SignUpConfirmationAction()
-    data object PasswordDuplicateBlurred: SignUpConfirmationAction()
-    data object Submit: SignUpConfirmationAction()
+    data class NickChanged(val nick: String) : SignUpConfirmationAction()
+    data object NickFocused : SignUpConfirmationAction()
+    data object NickBlurred : SignUpConfirmationAction()
+    data class PasswordChanged(val password: String) : SignUpConfirmationAction()
+    data object PasswordFocused : SignUpConfirmationAction()
+    data object PasswordBlurred : SignUpConfirmationAction()
+    data class PasswordDuplicateChanged(val passwordDuplicate: String) : SignUpConfirmationAction()
+    data object PasswordDuplicateFocused : SignUpConfirmationAction()
+    data object PasswordDuplicateBlurred : SignUpConfirmationAction()
+    data object Submit : SignUpConfirmationAction()
 }

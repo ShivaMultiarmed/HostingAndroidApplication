@@ -6,9 +6,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-class EnumConverter: JsonSerializer<Enum<*>>, JsonDeserializer<Enum<*>> {
+class EnumConverter : JsonSerializer<Enum<*>>, JsonDeserializer<Enum<*>> {
     override fun serialize(
         src: Enum<*>?,
         typeOfSrc: Type?,
@@ -22,9 +23,12 @@ class EnumConverter: JsonSerializer<Enum<*>>, JsonDeserializer<Enum<*>> {
         typeOfT: Type?,
         context: JsonDeserializationContext?
     ): Enum<*>? {
-        return json?.asJsonPrimitive?.asString?.let {
-            val klass = typeOfT as? Class<out Enum<*>>?: return@let null
-            return java.lang.Enum.valueOf(klass, it.uppercase())
-        }
+        val klass = when (typeOfT) {
+            is Class<*> -> typeOfT
+            is ParameterizedType -> typeOfT.rawType as? Class<*>
+            else -> null
+        }?.takeIf { it.isEnum } ?: return null
+        val entry = json?.asString?: return null
+        return java.lang.Enum.valueOf(klass as Class<out Enum<*>>, entry.uppercase())
     }
 }
