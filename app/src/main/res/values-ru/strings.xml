@@ -304,4 +304,5 @@
     <string name="video_description_label">Описание</string>
     <string name="wait_for_video_title">Видео находится в обработке</string>
     <string name="wait_for_video_hint">Подождите, пока видео обрабатывается</string>
+    <string name="code_pattern_not_correct">Допустимы только буквы и цифры</string>
 </resources>

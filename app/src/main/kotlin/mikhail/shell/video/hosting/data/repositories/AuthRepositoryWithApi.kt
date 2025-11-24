@@ -3,7 +3,6 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.AuthApi
-import mikhail.shell.video.hosting.data.dto.SignUpRequest
 import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
@@ -64,8 +63,6 @@ class AuthRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun confirmSignUpWithPassword(
-        token: String,
-        password: String,
         user: UserCreationModel
     ): Result<AuthModel, Error> = request (
         httpExceptionHandler(400) { e ->
@@ -77,15 +74,16 @@ class AuthRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        val signUpRequest = SignUpRequest(
-            password = password,
-            user = UserCreationRequest(
-                nick = user.nick
-            )
+        var p = user.password
+        var n = user.nick
+        val userRequest = UserCreationRequest(
+            password = p,
+            nick = n
         )
+        var t = user.token
         authApi.confirmSignUpWithPassword(
-            token = "Bearer $token",
-            user = signUpRequest
+            token = "Bearer $t",
+            user = userRequest
         )
     }
 
@@ -132,8 +130,9 @@ class AuthRepositoryWithApi @Inject constructor(
         )
     }
 
-    private inline fun <reified T: Enum<*>> Response<*>.getErrors(): Map<String, T> {
-        val json = errorBody()?.string()
+    private inline fun <reified T: Enum<*>> Response<*>.getErrors(): Map<String, T>? {
+        if (isSuccessful) return null
+        val json = errorBody()!!.string()
         val type = object : TypeToken<Map<String, String>>() {}.type
         return gson.fromJson<Map<String, String>>(json, type).mapErrors<T>()
     }

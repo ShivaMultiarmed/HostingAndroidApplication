@@ -10,7 +10,9 @@ data class User(
 )
 
 data class UserCreationModel(
-    val nick: String
+    val nick: String,
+    val password: String,
+    val token: String
 )
 
 data class UserEditingModel(

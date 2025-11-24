@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.RequestSignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
@@ -67,13 +68,35 @@ class SignUpRequestingViewModel @Inject constructor(
 
     private fun request() {
         viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    userName = it.userName.copy(
+                        error = it.userName.value.let {
+                            validateUserName(UserNameCheckPurpose.SIGN_UP, it).errorOrNull()
+                        }
+                    )
+                )
+            }
+            if (_state.value.userName.error != null) {
+                return@launch
+            }
             request.invoke(_state.value.userName.value).onSuccess {
                 viewModelScope.launch {
                     _events.emit(SignUpRequestingEvent.Success(_state.value.userName.value))
                 }
             }.onFailure { error ->
-                viewModelScope.launch {
-                    _events.emit(SignUpRequestingEvent.Failure(error))
+                if (error is TextError) {
+                    _state.update {
+                        it.copy(
+                            userName = it.userName.copy(
+                                error = error
+                            )
+                        )
+                    }
+                } else {
+                    viewModelScope.launch {
+                        _events.emit(SignUpRequestingEvent.Failure(error))
+                    }
                 }
             }
         }

@@ -13,8 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.RequestSignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.VerifySignUpWithPassword
 
@@ -54,14 +52,13 @@ class SignUpVerificationViewModel @AssistedInject constructor(
                     _events.emit(SignUpVerificationEvent.Success(token))
                 }
             }.onFailure { error ->
-                if (error == TextError.NOT_CORRECT) {
+                if (error is TextError) {
                     _state.update {
                         it.copy(
                             code = it.code.copy(error = error)
                         )
                     }
-                }
-                if (error is NetworkError || error == UnexpectedError) {
+                } else {
                     viewModelScope.launch {
                         _events.emit(SignUpVerificationEvent.Failure(error))
                     }

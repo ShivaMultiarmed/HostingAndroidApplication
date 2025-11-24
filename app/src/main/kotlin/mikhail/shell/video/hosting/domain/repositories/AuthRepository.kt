@@ -24,11 +24,7 @@ interface AuthRepository {
         code: String
     ): Result<String, Error>
 
-    suspend fun confirmSignUpWithPassword(
-        token: String,
-        password: String,
-        user: UserCreationModel
-    ): Result<AuthModel, Error>
+    suspend fun confirmSignUpWithPassword(user: UserCreationModel): Result<AuthModel, Error>
 
     suspend fun signOut(): Result<Unit, Error>
 

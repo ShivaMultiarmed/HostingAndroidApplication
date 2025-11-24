@@ -6,5 +6,6 @@ data class SignUpRequest(
 )
 
 data class UserCreationRequest(
-    val nick: String
+    val nick: String,
+    val password: String
 )

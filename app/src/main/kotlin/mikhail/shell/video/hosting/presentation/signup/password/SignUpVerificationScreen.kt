@@ -53,6 +53,7 @@ internal fun SignUpVerificationScreen(
             )
             val codeErrorMsg = when (state.code.error) {
                 TextError.NOT_CORRECT -> stringResource(R.string.code_not_correct)
+                TextError.PATTERN -> stringResource(R.string.code_pattern_not_correct)
                 else -> null
             }
             CodeInputField(

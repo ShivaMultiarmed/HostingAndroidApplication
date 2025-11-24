@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.data.api
 
-import mikhail.shell.video.hosting.data.dto.SignUpRequest
+import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import retrofit2.http.Body
@@ -25,7 +25,7 @@ interface AuthApi {
     @POST("auth/signup/password/confirm")
     suspend fun confirmSignUpWithPassword(
         @Header("Authorization") token: String,
-        @Body user: SignUpRequest
+        @Body user: UserCreationRequest
     ): AuthModel
     @POST("auth/signout")
     suspend fun signOut()

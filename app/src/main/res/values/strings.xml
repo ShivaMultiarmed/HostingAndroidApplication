@@ -291,4 +291,5 @@
     <string name="video_description_label">Description</string>
     <string name="wait_for_video_title">Video is processing</string>
     <string name="wait_for_video_hint">Please wait for video to process</string>
+    <string name="code_pattern_not_correct">Only letters and digits allowed</string>
 </resources>

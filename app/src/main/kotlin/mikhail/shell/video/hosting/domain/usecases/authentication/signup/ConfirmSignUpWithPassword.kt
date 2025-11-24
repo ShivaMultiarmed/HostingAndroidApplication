@@ -10,15 +10,7 @@ import javax.inject.Inject
 class ConfirmSignUpWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(
-        token: String,
-        password: String,
-        user: UserCreationModel
-    ): Result<AuthModel, Error> {
-        return authRepository.confirmSignUpWithPassword(
-            token = token,
-            password = password,
-            user = user
-        )
+    suspend operator fun invoke(user: UserCreationModel): Result<AuthModel, Error> {
+        return authRepository.confirmSignUpWithPassword(user)
     }
 }

@@ -159,19 +159,59 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
         }
     }
 
-    private fun confirm() { // TODO: validate again
+    private fun confirm() {
         viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    user = it.user.copy(
+                        nick = it.user.nick.copy(
+                            error = it.user.nick.value.let {
+                                validateNick(NickCheckPurpose.SIGN_UP, it).errorOrNull()
+                            }
+                        ),
+                        password = it.user.password.copy(
+                            error = it.user.password.value.let {
+                                validatePassword(it).errorOrNull()
+                            }
+                        ),
+                        passwordDuplicate = it.user.passwordDuplicate.copy(
+                            error = it.user.passwordDuplicate.value.let { passDuplicate ->
+                                validatePasswordDuplicate(
+                                    password = it.user.password.value,
+                                    passwordDuplicate = passDuplicate
+                                ).errorOrNull()
+                            }
+                        )
+                    )
+                )
+            }
+            if (
+                _state.value.user.nick.error != null
+                || _state.value.user.password.error != null
+                || _state.value.user.passwordDuplicate.error != null
+                ) {
+                return@launch
+            }
+            _state.update {
+                it.copy(isLoading = true)
+            }
             confirm(
-                token = token,
-                password = _state.value.user.password.value,
-                user = UserCreationModel(
-                    nick = _state.value.user.nick.value
+                UserCreationModel(
+                    nick = _state.value.user.nick.value,
+                    token = token,
+                    password = _state.value.user.password.value
                 )
             ).onSuccess { authModel ->
+                _state.update {
+                    it.copy(isLoading = false)
+                }
                 viewModelScope.launch {
                     _events.emit(SignUpConfirmationEvent.Success(authModel))
                 }
             }.onFailure { error ->
+                _state.update {
+                    it.copy(isLoading = false)
+                }
                 if (error is UserCreationError) {
                     _state.update {
                         it.copy(
@@ -186,7 +226,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                         )
                     }
                 } else {
-                    viewModelScope.launch {
+                    viewModelScope.launch   {
                         _events.emit(SignUpConfirmationEvent.Failure(error))
                     }
                 }
