@@ -23,8 +23,10 @@ fun EntryProviderScope<Route>.signUpConfirmationRoute(
     rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry<Route.Authentication.SignUp.Confirmation> { bundle ->
-        val viewModel = hiltViewModel<SignUpConfirmationViewModel, SignUpConfirmationViewModel.Factory> { it.create(bundle.token) }
+    entry<Route.Authentication.SignUp.Confirmation> { route ->
+        val viewModel = hiltViewModel<SignUpConfirmationViewModel, SignUpConfirmationViewModel.Factory> { factory ->
+            factory.create(route.token)
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }

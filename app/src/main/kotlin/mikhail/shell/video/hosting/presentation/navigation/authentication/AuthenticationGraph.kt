@@ -33,10 +33,12 @@ fun EntryProviderScope<Route>.authenticationGraph(
                     userDetailsProvider = userDetailsProvider
                 )
                 signUpGraph(
+                    authBackStack = authBackStack,
                     rootBackStack = rootBackStack,
                     userDetailsProvider = userDetailsProvider
                 )
                 resetGraph(
+                    authBackStack = authBackStack,
                     rootBackStack = rootBackStack
                 )
             }

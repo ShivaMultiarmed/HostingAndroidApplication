@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.navigation.authentication.signu
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
@@ -12,7 +13,8 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderScope<Route>.signUpGraph(
     rootBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider
+    userDetailsProvider: UserDetailsProvider,
+    authBackStack: SnapshotStateList<Route>
 ) {
     entry<Route.Authentication.SignUp> {
         val signUpBackStack = rememberSaveable {
@@ -25,7 +27,7 @@ fun EntryProviderScope<Route>.signUpGraph(
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                requestSignUpRoute(signUpBackStack)
+                requestSignUpRoute(authBackStack, signUpBackStack)
                 verifySignUpRoute(signUpBackStack)
                 signUpConfirmationRoute(rootBackStack, userDetailsProvider)
             }

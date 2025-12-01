@@ -9,7 +9,6 @@ import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.authentication.ResetError
 import mikhail.shell.video.hosting.domain.errors.user.UserCreationError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
@@ -74,15 +73,12 @@ class AuthRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        var p = user.password
-        var n = user.nick
         val userRequest = UserCreationRequest(
-            password = p,
-            nick = n
+            password = user.password,
+            nick = user.nick
         )
-        var t = user.token
         authApi.confirmSignUpWithPassword(
-            token = "Bearer $t",
+            token = "Bearer ${user.token}",
             user = userRequest
         )
     }
@@ -93,8 +89,8 @@ class AuthRepositoryWithApi @Inject constructor(
 
     override suspend fun requestResetPassword(userName: String): Result<Unit, Error> = request(
         httpExceptionHandler(400) {
-            val json = it.response()?.errorBody()?.string()
-            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+            val errors = it.response()?.getErrors<TextError>()
+            errors?.get("user_name_error")?: UnexpectedError
         }
     ) {
         authApi.requestResetPassword(userName)
@@ -104,9 +100,9 @@ class AuthRepositoryWithApi @Inject constructor(
         userName: String,
         code: String
     ): Result<String, Error> = request (
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
-            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+        httpExceptionHandler(400) {
+            val errors = it.response()?.getErrors<TextError>()
+            errors?.get("code_error")?: UnexpectedError
         }
     ) {
         authApi.verifyResetPassword(
@@ -119,9 +115,9 @@ class AuthRepositoryWithApi @Inject constructor(
         token: String,
         password: String
     ): Result<AuthModel, Error> = request (
-        httpExceptionHandler(400) { e ->
-            val json = e.response()?.errorBody()?.string()
-            gson.fromJson(json, ResetError::class.java)?: UnexpectedError
+        httpExceptionHandler(400) {
+            val errors = it.response()?.getErrors<TextError>()
+            errors?.get("password_error")?: UnexpectedError
         }
     ) {
         authApi.confirmResetPassword(

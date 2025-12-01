@@ -113,4 +113,5 @@ sealed class SignUpRequestingAction {
 sealed class SignUpRequestingEvent {
     data class Success(val userName: String) : SignUpRequestingEvent()
     data class Failure(val error: Error) : SignUpRequestingEvent()
+    data object Cancel: SignUpRequestingEvent()
 }
