@@ -57,9 +57,7 @@ class SignUpRequestingViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     userName = it.userName.copy(
-                        error = it.userName.value.let {
-                            validateUserName(UserNameCheckPurpose.SIGN_UP, it).errorOrNull()
-                        }
+                        error = validateUserName(UserNameCheckPurpose.SIGN_UP, it.userName.value).errorOrNull()
                     )
                 )
             }
@@ -71,9 +69,7 @@ class SignUpRequestingViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     userName = it.userName.copy(
-                        error = it.userName.value.let {
-                            validateUserName(UserNameCheckPurpose.SIGN_UP, it).errorOrNull()
-                        }
+                        error = validateUserName(UserNameCheckPurpose.SIGN_UP, it.userName.value).errorOrNull()
                     )
                 )
             }
@@ -113,5 +109,5 @@ sealed class SignUpRequestingAction {
 sealed class SignUpRequestingEvent {
     data class Success(val userName: String) : SignUpRequestingEvent()
     data class Failure(val error: Error) : SignUpRequestingEvent()
-    data object Cancel: SignUpRequestingEvent()
+    data object Cancel : SignUpRequestingEvent()
 }

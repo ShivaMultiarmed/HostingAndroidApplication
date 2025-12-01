@@ -106,9 +106,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                 it.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
-                            error = it.input.userName.value.let {
-                                validateUserName(UserNameCheckPurpose.SIGN_IN,it).errorOrNull()
-                            }
+                            error = validateUserName(UserNameCheckPurpose.SIGN_IN,it.input.userName.value).errorOrNull()
                         )
                     )
                 )

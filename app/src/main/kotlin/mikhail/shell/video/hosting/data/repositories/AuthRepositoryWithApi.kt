@@ -29,7 +29,10 @@ class AuthRepositoryWithApi @Inject constructor(
         authApi.signInWithPassword(email, password)
     }
 
-    override suspend fun checkUserName(purpose: UserNameCheckPurpose, userName: String): Result<Unit, Error> = request (
+    override suspend fun checkUserName(
+        purpose: UserNameCheckPurpose,
+        userName: String
+    ): Result<Unit, Error> = request (
         httpExceptionHandler(409) {
             TextError.EXISTS
         },
@@ -133,9 +136,9 @@ class AuthRepositoryWithApi @Inject constructor(
         return gson.fromJson<Map<String, String>>(json, type).mapErrors<T>()
     }
 
-    private inline fun <reified T: Enum<*>> Map<String, String>.mapErrors(): Map<String, T> {
+    private inline fun <reified T: Enum<*>> Map<String, String>.mapErrors(): Map<String, T>? {
         return map {
             it.key to java.lang.Enum.valueOf(T::class.java as Class<out Enum<*>>, it.value.uppercase())
-        }.toMap() as Map<String, T>
+        }.toMap() as? Map<String, T>
     }
 }
