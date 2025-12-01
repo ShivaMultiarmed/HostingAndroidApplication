@@ -87,7 +87,7 @@ class AuthRepositoryWithApi @Inject constructor(
         authApi.signOut()
     }
 
-    override suspend fun requestResetPassword(userName: String): Result<Unit, Error> = request(
+    override suspend fun requestResetPassword(userName: String): Result<Long, Error> = request(
         httpExceptionHandler(400) {
             val errors = it.response()?.getErrors<TextError>()
             errors?.get("user_name_error")?: UnexpectedError
@@ -97,7 +97,7 @@ class AuthRepositoryWithApi @Inject constructor(
     }
 
     override suspend fun verifyResetPassword(
-        userName: String,
+        userId: Long,
         code: String
     ): Result<String, Error> = request (
         httpExceptionHandler(400) {
@@ -106,7 +106,7 @@ class AuthRepositoryWithApi @Inject constructor(
         }
     ) {
         authApi.verifyResetPassword(
-            userName = userName,
+            userId = userId,
             code = code
         )
     }

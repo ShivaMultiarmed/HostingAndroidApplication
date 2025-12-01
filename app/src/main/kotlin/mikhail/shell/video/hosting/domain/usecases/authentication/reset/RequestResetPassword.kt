@@ -8,7 +8,7 @@ import javax.inject.Inject
 class RequestResetPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(userName: String): Result<Unit, Error> {
+    suspend operator fun invoke(userName: String): Result<Long, Error> {
         return authRepository.requestResetPassword(userName)
     }
 }

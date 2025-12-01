@@ -30,13 +30,13 @@ interface AuthApi {
     @POST("auth/signout")
     suspend fun signOut()
     @POST("auth/reset/password/request")
-    suspend fun requestResetPassword(@Query("user_name") userName: String)
-    @POST("auth/reset/password/verify")
+    suspend fun requestResetPassword(@Query("user_name") userName: String): Long
+    @POST("auth/reset/password/verification")
     suspend fun verifyResetPassword(
-        @Query("user_name") userName: String,
+        @Query("user_id") userId: Long,
         @Query("code") code: String
     ): String
-    @POST("auth/reset/password/confirm")
+    @POST("auth/reset/password/confirmation")
     suspend fun confirmResetPassword(
         @Header("Authorization") token: String,
         @Query("password") password: String

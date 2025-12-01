@@ -28,10 +28,10 @@ interface AuthRepository {
 
     suspend fun signOut(): Result<Unit, Error>
 
-    suspend fun requestResetPassword(userName: String): Result<Unit, Error>
+    suspend fun requestResetPassword(userName: String): Result<Long, Error>
 
     suspend fun verifyResetPassword(
-        userName: String,
+        userId: Long,
         code: String
     ): Result<String, Error>
 

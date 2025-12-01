@@ -74,9 +74,9 @@ class ResetRequestingViewModel @Inject constructor(
         }
         viewModelScope.launch {
             requestResetPassword(_state.value.userName.value)
-                .onSuccess {
+                .onSuccess { userId ->
                     viewModelScope.launch {
-                        _events.emit(ResetRequestingEvent.Success(_state.value.userName.value))
+                        _events.emit(ResetRequestingEvent.Success(userId))
                     }
                 }.onFailure { error ->
                     if (error is TextError) {
@@ -107,7 +107,7 @@ sealed class ResetRequestingAction {
 }
 
 sealed class ResetRequestingEvent {
-    data class Success(val userName: String): ResetRequestingEvent()
+    data class Success(val userId: Long): ResetRequestingEvent()
     data class Failure(val error: Error): ResetRequestingEvent()
     data object NavigateBack: ResetRequestingEvent()
 }

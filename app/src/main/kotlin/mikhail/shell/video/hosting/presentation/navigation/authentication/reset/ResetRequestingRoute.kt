@@ -37,7 +37,7 @@ fun EntryProviderScope<Route>.resetRequestingRoute(
         )
         events.observe { event ->
             when (event) {
-                is ResetRequestingEvent.Success -> resettingBackStack.add(Route.Authentication.Reset.Request)
+                is ResetRequestingEvent.Success -> resettingBackStack.add(Route.Authentication.Reset.Verification(event.userId))
                 is ResetRequestingEvent.Failure -> coroutineScope.launch {
                     val errMsg = when (event.error) {
                         is NetworkError -> context.getNetworkErrorMessage(event.error)

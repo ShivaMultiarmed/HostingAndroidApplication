@@ -19,7 +19,7 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules
 
 @HiltViewModel(assistedFactory = ResetVerificationViewModel.Factory::class)
 class ResetVerificationViewModel @AssistedInject constructor(
-    @Assisted("userName") private val userName: String,
+    @Assisted("userId") private val userId: Long,
     private val verifyResetPassword: VerifyResetPassword
 ) : ViewModel() {
     private val _state = MutableStateFlow(ResetVerificationState())
@@ -51,7 +51,7 @@ class ResetVerificationViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             verifyResetPassword(
-                userName = userName,
+                userId = userId,
                 code = _state.value.code.value
             ).onSuccess { token ->
                 viewModelScope.launch {
@@ -78,7 +78,7 @@ class ResetVerificationViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("userName") userName: String): ResetVerificationViewModel
+        fun create(@Assisted("userId") userId: Long): ResetVerificationViewModel
     }
 }
 

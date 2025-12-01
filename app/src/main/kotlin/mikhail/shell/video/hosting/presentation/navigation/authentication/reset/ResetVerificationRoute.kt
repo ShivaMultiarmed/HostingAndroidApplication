@@ -14,8 +14,8 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ResetVerificationEvent
-import mikhail.shell.video.hosting.presentation.reset.ResetVerificationViewModel
 import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreen
+import mikhail.shell.video.hosting.presentation.reset.ResetVerificationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.resetVerificationRoute(
@@ -25,7 +25,7 @@ fun EntryProviderScope<Route>.resetVerificationRoute(
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         val viewModel = hiltViewModel<ResetVerificationViewModel, ResetVerificationViewModel.Factory> { factory ->
-            factory.create(route.userName)
+            factory.create(route.userId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events

@@ -23,7 +23,7 @@ sealed class Route: NavKey {
             @Serializable
             data object Request: Route()
             @Serializable
-            data class Verification(val userName: String): Route()
+            data class Verification(val userId: Long): Route()
             @Serializable
             data class Confirmation(val token: String): Route()
         }
