@@ -34,34 +34,39 @@ class ResetRequestingViewModel @Inject constructor(
             is ResetRequestingAction.UserNameChanged -> onUserNameChanged(action.userName)
             ResetRequestingAction.UserNameFocused -> onUserNameFocused()
             ResetRequestingAction.UserNameBlurred -> onUserNameBlurred()
-            ResetRequestingAction.Cancel -> viewModelScope.launch { _events.emit(ResetRequestingEvent.NavigateBack) }
+            ResetRequestingAction.Cancel -> viewModelScope.launch {
+                _events.emit(
+                    ResetRequestingEvent.NavigateBack
+                )
+            }
         }
     }
 
     private fun onUserNameChanged(userName: String) {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    userName = it.userName.copy(value = userName)
-                )
-            }
+        _state.update {
+            it.copy(
+                userName = it.userName.copy(value = userName)
+            )
         }
     }
+
     private fun onUserNameFocused() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    userName = it.userName.copy(error = null)
-                )
-            }
+        _state.update {
+            it.copy(
+                userName = it.userName.copy(error = null)
+            )
         }
     }
+
     private fun onUserNameBlurred() {
         viewModelScope.launch {
             _state.update {
                 it.copy(
                     userName = it.userName.copy(
-                        error = validateUserName(UserNameCheckPurpose.RESET, it.userName.value).errorOrNull()
+                        error = validateUserName(
+                            UserNameCheckPurpose.RESET,
+                            it.userName.value
+                        ).errorOrNull()
                     )
                 )
             }
@@ -69,10 +74,23 @@ class ResetRequestingViewModel @Inject constructor(
     }
 
     private fun request() {
-        _state.update {
-            it.copy(isLoading = true)
-        }
         viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    userName = it.userName.copy(
+                        error = validateUserName(
+                            UserNameCheckPurpose.RESET,
+                            it.userName.value
+                        ).errorOrNull()
+                    )
+                )
+            }
+            if (_state.value.userName.error != null) {
+                return@launch
+            }
+            _state.update {
+                it.copy(isLoading = true)
+            }
             requestResetPassword(_state.value.userName.value)
                 .onSuccess { userId ->
                     viewModelScope.launch {
@@ -99,15 +117,15 @@ class ResetRequestingViewModel @Inject constructor(
 }
 
 sealed class ResetRequestingAction {
-    data class UserNameChanged(val userName: String): ResetRequestingAction()
-    data object UserNameFocused: ResetRequestingAction()
-    data object UserNameBlurred: ResetRequestingAction()
-    data object Submit: ResetRequestingAction()
-    data object Cancel: ResetRequestingAction()
+    data class UserNameChanged(val userName: String) : ResetRequestingAction()
+    data object UserNameFocused : ResetRequestingAction()
+    data object UserNameBlurred : ResetRequestingAction()
+    data object Submit : ResetRequestingAction()
+    data object Cancel : ResetRequestingAction()
 }
 
 sealed class ResetRequestingEvent {
-    data class Success(val userId: Long): ResetRequestingEvent()
-    data class Failure(val error: Error): ResetRequestingEvent()
-    data object NavigateBack: ResetRequestingEvent()
+    data class Success(val userId: Long) : ResetRequestingEvent()
+    data class Failure(val error: Error) : ResetRequestingEvent()
+    data object NavigateBack : ResetRequestingEvent()
 }

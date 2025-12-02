@@ -54,7 +54,7 @@ fun ConfirmResetScreen(
             Title(
                 text = stringResource(R.string.reset_password_title)
             )
-            val passwordErrMsg = when (state.input.password.error) {
+            val passwordErrMsg = when (state.user.password.error) {
                 TextError.EMPTY -> stringResource(R.string.password_empty_error)
                 TextError.LONG -> stringResource(R.string.password_too_long)
                 TextError.SHORT -> stringResource(R.string.password_too_short)
@@ -66,7 +66,7 @@ fun ConfirmResetScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
-                value = state.input.password.value,
+                value = state.user.password.value,
                 onValueChange = {
                     onAction(ResetConfirmationAction.PasswordChanged(it))
                 },
@@ -80,7 +80,7 @@ fun ConfirmResetScreen(
                     onAction(ResetConfirmationAction.PasswordBlurred)
                 }
             )
-            val passwordDuplicateErrorMsg = when (state.input.passwordDuplicate.error) {
+            val passwordDuplicateErrorMsg = when (state.user.passwordDuplicate.error) {
                 TextError.PATTERN -> stringResource(R.string.passwords_not_match)
                 else -> null
             }
@@ -89,7 +89,7 @@ fun ConfirmResetScreen(
                     .width(280.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 icon = Icons.Rounded.Password,
-                value = state.input.passwordDuplicate.value,
+                value = state.user.passwordDuplicate.value,
                 onValueChange = {
                     onAction(ResetConfirmationAction.PasswordDuplicatedChanged(it))
                 },

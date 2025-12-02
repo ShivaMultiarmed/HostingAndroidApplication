@@ -8,15 +8,17 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderScope<Route>.resetGraph(
     rootBackStack: MutableList<Route>,
-    authBackStack: SnapshotStateList<Route>
+    authBackStack: SnapshotStateList<Route>,
+    userDetailsProvider: UserDetailsProvider
 ) {
     entry<Route.Authentication.Reset> {
         val resettingBackStack = rememberSaveable {
-            mutableStateListOf<Route>()
+            mutableStateListOf<Route>(Route.Authentication.Reset.Request)
         }
         NavDisplay(
             backStack = resettingBackStack,
@@ -27,10 +29,7 @@ fun EntryProviderScope<Route>.resetGraph(
             entryProvider = entryProvider {
                 resetRequestingRoute(authBackStack, resettingBackStack)
                 resetVerificationRoute(resettingBackStack)
-                resetConfirmationRoute(
-                    rootBackStack = rootBackStack,
-                    resettingBackStack = resettingBackStack
-                )
+                resetConfirmationRoute(rootBackStack,resettingBackStack, userDetailsProvider)
             }
         )
     }

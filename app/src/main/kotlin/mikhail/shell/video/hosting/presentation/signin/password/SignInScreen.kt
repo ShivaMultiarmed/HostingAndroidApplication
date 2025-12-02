@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -117,6 +118,13 @@ fun SignInScreen(
                 },
                 secured = true,
                 errorMsg = passwordErrorMsg
+            )
+            Text(
+                modifier = Modifier.clickable {
+                    onEvent(SignInUiEvent.ResetPassword)
+                },
+                text = stringResource(R.string.forgot_password),
+                fontSize = 12.sp
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,

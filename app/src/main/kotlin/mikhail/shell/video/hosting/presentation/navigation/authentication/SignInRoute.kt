@@ -25,6 +25,7 @@ fun EntryProviderScope<Route>.signInRoute(
             onEvent = { event ->
                 when (event) {
                     SignInUiEvent.SignUp -> authBackStack.add(Route.Authentication.SignUp)
+                    SignInUiEvent.ResetPassword -> authBackStack.add(Route.Authentication.Reset)
                     else -> viewModel.onEvent(event)
                 }
             }

@@ -11,6 +11,8 @@ import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.providers.UserDetails
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreen
@@ -20,7 +22,8 @@ import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.resetConfirmationRoute(
     rootBackStack: MutableList<Route>,
-    resettingBackStack: MutableList<Route>
+    resettingBackStack: MutableList<Route>,
+    userDetailsProvider: UserDetailsProvider
 ) {
     entry<Route.Authentication.Reset.Confirmation> { route ->
         val context = LocalContext.current
@@ -48,6 +51,12 @@ fun EntryProviderScope<Route>.resetConfirmationRoute(
                     }
                 }
                 is ResetConfirmationEvent.Success -> {
+                    userDetailsProvider.save(
+                        UserDetails(
+                            userId = event.authModel.userId,
+                            token = event.authModel.token
+                        )
+                    )
                     rootBackStack.remove(Route.Authentication)
                     rootBackStack.add(Route.Recommendations)
                 }

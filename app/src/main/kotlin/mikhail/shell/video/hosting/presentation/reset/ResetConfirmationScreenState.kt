@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class ResetConfirmationScreenState (
-    val input: ConfirmResetInputState = ConfirmResetInputState(),
+    val user: ConfirmResetInputState = ConfirmResetInputState(),
     val isLoading: Boolean = false
 )
 

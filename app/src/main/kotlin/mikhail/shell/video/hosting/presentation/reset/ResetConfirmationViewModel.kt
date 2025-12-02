@@ -48,8 +48,8 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordChanged(password: String) {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    password = it.input.password.copy(value = password)
+                user = it.user.copy(
+                    password = it.user.password.copy(value = password)
                 )
             )
         }
@@ -57,8 +57,8 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordFocused() {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    password = it.input.password.copy(error = null)
+                user = it.user.copy(
+                    password = it.user.password.copy(error = null)
                 )
             )
         }
@@ -66,9 +66,9 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordBlurred() {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    password = it.input.password.copy(
-                        error = validatePassword(it.input.password.value).errorOrNull()
+                user = it.user.copy(
+                    password = it.user.password.copy(
+                        error = validatePassword(it.user.password.value).errorOrNull()
                     )
                 )
             )
@@ -78,8 +78,8 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordDuplicateChanged(passwordDuplicate: String) {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    passwordDuplicate = it.input.passwordDuplicate.copy(value = passwordDuplicate)
+                user = it.user.copy(
+                    passwordDuplicate = it.user.passwordDuplicate.copy(value = passwordDuplicate)
                 )
             )
         }
@@ -87,8 +87,8 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordDuplicateFocused() {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    passwordDuplicate = it.input.passwordDuplicate.copy(error = null)
+                user = it.user.copy(
+                    passwordDuplicate = it.user.passwordDuplicate.copy(error = null)
                 )
             )
         }
@@ -96,11 +96,11 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun onPasswordDuplicateBlurred() {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    passwordDuplicate = it.input.passwordDuplicate.copy(
+                user = it.user.copy(
+                    passwordDuplicate = it.user.passwordDuplicate.copy(
                         error = validatePasswordDuplicate(
-                            password = it.input.password.value,
-                            passwordDuplicate = it.input.passwordDuplicate.value
+                            password = it.user.password.value,
+                            passwordDuplicate = it.user.passwordDuplicate.value
                         ).errorOrNull()
                     )
                 )
@@ -111,22 +111,22 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private fun confirm() {
         _state.update {
             it.copy(
-                input = it.input.copy(
-                    password = it.input.password.copy(
-                        error = validatePassword(it.input.password.value).errorOrNull()
+                user = it.user.copy(
+                    password = it.user.password.copy(
+                        error = validatePassword(it.user.password.value).errorOrNull()
                     ),
-                    passwordDuplicate = it.input.passwordDuplicate.copy(
+                    passwordDuplicate = it.user.passwordDuplicate.copy(
                         error = validatePasswordDuplicate(
-                            password = it.input.password.value,
-                            passwordDuplicate = it.input.passwordDuplicate.value
+                            password = it.user.password.value,
+                            passwordDuplicate = it.user.passwordDuplicate.value
                         ).errorOrNull()
                     )
                 )
             )
         }
         if (
-            _state.value.input.password.error != null
-            || _state.value.input.passwordDuplicate.error != null
+            _state.value.user.password.error != null
+            || _state.value.user.passwordDuplicate.error != null
             ) {
             return
         }
@@ -136,7 +136,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
         viewModelScope.launch {
             confirm(
                 token = token,
-                password = _state.value.input.password.value
+                password = _state.value.user.password.value
             ).onSuccess {
                 viewModelScope.launch {
                     _events.emit(ResetConfirmationEvent.Success(it))
@@ -145,8 +145,8 @@ class ResetConfirmationViewModel @AssistedInject constructor(
                 if (error is TextError) {
                     _state.update {
                         it.copy(
-                            input = it.input.copy(
-                                password = it.input.password.copy(error = error)
+                            user = it.user.copy(
+                                password = it.user.password.copy(error = error)
                             )
                         )
                     }

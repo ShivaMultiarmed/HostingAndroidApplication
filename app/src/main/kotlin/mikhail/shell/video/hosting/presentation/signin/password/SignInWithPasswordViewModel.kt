@@ -177,4 +177,5 @@ sealed class SignInUiEvent {
     data object PasswordBlurred : SignInUiEvent()
     data object Submit : SignInUiEvent()
     data object SignUp : SignInUiEvent()
+    data object ResetPassword: SignInUiEvent()
 }
