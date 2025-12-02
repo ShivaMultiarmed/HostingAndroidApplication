@@ -6,6 +6,8 @@ import mikhail.shell.video.hosting.data.repositories.ChannelCreationRequest
 import mikhail.shell.video.hosting.data.repositories.ChannelEditingRequest
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -44,18 +46,21 @@ interface ChannelApi {
         @Query("part_size") partSize: Int
     ): List<ChannelDto>
     @PATCH("channels/{channel_id}/subscription")
+    @FormUrlEncoded
     suspend fun subscribe(
         @Path("channel_id") channelId: Long,
-        @Query("subscription") subscription: String,
-        @Query("fcm_token") fcmToken: String
+        @Field("subscription") subscription: String,
+        @Field("fcm_token") fcmToken: String
     ): ChannelWithUserDto
     @POST("channels/notifications/subscription")
+    @FormUrlEncoded
     suspend fun subscribeToChannelNotifications(
-        @Query("fcm_token") fcmToken: String
+        @Field("fcm_token") fcmToken: String
     )
     @DELETE("channels/notifications/subscription")
+    @FormUrlEncoded
     suspend fun unsubscribeFromChannelNotifications(
-        @Query("fcm_token") fcmToken: String
+        @Field("fcm_token") fcmToken: String
     )
     @GET("channels/{channel_id}")
     suspend fun fetchChannel(@Path("channel_id") channelId: Long): ChannelDto

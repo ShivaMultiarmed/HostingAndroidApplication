@@ -4,6 +4,8 @@ import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -11,16 +13,19 @@ import retrofit2.http.Query
 
 interface AuthApi {
     @POST("auth/signin/password")
+    @FormUrlEncoded
     suspend fun signInWithPassword(
-        @Query("user_name") email: String,
-        @Query("password") password: String
+        @Field("user_name") email: String,
+        @Field("password") password: String
     ): AuthModel
     @POST("auth/signup/password/request")
-    suspend fun requestSignUpWithPassword(@Query("user_name") userName: String)
+    @FormUrlEncoded
+    suspend fun requestSignUpWithPassword(@Field("user_name") userName: String)
     @POST("auth/signup/password/verification")
+    @FormUrlEncoded
     suspend fun verifySignUpWithPassword(
-        @Query("user_name") userName: String,
-        @Query("code") code: String
+        @Field("user_name") userName: String,
+        @Field("code") code: String
     ): String
     @POST("auth/signup/password/confirm")
     suspend fun confirmSignUpWithPassword(
@@ -30,16 +35,19 @@ interface AuthApi {
     @POST("auth/signout")
     suspend fun signOut()
     @POST("auth/reset/password/request")
-    suspend fun requestResetPassword(@Query("user_name") userName: String): Long
+    @FormUrlEncoded
+    suspend fun requestResetPassword(@Field("user_name") userName: String): Long
     @POST("auth/reset/password/verification")
+    @FormUrlEncoded
     suspend fun verifyResetPassword(
-        @Query("user_id") userId: Long,
-        @Query("code") code: String
+        @Field("user_id") userId: Long,
+        @Field("code") code: String
     ): String
     @POST("auth/reset/password/confirmation")
+    @FormUrlEncoded
     suspend fun confirmResetPassword(
         @Header("Authorization") token: String,
-        @Query("password") password: String
+        @Field("password") password: String
     ): AuthModel
     @GET("auth/existence")
     suspend fun checkUserName(
