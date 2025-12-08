@@ -30,3 +30,12 @@ fun Context.getNetworkErrorMessage(error: NetworkError): String {
         )
     )!!
 }
+
+fun Context.getStandardErrorMessage(error: Error): String? {
+    return when (error) {
+        NetworkError.AUTHENTICATION -> null
+        is NetworkError -> getNetworkErrorMessage(error)
+        else ->  getString(R.string.unexpected_error)
+    }
+}
+

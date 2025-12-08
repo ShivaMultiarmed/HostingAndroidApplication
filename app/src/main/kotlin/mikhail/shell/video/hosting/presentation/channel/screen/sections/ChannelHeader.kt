@@ -55,7 +55,7 @@ import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
-import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenUiEvent
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
@@ -68,7 +68,7 @@ import kotlin.math.roundToInt
 internal fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenUiEvent) -> Unit,
+    onEvent: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit
 ) {
@@ -112,7 +112,7 @@ private fun ChannelHeaderCompact(
     hasHeader: Boolean?,
     headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenUiEvent) -> Unit,
+    onEvent: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit = {}
 ) {
@@ -156,10 +156,10 @@ private fun ChannelHeaderCompact(
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenUiEvent.Edit)
+                            onEvent(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenUiEvent.Remove)
+                            onEvent(ChannelScreenAction.Remove)
                         }
                     )
                 }
@@ -174,7 +174,7 @@ private fun ChannelHeaderCompact(
             modifier = Modifier.fillMaxWidth(),
             state = channel.subscription,
             onSubscription = {
-                onEvent(ChannelScreenUiEvent.Subscribe(it))
+                onEvent(ChannelScreenAction.Subscribe(it))
             }
         )
     }
@@ -185,7 +185,7 @@ private fun ChannelHeaderCompact(
 private fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenUiEvent) -> Unit,
+    onEvent: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit = {}
 ) {
@@ -218,10 +218,10 @@ private fun ChannelHeaderMedium(
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenUiEvent.Edit)
+                            onEvent(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenUiEvent.Remove)
+                            onEvent(ChannelScreenAction.Remove)
                         }
                     )
                 }
@@ -236,7 +236,7 @@ private fun ChannelHeaderMedium(
             },
             state = channel.subscription,
             onSubscription = {
-                onEvent(ChannelScreenUiEvent.Subscribe(it))
+                onEvent(ChannelScreenAction.Subscribe(it))
             }
         )
     }
@@ -248,7 +248,7 @@ private fun ChannelHeaderExpanded(
     hasHeader: Boolean?,
     headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenUiEvent) -> Unit,
+    onEvent: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit
 ) {
@@ -305,7 +305,7 @@ private fun ChannelHeaderExpanded(
                 SubscriptionButton(
                     state = channel.subscription,
                     onSubscription = {
-                        onEvent(ChannelScreenUiEvent.Subscribe(it))
+                        onEvent(ChannelScreenAction.Subscribe(it))
                     }
                 )
                 SubscriberNumberText(subscribers = channel.subscribers)
@@ -313,10 +313,10 @@ private fun ChannelHeaderExpanded(
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenUiEvent.Edit)
+                            onEvent(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenUiEvent.Remove)
+                            onEvent(ChannelScreenAction.Remove)
                         }
                     )
                 }

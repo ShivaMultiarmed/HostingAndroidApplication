@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.media.session.MediaSession
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -208,6 +209,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                    }
+                    BackHandler(enabled = Route.Authentication in rootBackStack) {
+
                     }
                 }
             }

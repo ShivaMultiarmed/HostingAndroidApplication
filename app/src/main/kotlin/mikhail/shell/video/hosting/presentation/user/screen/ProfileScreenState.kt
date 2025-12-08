@@ -6,11 +6,10 @@ import mikhail.shell.video.hosting.presentation.user.models.UserUi
 
 data class ProfileScreenState (
     val isStarting: Boolean = false,
-    val isLoading: Boolean = false,
     val user: UserUi? = null,
     val error: Error? = null,
     val channelState: OwnedChannelsState = OwnedChannelsState(),
-    val isSignedOut: Boolean = false
+    val isSigningOut: Boolean = false
 )
 
 data class OwnedChannelsState(

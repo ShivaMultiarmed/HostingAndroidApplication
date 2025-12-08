@@ -1,9 +1,12 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
 import android.content.Intent
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,11 +16,14 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
-import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenUiEvent
+import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
+import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.profileRoute(
     rootBackStack: MutableList<Route>,
@@ -27,42 +33,53 @@ fun EntryProviderScope<Route>.profileRoute(
 ) {
     entry<Route.User.Profile> { route ->
         val context = LocalContext.current
-        val userId = route.userId
-        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { it.create(userId) }
-        val state by viewModel.state.collectAsStateWithLifecycle()
         val coroutineScope = rememberCoroutineScope()
+        val authenticatedUserId by rememberSaveable {
+            mutableLongStateOf(userDetailsProvider.getUserId())
+        }
+        val userId = route.userId
+        val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory> { factory ->
+            factory.create(userId)
+        }
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val events = viewModel.events
+        val snackBarHostState = remember { SnackbarHostState() }
         ProfileScreen(
-            owns = userId == userDetailsProvider.getUserId(),
+            owns = userId == authenticatedUserId,
             state = state,
-            onEvent = { event ->
-                when (event) {
-                    is ProfileScreenUiEvent.ClickedChannel -> currentTabBackStack.add(Route.Channel(event.channelId))
-                    ProfileScreenUiEvent.CreateChannel -> currentTabBackStack.add(Route.User.CreateChannel)
-                    ProfileScreenUiEvent.Invite -> {
-                        context.startActivity(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
-                            }
-                        )
-                    }
-                    ProfileScreenUiEvent.OpenSettings -> currentTabBackStack.add(Route.User.Settings)
-                    ProfileScreenUiEvent.PublishVideo -> currentTabBackStack.add(Route.User.UploadVideo)
-                    ProfileScreenUiEvent.SignOut -> {
-                        player.stop()
-                        player.clearMediaItems()
-                        viewModel.onEvent(event)
-                        coroutineScope.launch {
-                            logOut(userDetailsProvider, rootBackStack)
-                        }
-                    }
-                    else -> viewModel.onEvent(event)
-                }
-            }
+            onAction = viewModel::onAction,
+            snackBarHostState = snackBarHostState
         )
-        LaunchedEffect(state.error) {
-            if (state.error == NetworkError.AUTHENTICATION) {
-                rootBackStack.add(Route.Authentication)
+        events.observe { event ->
+            when (event) {
+                is ProfileScreenEvent.Failure -> {
+                    if (event.error != NetworkError.AUTHENTICATION) {
+                        coroutineScope.launch {
+                            context.getStandardErrorMessage(event.error)?.let {
+                                snackBarHostState.showSnackbar(it)
+                            }
+                        }
+                    } else {
+                        rootBackStack.add(Route.Authentication)
+                    }
+                }
+                is ProfileScreenEvent.ChannelChosen -> currentTabBackStack.add(Route.Channel(event.channelId))
+                ProfileScreenEvent.ChannelCreationRequested -> currentTabBackStack.add(Route.User.ChannelCreation)
+                ProfileScreenEvent.InvitationRequested -> context.startActivity(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
+                    }
+                )
+                ProfileScreenEvent.SettingsRequested -> currentTabBackStack.add(Route.User.Settings)
+                ProfileScreenEvent.VideoUploadingRequested -> currentTabBackStack.add(Route.User.VideoUploading)
+                ProfileScreenEvent.SignedOut -> {
+                    player.stop()
+                    player.clearMediaItems()
+                    coroutineScope.launch {
+                        logOut(userDetailsProvider, rootBackStack)
+                    }
+                }
             }
         }
     }

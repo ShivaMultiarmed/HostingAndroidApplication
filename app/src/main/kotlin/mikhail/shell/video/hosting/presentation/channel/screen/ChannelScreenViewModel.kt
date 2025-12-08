@@ -6,13 +6,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelDetails
 import mikhail.shell.video.hosting.domain.usecases.channels.RemoveChannel
@@ -22,6 +23,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
 import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
+import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 
 @HiltViewModel(assistedFactory = ChannelScreenViewModel.Factory::class)
@@ -35,154 +37,182 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private val subscribe: Subscribe,
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
+    private val _state = MutableStateFlow(ChannelScreenState())
+    val state = _state.onStart { startAll() }.stateIn(_state.value)
 
-    private val _state = MutableStateFlow<ChannelScreenState>(ChannelScreenState.Idle)
-    val state = _state.onStart {
-        initialize()
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = _state.value
-    )
+    private val _events = MutableSharedFlow<ChannelScreenEvent>()
+    val events = _events.asSharedFlow()
 
-    fun onEvent(event: ChannelScreenUiEvent) {
-        when (event) {
-            ChannelScreenUiEvent.ReachedBottom -> viewModelScope.launch { loadVideos(start = false) }
-            ChannelScreenUiEvent.RestartVideos -> viewModelScope.launch { loadVideos(start = true) }
-            ChannelScreenUiEvent.Restart -> initialize()
-            ChannelScreenUiEvent.Remove -> remove()
-            is ChannelScreenUiEvent.Subscribe -> subscribe(event.subscription)
-            else -> Unit
+    fun onAction(action: ChannelScreenAction) {
+        when (action) {
+            ChannelScreenAction.LoadNextPart -> viewModelScope.launch {
+                loadVideos(start = false)
+            }
+            ChannelScreenAction.RestartVideos -> viewModelScope.launch {
+                loadVideos(start = true)
+            }
+            ChannelScreenAction.RestartChannel -> startAll()
+            ChannelScreenAction.Remove -> remove()
+            is ChannelScreenAction.Subscribe -> subscribe(action.subscription)
+            is ChannelScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(ChannelScreenEvent.VideoChosen(action.videoId))
+            }
+            ChannelScreenAction.Edit -> viewModelScope.launch {
+                _events.emit(ChannelScreenEvent.EditingRequest(channelId))
+            }
         }
     }
 
-    private fun initialize() {
+    private fun startAll() {
         viewModelScope.launch {
-            loadChannel()
+            startChannel()
+        }
+        viewModelScope.launch {
             loadVideos(start = true)
         }
     }
 
-    private suspend fun loadChannel() {
+    private suspend fun startChannel() {
+        if (_state.value.isStarting) {
+            return
+        }
         _state.update {
-            ChannelScreenState.Starting
+            it.copy(isStarting = true)
         }
         getChannelDetails(channelId).onSuccess { channel ->
             _state.update {
-                ChannelScreenState.Success(
+                it.copy(
                     channel = channel.toUi(
                         logo = getChannelLogoUrl(channelId = channelId, size = ImageSize.MEDIUM),
                         header = getChannelHeaderUrl(channelId = channelId, size = ImageSize.LARGE)
                     ),
-                    videoState = VideoListState()
+                    isStarting = false
                 )
             }
         }.onFailure { error ->
             _state.update {
-                ChannelScreenState.Failure(error)
+                it.copy(
+                    error = error,
+                    isStarting = false
+                )
+            }
+            viewModelScope.launch {
+                _events.emit(ChannelScreenEvent.Failure(error))
             }
         }
     }
 
     private suspend fun loadVideos(start: Boolean = false) {
-        val currentState = _state.value as? ChannelScreenState.Success
-        if (currentState == null) {
+        if (_state.value.videos.isStarting || _state.value.videos.isLoading) {
             return
         }
         _state.update {
-            val stateToUpdate = it as? ChannelScreenState.Success
-            stateToUpdate?.copy(
-                videoState = stateToUpdate.videoState.copy(
+            it.copy(
+                videos = it.videos.copy(
                     isStarting = start,
                     isLoading = !start
                 )
-            )?: it
+            )
         }
         getVideoList(
             channelId = channelId,
-            partIndex = if (start) 0 else currentState.videoState.nextPartIndex,
+            partIndex = if (start) 0 else _state.value.videos.nextPartIndex,
             partSize = PART_SIZE
         ).onSuccess { videos ->
             _state.update {
-                val stateToUpdate = it as? ChannelScreenState.Success
-                stateToUpdate?.copy(
-                    videoState = stateToUpdate.videoState.copy(
-                        videos = ((if (start) null else stateToUpdate.videoState.videos)
-                            ?: emptyList()) + videos.map { it.toUi(
+                it.copy(
+                    videos = it.videos.copy(
+                        videos = ((if (start) null else it.videos.videos)
+                            ?: emptyList()) + videos.map {
+                            it.toUi(
                                 cover = getVideoCoverUrl(
                                     videoId = it.videoId,
                                     size = ImageSize.LARGE
                                 )
-                            ) },
+                            )
+                        },
                         hasMore = videos.size == PART_SIZE,
-                        nextPartIndex = (if (start) 0 else stateToUpdate.videoState.nextPartIndex) + 1,
+                        nextPartIndex = (if (start) 0 else it.videos.nextPartIndex) + 1,
                         isStarting = false,
                         isLoading = false,
                         error = null
                     )
-                )?: it
+                )
             }
         }.onFailure { error ->
             _state.update {
-                val stateToUpdate = it as? ChannelScreenState.Success
-                stateToUpdate?.copy(
-                    videoState = stateToUpdate.videoState.copy(
-                        videos = stateToUpdate.videoState.videos,
+                it.copy(
+                    videos = it.videos.copy(
+                        videos = it.videos.videos,
                         error = error,
                         isLoading = false,
                         isStarting = false
                     )
-                )?: it
+                )
+            }
+            viewModelScope.launch {
+                _events.emit(ChannelScreenEvent.Failure(error))
             }
         }
     }
 
     private fun subscribe(subscription: Subscription) {
-        val currentState = _state.value as? ChannelScreenState.Success
-        if (currentState == null) {
+        if (_state.value.isSubscribing) {
             return
+        }
+        _state.update {
+            it.copy(isSubscribing = true)
         }
         viewModelScope.launch {
             subscribe(
-                channelId = currentState.channel.channelId,
+                channelId = _state.value.channel!!.channelId,
                 subscription = subscription
             ).onSuccess { updatedChannel ->
                 _state.update {
-                    val stateToUpdate = _state.value as? ChannelScreenState.Success
-                    stateToUpdate?.copy(
-                        channel = stateToUpdate.channel.copy(
+                    it.copy(
+                        channel = it.channel!!.copy(
                             subscription = updatedChannel.subscription,
-                            subscribers = updatedChannel.subscribers
-                        )
-                    )?: it
+                            subscribers = updatedChannel.subscribers,
+                        ),
+                        error = null,
+                        isSubscribing = false
+                    )
                 }
             }.onFailure { error ->
                 _state.update {
-                    val stateToUpdate = _state.value as? ChannelScreenState.Success
-                    stateToUpdate?.copy(
-                        channel = stateToUpdate.channel.copy(
-                            subscriptionError = error
-                        )
-                    )?: it
+                    it.copy(
+                        error = error,
+                        isSubscribing = false
+                    )
+                }
+                viewModelScope.launch {
+                    _events.emit(ChannelScreenEvent.Failure(error))
                 }
             }
         }
     }
 
     private fun remove() {
+        if (_state.value.isRemoving) {
+            return
+        }
         viewModelScope.launch {
             removeChannel(channelId).onSuccess {
                 _state.update {
-                    ChannelScreenState.Removed
+                    it.copy(isRemoving = false)
+                }
+                viewModelScope.launch {
+                    _events.emit(ChannelScreenEvent.Removed(channelId))
                 }
             }.onFailure { error ->
                 _state.update {
-                    val stateToUpdate = _state.value as? ChannelScreenState.Success
-                    stateToUpdate?.copy(
-                        channel = stateToUpdate.channel.copy(
-                            removingError = error
-                        )
-                    )?: it
+                    it.copy(
+                        error = error,
+                        isRemoving = false
+                    )
+                }
+                viewModelScope.launch {
+                    _events.emit(ChannelScreenEvent.Failure(error))
                 }
             }
         }
@@ -198,12 +228,19 @@ class ChannelScreenViewModel @AssistedInject constructor(
     }
 }
 
-sealed class ChannelScreenUiEvent {
-    data object Restart : ChannelScreenUiEvent()
-    data object RestartVideos : ChannelScreenUiEvent()
-    data class Subscribe(val subscription: Subscription) : ChannelScreenUiEvent()
-    data class ClickVideo(val videoId: Long) : ChannelScreenUiEvent()
-    data object ReachedBottom : ChannelScreenUiEvent()
-    data object Edit : ChannelScreenUiEvent()
-    data object Remove : ChannelScreenUiEvent()
+sealed class ChannelScreenAction {
+    data object RestartChannel : ChannelScreenAction()
+    data object RestartVideos : ChannelScreenAction()
+    data class Subscribe(val subscription: Subscription) : ChannelScreenAction()
+    data class ChooseVideo(val videoId: Long) : ChannelScreenAction()
+    data object LoadNextPart : ChannelScreenAction()
+    data object Edit : ChannelScreenAction()
+    data object Remove : ChannelScreenAction()
+}
+
+sealed class ChannelScreenEvent {
+    data class Failure(val error: Error) : ChannelScreenEvent()
+    data class VideoChosen(val videoId: Long) : ChannelScreenEvent()
+    data class EditingRequest(val channelId: Long) : ChannelScreenEvent()
+    data class Removed(val channelId: Long) : ChannelScreenEvent()
 }

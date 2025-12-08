@@ -15,7 +15,7 @@ fun EntryProviderScope<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
     userBackStack: MutableList<Route>
 ) {
-    entry <Route.User.CreateChannel> { route ->
+    entry <Route.User.ChannelCreation> { route ->
         val viewModel = hiltViewModel<ChannelCreationViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         ChannelCreationScreen(

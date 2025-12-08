@@ -21,7 +21,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.CommentCreationModel
 import mikhail.shell.video.hosting.domain.models.CommentEditingModel
 import mikhail.shell.video.hosting.domain.models.Liking

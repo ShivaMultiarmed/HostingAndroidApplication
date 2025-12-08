@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
@@ -53,7 +53,7 @@ internal fun VideoGridSection(
                 )
             },
             emptyComponent = {
-                EmptyResultComponent(
+                EmptyComponent(
                     modifier = Modifier.fillMaxSize(),
                     message = stringResource(R.string.no_videos_yet)
                 )

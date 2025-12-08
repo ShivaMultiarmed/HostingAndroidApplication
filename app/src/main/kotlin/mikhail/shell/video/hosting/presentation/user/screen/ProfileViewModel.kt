@@ -6,11 +6,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize.MEDIUM
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
@@ -32,30 +35,54 @@ class ProfileViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow(ProfileScreenState())
     val state = _state.onStart { startAll() }.stateIn( _state.value)
 
-    fun onEvent(event: ProfileScreenUiEvent) {
-        when (event) {
-            ProfileScreenUiEvent.Restart -> viewModelScope.launch { startAll() }
-            ProfileScreenUiEvent.ReloadChannels, ProfileScreenUiEvent.EndReached -> viewModelScope.launch { loadChannels(start = false) }
-            ProfileScreenUiEvent.SignOut -> signOut()
-            else -> Unit
+    private val _events = MutableSharedFlow<ProfileScreenEvent>()
+    val events = _events.asSharedFlow()
+
+    fun onAction(action: ProfileScreenAction) {
+        when (action) {
+            ProfileScreenAction.RestartProfile -> viewModelScope.launch { startAll() }
+            ProfileScreenAction.LoadNextChannelsPart -> viewModelScope.launch { loadChannels(start = false) }
+            ProfileScreenAction.SignOut -> signOut()
+            is ProfileScreenAction.ChooseChannel -> viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.ChannelChosen(action.channelId))
+            }
+            ProfileScreenAction.CreateChannel -> viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.ChannelCreationRequested)
+            }
+            ProfileScreenAction.Invite -> viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.InvitationRequested)
+            }
+            ProfileScreenAction.OpenSettings -> viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.SettingsRequested)
+            }
+            ProfileScreenAction.PublishVideo -> viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.VideoUploadingRequested)
+            }
         }
     }
 
     private fun startAll() {
         viewModelScope.launch {
             start()
+        }
+        viewModelScope.launch {
             loadChannels(start = true)
         }
     }
 
     private suspend fun start() {
+        if (_state.value.isStarting) {
+            return
+        }
         _state.update {
             it.copy(isStarting = true)
         }
         getUser(userId).onSuccess { user ->
             _state.update {
                 it.copy(
-                    user = user.toUi(avatar = constructAvatarUrl(userId, MEDIUM)),
+                    user = user.toUi(
+                        avatar = constructAvatarUrl(userId, MEDIUM)
+                    ),
                     error = null,
                     isStarting = false
                 )
@@ -71,6 +98,9 @@ class ProfileViewModel @AssistedInject constructor(
     }
 
     private suspend fun loadChannels(start: Boolean = false) {
+        if (_state.value.channelState.isLoading) {
+            return
+        }
         _state.update {
             it.copy(
                 channelState = it.channelState.copy(isLoading = true)
@@ -87,7 +117,7 @@ class ProfileViewModel @AssistedInject constructor(
                         channels = ((if (start) null else _state.value.channelState.channels)?: emptyList()) + channels.map {
                             it.toUi(
                                 logo = getChannelLogoUrl(
-                                    channelId = it.channelId!!,
+                                    channelId = it.channelId,
                                     size = MEDIUM
                                 )
                             )
@@ -108,15 +138,19 @@ class ProfileViewModel @AssistedInject constructor(
                     )
                 )
             }
+            viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.Failure(error))
+            }
         }
     }
 
     private fun signOut() {
+        if (_state.value.isSigningOut) {
+            return
+        }
         viewModelScope.launch {
             signOut.invoke()
-            _state.update {
-                it.copy(isSignedOut = true)
-            }
+            _events.emit(ProfileScreenEvent.SignedOut)
         }
     }
 
@@ -130,14 +164,23 @@ class ProfileViewModel @AssistedInject constructor(
     }
 }
 
-sealed class ProfileScreenUiEvent {
-    data object Restart : ProfileScreenUiEvent()
-    data object ReloadChannels : ProfileScreenUiEvent()
-    data object EndReached : ProfileScreenUiEvent()
-    data class ClickedChannel(val channelId: Long) : ProfileScreenUiEvent()
-    data object OpenSettings : ProfileScreenUiEvent()
-    data object PublishVideo : ProfileScreenUiEvent()
-    data object CreateChannel : ProfileScreenUiEvent()
-    data object SignOut : ProfileScreenUiEvent()
-    data object Invite : ProfileScreenUiEvent()
+sealed class ProfileScreenAction {
+    data object RestartProfile : ProfileScreenAction()
+    data object LoadNextChannelsPart : ProfileScreenAction()
+    data class ChooseChannel(val channelId: Long) : ProfileScreenAction()
+    data object OpenSettings : ProfileScreenAction()
+    data object PublishVideo : ProfileScreenAction()
+    data object CreateChannel : ProfileScreenAction()
+    data object SignOut : ProfileScreenAction()
+    data object Invite : ProfileScreenAction()
+}
+
+sealed class ProfileScreenEvent {
+    data class Failure(val error: Error): ProfileScreenEvent()
+    data object SignedOut: ProfileScreenEvent()
+    data class ChannelChosen(val channelId: Long) : ProfileScreenEvent()
+    data object SettingsRequested : ProfileScreenEvent()
+    data object VideoUploadingRequested : ProfileScreenEvent()
+    data object ChannelCreationRequested : ProfileScreenEvent()
+    data object InvitationRequested : ProfileScreenEvent()
 }

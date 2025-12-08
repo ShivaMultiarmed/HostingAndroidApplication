@@ -59,7 +59,7 @@ import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
@@ -418,7 +418,7 @@ fun UserEditingScreen(
             notFoundMessage = stringResource(R.string.user_not_found)
         )
     } else if (state is UserEditingScreenState.Starting) {
-        LoadingComponent(
+        StartingComponent(
             modifier = Modifier.fillMaxSize()
         )
     } else if (state is UserEditingScreenState.Failure) {

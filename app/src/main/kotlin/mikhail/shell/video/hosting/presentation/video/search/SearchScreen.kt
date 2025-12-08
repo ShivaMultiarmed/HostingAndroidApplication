@@ -45,11 +45,10 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
@@ -62,11 +61,12 @@ import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 @Composable
 fun SearchScreen(
     state: SearchScreenState,
-    onEvent: (SearchScreenUiEvent) -> Unit
+    onAction: (SearchScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    val snackBarHostState = remember { SnackbarHostState() }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -81,14 +81,12 @@ fun SearchScreen(
                     )
             ) {
                 val button = createRef()
-                val errorMsg = state.queryError?.let { "" }
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
-                    value = state.query,
+                    value = state.query.value,
                     onValueChange = {
-                        onEvent(SearchScreenUiEvent.QueryChanged(it))
+                        onAction(SearchScreenAction.ChangeQuery(it))
                     },
-                    errorMsg = errorMsg,
                     label = stringResource(R.string.video_search_label),
                     icon = Icons.Rounded.Search
                 )
@@ -98,9 +96,9 @@ fun SearchScreen(
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     },
-                    enabled = state.query.isNotEmpty(),
+                    enabled = state.query.value.isNotEmpty(),
                     onClick = {
-                        onEvent(SearchScreenUiEvent.Submit)
+                        onAction(SearchScreenAction.Submit)
                     },
                     icon = Icons.AutoMirrored.Rounded.Send
                 )
@@ -116,7 +114,7 @@ fun SearchScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onStart = {
-                    onEvent(SearchScreenUiEvent.Restart)
+                    onAction(SearchScreenAction.Restart)
                 },
                 isStarting = state.isStarting
             ) {
@@ -124,22 +122,21 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     itemComponent = {
                         VideoWithChannelSnippet(
-                            modifier = Modifier
-                                .then(
-                                    if (isWidthCompact) {
-                                        Modifier
-                                    } else {
-                                        Modifier.clip(RoundedCornerShape(15.dp))
-                                    }
-                                ),
+                            modifier = Modifier.then(
+                                if (isWidthCompact) {
+                                    Modifier
+                                } else {
+                                    Modifier.clip(RoundedCornerShape(15.dp))
+                                }
+                            ),
                             videoWithChannel = it,
                             onClick = {
-                                onEvent(SearchScreenUiEvent.ClickedVideo(it))
+                                onAction(SearchScreenAction.ChooseVideo(it))
                             }
                         )
                     },
                     emptyComponent = {
-                        EmptyResultComponent(
+                        EmptyComponent(
                             modifier = Modifier
                                 .padding(padding)
                                 .fillMaxSize(),
@@ -148,34 +145,30 @@ fun SearchScreen(
                     },
                     items = state.videos,
                     hasMore = state.hasMore,
-                    error = state.loadingError.takeIf { state.hasMore },
+                    error = state.error,
                     isLoading = state.isLoading,
                     onReload = {
-                        onEvent(SearchScreenUiEvent.Reload)
+                        onAction(SearchScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
-                        onEvent(SearchScreenUiEvent.BottomReached)
+                        onAction(SearchScreenAction.LoadNextPart)
                     }
                 )
             }
         } else if (state.isStarting) {
-            LoadingComponent(
+            StartingComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
             )
-        } else if (state.startingError != null) {
+        } else if (state.error != null) {
             ErrorComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 onRetry = {
-                    onEvent(SearchScreenUiEvent.Restart)
+                    onAction(SearchScreenAction.Restart)
                 }
-            )
-            ErrorDisplay(
-                error = state.startingError,
-                snackBarHostState = snackBarHostState
             )
         }
     }

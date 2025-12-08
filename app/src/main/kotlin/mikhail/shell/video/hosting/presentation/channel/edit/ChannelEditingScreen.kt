@@ -51,7 +51,7 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_L
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -417,7 +417,7 @@ fun ChannelEditingScreen(
             notFoundMessage = stringResource(R.string.channel_not_found)
         )
     } else if (state is ChannelEditingScreenState.Starting) {
-        LoadingComponent(
+        StartingComponent(
             modifier = Modifier.fillMaxSize()
         )
     }

@@ -11,26 +11,24 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
 
 @Composable
 fun RecommendationsScreen(
     state: RecommendationsScreenState,
-    onEvent: (RecommendationsScreenUiEvent) -> Unit
+    onAction: (RecommendationsScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
-    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -41,7 +39,9 @@ fun RecommendationsScreen(
             )
         },
         snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
+            SnackbarHost(
+                hostState = snackBarHostState
+            )
         }
     ) { padding ->
         if (state.videos != null) {
@@ -50,7 +50,7 @@ fun RecommendationsScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onStart = {
-                    onEvent(RecommendationsScreenUiEvent.Restarted)
+                    onAction(RecommendationsScreenAction.Restart)
                 },
                 isStarting = state.isStarting,
             ) {
@@ -62,7 +62,7 @@ fun RecommendationsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             videoWithChannel = it,
                             onClick = {
-                                onEvent(RecommendationsScreenUiEvent.ClickedVideo(it))
+                                onAction(RecommendationsScreenAction.ChooseVideo(it))
                             }
                         )
                     },
@@ -82,27 +82,23 @@ fun RecommendationsScreen(
                     error = state.error,
                     isLoading = state.isLoading,
                     onReload = {
-                        onEvent(RecommendationsScreenUiEvent.Reload)
+                        onAction(RecommendationsScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
-                        onEvent(RecommendationsScreenUiEvent.EndReached)
+                        onAction(RecommendationsScreenAction.LoadNextPart)
                     }
                 )
             }
         } else if (state.isStarting) {
-            LoadingComponent(
+            StartingComponent(
                 modifier = Modifier.fillMaxSize()
             )
         } else if (state.error != null) {
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
-                    onEvent(RecommendationsScreenUiEvent.Restarted)
+                    onAction(RecommendationsScreenAction.Restart)
                 }
-            )
-            ErrorDisplay(
-                error = state.error,
-                snackBarHostState = snackBarHostState
             )
         }
     }

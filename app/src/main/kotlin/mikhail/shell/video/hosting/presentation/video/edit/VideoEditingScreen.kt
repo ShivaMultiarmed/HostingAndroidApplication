@@ -49,7 +49,7 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_L
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
@@ -235,7 +235,7 @@ fun VideoEditingScreen(
                     .padding(padding)
             ) {
                 if (state is VideoEditingScreenState.Starting) {
-                    LoadingComponent(
+                    StartingComponent(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surface)

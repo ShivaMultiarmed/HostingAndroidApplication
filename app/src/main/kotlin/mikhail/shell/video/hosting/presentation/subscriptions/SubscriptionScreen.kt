@@ -13,17 +13,15 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
-import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.TopBar
@@ -32,11 +30,11 @@ import mikhail.shell.video.hosting.presentation.utils.TopBar
 @Composable
 fun SubscriptionsScreen(
     state: SubscriptionsScreenState,
-    onEvent: (SubscriptionsScreenUiEvent) -> Unit
+    onAction: (SubscriptionsScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    val snackBarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         modifier = Modifier
@@ -57,7 +55,7 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onStart = {
-                    onEvent(SubscriptionsScreenUiEvent.Restart)
+                    onAction(SubscriptionsScreenAction.Restart)
                 },
                 isStarting = state.isStarting
             ) {
@@ -86,12 +84,12 @@ fun SubscriptionsScreen(
                                 ),
                             channel = it,
                             onClick = {
-                                onEvent(SubscriptionsScreenUiEvent.ChannelClicked(it))
+                                onAction(SubscriptionsScreenAction.ChooseChannel(it))
                             }
                         )
                     },
                     emptyComponent = {
-                        EmptyResultComponent(
+                        EmptyComponent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(MaterialTheme.colorScheme.surface),
@@ -100,16 +98,16 @@ fun SubscriptionsScreen(
                     },
                     isLoading = state.isLoading,
                     onReload = {
-                        onEvent(SubscriptionsScreenUiEvent.Reload)
+                        onAction(SubscriptionsScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
-                        onEvent(SubscriptionsScreenUiEvent.EndReached)
+                        onAction(SubscriptionsScreenAction.LoadNextPart)
                     },
                     hasMore = state.hasMore
                 )
             }
         } else if (state.isStarting) {
-            LoadingComponent(
+            StartingComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
@@ -120,12 +118,8 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
                 onRetry = {
-                    onEvent(SubscriptionsScreenUiEvent.Restart)
+                    onAction(SubscriptionsScreenAction.Restart)
                 }
-            )
-            ErrorDisplay(
-                error = state.error,
-                snackBarHostState = snackBarHostState
             )
         }
     }

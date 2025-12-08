@@ -42,9 +42,9 @@ sealed class Route: NavKey {
         @Serializable
         data object Settings: Route()
         @Serializable
-        data object CreateChannel: Route()
+        data object ChannelCreation: Route()
         @Serializable
-        data object UploadVideo: Route()
+        data object VideoUploading: Route()
     }
     @Serializable
     data class Video(val videoId: Long): Route() {

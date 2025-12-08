@@ -71,10 +71,10 @@ fun <I> PageableBox(
                     }
                 ) {
                     if (isLoading) {
-                        LoadingComponent(
+                        StartingComponent(
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else if (error != null) {
+                    } else if (error != null || hasMore) {
                         ErrorComponent(
                             modifier = Modifier.fillMaxSize(),
                             onRetry = onReload
@@ -90,6 +90,5 @@ fun <I> PageableBox(
         } else {
             emptyComponent?.invoke()
         }
-
     }
 }

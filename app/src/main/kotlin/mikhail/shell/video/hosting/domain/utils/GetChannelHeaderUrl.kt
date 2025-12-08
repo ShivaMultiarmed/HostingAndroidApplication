@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.utils
 
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 

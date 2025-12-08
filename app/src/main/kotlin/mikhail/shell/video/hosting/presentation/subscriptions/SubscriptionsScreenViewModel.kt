@@ -3,16 +3,18 @@ package mikhail.shell.video.hosting.presentation.subscriptions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.channels.GetSubscriptions
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
+import mikhail.shell.video.hosting.presentation.utils.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,23 +23,25 @@ class SubscriptionsScreenViewModel @Inject constructor(
     private val getChannelLogoUrl: GetChannelLogoUrl
 ) : ViewModel() {
     private val _state = MutableStateFlow(SubscriptionsScreenState())
-    val state = _state.onStart {
-        load(start = true)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = _state.value
-    )
+    val state = _state.onStart { load(start = true) }.stateIn(_state.value)
 
-    fun onEvent(event: SubscriptionsScreenUiEvent) {
-        when (event) {
-            is SubscriptionsScreenUiEvent.Restart -> load(start = true)
-            SubscriptionsScreenUiEvent.EndReached, SubscriptionsScreenUiEvent.Reload -> load()
-            else -> Unit
+    private val _events = MutableSharedFlow<SubscriptionsScreenEvent>()
+    val events = _events.asSharedFlow()
+
+    fun onAction(action: SubscriptionsScreenAction) {
+        when (action) {
+            SubscriptionsScreenAction.Restart -> load(start = true)
+            SubscriptionsScreenAction.LoadNextPart -> load()
+            is SubscriptionsScreenAction.ChooseChannel -> viewModelScope.launch {
+                _events.emit(SubscriptionsScreenEvent.ChannelChosen(action.channelId))
+            }
         }
     }
 
     private fun load(start: Boolean = false) {
+        if (_state.value.isStarting || _state.value.isLoading) {
+            return
+        }
         _state.update {
             it.copy(
                 isStarting = start,
@@ -48,13 +52,13 @@ class SubscriptionsScreenViewModel @Inject constructor(
             getSubscriptions(
                 partIndex = if (start) 0 else _state.value.nextPartIndex,
                 partSize = PART_SIZE
-            ).onSuccess { fetchedChannels ->
+            ).onSuccess { channels ->
                 _state.update {
                     it.copy(
-                        channels = ((if (start) null else it.channels)?: emptyList()) + fetchedChannels.map {
+                        channels = ((if (start) null else it.channels)?: emptyList()) + channels.map {
                             it.toUi(
                                 logo = getChannelLogoUrl(
-                                    channelId = it.channelId!!,
+                                    channelId = it.channelId,
                                     size = ImageSize.MEDIUM
                                 )
                             )
@@ -63,16 +67,19 @@ class SubscriptionsScreenViewModel @Inject constructor(
                         isStarting = false,
                         isLoading = false,
                         nextPartIndex = (if (start) 0 else it.nextPartIndex) + 1,
-                        hasMore = fetchedChannels.size == PART_SIZE
+                        hasMore = channels.size == PART_SIZE
                     )
                 }
-            }.onFailure { err ->
+            }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        error = err,
+                        error = error,
                         isStarting = false,
                         isLoading = false
                     )
+                }
+                viewModelScope.launch {
+                    _events.emit(SubscriptionsScreenEvent.Failure(error))
                 }
             }
         }
@@ -83,9 +90,13 @@ class SubscriptionsScreenViewModel @Inject constructor(
     }
 }
 
-sealed class SubscriptionsScreenUiEvent {
-    data object Restart : SubscriptionsScreenUiEvent()
-    data object EndReached : SubscriptionsScreenUiEvent()
-    data object Reload: SubscriptionsScreenUiEvent()
-    data class ChannelClicked(val channelId: Long) : SubscriptionsScreenUiEvent()
+sealed class SubscriptionsScreenAction {
+    data object Restart : SubscriptionsScreenAction()
+    data object LoadNextPart: SubscriptionsScreenAction()
+    data class ChooseChannel(val channelId: Long) : SubscriptionsScreenAction()
+}
+
+sealed class SubscriptionsScreenEvent {
+    data class Failure(val error: Error): SubscriptionsScreenEvent()
+    data class ChannelChosen(val channelId: Long): SubscriptionsScreenEvent()
 }

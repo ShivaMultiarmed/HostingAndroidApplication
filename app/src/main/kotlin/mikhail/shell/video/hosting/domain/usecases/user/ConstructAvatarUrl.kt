@@ -1,6 +1,6 @@
 package mikhail.shell.video.hosting.domain.usecases.user
 
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import javax.inject.Inject
 

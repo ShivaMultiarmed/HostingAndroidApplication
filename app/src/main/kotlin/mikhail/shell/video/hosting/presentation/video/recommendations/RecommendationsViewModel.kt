@@ -3,16 +3,18 @@ package mikhail.shell.video.hosting.presentation.video.recommendations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.videos.GetRecommendations
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
+import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
 
@@ -23,23 +25,25 @@ class RecommendationsViewModel @Inject constructor(
     private val getVideoCoverUrl: GetVideoCoverUrl,
 ) : ViewModel() {
     private val _state = MutableStateFlow(RecommendationsScreenState())
-    val state = _state.onStart {
-        load(start = true)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(3000),
-        initialValue = _state.value
-    )
+    val state = _state.onStart { load(start = true) }.stateIn(_state.value)
 
-    fun onEvent(event: RecommendationsScreenUiEvent) {
-        when (event) {
-            RecommendationsScreenUiEvent.EndReached, RecommendationsScreenUiEvent.Reload -> load(start = false)
-            RecommendationsScreenUiEvent.Restarted -> load(start = true)
-            else -> Unit
+    private val _events = MutableSharedFlow<RecommendationsScreenEvent>()
+    val events = _events.asSharedFlow()
+
+    fun onAction(action: RecommendationsScreenAction) {
+        when (action) {
+            RecommendationsScreenAction.LoadNextPart -> load()
+            RecommendationsScreenAction.Restart -> load(start = true)
+            is RecommendationsScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(RecommendationsScreenEvent.VideoChosen(action.videoId))
+            }
         }
     }
 
-    private fun load(start: Boolean) {
+    private fun load(start: Boolean = false) {
+        if (_state.value.isStarting || _state.value.isLoading) {
+            return
+        }
         _state.update {
             it.copy(
                 isStarting = start,
@@ -80,6 +84,9 @@ class RecommendationsViewModel @Inject constructor(
                         error = error
                     )
                 }
+                viewModelScope.launch {
+                    _events.emit(RecommendationsScreenEvent.Failure(error))
+                }
             }
         }
     }
@@ -89,9 +96,13 @@ class RecommendationsViewModel @Inject constructor(
     }
 }
 
-sealed class RecommendationsScreenUiEvent {
-    data object Reload: RecommendationsScreenUiEvent()
-    data object EndReached : RecommendationsScreenUiEvent()
-    data object Restarted : RecommendationsScreenUiEvent()
-    data class ClickedVideo(val videoId: Long) : RecommendationsScreenUiEvent()
+sealed class RecommendationsScreenAction {
+    data object Restart : RecommendationsScreenAction()
+    data object LoadNextPart : RecommendationsScreenAction()
+    data class ChooseVideo(val videoId: Long) : RecommendationsScreenAction()
+}
+
+sealed class RecommendationsScreenEvent {
+    data class VideoChosen(val videoId: Long): RecommendationsScreenEvent()
+    data class Failure(val error: Error): RecommendationsScreenEvent()
 }

@@ -102,10 +102,10 @@ import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
-import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -536,7 +536,7 @@ fun VideoScreen(
                 notFoundMessage = stringResource(R.string.video_not_found)
             )
         } else if (state.isStarting) {
-            LoadingComponent(
+            StartingComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
@@ -603,7 +603,7 @@ private fun CommentsBottomSheet(
                         )
                     },
                     emptyComponent = {
-                        EmptyResultComponent(
+                        EmptyComponent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
@@ -622,7 +622,7 @@ private fun CommentsBottomSheet(
                     }
                 )
             } else if (commentsState.isStarting) {
-                LoadingComponent(
+                StartingComponent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)

@@ -41,7 +41,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,13 +58,12 @@ import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.Dialog
-import mikhail.shell.video.hosting.presentation.utils.EmptyResultComponent
+import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
-import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
@@ -75,11 +73,11 @@ import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 fun ProfileScreen(
     owns: Boolean,
     state: ProfileScreenState,
-    onEvent: (ProfileScreenUiEvent) -> Unit
+    onAction: (ProfileScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val orientation = LocalConfiguration.current.orientation
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
-    val snackBarHostState = remember { SnackbarHostState() }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,21 +88,24 @@ fun ProfileScreen(
             topBar = {
                 TopBar(
                     title = stringResource(R.string.profile_title),
-                    actions = if (owns) listOf(
-                        {
-                            IconButton(
-                                onClick = {
-                                    onEvent(ProfileScreenUiEvent.OpenSettings)
+                    actions = when {
+                        owns -> listOf(
+                            {
+                                IconButton(
+                                    onClick = {
+                                        onAction(ProfileScreenAction.OpenSettings)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Settings,
+                                        tint = MaterialTheme.colorScheme.onBackground,
+                                        contentDescription = stringResource(R.string.open_settings_button)
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Settings,
-                                    tint = MaterialTheme.colorScheme.onBackground,
-                                    contentDescription = stringResource(R.string.open_settings_button)
-                                )
                             }
-                        }
-                    ) else null
+                        )
+                        else -> null
+                    }
                 )
             },
             snackbarHost = {
@@ -119,7 +120,7 @@ fun ProfileScreen(
                         .fillMaxSize()
                         .padding(padding),
                     onStart = {
-                        onEvent(ProfileScreenUiEvent.Restart)
+                        onAction(ProfileScreenAction.RestartProfile)
                     },
                     isStarting = state.isStarting
                 ) {
@@ -130,7 +131,7 @@ fun ProfileScreen(
                             ProfileScreenContent(
                                 owns = owns,
                                 state = state,
-                                onEvent = onEvent,
+                                onEvent = onAction,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 }
@@ -143,7 +144,7 @@ fun ProfileScreen(
                             ProfileScreenContent(
                                 owns = owns,
                                 state = state,
-                                onEvent = onEvent,
+                                onEvent = onAction,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 }
@@ -151,26 +152,16 @@ fun ProfileScreen(
                         }
                     }
                 }
-                StandardErrorDisplay(
-                    error = state.channelState.error,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.user_not_found)
-                )
             } else if (state.isStarting) {
-                LoadingComponent(
+                StartingComponent(
                     modifier = Modifier.fillMaxSize()
                 )
             } else if (state.error != null) {
                 ErrorComponent(
                     modifier = Modifier.fillMaxSize(),
                     onRetry = {
-                        onEvent(ProfileScreenUiEvent.Restart)
+                        onAction(ProfileScreenAction.RestartProfile)
                     }
-                )
-                StandardErrorDisplay(
-                    error = state.channelState.error,
-                    snackBarHostState = snackBarHostState,
-                    notFoundMessage = stringResource(R.string.user_not_found)
                 )
             }
         }
@@ -194,7 +185,7 @@ fun ProfileScreen(
 private fun ProfileScreenContent(
     owns: Boolean,
     state: ProfileScreenState,
-    onEvent: (ProfileScreenUiEvent) -> Unit,
+    onEvent: (ProfileScreenAction) -> Unit,
     onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -256,36 +247,36 @@ private fun ProfileScreenContent(
                         ),
                         channel = it,
                         onClick = {
-                            onEvent(ProfileScreenUiEvent.ClickedChannel(it))
+                            onEvent(ProfileScreenAction.ChooseChannel(it))
                         }
                     )
                 },
                 emptyComponent = {
-                    EmptyResultComponent(
+                    EmptyComponent(
                         modifier = Modifier.fillMaxSize(),
                         message = stringResource(R.string.user_channels_empty_message)
                     )
                 },
                 items = state.channelState.channels,
                 hasMore = state.channelState.hasMore,
-                error = state.channelState.error.takeIf { state.channelState.hasMore },
+                error = state.channelState.error,
                 isLoading = state.channelState.isLoading,
                 onReload = {
-                    onEvent(ProfileScreenUiEvent.ReloadChannels)
+                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
                 },
                 onReachedBottom = {
-                    onEvent(ProfileScreenUiEvent.EndReached)
+                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )
         } else if (state.channelState.isLoading) {
-            LoadingComponent(
+            StartingComponent(
                 modifier = Modifier.fillMaxSize()
             )
         } else if (state.channelState.error != null) {
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
-                    onEvent(ProfileScreenUiEvent.ReloadChannels)
+                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )
         }
@@ -432,7 +423,7 @@ private fun UserDetail(text: String) {
 private fun UserActions(
     modifier: Modifier = Modifier,
     hasChannels: Boolean,
-    onEvent: (ProfileScreenUiEvent) -> Unit
+    onEvent: (ProfileScreenAction) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -446,20 +437,20 @@ private fun UserActions(
             ActionButton(
                 text = stringResource(R.string.upload_video_button),
                 onClick = {
-                    onEvent(ProfileScreenUiEvent.PublishVideo)
+                    onEvent(ProfileScreenAction.PublishVideo)
                 }
             )
         }
         ActionButton(
             text = stringResource(R.string.create_channel_button),
             onClick = {
-                onEvent(ProfileScreenUiEvent.CreateChannel)
+                onEvent(ProfileScreenAction.CreateChannel)
             }
         )
         ActionButton(
             text = stringResource(R.string.invite_button),
             onClick = {
-                onEvent(ProfileScreenUiEvent.Invite)
+                onEvent(ProfileScreenAction.Invite)
             }
         )
         var isLogoutDialogVisible by rememberSaveable { mutableStateOf(false) }
@@ -472,7 +463,7 @@ private fun UserActions(
         if (isLogoutDialogVisible) {
             Dialog(
                 onSubmit = {
-                    onEvent(ProfileScreenUiEvent.SignOut)
+                    onEvent(ProfileScreenAction.SignOut)
                 },
                 onDismiss = {
                     isLogoutDialogVisible = false
@@ -539,4 +530,3 @@ fun ChannelSnippet(
         }
     }
 }
-

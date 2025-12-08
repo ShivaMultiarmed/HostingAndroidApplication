@@ -30,7 +30,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
     userBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry<Route.User.UploadVideo> {
+    entry<Route.User.VideoUploading> {
         val userId = userDetailsProvider.getUserId()
         val context = LocalContext.current
         val viewModel = hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> {

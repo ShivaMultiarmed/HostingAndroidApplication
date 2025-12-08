@@ -15,7 +15,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -26,15 +25,15 @@ import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGri
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
-import mikhail.shell.video.hosting.presentation.utils.LoadingComponent
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 
 @Composable
 fun ChannelScreen(
     userId: Long,
     state: ChannelScreenState,
-    onEvent: (ChannelScreenUiEvent) -> Unit
+    onAction: (ChannelScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
-    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +47,7 @@ fun ChannelScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (state is ChannelScreenState.Success) {
+            if (state.channel != null) {
                 var shouldShowLogo by rememberSaveable { mutableStateOf(false) }
                 Column(
                     modifier = Modifier.fillMaxSize()
@@ -56,45 +55,45 @@ fun ChannelScreen(
                     ChannelHeader(
                         modifier = Modifier.padding(10.dp),
                         channel = state.channel,
-                        onEvent = onEvent,
+                        onEvent = onAction,
                         owns = userId == state.channel.ownerId,
                         onShowLogo = {
                             shouldShowLogo = true
                         }
                     )
-                    if (state.videoState.videos != null) {
+                    if (state.videos.videos != null) {
                         VideoGridSection(
                             modifier = Modifier.fillMaxSize(),
-                            videos = state.videoState.videos,
+                            videos = state.videos.videos,
                             onVideoClick = {
-                                onEvent(ChannelScreenUiEvent.ClickVideo(it))
+                                onAction(ChannelScreenAction.ChooseVideo(it))
                             },
                             onReachedBottom = {
-                                onEvent(ChannelScreenUiEvent.ReachedBottom)
+                                onAction(ChannelScreenAction.LoadNextPart)
                             },
-                            hasMore = state.videoState.hasMore,
-                            isStarting = state.videoState.isStarting,
+                            hasMore = state.videos.hasMore,
+                            isStarting = state.videos.isStarting,
                             onRestart = {
-                                onEvent(ChannelScreenUiEvent.RestartVideos)
+                                onAction(ChannelScreenAction.RestartVideos)
                             },
                             onReload = {
-                                onEvent(ChannelScreenUiEvent.ReachedBottom)
+                                onAction(ChannelScreenAction.LoadNextPart)
                             }
                         )
-                    } else if (state.videoState.isStarting) {
-                        LoadingComponent(
+                    } else if (state.videos.isStarting) {
+                        StartingComponent(
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else if (state.videoState.error != null) {
+                    } else if (state.videos.error != null) {
                         ErrorComponent(
                             modifier = Modifier.fillMaxSize(),
                             onRetry = {
-                                onEvent(ChannelScreenUiEvent.RestartVideos)
+                                onAction(ChannelScreenAction.RestartVideos)
                             }
                         )
                     }
                     ErrorDisplay(
-                        state.videoState.error,
+                        state.videos.error,
                         snackBarHostState = snackBarHostState
                     )
                 }
@@ -110,24 +109,20 @@ fun ChannelScreen(
                             .clip(CircleShape)
                     )
                 }
-            } else if (state is ChannelScreenState.Starting) {
-                LoadingComponent(
+            } else if (state.isStarting) {
+                StartingComponent(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface)
                 )
-            } else if (state is ChannelScreenState.Failure) {
+            } else if (state.error != null) {
                 ErrorComponent(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface),
                     onRetry = {
-                        onEvent(ChannelScreenUiEvent.Restart)
+                        onAction(ChannelScreenAction.RestartChannel)
                     }
-                )
-                ErrorDisplay(
-                    error = state.error,
-                    snackBarHostState = snackBarHostState
                 )
             }
         }

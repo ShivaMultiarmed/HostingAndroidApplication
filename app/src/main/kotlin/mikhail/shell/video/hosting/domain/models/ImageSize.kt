@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain
+package mikhail.shell.video.hosting.domain.models
 
 enum class ImageSize {
     SMALL,

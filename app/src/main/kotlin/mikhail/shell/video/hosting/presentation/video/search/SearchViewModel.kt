@@ -3,12 +3,15 @@ package mikhail.shell.video.hosting.presentation.video.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.ImageSize
-import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
+import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.SearchForVideos
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateSearchQuery
@@ -27,28 +30,39 @@ class SearchViewModel @Inject constructor(
     private val _state = MutableStateFlow(SearchScreenState())
     val state = _state.asStateFlow()
 
-    fun onEvent(event: SearchScreenUiEvent) {
-        when (event) {
-            is SearchScreenUiEvent.QueryChanged -> onQueryChanged(event.query)
-            SearchScreenUiEvent.Reload, SearchScreenUiEvent.BottomReached -> load(start = false)
-            SearchScreenUiEvent.Restart, SearchScreenUiEvent.Submit -> load(start = true)
-            else -> Unit
+    private val _events = MutableSharedFlow<SearchScreenEvent>()
+    val events = _events.asSharedFlow()
+
+    fun onAction(action: SearchScreenAction) {
+        when (action) {
+            is SearchScreenAction.ChangeQuery -> onQueryChanged(action.query)
+            SearchScreenAction.LoadNextPart -> load(start = false)
+            SearchScreenAction.Restart, SearchScreenAction.Submit -> load()
+            is SearchScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(SearchScreenEvent.VideoChosen(action.videoId))
+            }
         }
     }
 
     private fun onQueryChanged(query: String) {
         _state.update {
             it.copy(
-                query = query,
-                queryError = query.let {
-                    val validationResult = validateSearchQuery(query)
-                    if (validationResult is Result.Failure) validationResult.error else null
-                }
+                query = it.query.copy(
+                    value = query,
+                    error = if (query.isEmpty()) null else validateSearchQuery(query).errorOrNull()
+                )
             )
         }
     }
 
     private fun load(start: Boolean = true) {
+        if (
+            _state.value.isStarting
+            || _state.value.isLoading
+            || _state.value.query.error != null
+        ) {
+            return
+        }
         _state.update {
             it.copy(
                 isStarting = start,
@@ -57,13 +71,13 @@ class SearchViewModel @Inject constructor(
         }
         viewModelScope.launch {
             searchForVideos(
-                query = _state.value.query,
+                query = _state.value.query.value,
                 cursor = if (start) null else _state.value.videos!!.last().videoId,
                 partSize = PART_SIZE
-            ).onSuccess { list ->
+            ).onSuccess { videos ->
                 _state.update {
                     it.copy(
-                        videos = ((if (!start) it.videos else null) ?: emptyList()) + list.map {
+                        videos = ((if (!start) it.videos else null) ?: emptyList()) + videos.map {
                             it.toUi(
                                 channelLogo = getChannelLogoUrl(
                                     channelId = it.channel.channelId,
@@ -75,21 +89,22 @@ class SearchViewModel @Inject constructor(
                                 )
                             )
                         },
-                        startingError = null,
-                        loadingError = null,
+                        error = null,
                         isStarting = false,
                         isLoading = false,
-                        hasMore = list.size == PART_SIZE
+                        hasMore = videos.size == PART_SIZE
                     )
                 }
             }.onFailure { error ->
                 _state.update {
                     it.copy(
-                        startingError = if (start) error else it.startingError,
-                        loadingError = if (!start) error else it.loadingError,
+                        error = error,
                         isStarting = false,
                         isLoading = false
                     )
+                }
+                viewModelScope.launch {
+                    _events.emit(SearchScreenEvent.Failure(error))
                 }
             }
         }
@@ -100,11 +115,15 @@ class SearchViewModel @Inject constructor(
     }
 }
 
-sealed class SearchScreenUiEvent {
-    data class QueryChanged(val query: String) : SearchScreenUiEvent()
-    data object Restart : SearchScreenUiEvent()
-    data object Submit : SearchScreenUiEvent()
-    data object BottomReached : SearchScreenUiEvent()
-    data object Reload : SearchScreenUiEvent()
-    data class ClickedVideo(val videoId: Long) : SearchScreenUiEvent()
+sealed class SearchScreenAction {
+    data class ChangeQuery(val query: String) : SearchScreenAction()
+    data object Submit : SearchScreenAction()
+    data object Restart : SearchScreenAction()
+    data object LoadNextPart : SearchScreenAction()
+    data class ChooseVideo(val videoId: Long) : SearchScreenAction()
+}
+
+sealed class SearchScreenEvent {
+    data class Failure(val error: Error) : SearchScreenEvent()
+    data class VideoChosen(val videoId: Long) : SearchScreenEvent()
 }
