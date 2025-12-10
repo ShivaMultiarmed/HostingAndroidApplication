@@ -22,13 +22,10 @@ import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,17 +47,16 @@ import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 
 @OptIn(UnstableApi::class)
 @Composable
 fun ChannelCreationScreen(
     state: ChannelCreationScreenState,
-    onEvent: (ChannelCreationUiEvent) -> Unit
+    onAction: (ChannelCreationScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
-    val snackBarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
     Scaffold(
         modifier = Modifier
@@ -70,17 +66,18 @@ fun ChannelCreationScreen(
             TopBar(
                 title = stringResource(R.string.channel_create_title),
                 onPopup = {
-                    onEvent(ChannelCreationUiEvent.Cancel)
+                    onAction(ChannelCreationScreenAction.Cancel)
                 },
                 inProgress = state.isLoading,
-                complete = state.channelId != null,
                 onSubmit = {
-                    onEvent(ChannelCreationUiEvent.Submit)
+                    onAction(ChannelCreationScreenAction.Submit)
                 }
             )
         },
         snackbarHost = {
-            SnackbarHost(snackBarHostState)
+            SnackbarHost(
+                hostState = snackBarHostState
+            )
         }
     ) {
         Column(
@@ -89,15 +86,7 @@ fun ChannelCreationScreen(
                 .padding(it)
                 .verticalScroll(scrollState)
         ) {
-            LaunchedEffect(state.channelId) {
-                if (state.channelId != null) {
-                    snackBarHostState.showSnackbar(
-                        message = context.getString(R.string.channel_create_success),
-                        duration = SnackbarDuration.Long
-                    )
-                }
-            }
-            val titleErrMsg = when (state.title.error) {
+            val titleErrMsg = when (state.channel.title.error) {
                 TextError.EMPTY -> stringResource(R.string.text_empty_error)
                 TextError.LONG -> stringResource(R.string.text_too_large_error,ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
@@ -105,67 +94,71 @@ fun ChannelCreationScreen(
                 else -> null
             }
             EditField(
-                actionItems = if (state.title.value.isNotEmpty()) listOf(
+                actionItems = if (state.channel.title.value.isNotEmpty()) listOf(
                     DeletingItem(
-                        deleting = { onEvent(ChannelCreationUiEvent.TitleChanged("")) }
+                        deleting = {
+                            onAction(ChannelCreationScreenAction.ChangeTitle(""))
+                        }
                     )
                 ) else emptyList()
             ) {
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Title,
-                    value = state.title.value,
+                    value = state.channel.title.value,
                     onValueChange = {
-                        onEvent(ChannelCreationUiEvent.TitleChanged(it))
+                        onAction(ChannelCreationScreenAction.ChangeTitle(it))
                     },
                     label = stringResource(R.string.channel_title_label),
                     errorMsg = titleErrMsg,
                     onFocus = {
-                        onEvent(ChannelCreationUiEvent.TitleFocused)
+                        onAction(ChannelCreationScreenAction.FocusTitle)
                     },
                     onBlur = {
-                        onEvent(ChannelCreationUiEvent.TitleBlurred)
+                        onAction(ChannelCreationScreenAction.BlurTitle)
                     }
                 )
             }
-            val aliasErrMsg = when (state.alias.error) {
+            val aliasErrMsg = when (state.channel.alias.error) {
                 TextError.LONG -> stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
                 is NetworkError -> stringResource(R.string.channel_alias_check_error)
                 else -> null
             }
             EditField(
-                actionItems = if (state.alias.value.isNotEmpty()) listOf(
+                actionItems = if (state.channel.alias.value.isNotEmpty()) listOf(
                     DeletingItem(
-                        deleting = { onEvent(ChannelCreationUiEvent.AliasChanged("")) }
+                        deleting = { onAction(ChannelCreationScreenAction.ChangeAlias("")) }
                     )
                 ) else emptyList()
             ) {
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.AlternateEmail,
-                    value = state.alias.value,
+                    value = state.channel.alias.value,
                     onValueChange = {
-                        onEvent(ChannelCreationUiEvent.AliasChanged(it))
+                        onAction(ChannelCreationScreenAction.ChangeAlias(it))
                     },
                     label = stringResource(R.string.channel_alias_label),
                     errorMsg = aliasErrMsg,
                     onFocus = {
-                        onEvent(ChannelCreationUiEvent.AliasFocused)
+                        onAction(ChannelCreationScreenAction.FocusAlias)
                     },
                     onBlur = {
-                        onEvent(ChannelCreationUiEvent.AliasBlurred)
+                        onAction(ChannelCreationScreenAction.BlurAlias)
                     }
                 )
             }
-            val descriptionErrMsg = when (state.description.error) {
+            val descriptionErrMsg = when (state.channel.description.error) {
                 TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
                 else -> null
             }
             EditField(
-                actionItems = if (state.description.value.isNotEmpty()) listOf(
+                actionItems = if (state.channel.description.value.isNotEmpty()) listOf(
                     DeletingItem(
-                        deleting = { onEvent(ChannelCreationUiEvent.DescriptionChanged("")) }
+                        deleting = {
+                            onAction(ChannelCreationScreenAction.ChangeDescription(""))
+                        }
                     )
                 ) else emptyList()
             ) {
@@ -174,28 +167,28 @@ fun ChannelCreationScreen(
                         .fillMaxWidth()
                         .height(300.dp),
                     icon = Icons.Rounded.DensityMedium,
-                    value = state.description.value,
+                    value = state.channel.description.value,
                     onValueChange = {
-                        onEvent(ChannelCreationUiEvent.DescriptionChanged(it))
+                        onAction(ChannelCreationScreenAction.ChangeDescription(it))
                     },
                     label = stringResource(R.string.channel_description_label),
                     maxLines = 50,
                     errorMsg = descriptionErrMsg,
                     onFocus = {
-                        onEvent(ChannelCreationUiEvent.DescriptionFocused)
+                        onAction(ChannelCreationScreenAction.FocusDescription)
                     },
                     onBlur = {
-                        onEvent(ChannelCreationUiEvent.DescriptionBlurred)
+                        onAction(ChannelCreationScreenAction.BlurDescription)
                     }
                 )
             }
             val logoPicker =
                 rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        onEvent(ChannelCreationUiEvent.LogoChanged(it.toString()))
+                        onAction(ChannelCreationScreenAction.ChangeLogo(it.toString()))
                     }
                 }
-            val logoErrorMsg = when (state.logo.error) {
+            val logoErrorMsg = when (state.channel.logo.error) {
                 FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
@@ -204,16 +197,16 @@ fun ChannelCreationScreen(
                 else -> null
             }
             EditField(
-                actionItems = if (state.logo.value != null) listOf(
+                actionItems = if (state.channel.logo.value != null) listOf(
                     DeletingItem(
-                        deleting = { onEvent(ChannelCreationUiEvent.LogoChanged(null)) }
+                        deleting = { onAction(ChannelCreationScreenAction.ChangeLogo(null)) }
                     )
                 ) else emptyList()
             ) {
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Person,
-                    placeholder = if (state.logo.value == null) stringResource(R.string.channel_logo_choose_label)
+                    placeholder = if (state.channel.logo.value == null) stringResource(R.string.channel_logo_choose_label)
                     else stringResource(R.string.channel_logo_choose_another_label),
                     onClick = {
                         logoPicker.launch("image/*")
@@ -221,7 +214,7 @@ fun ChannelCreationScreen(
                     errorMsg = logoErrorMsg
                 )
             }
-            if (state.logo.value != null) {
+            if (state.channel.logo.value != null) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -230,8 +223,8 @@ fun ChannelCreationScreen(
                         text = stringResource(R.string.channel_chosen_logo_message)
                     )
                     AsyncImage(
-                        model = state.logo.value,
-                        contentDescription = state.title.value,
+                        model = state.channel.logo.value,
+                        contentDescription = state.channel.title.value,
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape),
@@ -242,10 +235,10 @@ fun ChannelCreationScreen(
             val headerPicker =
                 rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        onEvent(ChannelCreationUiEvent.HeaderChanged(it.toString()))
+                        onAction(ChannelCreationScreenAction.ChangeHeader(it.toString()))
                     }
                 }
-            val headerErrorMsg = when (state.header.error) {
+            val headerErrorMsg = when (state.channel.header.error) {
                 FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
                 FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
                 FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
@@ -254,16 +247,16 @@ fun ChannelCreationScreen(
                 else -> null
             }
             EditField(
-                actionItems = if (state.header.value != null) listOf(
+                actionItems = if (state.channel.header.value != null) listOf(
                     DeletingItem(
-                        deleting = { onEvent(ChannelCreationUiEvent.HeaderChanged(null)) }
+                        deleting = { onAction(ChannelCreationScreenAction.ChangeHeader(null)) }
                     )
                 ) else emptyList()
             ) {
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
                     icon = Icons.Rounded.Wallpaper,
-                    placeholder = when (state.header.value) {
+                    placeholder = when (state.channel.header.value) {
                         null -> stringResource(R.string.channel_choose_header_label)
                         else -> stringResource(R.string.channel_header_choose_another_label)
                     },
@@ -273,7 +266,7 @@ fun ChannelCreationScreen(
                     errorMsg = headerErrorMsg
                 )
             }
-            if (state.header.value != null) {
+            if (state.channel.header.value != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -284,8 +277,8 @@ fun ChannelCreationScreen(
                         text = stringResource(R.string.channel_chosen_header_message)
                     )
                     AsyncImage(
-                        model = state.header.value,
-                        contentDescription = state.title.value,
+                        model = state.channel.header.value,
+                        contentDescription = state.channel.title.value,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -295,9 +288,5 @@ fun ChannelCreationScreen(
                 }
             }
         }
-        StandardErrorDisplay(
-            error = state.error,
-            snackBarHostState = snackBarHostState
-        )
     }
 }

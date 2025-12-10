@@ -1,41 +1,55 @@
 package mikhail.shell.video.hosting.presentation.navigation.channel
 
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
-import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationUiEvent
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenEvent
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
-    userBackStack: MutableList<Route>
+    userBackStack: MutableList<Route>,
+    userDetailsProvider: UserDetailsProvider,
 ) {
     entry <Route.User.ChannelCreation> { route ->
-        val viewModel = hiltViewModel<ChannelCreationViewModel>()
+        val context = LocalContext.current
+        val viewModel = hiltViewModel<ChannelCreationViewModel, ChannelCreationViewModel.Factory> { factory ->
+            factory.create(userDetailsProvider.getUserId())
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val events = viewModel.events
+        val snackBarHostState = remember { SnackbarHostState() }
         ChannelCreationScreen(
             state = state,
-            onEvent = { event ->
-                when (event) {
-                    is ChannelCreationUiEvent.Cancel -> userBackStack.remove(route)
-                    else -> viewModel.onEvent(event)
-                }
-            }
+            onAction = viewModel::onAction,
+            snackBarHostState = snackBarHostState
         )
-        LaunchedEffect(state.error) {
-            if (state.error == NetworkError.AUTHENTICATION) {
-                rootBackStack.add(Route.Authentication)
-            }
-        }
-        LaunchedEffect(state.channelId) {
-            if (state.channelId != null) {
-                userBackStack.add(Route.Channel(state.channelId!!))
-                userBackStack.remove(route)
+        events.observe { event ->
+            when (event) {
+                ChannelCreationScreenEvent.Cancelled -> userBackStack.removeLastOrNull()
+                is ChannelCreationScreenEvent.Created -> {
+                    userBackStack.removeLastOrNull()
+                    userBackStack.add(Route.Channel(event.channelId))
+                }
+                is ChannelCreationScreenEvent.Failure -> {
+                    if (event.error == NetworkError.AUTHENTICATION) {
+                        rootBackStack.add(Route.Authentication)
+                    } else {
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
+                        }
+                    }
+                }
             }
         }
     }

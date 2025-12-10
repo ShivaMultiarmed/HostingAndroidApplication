@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelDetails
@@ -226,21 +225,4 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private companion object {
         const val PART_SIZE = 10
     }
-}
-
-sealed class ChannelScreenAction {
-    data object RestartChannel : ChannelScreenAction()
-    data object RestartVideos : ChannelScreenAction()
-    data class Subscribe(val subscription: Subscription) : ChannelScreenAction()
-    data class ChooseVideo(val videoId: Long) : ChannelScreenAction()
-    data object LoadNextPart : ChannelScreenAction()
-    data object Edit : ChannelScreenAction()
-    data object Remove : ChannelScreenAction()
-}
-
-sealed class ChannelScreenEvent {
-    data class Failure(val error: Error) : ChannelScreenEvent()
-    data class VideoChosen(val videoId: Long) : ChannelScreenEvent()
-    data class EditingRequest(val channelId: Long) : ChannelScreenEvent()
-    data class Removed(val channelId: Long) : ChannelScreenEvent()
 }

@@ -6,13 +6,15 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class ChannelCreationScreenState(
-    val owner: Long,
+    val channel: ChannelCreationInputState,
+    val isLoading: Boolean = false
+)
+
+data class ChannelCreationInputState(
+    val ownerId: Long,
     val title: FieldState<String, Error> = FieldState(""),
     val alias: FieldState<String, Error> = FieldState(""),
     val logo: FieldState<String?, FileError> = FieldState(null),
     val header: FieldState<String?, FileError> = FieldState(null),
-    val description: FieldState<String, TextError> = FieldState(""),
-    val channelId: Long? = null,
-    val isLoading: Boolean = false,
-    val error: Error? = null
+    val description: FieldState<String, TextError> = FieldState("")
 )

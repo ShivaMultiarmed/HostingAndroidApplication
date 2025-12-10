@@ -48,7 +48,8 @@ fun EntryProviderScope<Route>.userGraph(
                 )
                 channelCreationRoute(
                     rootBackStack = rootBackStack,
-                    userBackStack = userBackStack
+                    userBackStack = userBackStack,
+                    userDetailsProvider = userDetailsProvider
                 )
                 channelGraph(
                     rootBackStack = rootBackStack,

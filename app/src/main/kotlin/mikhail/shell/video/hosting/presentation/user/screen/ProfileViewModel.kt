@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
@@ -162,25 +161,4 @@ class ProfileViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("userId") userId: Long): ProfileViewModel
     }
-}
-
-sealed class ProfileScreenAction {
-    data object RestartProfile : ProfileScreenAction()
-    data object LoadNextChannelsPart : ProfileScreenAction()
-    data class ChooseChannel(val channelId: Long) : ProfileScreenAction()
-    data object OpenSettings : ProfileScreenAction()
-    data object PublishVideo : ProfileScreenAction()
-    data object CreateChannel : ProfileScreenAction()
-    data object SignOut : ProfileScreenAction()
-    data object Invite : ProfileScreenAction()
-}
-
-sealed class ProfileScreenEvent {
-    data class Failure(val error: Error): ProfileScreenEvent()
-    data object SignedOut: ProfileScreenEvent()
-    data class ChannelChosen(val channelId: Long) : ProfileScreenEvent()
-    data object SettingsRequested : ProfileScreenEvent()
-    data object VideoUploadingRequested : ProfileScreenEvent()
-    data object ChannelCreationRequested : ProfileScreenEvent()
-    data object InvitationRequested : ProfileScreenEvent()
 }

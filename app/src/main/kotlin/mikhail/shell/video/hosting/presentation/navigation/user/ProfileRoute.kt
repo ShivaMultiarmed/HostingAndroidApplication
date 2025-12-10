@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen

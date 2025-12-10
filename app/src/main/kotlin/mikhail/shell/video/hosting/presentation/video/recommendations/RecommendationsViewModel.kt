@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.videos.GetRecommendations
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
@@ -94,15 +93,4 @@ class RecommendationsViewModel @Inject constructor(
     private companion object {
         const val PART_SIZE = 10
     }
-}
-
-sealed class RecommendationsScreenAction {
-    data object Restart : RecommendationsScreenAction()
-    data object LoadNextPart : RecommendationsScreenAction()
-    data class ChooseVideo(val videoId: Long) : RecommendationsScreenAction()
-}
-
-sealed class RecommendationsScreenEvent {
-    data class VideoChosen(val videoId: Long): RecommendationsScreenEvent()
-    data class Failure(val error: Error): RecommendationsScreenEvent()
 }

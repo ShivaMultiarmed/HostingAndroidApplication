@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.usecases.channels.GetSubscriptions
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
@@ -88,15 +87,4 @@ class SubscriptionsScreenViewModel @Inject constructor(
     private companion object {
         const val PART_SIZE = 10
     }
-}
-
-sealed class SubscriptionsScreenAction {
-    data object Restart : SubscriptionsScreenAction()
-    data object LoadNextPart: SubscriptionsScreenAction()
-    data class ChooseChannel(val channelId: Long) : SubscriptionsScreenAction()
-}
-
-sealed class SubscriptionsScreenEvent {
-    data class Failure(val error: Error): SubscriptionsScreenEvent()
-    data class ChannelChosen(val channelId: Long): SubscriptionsScreenEvent()
 }

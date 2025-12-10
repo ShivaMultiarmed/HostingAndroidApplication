@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
@@ -113,17 +112,4 @@ class SearchViewModel @Inject constructor(
     private companion object {
         const val PART_SIZE = 10
     }
-}
-
-sealed class SearchScreenAction {
-    data class ChangeQuery(val query: String) : SearchScreenAction()
-    data object Submit : SearchScreenAction()
-    data object Restart : SearchScreenAction()
-    data object LoadNextPart : SearchScreenAction()
-    data class ChooseVideo(val videoId: Long) : SearchScreenAction()
-}
-
-sealed class SearchScreenEvent {
-    data class Failure(val error: Error) : SearchScreenEvent()
-    data class VideoChosen(val videoId: Long) : SearchScreenEvent()
 }
