@@ -22,8 +22,8 @@ data class ChannelEditingInputState(
     val title: FieldState<String, Error>,
     val alias: FieldState<String, Error>,
     val description: FieldState<String, TextError>,
-    val header: FieldState<EditingState, FileError>,
-    val logo: FieldState<EditingState, FileError>,
+    val header: FieldState<EditingState<String?>, FileError>,
+    val logo: FieldState<EditingState<String?>, FileError>,
 ) {
     companion object {
         fun initialize(

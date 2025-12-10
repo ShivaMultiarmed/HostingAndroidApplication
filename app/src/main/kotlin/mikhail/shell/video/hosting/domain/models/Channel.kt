@@ -32,6 +32,6 @@ data class ChannelEditingModel(
     val title: String,
     val alias: String?,
     val description: String?,
-    val logo: EditingState,
-    val header: EditingState,
+    val logo: EditingState<String?>,
+    val header: EditingState<String?>,
 )

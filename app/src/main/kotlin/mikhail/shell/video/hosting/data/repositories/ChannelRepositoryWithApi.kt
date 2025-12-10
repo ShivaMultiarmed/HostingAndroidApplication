@@ -8,10 +8,10 @@ import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
 import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
+import mikhail.shell.video.hosting.data.utils.createEmptyFilePart
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
@@ -20,11 +20,12 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
-import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
+import mikhail.shell.video.hosting.presentation.utils.EditingState
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
@@ -156,20 +157,22 @@ class ChannelRepositoryWithApi @Inject constructor(
             )
         }
     ) {
-        val headerPart = channel.header?.let {
-            fileProvider.uriToPart(uri = it, partName = "header")
+        val headerPart = when (channel.header) {
+            is EditingState.Editing -> fileProvider.uriToPart(uri = channel.header.value!!, partName = "header")
+            is EditingState.Keeping -> null
+            EditingState.Removing -> createEmptyFilePart(mimeType = "image/*", partName = "header")
         }
-        val logoPart = channel.logo?.let {
-            fileProvider.uriToPart(uri = it, partName = "logo")
+        val logoPart = when (channel.logo){
+            is EditingState.Editing -> fileProvider.uriToPart(uri = channel.logo.value!!, partName = "logo")
+            is EditingState.Keeping -> null
+            EditingState.Removing -> createEmptyFilePart(mimeType = "image/*", partName = "logo")
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
                 channelId = channel.channelId,
                 title = channel.title,
                 alias = channel.alias,
-                description = channel.description,
-                headerAction = channel.headerAction,
-                logoAction = channel.logoAction
+                description = channel.description
             ),
             logo = logoPart,
             header = headerPart
@@ -195,7 +198,5 @@ data class ChannelEditingRequest(
     val channelId: Long,
     val title: String,
     val alias: String?,
-    val description: String?,
-    val headerAction: EditAction,
-    val logoAction: EditAction
+    val description: String?
 )

@@ -224,7 +224,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onHeaderChanged(editingState: EditingState) {
+    private fun onHeaderChanged(editingState: EditingState<String?>) {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
@@ -232,7 +232,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     header = currentState.channel.header.copy(
                         value = editingState,
                         error = when (editingState) {
-                            is EditingState.Editing<*> -> validateImage(editingState.value as String).errorOrNull()
+                            is EditingState.Editing -> validateImage(editingState.value!!).errorOrNull()
                             else -> null
                         }
                     )
@@ -241,7 +241,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onLogoChanged(editingState: EditingState) {
+    private fun onLogoChanged(editingState: EditingState<String?>) {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
@@ -249,7 +249,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     logo = currentState.channel.logo.copy(
                         value = editingState,
                         error = when (editingState) {
-                            is EditingState.Editing<*> -> validateImage(editingState.value as String).errorOrNull()
+                            is EditingState.Editing -> validateImage(editingState.value!!).errorOrNull()
                             else -> null
                         }
                     )

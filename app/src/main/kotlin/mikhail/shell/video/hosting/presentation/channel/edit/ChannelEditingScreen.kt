@@ -212,13 +212,13 @@ fun ChannelEditingScreen(
                             }
                         }
                     val logoErrMsg = getFileErrorMessage(state.channel.logo.error)
-                    val logoPainter = rememberAsyncImagePainter((state.channel.logo.initial as EditingState.Keeping<*>).value)
+                    val logoPainter = rememberAsyncImagePainter((state.channel.logo.initial as EditingState.Keeping).value)
                     Column {
                         StandardEditField(
                             modifier = Modifier,
                             firstTime = false,
-                            updated = state.channel.logo.value is EditingState.Editing<*> || state.channel.logo.value is EditingState.Removing && logoPainter.state is AsyncImagePainter.State.Success,
-                            empty = !(state.channel.logo.value is EditingState.Editing<*> || logoPainter.state is AsyncImagePainter.State.Success && state.channel.logo.value !is EditingState.Removing),
+                            updated = state.channel.logo.value is EditingState.Editing || state.channel.logo.value is EditingState.Removing && logoPainter.state is AsyncImagePainter.State.Success,
+                            empty = !(state.channel.logo.value is EditingState.Editing || logoPainter.state is AsyncImagePainter.State.Success && state.channel.logo.value !is EditingState.Removing),
                             onRevert = {
                                 onAction(ScreenAction.ChangeLogo(state.channel.logo.initial))
                             },
@@ -230,7 +230,7 @@ fun ChannelEditingScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 icon = Icons.Rounded.Person,
                                 placeholder = when (state.channel.logo.value) {
-                                    !is EditingState.Editing<*> -> stringResource(R.string.channel_logo_choose_label)
+                                    !is EditingState.Editing -> stringResource(R.string.channel_logo_choose_label)
                                     else -> stringResource(R.string.channel_logo_choose_another_label)
                                 },
                                 onClick = {
@@ -261,7 +261,7 @@ fun ChannelEditingScreen(
                                     )
                                 }
                             }
-                            if (state.channel.logo.value is EditingState.Editing<*>) {
+                            if (state.channel.logo.value is EditingState.Editing) {
                                 Column (
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -298,13 +298,13 @@ fun ChannelEditingScreen(
                             }
                         }
                     val headerErrMsg = getFileErrorMessage(state.channel.header.error)
-                    val headerPainter = rememberAsyncImagePainter(state.channel.header.initial)
+                    val headerPainter = rememberAsyncImagePainter((state.channel.header.initial as EditingState.Keeping).value)
                     Column {
                         StandardEditField(
                             modifier = Modifier,
                             firstTime = false,
-                            updated = state.channel.header.value is EditingState.Editing<*> || state.channel.header.value is EditingState.Removing && headerPainter.state is AsyncImagePainter.State.Success,
-                            empty = !(state.channel.header.value is EditingState.Editing<*> || headerPainter.state is AsyncImagePainter.State.Success && state.channel.header.value !is EditingState.Removing),
+                            updated = state.channel.header.value is EditingState.Editing || state.channel.header.value is EditingState.Removing && headerPainter.state is AsyncImagePainter.State.Success,
+                            empty = !(state.channel.header.value is EditingState.Editing || headerPainter.state is AsyncImagePainter.State.Success && state.channel.header.value !is EditingState.Removing),
                             onRevert = {
                                 onAction(ScreenAction.ChangeHeader(state.channel.header.initial))
                             },
@@ -316,7 +316,7 @@ fun ChannelEditingScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 icon = Icons.Rounded.Wallpaper,
                                 placeholder = when (state.channel.header.value) {
-                                    !is EditingState.Editing<*> -> stringResource(R.string.channel_choose_header_label)
+                                    !is EditingState.Editing -> stringResource(R.string.channel_choose_header_label)
                                     else -> stringResource(R.string.channel_choose_another_header_label)
                                 },
                                 onClick = {

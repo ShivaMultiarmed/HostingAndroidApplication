@@ -81,6 +81,17 @@ fun unexpectedExceptionHandler(processing: (Exception) -> Error) = processing
 
 const val TRANSFER_BUFFER_SIZE = 10 * 1024 * 1024
 
+fun createEmptyFilePart(
+    mimeType: String = "application/octet-stream",
+    partName: String
+) : MultipartBody.Part {
+    return MultipartBody.Part.createFormData(
+        name = partName,
+        filename = "",
+        body = ByteArray(0).toRequestBody(contentType = mimeType.toMediaTypeOrNull())
+    )
+}
+
 fun FileProvider.uriToPart(
     uri: String,
     partName: String
@@ -91,9 +102,7 @@ fun FileProvider.uriToPart(
         .getExtensionFromMimeType(mimeType)
     val bytes = getFileAsInputStream(uri)!!.use { it.readBytes() }
     val fileName = "$partName.$extension"
-    val requestBody = bytes.toRequestBody(
-        contentType = mimeType?.toMediaTypeOrNull()
-    )
+    val requestBody = bytes.toRequestBody(contentType = mimeType?.toMediaTypeOrNull())
     return MultipartBody.Part.createFormData(
         name = partName,
         filename = fileName,
