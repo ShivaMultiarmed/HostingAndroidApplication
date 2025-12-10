@@ -1,7 +1,5 @@
 package mikhail.shell.video.hosting.domain.models
 
-import mikhail.shell.video.hosting.presentation.utils.EditingState
-
 data class Channel(
     val channelId: Long,
     val ownerId: Long,
@@ -32,6 +30,6 @@ data class ChannelEditingModel(
     val title: String,
     val alias: String?,
     val description: String?,
-    val logo: EditingState<String?>,
-    val header: EditingState<String?>,
+    val logo: EditingAction<String>,
+    val header: EditingAction<String>,
 )

@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.channel.ChannelEditingError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
+import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.errorOrNull
@@ -322,8 +323,16 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     title = currentState.channel.title.value,
                     alias = currentState.channel.alias.value.takeIf { it.isNotEmpty() },
                     description = currentState.channel.description.value.takeIf { it.isNotEmpty() },
-                    header = currentState.channel.header.value,
-                    logo = currentState.channel.logo.value,
+                    header = when (currentState.channel.header.value) {
+                        is EditingState.Editing -> EditingAction.Edit(currentState.channel.header.value.value!!)
+                        is EditingState.Keeping -> EditingAction.Keep
+                        EditingState.Removing -> EditingAction.Remove
+                    },
+                    logo = when (currentState.channel.logo.value) {
+                        is EditingState.Editing -> EditingAction.Edit(currentState.channel.logo.value.value!!)
+                        is EditingState.Keeping -> EditingAction.Keep
+                        EditingState.Removing -> EditingAction.Remove
+                    }
                 )
             ).onSuccess { editedChannel ->
                 _state.update {

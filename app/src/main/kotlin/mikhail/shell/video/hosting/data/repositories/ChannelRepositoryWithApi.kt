@@ -20,12 +20,12 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
+import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
-import mikhail.shell.video.hosting.presentation.utils.EditingState
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
@@ -158,14 +158,14 @@ class ChannelRepositoryWithApi @Inject constructor(
         }
     ) {
         val headerPart = when (channel.header) {
-            is EditingState.Editing -> fileProvider.uriToPart(uri = channel.header.value!!, partName = "header")
-            is EditingState.Keeping -> null
-            EditingState.Removing -> createEmptyFilePart(mimeType = "image/*", partName = "header")
+            is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.header.value, partName = "header")
+            is EditingAction.Keep -> null
+            is EditingAction.Remove -> createEmptyFilePart(mimeType = "image/*", partName = "header")
         }
         val logoPart = when (channel.logo){
-            is EditingState.Editing -> fileProvider.uriToPart(uri = channel.logo.value!!, partName = "logo")
-            is EditingState.Keeping -> null
-            EditingState.Removing -> createEmptyFilePart(mimeType = "image/*", partName = "logo")
+            is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.logo.value!!, partName = "logo")
+            is EditingAction.Keep -> null
+            EditingAction.Remove -> createEmptyFilePart(mimeType = "image/*", partName = "logo")
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
