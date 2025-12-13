@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -11,11 +10,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observe
-import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
 
 fun EntryProviderScope<Route>.editVideoRoute(
@@ -36,22 +35,28 @@ fun EntryProviderScope<Route>.editVideoRoute(
         )
         events.observe { event ->
             when (event) {
-                is VideoEditingEvent.Failure if (event.error is NetworkError) -> coroutineScope.launch {
-                    val errorMessage = context.getNetworkErrorMessage(event.error)
-                    snackBarHostState.showSnackbar(
-                        message = errorMessage,
-                        duration = SnackbarDuration.Short
-                    )
+                is VideoEditingScreenEvent.Failure -> {
+                    if (event.error == NetworkError.AUTHENTICATION) {
+                        rootBackStack.add(Route.Authentication)
+                    } else {
+                        coroutineScope.launch {
+                            context.getStandardErrorMessage(event.error)?.let {
+                                snackBarHostState.showSnackbar(it)
+                            }
+                        }
+                    }
                 }
-                VideoEditingEvent.NavigateBack -> videoBackStack.removeLastOrNull()
-                VideoEditingEvent.RequireAuthentication -> rootBackStack.add(Route.Authentication)
-                VideoEditingEvent.Success -> {
+                VideoEditingScreenEvent.Cancelled -> videoBackStack.removeLastOrNull()
+                VideoEditingScreenEvent.Success -> {
                     val videoRoute = videoBackStack.find { it is Route.Video.View } as Route.Video.View
                     videoBackStack.clear()
                     videoBackStack.add(videoRoute.copy())
                 }
-                else -> Unit
             }
         }
     }
+}
+
+operator fun <T> Collection<T>.get(index: Int): T {
+    return if (index >= 0) elementAt(index) else elementAt(size + index)
 }

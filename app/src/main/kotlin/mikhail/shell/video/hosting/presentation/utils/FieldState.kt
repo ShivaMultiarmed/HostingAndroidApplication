@@ -8,8 +8,8 @@ data class FieldState<I, E: Error>(
     val error: E? = null
 )
 
-sealed class EditingState<I> {
-    data class Keeping<I>(val value: I) : EditingState<I>()
+sealed class EditingState<out I> {
+    data class Keeping<out I>(val value: I) : EditingState<I>()
     data object Removing : EditingState<Nothing>()
-    data class Editing<I>(val value: I) : EditingState<I>()
+    data class Editing<out I>(val value: I) : EditingState<I>()
 }

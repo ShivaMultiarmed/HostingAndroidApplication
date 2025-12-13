@@ -6,8 +6,6 @@ import mikhail.shell.video.hosting.domain.errors.NumericError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 
-typealias State = VideoUploadingScreenState
-
 sealed class VideoUploadingScreenState {
     data object Starting: VideoUploadingScreenState()
     data class Failure(val error: Error): VideoUploadingScreenState()

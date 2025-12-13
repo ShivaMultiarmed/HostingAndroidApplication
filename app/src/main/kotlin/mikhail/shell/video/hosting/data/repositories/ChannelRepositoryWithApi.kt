@@ -8,7 +8,6 @@ import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
 import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
-import mikhail.shell.video.hosting.data.utils.createEmptyFilePart
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
@@ -20,6 +19,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
+import mikhail.shell.video.hosting.domain.models.EditAction
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
@@ -159,20 +159,28 @@ class ChannelRepositoryWithApi @Inject constructor(
     ) {
         val headerPart = when (channel.header) {
             is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.header.value, partName = "header")
-            is EditingAction.Keep -> null
-            is EditingAction.Remove -> createEmptyFilePart(mimeType = "image/*", partName = "header")
+            else -> null
         }
         val logoPart = when (channel.logo){
-            is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.logo.value!!, partName = "logo")
-            is EditingAction.Keep -> null
-            EditingAction.Remove -> createEmptyFilePart(mimeType = "image/*", partName = "logo")
+            is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.logo.value, partName = "logo")
+            else -> null
         }
         channelApi.editChannel(
             channel = ChannelEditingRequest(
                 channelId = channel.channelId,
                 title = channel.title,
                 alias = channel.alias,
-                description = channel.description
+                description = channel.description,
+                headerAction = when (channel.header) {
+                    is EditingAction.Edit -> EditAction.EDIT
+                    EditingAction.Keep -> EditAction.KEEP
+                    EditingAction.Remove -> EditAction.REMOVE
+                },
+                logoAction = when (channel.logo) {
+                    is EditingAction.Edit -> EditAction.EDIT
+                    EditingAction.Keep -> EditAction.KEEP
+                    EditingAction.Remove -> EditAction.REMOVE
+                }
             ),
             logo = logoPart,
             header = headerPart
@@ -198,5 +206,7 @@ data class ChannelEditingRequest(
     val channelId: Long,
     val title: String,
     val alias: String?,
-    val description: String?
+    val description: String?,
+    val headerAction: EditAction,
+    val logoAction: EditAction
 )

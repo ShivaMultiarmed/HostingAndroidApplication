@@ -326,12 +326,12 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     header = when (currentState.channel.header.value) {
                         is EditingState.Editing -> EditingAction.Edit(currentState.channel.header.value.value!!)
                         is EditingState.Keeping -> EditingAction.Keep
-                        EditingState.Removing -> EditingAction.Remove
+                        is EditingState.Removing -> EditingAction.Remove
                     },
                     logo = when (currentState.channel.logo.value) {
                         is EditingState.Editing -> EditingAction.Edit(currentState.channel.logo.value.value!!)
                         is EditingState.Keeping -> EditingAction.Keep
-                        EditingState.Removing -> EditingAction.Remove
+                        is EditingState.Removing -> EditingAction.Remove
                     }
                 )
             ).onSuccess { editedChannel ->

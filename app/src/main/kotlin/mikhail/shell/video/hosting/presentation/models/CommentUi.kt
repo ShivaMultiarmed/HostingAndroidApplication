@@ -14,13 +14,11 @@ data class CommentUi(
     val dateTime: LocalDateTime
 )
 
-fun CommentWithUser.toUi(
-    avatar: String
-) = CommentUi(
-    userId = user.userId!!,
-    commentId = comment.commentId!!,
+fun CommentWithUser.toUi(avatar: String) = CommentUi(
+    userId = user.userId,
+    commentId = comment.commentId,
     nick = user.nick,
     avatar = avatar,
     text = comment.text,
-    dateTime = comment.dateTime!!.toLocalDateTime(TimeZone.currentSystemDefault())
+    dateTime = comment.dateTime.toLocalDateTime(TimeZone.currentSystemDefault())
 )

@@ -49,8 +49,7 @@ data class VideoEditingModel(
     val videoId: Long,
     val title: String,
     val description: String?,
-    val cover: String?,
-    val coverAction: EditAction
+    val cover: EditingAction<String>
 )
 
 @OptIn(ExperimentalUuidApi::class)

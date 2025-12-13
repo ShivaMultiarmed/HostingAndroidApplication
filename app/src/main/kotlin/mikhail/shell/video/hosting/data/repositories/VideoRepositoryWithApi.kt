@@ -22,13 +22,14 @@ import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.toRequestBody
 import mikhail.shell.video.hosting.data.utils.uriToPart
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.EditingAction
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.PendingVideo
 import mikhail.shell.video.hosting.domain.models.Result
@@ -253,13 +254,20 @@ class VideoRepositoryWithApi @Inject constructor(
                 )
             }
         ) {
-            val coverPart = video.cover?.let { fileProvider.uriToPart(it, "cover") }
+            val coverPart = when (video.cover) {
+                is EditingAction.Edit -> fileProvider.uriToPart(video.cover.value, "cover")
+                else -> null
+            }
             videoApi.editVideo(
                 video = VideoEditingRequest(
                     videoId = video.videoId,
                     title = video.title,
                     description = video.description,
-                    coverAction = video.coverAction
+                    coverAction = when (video.cover) {
+                        is EditingAction.Edit -> EditAction.EDIT
+                        EditingAction.Keep -> EditAction.KEEP
+                        EditingAction.Remove -> EditAction.REMOVE
+                    }
                 ),
                 cover = coverPart
             ).toDomain()

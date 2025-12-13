@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -89,7 +90,6 @@ import kotlinx.datetime.toInstant
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
 import mikhail.shell.video.hosting.domain.models.Liking.NONE
@@ -104,13 +104,11 @@ import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
-import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
-import mikhail.shell.video.hosting.presentation.utils.StandardErrorDisplay
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -126,14 +124,14 @@ fun VideoScreen(
     state: VideoScreenState,
     player: Player,
     userId: Long,
-    onEvent: (VideoScreenUiEvent) -> Unit
+    onAction: (VideoScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
     val lifecycleOwner = LocalLifecycleOwner.current
     val playerState = LocalPlayerState.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val snackBarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
     Scaffold(
         modifier = Modifier
@@ -141,7 +139,7 @@ fun VideoScreen(
             .background(MaterialTheme.colorScheme.surface),
         snackbarHost = {
             SnackbarHost(
-                modifier = Modifier,// TODO: .padding(bottom = ),
+                modifier = Modifier.imePadding(),
                 hostState = snackBarHostState
             )
         }
@@ -326,7 +324,7 @@ fun VideoScreen(
                                                 MenuItem(
                                                     title = stringResource(R.string.video_edit_button),
                                                     onClick = {
-                                                        onEvent(VideoScreenUiEvent.Edit)
+                                                        onAction(VideoScreenAction.Edit)
                                                     }
                                                 ),
                                                 MenuItem(
@@ -345,7 +343,7 @@ fun VideoScreen(
                                 if (isDeletingDialogOpen) {
                                     Dialog(
                                         onSubmit = {
-                                            onEvent(VideoScreenUiEvent.Remove)
+                                            onAction(VideoScreenAction.Remove)
                                         },
                                         onDismiss = {
                                             isDeletingDialogOpen = false
@@ -366,7 +364,7 @@ fun VideoScreen(
                             Row(
                                 modifier = Modifier
                                     .clickable {
-                                        onEvent(VideoScreenUiEvent.OpenChannel)
+                                        onAction(VideoScreenAction.OpenChannel)
                                     }
                                     .weight(1f),
                                 verticalAlignment = Alignment.CenterVertically
@@ -414,7 +412,7 @@ fun VideoScreen(
                                         SUBSCRIBED -> NOT_SUBSCRIBED
                                         else -> SUBSCRIBED
                                     }
-                                    onEvent(VideoScreenUiEvent.Subscribe(subscriptionState))
+                                    onAction(VideoScreenAction.Subscribe(subscriptionState))
                                 },
                                 toggledOffText = stringResource(R.string.subscribe_button),
                                 toggledOnText = stringResource(R.string.unsubscribe_button)
@@ -434,7 +432,7 @@ fun VideoScreen(
                                 icon = likeVector,
                                 text = state.video.likes.toRoundString(),
                                 onClick = {
-                                    onEvent(VideoScreenUiEvent.Like(if (state.video.liking != LIKED) LIKED else NONE))
+                                    onAction(VideoScreenAction.Like(if (state.video.liking != LIKED) LIKED else NONE))
                                 }
                             )
                             val dislikeVector = when (state.video.liking) {
@@ -445,21 +443,21 @@ fun VideoScreen(
                                 icon = dislikeVector,
                                 text = state.video.dislikes.toRoundString(),
                                 onClick = {
-                                    onEvent(VideoScreenUiEvent.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
+                                    onAction(VideoScreenAction.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
                                 }
                             )
                             ActionButton(
                                 icon = Icons.Rounded.Share,
                                 text = stringResource(R.string.video_share),
                                 onClick = {
-                                    onEvent(VideoScreenUiEvent.Share)
+                                    onAction(VideoScreenAction.Share)
                                 }
                             )
                             ActionButton(
                                 icon = Icons.Outlined.Download,
                                 text = stringResource(R.string.video_download_button),
                                 onClick = {
-                                    onEvent(VideoScreenUiEvent.DownLoad)
+                                    onAction(VideoScreenAction.DownLoad)
                                 }
                             )
                         }
@@ -515,45 +513,30 @@ fun VideoScreen(
                     commentsState = state.commentsState,
                     userId = userId,
                     snackBarHostState = snackBarHostState,
-                    onEvent = onEvent
+                    onAction = onAction
                 )
             }
             LaunchedEffect(sheetState.isVisible) {
                 if (sheetState.isVisible) {
-                    onEvent(VideoScreenUiEvent.OpenComments)
+                    onAction(VideoScreenAction.OpenComments)
                 } else {
-                    onEvent(VideoScreenUiEvent.CloseComments)
+                    onAction(VideoScreenAction.CloseComments)
                 }
             }
-            StandardErrorDisplay(
-                error = state.likingError,
-                snackBarHostState = snackBarHostState,
-                notFoundMessage = stringResource(R.string.video_not_found)
-            )
-            StandardErrorDisplay(
-                error = state.subscriptionError,
-                snackBarHostState = snackBarHostState,
-                notFoundMessage = stringResource(R.string.video_not_found)
-            )
         } else if (state.isStarting) {
             StartingComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
             )
-        } else if (state.startingError != null) {
+        } else if (state.error != null) {
             ErrorComponent(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
                 onRetry = {
-                    onEvent(VideoScreenUiEvent.Restart)
+                    onAction(VideoScreenAction.Restart)
                 }
-            )
-            StandardErrorDisplay(
-                error = state.startingError,
-                snackBarHostState = snackBarHostState,
-                notFoundMessage = stringResource(R.string.video_not_found)
             )
         }
     }
@@ -567,7 +550,7 @@ private fun CommentsBottomSheet(
     sheetState: SheetState,
     snackBarHostState: SnackbarHostState,
     commentsState: CommentsState,
-    onEvent: (VideoScreenUiEvent) -> Unit
+    onAction: (VideoScreenAction) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
@@ -576,7 +559,7 @@ private fun CommentsBottomSheet(
             coroutineScope.launch {
                 sheetState.hide()
             }
-            onEvent(VideoScreenUiEvent.CloseComments)
+            onAction(VideoScreenAction.CloseComments)
         },
         modifier = Modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.background
@@ -598,7 +581,7 @@ private fun CommentsBottomSheet(
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
                             owns = it.userId == userId,
-                            onEvent = onEvent,
+                            onEvent = onAction,
                             comment = it,
                         )
                     },
@@ -612,13 +595,13 @@ private fun CommentsBottomSheet(
                     },
                     items = commentsState.comments,
                     hasMore = commentsState.hasMore,
-                    error = commentsState.loadingError,
+                    error = commentsState.error,
                     isLoading = commentsState.isLoading,
                     onReachedBottom = {
-                        onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
+                        onAction(VideoScreenAction.LoadNextCommentsPart)
                     },
                     onReload = {
-                        onEvent(VideoScreenUiEvent.ReachedCommentsEnd)
+                        onAction(VideoScreenAction.LoadNextCommentsPart)
                     }
                 )
             } else if (commentsState.isStarting) {
@@ -627,13 +610,13 @@ private fun CommentsBottomSheet(
                         .fillMaxWidth()
                         .weight(1f)
                 )
-            } else if (commentsState.loadingError != null) {
+            } else if (commentsState.error != null) {
                 ErrorComponent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     onRetry = {
-                        onEvent(VideoScreenUiEvent.RestartComments)
+                        onAction(VideoScreenAction.RestartComments)
                     }
                 )
             } else {
@@ -644,17 +627,12 @@ private fun CommentsBottomSheet(
                 )
             }
             CommentForm(
-                currentText = commentsState.currentText,
-                snackBarHostState = snackBarHostState,
-                onEvent = onEvent,
-                error = commentsState.actionError
+                text = commentsState.comment.text.value,
+                onAction = onAction,
+                error = commentsState.error
             )
         }
     }
-    ErrorDisplay(
-        error = commentsState.loadingError,
-        snackBarHostState = snackBarHostState
-    )
 }
 
 @Composable
@@ -662,7 +640,7 @@ private fun CommentBox(
     modifier: Modifier = Modifier,
     owns: Boolean,
     comment: CommentUi,
-    onEvent: (VideoScreenUiEvent) -> Unit,
+    onEvent: (VideoScreenAction) -> Unit,
 ) {
     val context = LocalContext.current
     Column(
@@ -676,7 +654,7 @@ private fun CommentBox(
                     title = stringResource(R.string.comment_edit_button),
                     onClick = {
                         onEvent(
-                            VideoScreenUiEvent.EditComment(comment.commentId)
+                            VideoScreenAction.EditComment(comment.commentId)
                         )
                         isMenuVisible = false
                     }
@@ -684,7 +662,7 @@ private fun CommentBox(
                 MenuItem(
                     title = stringResource(R.string.comment_delete_button),
                     onClick = {
-                        onEvent(VideoScreenUiEvent.RemoveComment(comment.commentId))
+                        onEvent(VideoScreenAction.RemoveComment(comment.commentId))
                         isMenuVisible = false
                     }
                 )
@@ -702,7 +680,7 @@ private fun CommentBox(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.tertiaryContainer)
                     .clickable {
-                        onEvent(VideoScreenUiEvent.OpenProfile(comment.userId))
+                        onEvent(VideoScreenAction.OpenProfile(comment.userId))
                     },
                 model = comment.avatar,
                 contentDescription = null,
@@ -743,9 +721,8 @@ private fun CommentBox(
 
 @Composable
 private fun CommentForm(
-    currentText: String,
-    snackBarHostState: SnackbarHostState,
-    onEvent: (VideoScreenUiEvent) -> Unit,
+    text: String,
+    onAction: (VideoScreenAction) -> Unit,
     error: Error?
 ) {
     Row(
@@ -769,10 +746,10 @@ private fun CommentForm(
                 )
                 .background(MaterialTheme.colorScheme.tertiaryContainer)
                 .weight(1f),
-            value = currentText,
+            value = text,
             maxLines = 100,
             onValueChange = {
-                onEvent(VideoScreenUiEvent.CommentTextChanged(it))
+                onAction(VideoScreenAction.ChangeCommentText(it))
             },
             textStyle = TextStyle(
                 fontSize = 16.sp
@@ -781,7 +758,7 @@ private fun CommentForm(
                 Box(
                     modifier = Modifier.padding(5.dp)
                 ) {
-                    if (currentText.isNotEmpty()) {
+                    if (text.isNotEmpty()) {
                         innerText()
                     } else {
                         Text(
@@ -793,17 +770,13 @@ private fun CommentForm(
             }
         )
         PrimaryProgressButton(
-            enabled = currentText.isNotEmpty(),
+            enabled = text.isNotEmpty(),
             onClick = {
-                onEvent(VideoScreenUiEvent.SubmitComment)
+                onAction(VideoScreenAction.SubmitComment)
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )
     }
-    ErrorDisplay(
-        error = error.takeIf { it is NetworkError },
-        snackBarHostState = snackBarHostState
-    )
 }
 
 fun LocalDateTime.toPresentation(

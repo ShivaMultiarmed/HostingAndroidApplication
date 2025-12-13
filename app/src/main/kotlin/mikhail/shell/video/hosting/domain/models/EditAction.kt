@@ -1,11 +1,11 @@
 package mikhail.shell.video.hosting.domain.models
 
 enum class EditAction {
-    KEEP, REMOVE, UPDATE
+    KEEP, REMOVE, EDIT
 }
 
 sealed class EditingAction<out I> {
     data object Keep : EditingAction<Nothing>()
     data object Remove : EditingAction<Nothing>()
-    data class Edit<I>(val value: I) : EditingAction<I>()
+    data class Edit<out I>(val value: I) : EditingAction<I>()
 }

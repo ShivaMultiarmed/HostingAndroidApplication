@@ -51,7 +51,7 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
 import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
-import mikhail.shell.video.hosting.domain.models.EditAction.UPDATE
+import mikhail.shell.video.hosting.domain.models.EditAction.EDIT
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_NAME_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_USERNAME_LENGTH
@@ -177,7 +177,7 @@ fun UserEditingScreen(
                 val avatarPicker =
                     rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                         if (it != null) {
-                            onEvent(UserEditingUiEvent.AvatarChanged(it.toString(), UPDATE))
+                            onEvent(UserEditingUiEvent.AvatarChanged(it.toString(), EDIT))
                         }
                     }
                 var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
@@ -186,7 +186,7 @@ fun UserEditingScreen(
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = state.editedUser.avatarAction == UPDATE || state.editedUser.avatarAction == REMOVE && avatarExists == true,
+                        updated = state.editedUser.avatarAction == EDIT || state.editedUser.avatarAction == REMOVE && avatarExists == true,
                         empty = !(state.editedUser.avatar.value != null || avatarExists == true && state.editedUser.avatarAction != REMOVE),
                         onRevert = {
                             onEvent(UserEditingUiEvent.AvatarChanged(null, KEEP))

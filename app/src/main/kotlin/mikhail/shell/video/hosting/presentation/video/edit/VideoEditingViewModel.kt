@@ -12,21 +12,22 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.models.ImageSize
-import mikhail.shell.video.hosting.domain.errors.Error
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
-import mikhail.shell.video.hosting.domain.models.EditAction
-import mikhail.shell.video.hosting.domain.models.Result
+import mikhail.shell.video.hosting.domain.models.EditingAction
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.VideoEditingModel
+import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.videos.EditVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.domain.utils.ValidateTitle
-import mikhail.shell.video.hosting.presentation.utils.FieldState
+import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.stateIn
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = VideoEditingViewModel.Factory::class)
 class VideoEditingViewModel @AssistedInject constructor(
@@ -38,24 +39,26 @@ class VideoEditingViewModel @AssistedInject constructor(
     private val validateImage: ValidateImage,
     private val editVideo: EditVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow<VideoEditingScreenState>(VideoEditingScreenState.Starting)
-    val state = _state.onStart { start() }.stateIn(initialValue = _state.value)
+    private val _state = MutableStateFlow<ScreenState>(ScreenState.Starting)
+    val state = _state.onStart { start() }.stateIn(_state.value)
 
-    private val _events = MutableSharedFlow<VideoEditingEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: VideoEditingAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            VideoEditingAction.Cancel -> viewModelScope.launch { _events.emit(VideoEditingEvent.NavigateBack) }
-            VideoEditingAction.Restart -> start()
-            is VideoEditingAction.TitleChanged -> onTitleChanged(action.title)
-            VideoEditingAction.TitleFocused -> onTitleFocused()
-            VideoEditingAction.TitleBlurred -> onTitleBlurred()
-            is VideoEditingAction.CoverChanged -> onCoverChanged(action.cover, action.action)
-            is VideoEditingAction.DescriptionChanged -> onDescriptionChanged(action.description)
-            VideoEditingAction.DescriptionFocused -> onDescriptionFocused()
-            VideoEditingAction.DescriptionBlurred -> onDescriptionBlurred()
-            VideoEditingAction.Submit -> edit()
+            ScreenAction.Cancel -> viewModelScope.launch {
+                _events.emit(ScreenEvent.Cancelled)
+            }
+            ScreenAction.Restart -> start()
+            is ScreenAction.ChangeTitle -> onTitleChanged(action.title)
+            ScreenAction.FocusTitle -> onTitleFocused()
+            ScreenAction.BlurTitle -> onTitleBlurred()
+            is ScreenAction.ChangeCover -> onCoverChanged(action.cover)
+            is ScreenAction.ChangeDescription -> onDescriptionChanged(action.description)
+            ScreenAction.FocusDescription -> onDescriptionFocused()
+            ScreenAction.BlurDescription -> onDescriptionBlurred()
+            ScreenAction.Submit -> edit()
         }
     }
 
@@ -63,34 +66,21 @@ class VideoEditingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             getVideo(videoId).onSuccess { video ->
                 _state.update {
-                    VideoEditingScreenState.Editing(
-                        initialVideo = EditableVideoUi(
+                    ScreenState.Editing(
+                        video = VideoEditingInputState.initialize(
                             videoId = videoId,
                             title = video.title,
-                            cover = getVideoCoverUrl(
-                                videoId = videoId,
-                                size = ImageSize.MEDIUM
-                            ),
-                            description = video.description ?: ""
-                        ),
-                        currentVideo = VideoEditingInputState(
-                            title = FieldState(value = video.title),
-                            cover = FieldState(value = null),
-                            description = FieldState(value = video.description ?: "")
+                            cover = getVideoCoverUrl(videoId = videoId, size = ImageSize.MEDIUM),
+                            description = video.description?: ""
                         )
                     )
                 }
             }.onFailure { error ->
                 _state.update {
-                    VideoEditingScreenState.Failure(error)
-                }
-                val eventToEmit = when (error) {
-                    NetworkError.AUTHENTICATION -> VideoEditingEvent.RequireAuthentication
-                    NetworkError.NOT_FOUND -> VideoEditingEvent.NavigateBack
-                    else -> VideoEditingEvent.Failure(error)
+                    ScreenState.Failure(error)
                 }
                 viewModelScope.launch {
-                    _events.emit(eventToEmit)
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }
@@ -98,12 +88,10 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onTitleChanged(title: String) {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    title = currentState.currentVideo.title.copy(
-                        value = title
-                    )
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(value = title)
                 )
             ) ?: it
         }
@@ -111,12 +99,10 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onTitleFocused() {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    title = currentState.currentVideo.title.copy(
-                        error = null
-                    )
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(error = null)
                 )
             ) ?: it
         }
@@ -124,33 +110,29 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onTitleBlurred() {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    title = currentState.currentVideo.title.copy(
-                        error = currentState.currentVideo.title.value.let {
-                            val validationResult = validateTitle(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(
+                        error = validateTitle(currentState.video.title.value).errorOrNull()
                     )
                 )
             ) ?: it
         }
     }
 
-    private fun onCoverChanged(cover: String?, action: EditAction) {
+    private fun onCoverChanged(cover: EditingState<String?>) {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    cover = currentState.currentVideo.cover.copy(
+                video = currentState.video.copy(
+                    cover = currentState.video.cover.copy(
                         value = cover,
-                        error = cover?.let {
-                            val validationResult = validateImage(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
+                        error = when (cover) {
+                            is EditingState.Editing -> validateImage(cover.value!!).errorOrNull()
+                            else -> null
                         }
-                    ),
-                    coverAction = action
+                    )
                 )
             ) ?: it
         }
@@ -158,12 +140,10 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onDescriptionChanged(description: String) {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    description = currentState.currentVideo.description.copy(
-                        value = description
-                    )
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(value = description)
                 )
             ) ?: it
         }
@@ -171,12 +151,10 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onDescriptionFocused() {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    description = currentState.currentVideo.description.copy(
-                        error = null
-                    )
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(error = null)
                 )
             ) ?: it
         }
@@ -184,14 +162,11 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun onDescriptionBlurred() {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    description = currentState.currentVideo.description.copy(
-                        error = currentState.currentVideo.description.value.let {
-                            val validationResult = validateDescription(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
+                video = currentState.video.copy(
+                    description = currentState.video.description.copy(
+                        error = validateDescription(currentState.video.description.value).errorOrNull()
                     )
                 )
             ) ?: it
@@ -200,73 +175,75 @@ class VideoEditingViewModel @AssistedInject constructor(
 
     private fun edit() {
         _state.update {
-            val currentState = it as? VideoEditingScreenState.Editing
-            currentState?.copy(
-                currentVideo = currentState.currentVideo.copy(
-                    title = currentState.currentVideo.title.copy(
-                        error = currentState.currentVideo.title.value.let {
-                            val validationResult = validateTitle(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
+            val currentState = it as? ScreenState.Editing
+            if (currentState == null || currentState.isLoading) {
+                return
+            }
+            currentState.copy(
+                video = currentState.video.copy(
+                    title = currentState.video.title.copy(
+                        error = validateTitle(currentState.video.title.value).errorOrNull()
+                    ),
+                    cover = currentState.video.cover.copy(
+                        error = currentState.video.cover.value.let {
+                            when (it) {
+                                is EditingState.Editing -> validateImage(it.value!!).errorOrNull()
+                                else -> null
+                            }
                         }
                     ),
-                    cover = currentState.currentVideo.cover.copy(
-                        error = currentState.currentVideo.cover.value?.let {
-                            val validationResult = validateImage(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
-                    ),
-                    description = currentState.currentVideo.description.copy(
-                        error = currentState.currentVideo.description.value.let {
-                            val validationResult = validateDescription(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
+                    description = currentState.video.description.copy(
+                        error = validateDescription(currentState.video.description.value).errorOrNull()
                     )
                 )
-            ) ?: it
+            )
         }
-        val currentState = _state.value as? VideoEditingScreenState.Editing
+        val currentState = _state.value as? ScreenState.Editing
         if (
             currentState == null
-            || currentState.currentVideo.title.error != null
-            || currentState.currentVideo.description.error != null
-            || currentState.currentVideo.cover.error != null
+            || currentState.video.title.error != null
+            || currentState.video.description.error != null
+            || currentState.video.cover.error != null
         ) {
             return
         }
         viewModelScope.launch {
             _state.update {
-                val currentState = it as? VideoEditingScreenState.Editing
+                val currentState = it as? ScreenState.Editing
                 currentState?.copy(isLoading = true) ?: it
             }
             editVideo(
                 video = VideoEditingModel(
                     videoId = videoId,
-                    title = currentState.currentVideo.title.value,
-                    description = currentState.currentVideo.description.value.takeIf { it.isNotEmpty() },
-                    cover = currentState.currentVideo.cover.value,
-                    coverAction = currentState.currentVideo.coverAction
+                    title = currentState.video.title.value,
+                    description = currentState.video.description.value.takeIf { it.isNotEmpty() },
+                    cover = when (currentState.video.cover.value) {
+                        is EditingState.Editing -> EditingAction.Edit(currentState.video.cover.value.value!!)
+                        is EditingState.Keeping -> EditingAction.Keep
+                        is EditingState.Removing -> EditingAction.Remove
+                    }
                 )
             ).onSuccess { updatedVideo ->
                 viewModelScope.launch {
-                    _events.emit(VideoEditingEvent.Success)
+                    _events.emit(ScreenEvent.Success)
                 }
             }.onFailure { error ->
                 _state.update {
-                    val currentState = it as? VideoEditingScreenState.Editing
+                    val currentState = it as? ScreenState.Editing
                     currentState?.copy(isLoading = false) ?: it
                 }
                 if (error is VideoEditingError) {
                     _state.update {
-                        val currentState = it as? VideoEditingScreenState.Editing
+                        val currentState = it as? ScreenState.Editing
                         currentState?.copy(
-                            currentVideo = currentState.currentVideo.copy(
-                                title = currentState.currentVideo.title.copy(
+                            video = currentState.video.copy(
+                                title = currentState.video.title.copy(
                                     error = error.titleError
                                 ),
-                                cover = currentState.currentVideo.cover.copy(
+                                cover = currentState.video.cover.copy(
                                     error = error.coverError
                                 ),
-                                description = currentState.currentVideo.description.copy(
+                                description = currentState.video.description.copy(
                                     error = error.descriptionError
                                 )
                             )
@@ -274,12 +251,7 @@ class VideoEditingViewModel @AssistedInject constructor(
                     }
                 } else {
                     viewModelScope.launch {
-                        val eventToEmit = when (error) {
-                            NetworkError.AUTHENTICATION -> VideoEditingEvent.RequireAuthentication
-                            NetworkError.NOT_FOUND -> VideoEditingEvent.NavigateBack
-                            else -> VideoEditingEvent.Failure(error)
-                        }
-                        _events.emit(eventToEmit)
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 }
             }
@@ -290,35 +262,4 @@ class VideoEditingViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("videoId") videoId: Long): VideoEditingViewModel
     }
-}
-
-sealed class VideoEditingScreenState {
-    data object Starting : VideoEditingScreenState()
-    data class Editing(
-        val initialVideo: EditableVideoUi,
-        val currentVideo: VideoEditingInputState,
-        val isLoading: Boolean = false
-    ) : VideoEditingScreenState()
-
-    data class Failure(val error: Error) : VideoEditingScreenState()
-}
-
-sealed class VideoEditingEvent {
-    data object NavigateBack : VideoEditingEvent()
-    data object RequireAuthentication : VideoEditingEvent()
-    data class Failure(val error: Error) : VideoEditingEvent()
-    data object Success : VideoEditingEvent()
-}
-
-sealed class VideoEditingAction {
-    data object Restart : VideoEditingAction()
-    data object TitleFocused : VideoEditingAction()
-    data object TitleBlurred : VideoEditingAction()
-    data class TitleChanged(val title: String) : VideoEditingAction()
-    data class CoverChanged(val cover: String?, val action: EditAction) : VideoEditingAction()
-    data object DescriptionFocused : VideoEditingAction()
-    data object DescriptionBlurred : VideoEditingAction()
-    data class DescriptionChanged(val description: String) : VideoEditingAction()
-    data object Submit : VideoEditingAction()
-    data object Cancel : VideoEditingAction()
 }

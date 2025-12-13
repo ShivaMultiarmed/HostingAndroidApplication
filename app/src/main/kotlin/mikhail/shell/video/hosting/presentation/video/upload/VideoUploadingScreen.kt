@@ -68,7 +68,6 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.NumericError
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_VIDEO_SIZE
 import mikhail.shell.video.hosting.domain.validation.mb
@@ -82,21 +81,21 @@ import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
-import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Editing
-import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Failure
-import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState.Starting
+import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
 import java.io.File
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState as ScreenState
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun VideoUploadingScreen(
-    state: State,
+    state: ScreenState,
     player: Player,
-    onAction: (Action) -> Unit,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
@@ -114,7 +113,7 @@ fun VideoUploadingScreen(
         }
     }
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
-    if (state is Editing) {
+    if (state is ScreenState.Editing) {
         val scrollState = rememberScrollState()
         var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
         Scaffold(
@@ -122,13 +121,13 @@ fun VideoUploadingScreen(
                 if (!isFullScreen) {
                     TopBar(
                         onPopup = {
-                            onAction(VideoUploadingScreenAction.Cancel)
+                            onAction(ScreenAction.Cancel)
                         },
                         title = stringResource(R.string.video_upload_title),
                         inProgress = state.isLoading,
                         complete = false,
                         onSubmit = {
-                            onAction(VideoUploadingScreenAction.Submit)
+                            onAction(ScreenAction.Submit)
                         }
                     )
                 }
@@ -157,13 +156,13 @@ fun VideoUploadingScreen(
                     val sourceCreator =
                         rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) {
                             if (it) {
-                                onAction(VideoUploadingScreenAction.SourceChanged(state.video.source.value))
+                                onAction(ScreenAction.ChangeSource(state.video.source.value))
                             }
                         }
                     val sourcePicker =
                         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
                             if (it != null) {
-                                onAction(VideoUploadingScreenAction.SourceChanged(it.toString()))
+                                onAction(ScreenAction.ChangeSource(it.toString()))
                             }
                         }
                     val sourceErrMsg = when (state.video.source.error) {
@@ -183,7 +182,7 @@ fun VideoUploadingScreen(
                         else -> listOf(
                             DeletingItem(
                                 deleting = {
-                                    onAction(VideoUploadingScreenAction.SourceChanged(null))
+                                    onAction(ScreenAction.ChangeSource(null))
                                 }
                             )
                         )
@@ -231,7 +230,7 @@ fun VideoUploadingScreen(
                                                 "${context.packageName}.fileprovider",
                                                 file
                                             )
-                                            onAction(VideoUploadingScreenAction.SourceChanged(uri.toString()))
+                                            onAction(ScreenAction.ChangeSource(uri.toString()))
                                             sourceCreator.launch(uri)
                                         } else if (cameraPermission.status.shouldShowRationale) {
                                             coroutineScope.launch {
@@ -259,7 +258,6 @@ fun VideoUploadingScreen(
                         )
                     }
                 }
-
                 LaunchedEffect(state.video.source.value) {
                     if (state.video.source.value != null) {
                         val newMediaItem = MediaItem.fromUri(state.video.source.value)
@@ -341,7 +339,7 @@ fun VideoUploadingScreen(
                             ActionItem(
                                 icon = Icons.Rounded.Delete,
                                 action = {
-                                    onAction(VideoUploadingScreenAction.TitleChanged(""))
+                                    onAction(ScreenAction.ChangeTitle(""))
                                 }
                             )
                         )
@@ -352,16 +350,16 @@ fun VideoUploadingScreen(
                             modifier = Modifier.fillMaxWidth(),
                             value = state.video.title.value,
                             onValueChange = {
-                                onAction(VideoUploadingScreenAction.TitleChanged(it))
+                                onAction(ScreenAction.ChangeTitle(it))
                             },
                             errorMsg = titleErrMsg,
                             label = stringResource(R.string.video_title_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
-                                onAction(VideoUploadingScreenAction.TitleFocused)
+                                onAction(ScreenAction.FocusTitle)
                             },
                             onBlur = {
-                                onAction(VideoUploadingScreenAction.TitleBlurred)
+                                onAction(ScreenAction.BlurTitle)
                             }
                         )
                     }
@@ -377,7 +375,7 @@ fun VideoUploadingScreen(
                             ActionItem(
                                 icon = Icons.Rounded.Delete,
                                 action = {
-                                    onAction(VideoUploadingScreenAction.ChannelChanged(null))
+                                    onAction(ScreenAction.ChangeChannel(null))
                                 }
                             )
                         )
@@ -391,7 +389,7 @@ fun VideoUploadingScreen(
                             placeHolder = stringResource(R.string.video_upload_channel_label),
                             values = state.channels.associate { it.channelId to it.title },
                             onValueChange = {
-                                onAction(VideoUploadingScreenAction.ChannelChanged(it))
+                                onAction(ScreenAction.ChangeChannel(it))
                             },
                             errorMsg = channelErrMsg,
                             icon = Icons.Rounded.Apps,
@@ -401,21 +399,10 @@ fun VideoUploadingScreen(
                         ActivityResultContracts.GetContent()
                     ) {
                         if (it != null) {
-                            onAction(VideoUploadingScreenAction.CoverChanged(it.toString()))
+                            onAction(ScreenAction.ChangeCover(it.toString()))
                         }
                     }
-                    val coverErrMsg = when (state.video.cover.error) {
-                        FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                        FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-                        FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
-                        FileError.EMPTY -> stringResource(R.string.file_not_found_error)
-                        FileError.LARGE -> stringResource(
-                            R.string.file_too_large_error,
-                            "${MAX_IMAGE_SIZE.mb} MB"
-                        )
-
-                        else -> null
-                    }
+                    val coverErrMsg = getFileErrorMessage(state.video.cover.error)
                     EditField(
                         actionItems = when (state.video.cover.value) {
                             null -> emptyList()
@@ -423,7 +410,7 @@ fun VideoUploadingScreen(
                                 ActionItem(
                                     icon = Icons.Rounded.Delete,
                                     action = {
-                                        onAction(VideoUploadingScreenAction.CoverChanged(null))
+                                        onAction(ScreenAction.ChangeCover(null))
                                     }
                                 )
                             )
@@ -474,45 +461,44 @@ fun VideoUploadingScreen(
                             R.string.text_too_large_error,
                             MAX_TITLE_LENGTH
                         )
-
                         else -> null
                     }
                     StandardEditField(
                         empty = state.video.description.value.isEmpty(),
                         onDelete = {
-                            onAction(VideoUploadingScreenAction.DescriptionChanged(""))
+                            onAction(ScreenAction.ChangeDescription(""))
                         }
                     ) {
                         InputField(
                             modifier = Modifier.fillMaxWidth(),
                             value = state.video.description.value,
                             onValueChange = {
-                                onAction(VideoUploadingScreenAction.DescriptionChanged(it))
+                                onAction(ScreenAction.ChangeDescription(it))
                             },
                             errorMsg = descriptionErrMsg,
                             label = stringResource(R.string.video_description_label),
                             icon = Icons.Rounded.Title,
                             onFocus = {
-                                onAction(VideoUploadingScreenAction.DescriptionFocused)
+                                onAction(ScreenAction.FocusDescription)
                             },
                             onBlur = {
-                                onAction(VideoUploadingScreenAction.DescriptionBlurred)
+                                onAction(ScreenAction.BlurDescription)
                             }
                         )
                     }
                 }
             }
         }
-    } else if (state is Failure) {
+    } else if (state is ScreenState.Failure) {
         ErrorComponent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
             onRetry = {
-                onAction(VideoUploadingScreenAction.Restart)
+                onAction(ScreenAction.Restart)
             }
         )
-    } else if (state is Starting) {
+    } else if (state is ScreenState.Starting) {
         StartingComponent(
             modifier = Modifier
                 .fillMaxSize()
