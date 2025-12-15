@@ -465,7 +465,7 @@ fun VideoUploadingScreen(
                     }
                     StandardEditField(
                         empty = state.video.description.value.isEmpty(),
-                        onDelete = {
+                        onRemove = {
                             onAction(ScreenAction.ChangeDescription(""))
                         }
                     ) {

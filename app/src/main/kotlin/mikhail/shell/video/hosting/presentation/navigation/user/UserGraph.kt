@@ -35,7 +35,7 @@ fun EntryProviderScope<Route>.userGraph(
                     userDetailsProvider = userDetailsProvider,
                     player = player
                 )
-                editUserRoute(
+                userEditingRoute(
                     rootBackStack = rootBackStack,
                     userBackStack = userBackStack,
                     userDetailsProvider = userDetailsProvider,

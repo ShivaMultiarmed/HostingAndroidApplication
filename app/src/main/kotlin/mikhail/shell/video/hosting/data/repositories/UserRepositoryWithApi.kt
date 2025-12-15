@@ -7,12 +7,13 @@ import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.domain.models.EditingAction
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -46,17 +47,22 @@ class UserRepositoryWithApi @Inject constructor(
                 )
             }
         ) {
-            val avatarPart = user.avatar?.let {
-                fileProvider.uriToPart(uri = it, partName = "avatar")
+            val avatarPart = when (user.avatar) {
+                is EditingAction.Edit -> fileProvider.uriToPart(uri = user.avatar.value, partName = "avatar")
+                else -> null
             }
             userApi.edit(
                 user = UserEditingRequest(
                     nick = user.nick,
                     name = user.name,
                     bio = user.bio,
-                    tel = user.tel,
+                    tel = user.telephone,
                     email = user.email,
-                    avatarAction = user.avatarAction
+                    avatarAction = when (user.avatar) {
+                        is EditingAction.Edit -> EditAction.EDIT
+                        EditingAction.Keep -> EditAction.KEEP
+                        EditingAction.Remove -> EditAction.REMOVE
+                    }
                 ),
                 avatar = avatarPart
             ).toDomain()

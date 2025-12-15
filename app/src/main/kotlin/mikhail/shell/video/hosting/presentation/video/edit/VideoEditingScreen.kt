@@ -90,9 +90,9 @@ fun VideoEditingScreen(
                 }
                 StandardEditField(
                     firstTime = false,
-                    updated = state.video.title.value != state.video.title.initial,
+                    edited = state.video.title.value != state.video.title.initial,
                     empty = state.video.title.value.isEmpty(),
-                    onDelete = {
+                    onRemove = {
                         onAction(VideoEditingScreenAction.ChangeTitle(""))
                     },
                     onRevert = {
@@ -135,12 +135,12 @@ fun VideoEditingScreen(
                 Column {
                     StandardEditField(
                         firstTime = false,
-                        updated = state.video.cover.value is EditingState.Editing || state.video.cover.value is EditingState.Removing && coverExists == true,
+                        edited = state.video.cover.value is EditingState.Editing || state.video.cover.value is EditingState.Removing && coverExists == true,
                         empty = !(state.video.cover.value is EditingState.Editing || state.video.cover.value !is EditingState.Removing && coverExists == true),
                         onRevert = {
                             onAction(VideoEditingScreenAction.ChangeCover(state.video.cover.initial))
                         },
-                        onDelete = {
+                        onRemove = {
                             onAction(VideoEditingScreenAction.ChangeCover(EditingState.Removing))
                         }
                     ) {
@@ -232,9 +232,9 @@ fun VideoEditingScreen(
                 }
                 StandardEditField(
                     firstTime = false,
-                    updated = state.video.description.value != state.video.description.initial,
+                    edited = state.video.description.value != state.video.description.initial,
                     empty = state.video.description.value.isEmpty(),
-                    onDelete = {
+                    onRemove = {
                         onAction(VideoEditingScreenAction.ChangeDescription(""))
                     },
                     onRevert = {

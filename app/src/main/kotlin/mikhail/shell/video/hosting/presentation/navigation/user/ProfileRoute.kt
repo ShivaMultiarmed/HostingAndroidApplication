@@ -52,7 +52,7 @@ fun EntryProviderScope<Route>.profileRoute(
         events.observe { event ->
             when (event) {
                 is ProfileScreenEvent.Failure -> {
-                    if (event.error != NetworkError.AUTHENTICATION) {
+                    if (event.error !in setOf(NetworkError.AUTHENTICATION, NetworkError.NOT_FOUND)) {
                         coroutineScope.launch {
                             context.getStandardErrorMessage(event.error)?.let {
                                 snackBarHostState.showSnackbar(it)

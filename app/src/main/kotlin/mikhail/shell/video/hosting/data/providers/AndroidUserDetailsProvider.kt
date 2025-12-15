@@ -17,8 +17,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 
+
 class AndroidUserDetailsProvider @Inject constructor(
-    @ApplicationContext private val appContext: Context
+    @param:ApplicationContext private val appContext: Context,
 ) : UserDetailsProvider {
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val dataStore = appContext.userDetailsDataStore

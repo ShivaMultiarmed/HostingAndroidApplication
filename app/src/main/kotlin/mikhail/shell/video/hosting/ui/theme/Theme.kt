@@ -43,6 +43,7 @@ val DarkColorScheme = darkColorScheme(
 
     tertiary = LighterGray,
     onTertiary = Black,
+
     tertiaryContainer = Gray,
     onTertiaryContainer = LighterGray,
 
@@ -70,6 +71,7 @@ val LightColorScheme = lightColorScheme(
 
     tertiary = Gray,
     onTertiary = Black,
+
     tertiaryContainer = LightGray,
     onTertiaryContainer = Black,
 
@@ -86,14 +88,12 @@ val LightColorScheme = lightColorScheme(
 )
 
 val ColorScheme.disabled: Color
-    @Composable
-    get() {
+    @Composable get() {
         return MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
     }
 
 val ColorScheme.onDisabled: Color
-    @Composable
-    get() {
+    @Composable get() {
         return MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
     }
 
@@ -113,6 +113,7 @@ fun getColorScheme(): ColorScheme {
             isSystemInDarkTheme() -> DarkColorScheme
             else -> LightColorScheme
         }
+
         DARK -> DarkColorScheme
         LIGHT -> LightColorScheme
     }
@@ -147,8 +148,7 @@ val Context.uiPreferences by dataStore("ui_preferences.json", UiPreferencesSeria
 
 class UiPreferencesSerializer : Serializer<UiPreferences> {
     override suspend fun readFrom(input: InputStream): UiPreferences = input.use {
-        it
-            .readBytes()
+        it.readBytes()
             .decodeToString()
             .let {
                 Json.decodeFromString(deserializer = UiPreferences.serializer(), string = it)
@@ -156,20 +156,16 @@ class UiPreferencesSerializer : Serializer<UiPreferences> {
     }
 
     override suspend fun writeTo(
-        t: UiPreferences,
-        output: OutputStream
+        t: UiPreferences, output: OutputStream
     ) {
         Json.encodeToString(
-            serializer = UiPreferences.serializer(),
-            value = t
+            serializer = UiPreferences.serializer(), value = t
         ).let {
-            it
-                .encodeToByteArray()
-                .let { bytes ->
-                    output.use {
-                        it.write(bytes)
-                    }
+            it.encodeToByteArray().let { bytes ->
+                output.use {
+                    it.write(bytes)
                 }
+            }
         }
     }
 
@@ -187,7 +183,8 @@ fun VideoHostingTheme(
     val colorScheme = getColorScheme()
     val statusBarIconsColor = colorScheme.onSurface
     LaunchedEffect(colorScheme) {
-        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = (statusBarIconsColor != DarkColorScheme.onSurface)
+        WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars =
+            (statusBarIconsColor != DarkColorScheme.onSurface)
     }
 
     val locale = getLocale()
@@ -203,8 +200,6 @@ fun VideoHostingTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+        colorScheme = colorScheme, typography = Typography, content = content
     )
 }

@@ -2,13 +2,13 @@ package mikhail.shell.video.hosting.presentation.user.edit
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,18 +24,16 @@ import androidx.compose.material.icons.rounded.DensityMedium
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PersonOff
 import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,422 +44,389 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.models.EditAction.KEEP
-import mikhail.shell.video.hosting.domain.models.EditAction.REMOVE
-import mikhail.shell.video.hosting.domain.models.EditAction.EDIT
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_NAME_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_USERNAME_LENGTH
 import mikhail.shell.video.hosting.presentation.utils.Dialog
+import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.StandardEditField
-import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
+import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenState as ScreenState
 
 @Composable
 fun UserEditingScreen(
-    state: UserEditingScreenState,
-    onEvent: (UserEditingUiEvent) -> Unit
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
-    val snackBarHostState = remember { SnackbarHostState() }
-    if (state is UserEditingScreenState.Editing) {
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            snackbarHost = {
-                SnackbarHost(snackBarHostState)
-            },
-            topBar = {
-                TopBar(
-                    title = stringResource(R.string.edit_profile_title),
-                    onPopup = {
-                        onEvent(UserEditingUiEvent.Cancel)
-                    },
-                    onSubmit = {
-                        onEvent(UserEditingUiEvent.Submit)
-                    },
-                    inProgress = state.isLoading
-                )
-            }
-        ) { padding ->
-            Column(
+    when (state) {
+        is ScreenState.Editing -> {
+            Scaffold(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                val nickErrMsg = when (state.editedUser.nick.error) {
-                    is TextError -> when (state.editedUser.nick.error) {
-                        TextError.EMPTY -> stringResource(R.string.nick_empty_error)
-                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_NAME_LENGTH)
-                        TextError.EXISTS -> stringResource(R.string.nick_exists_error)
+                    .background(MaterialTheme.colorScheme.surface),
+                snackbarHost = {
+                    SnackbarHost(snackBarHostState)
+                },
+                topBar = {
+                    TopBar(
+                        title = stringResource(R.string.edit_profile_title),
+                        onPopup = {
+                            onAction(ScreenAction.Cancel)
+                        },
+                        onSubmit = {
+                            onAction(ScreenAction.Submit)
+                        },
+                        inProgress = state.isLoading
+                    )
+                }
+            ) { padding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    val nickErrMsg = when (state.user.nick.error) {
+                        is TextError -> when (state.user.nick.error) {
+                            TextError.EMPTY -> stringResource(R.string.nick_empty_error)
+                            TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_NAME_LENGTH)
+                            TextError.EXISTS -> stringResource(R.string.nick_exists_error)
+                            else -> null
+                        }
+                        is NetworkError -> stringResource(R.string.nick_validation_unavailable)
                         else -> null
                     }
-                    is NetworkError -> stringResource(R.string.nick_validation_unavailable)
-                    else -> null
-                }
-                StandardEditField(
-                    modifier = Modifier,
-                    firstTime = false,
-                    updated = state.editedUser.nick.value != state.initialUser.nick,
-                    empty = state.editedUser.nick.value.isEmpty(),
-                    onRevert = {
-                        onEvent(UserEditingUiEvent.NickChanged(state.initialUser.nick))
-                    },
-                    onDelete = {
-                        onEvent(UserEditingUiEvent.NickChanged(""))
-                    }
-                ) {
-                    InputField(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Rounded.AlternateEmail,
-                        value = state.editedUser.nick.value,
-                        onValueChange = {
-                            onEvent(UserEditingUiEvent.NickChanged(it))
-                        },
-                        onFocus = {
-                            onEvent(UserEditingUiEvent.NickFocused)
-                        },
-                        onBlur = {
-                            onEvent(UserEditingUiEvent.NickBlurred)
-                        },
-                        label = stringResource(R.string.nick_label),
-                        errorMsg = nickErrMsg
-                    )
-                }
-                val nameErrMsg = when (state.editedUser.name.error) {
-                    TextError.EMPTY -> stringResource(R.string.name_empty, MAX_NAME_LENGTH)
-                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_NAME_LENGTH)
-                    else -> null
-                }
-                StandardEditField(
-                    modifier = Modifier,
-                    firstTime = false,
-                    updated = state.editedUser.name.value != state.initialUser.name,
-                    empty = state.editedUser.nick.value.isEmpty(),
-                    onRevert = {
-                        onEvent(UserEditingUiEvent.NameChanged(state.initialUser.name))
-                    },
-                    onDelete = {
-                        onEvent(UserEditingUiEvent.NameChanged(""))
-                    }
-                ) {
-                    InputField(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Rounded.Person,
-                        value = state.editedUser.name.value,
-                        onValueChange = {
-                            onEvent(UserEditingUiEvent.NameChanged(it))
-                        },
-                        onFocus = {
-                            onEvent(UserEditingUiEvent.NameFocused)
-                        },
-                        onBlur = {
-                            onEvent(UserEditingUiEvent.NameBlurred)
-                        },
-                        label = stringResource(R.string.name_label),
-                        errorMsg = nameErrMsg
-                    )
-                }
-                val avatarPicker =
-                    rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                        if (it != null) {
-                            onEvent(UserEditingUiEvent.AvatarChanged(it.toString(), EDIT))
-                        }
-                    }
-                var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
-                val avatarErrMsg = getFileErrorMessage(state.editedUser.avatar.error)
-                Column {
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = state.editedUser.avatarAction == EDIT || state.editedUser.avatarAction == REMOVE && avatarExists == true,
-                        empty = !(state.editedUser.avatar.value != null || avatarExists == true && state.editedUser.avatarAction != REMOVE),
+                        edited = state.user.nick.value != state.user.nick.initial,
+                        empty = state.user.nick.value.isEmpty(),
                         onRevert = {
-                            onEvent(UserEditingUiEvent.AvatarChanged(null, KEEP))
+                            onAction(ScreenAction.ChangeNick(state.user.nick.initial))
                         },
-                        onDelete = {
-                            onEvent(UserEditingUiEvent.AvatarChanged(null, REMOVE))
+                        onRemove = {
+                            onAction(ScreenAction.ChangeNick(""))
                         }
                     ) {
-                        FileInputField(
+                        InputField(
                             modifier = Modifier.fillMaxWidth(),
-                            icon = Icons.Rounded.Image,
-                            placeholder = when (state.editedUser.avatar.value) {
-                                state.editedUser.avatar.value -> stringResource(R.string.profile_choose_avatar_label)
-                                else -> stringResource(R.string.profile_choose_another_avatar_label)
+                            icon = Icons.Rounded.AlternateEmail,
+                            value = state.user.nick.value,
+                            onValueChange = {
+                                onAction(ScreenAction.ChangeNick(it))
                             },
-                            onClick = {
-                                avatarPicker.launch("image/*")
+                            onFocus = {
+                                onAction(ScreenAction.FocusNick)
                             },
-                            errorMsg = avatarErrMsg
+                            onBlur = {
+                                onAction(ScreenAction.BlurNick)
+                            },
+                            label = stringResource(R.string.nick_label),
+                            errorMsg = nickErrMsg
                         )
                     }
-                    FlowRow(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            30.dp,
-                            Alignment.CenterHorizontally
-                        )
+                    val nameErrMsg = when (state.user.name.error) {
+                        TextError.EMPTY -> stringResource(R.string.name_empty, MAX_NAME_LENGTH)
+                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_NAME_LENGTH)
+                        else -> null
+                    }
+                    StandardEditField(
+                        modifier = Modifier,
+                        firstTime = false,
+                        edited = state.user.name.value != state.user.name.initial,
+                        empty = state.user.nick.value.isEmpty(),
+                        onRevert = {
+                            onAction(ScreenAction.ChangeName(state.user.name.initial))
+                        },
+                        onRemove = {
+                            onAction(ScreenAction.ChangeName(""))
+                        }
                     ) {
-                        if (avatarExists != false) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.profile_current_avatar_hint)
-                                )
-                                AsyncImage(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop,
-                                    model = state.initialUser.avatar,
-                                    contentDescription = null,
-                                    onSuccess = {
-                                        avatarExists = true
-                                    },
-                                    onError = {
-                                        avatarExists = false
-                                    }
-                                )
+                        InputField(
+                            modifier = Modifier.fillMaxWidth(),
+                            icon = Icons.Rounded.Person,
+                            value = state.user.name.value,
+                            onValueChange = {
+                                onAction(ScreenAction.ChangeName(it))
+                            },
+                            onFocus = {
+                                onAction(ScreenAction.FocusName)
+                            },
+                            onBlur = {
+                                onAction(ScreenAction.BlurName)
+                            },
+                            label = stringResource(R.string.name_label),
+                            errorMsg = nameErrMsg
+                        )
+                    }
+                    val avatarPicker =
+                        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+                            if (it != null) {
+                                onAction(ScreenAction.ChangeAvatar(EditingState.Editing(it.toString())))
                             }
                         }
-                        if (state.editedUser.avatar.value != null) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.profile_chosen_avatar_hint)
-                                )
-                                AsyncImage(
-                                    model = state.editedUser.avatar.value,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
+                    val avatarPainter = rememberAsyncImagePainter((state.user.avatar.initial as EditingState.Keeping).value)
+                    val avatarExists by rememberSaveable {
+                        derivedStateOf {
+                            when (avatarPainter.state) {
+                                is AsyncImagePainter.State.Error -> false
+                                is AsyncImagePainter.State.Success -> true
+                                else -> null
                             }
                         }
                     }
-                    if (avatarExists == true && state.editedUser.avatarAction == REMOVE) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    val avatarErrMsg = getFileErrorMessage(state.user.avatar.error)
+                    Column {
+                        StandardEditField(
+                            modifier = Modifier,
+                            firstTime = false,
+                            edited = state.user.avatar.value is EditingState.Editing || state.user.avatar.value is EditingState.Removing && avatarExists == true,
+                            empty = !(state.user.avatar.value is EditingState.Editing || avatarExists == true && state.user.avatar.value !is EditingState.Removing),
+                            onRevert = {
+                                onAction(ScreenAction.ChangeAvatar(state.user.avatar.initial))
+                            },
+                            onRemove = {
+                                onAction(ScreenAction.ChangeAvatar(EditingState.Removing))
+                            }
                         ) {
-                            Text(
-                                text = stringResource(R.string.profile_delete_avatar_hint)
+                            FileInputField(
+                                modifier = Modifier.fillMaxWidth(),
+                                icon = Icons.Rounded.Image,
+                                placeholder = when (state.user.avatar.value) {
+                                    !is EditingState.Editing -> stringResource(R.string.profile_choose_avatar_label)
+                                    else -> stringResource(R.string.profile_choose_another_avatar_label)
+                                },
+                                onClick = {
+                                    avatarPicker.launch("image/*")
+                                },
+                                errorMsg = avatarErrMsg
                             )
                         }
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                30.dp,
+                                Alignment.CenterHorizontally
+                            )
+                        ) {
+                            if (avatarExists != false) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.profile_current_avatar_hint)
+                                    )
+                                    Image(
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(CircleShape),
+                                        painter = avatarPainter,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                            if (state.user.avatar.value is EditingState.Editing) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.profile_chosen_avatar_hint)
+                                    )
+                                    AsyncImage(
+                                        model = state.user.avatar.value.value,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                        if (avatarExists == true && state.user.avatar.value is EditingState.Removing) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.profile_delete_avatar_hint)
+                                )
+                            }
+                        }
                     }
-                }
-                val telError = when (state.editedUser.tel.error) {
-                    TextError.EMPTY -> stringResource(R.string.tel_empty)
-                    TextError.SHORT -> stringResource(R.string.phone_number_short_error)
-                    TextError.LONG -> stringResource(R.string.phone_number_long_error)
-                    TextError.PATTERN -> stringResource(R.string.phone_number_malformed_error)
-                    else -> null
-                }
-                StandardEditField(
-                    modifier = Modifier,
-                    firstTime = false,
-                    updated = state.editedUser.tel.value != state.initialUser.tel,
-                    empty = state.editedUser.tel.value.isEmpty(),
-                    onRevert = {
-                        onEvent(UserEditingUiEvent.TelChanged(state.initialUser.tel))
-                    },
-                    onDelete = {
-                        onEvent(UserEditingUiEvent.TelChanged(""))
+                    val telError = when (state.user.telephone.error) {
+                        TextError.EMPTY -> stringResource(R.string.tel_empty)
+                        TextError.SHORT -> stringResource(R.string.phone_number_short_error)
+                        TextError.LONG -> stringResource(R.string.phone_number_long_error)
+                        TextError.PATTERN -> stringResource(R.string.phone_number_malformed_error)
+                        else -> null
                     }
-                ) {
-                    InputField(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Rounded.PhoneAndroid,
-                        value = state.editedUser.tel.value,
-                        errorMsg = telError,
-                        onValueChange = {
-                            onEvent(UserEditingUiEvent.TelChanged(it))
+                    StandardEditField(
+                        modifier = Modifier,
+                        firstTime = false,
+                        edited = state.user.telephone.value != state.user.telephone.initial,
+                        empty = state.user.telephone.value.isEmpty(),
+                        onRevert = {
+                            onAction(ScreenAction.ChangeTelephone(state.user.telephone.initial))
                         },
-                        onFocus = {
-                            onEvent(UserEditingUiEvent.TelFocused)
-                        },
-                        onBlur = {
-                            onEvent(UserEditingUiEvent.TelBlurred)
-                        },
-                        label = stringResource(R.string.profile_telephone_label),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-                    )
-                }
-                val emailError = when (state.editedUser.email.error) {
-                    TextError.EMPTY -> stringResource(R.string.email_empty)
-                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_USERNAME_LENGTH)
-                    TextError.PATTERN -> stringResource(R.string.email_malformed_error)
-                    else -> null
-                }
-                StandardEditField(
-                    firstTime = false,
-                    updated = state.editedUser.email.value != state.initialUser.email,
-                    empty = state.editedUser.email.value.isEmpty(),
-                    onRevert = {
-                        onEvent(UserEditingUiEvent.EmailChanged(state.initialUser.email))
-                    },
-                    onDelete = {
-                        onEvent(UserEditingUiEvent.EmailChanged(""))
+                        onRemove = {
+                            onAction(ScreenAction.ChangeTelephone(""))
+                        }
+                    ) {
+                        InputField(
+                            modifier = Modifier.fillMaxWidth(),
+                            icon = Icons.Rounded.PhoneAndroid,
+                            value = state.user.telephone.value,
+                            errorMsg = telError,
+                            onValueChange = {
+                                onAction(ScreenAction.ChangeTelephone(it))
+                            },
+                            onFocus = {
+                                onAction(ScreenAction.FocusTelephone)
+                            },
+                            onBlur = {
+                                onAction(ScreenAction.BlurTelephone)
+                            },
+                            label = stringResource(R.string.profile_telephone_label),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                        )
                     }
-                ) {
-                    InputField(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Rounded.Email,
-                        value = state.editedUser.email.value,
-                        errorMsg = emailError,
-                        onValueChange = {
-                            onEvent(UserEditingUiEvent.EmailChanged(it))
-                        },
-                        onFocus = {
-                            onEvent(UserEditingUiEvent.EmailFocused)
-                        },
-                        onBlur = {
-                            onEvent(UserEditingUiEvent.EmailBlurred)
-                        },
-                        label = stringResource(R.string.email_label),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                    )
-                }
-                val bioError = when (state.editedUser.bio.error) {
-                    TextError.EMPTY -> stringResource(R.string.bio_empty)
-                    TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
-                    else -> null
-                }
-                StandardEditField(
-                    firstTime = false,
-                    updated = state.editedUser.bio.value != state.initialUser.bio,
-                    empty = state.editedUser.bio.value.isEmpty(),
-                    onRevert = {
-                        onEvent(UserEditingUiEvent.BioChanged(state.initialUser.bio))
-                    },
-                    onDelete = {
-                        onEvent(UserEditingUiEvent.BioChanged(""))
+                    val emailError = when (state.user.email.error) {
+                        TextError.EMPTY -> stringResource(R.string.email_empty)
+                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_USERNAME_LENGTH)
+                        TextError.PATTERN -> stringResource(R.string.email_malformed_error)
+                        else -> null
                     }
-                ) {
-                    InputField(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Rounded.DensityMedium,
-                        value = state.editedUser.bio.value,
-                        onValueChange = {
-                            onEvent(UserEditingUiEvent.BioChanged(it))
+                    StandardEditField(
+                        firstTime = false,
+                        edited = state.user.email.value != state.user.email.initial,
+                        empty = state.user.email.value.isEmpty(),
+                        onRevert = {
+                            onAction(ScreenAction.ChangeEmail(state.user.email.initial))
                         },
-                        onFocus = {
-                            onEvent(UserEditingUiEvent.BioFocused)
+                        onRemove = {
+                            onAction(ScreenAction.ChangeEmail(""))
+                        }
+                    ) {
+                        InputField(
+                            modifier = Modifier.fillMaxWidth(),
+                            icon = Icons.Rounded.Email,
+                            value = state.user.email.value,
+                            errorMsg = emailError,
+                            onValueChange = {
+                                onAction(ScreenAction.ChangeEmail(it))
+                            },
+                            onFocus = {
+                                onAction(ScreenAction.FocusEmail)
+                            },
+                            onBlur = {
+                                onAction(ScreenAction.BlurEmail)
+                            },
+                            label = stringResource(R.string.email_label),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        )
+                    }
+                    val bioError = when (state.user.bio.error) {
+                        TextError.EMPTY -> stringResource(R.string.bio_empty)
+                        TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_TEXT_LENGTH)
+                        else -> null
+                    }
+                    StandardEditField(
+                        firstTime = false,
+                        edited = state.user.bio.value != state.user.bio.initial,
+                        empty = state.user.bio.value.isEmpty(),
+                        onRevert = {
+                            onAction(ScreenAction.ChangeBio(state.user.bio.initial))
                         },
-                        onBlur = {
-                            onEvent(UserEditingUiEvent.BioBlurred)
-                        },
-                        label = stringResource(R.string.profile_bio),
-                        errorMsg = bioError,
-                        maxLines = 50,
-                    )
-                }
-                var isRemoveAccountDialogVisible by rememberSaveable { mutableStateOf(false) }
-                if (isRemoveAccountDialogVisible) {
-                    Dialog(
-                        onSubmit = {
-                            onEvent(UserEditingUiEvent.Remove)
-                        },
-                        onDismiss = {
-                            isRemoveAccountDialogVisible = false
-                        },
-                        dialogTitle = stringResource(R.string.delete_account_warning_title),
-                        dialogDescription = stringResource(R.string.delete_account_warning_message)
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(10.dp))
-                        .padding(20.dp),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    PrimaryProgressButton(
-                        needsCaution = true,
-                        inProgress = state.isRemoving,
-                        onClick = {
-                            isRemoveAccountDialogVisible = true
-                        },
-                        text = stringResource(R.string.delete_account_button)
-                    )
+                        onRemove = {
+                            onAction(ScreenAction.ChangeBio(""))
+                        }
+                    ) {
+                        InputField(
+                            modifier = Modifier.fillMaxWidth(),
+                            icon = Icons.Rounded.DensityMedium,
+                            value = state.user.bio.value,
+                            onValueChange = {
+                                onAction(ScreenAction.ChangeBio(it))
+                            },
+                            onFocus = {
+                                onAction(ScreenAction.FocusBio)
+                            },
+                            onBlur = {
+                                onAction(ScreenAction.BlurBio)
+                            },
+                            label = stringResource(R.string.profile_bio),
+                            errorMsg = bioError,
+                            maxLines = 50,
+                        )
+                    }
+                    var isAccountRemovingDialogVisible by rememberSaveable { mutableStateOf(false) }
+                    if (isAccountRemovingDialogVisible) {
+                        Dialog(
+                            onSubmit = {
+                                onAction(ScreenAction.Remove)
+                            },
+                            onDismiss = {
+                                isAccountRemovingDialogVisible = false
+                            },
+                            dialogTitle = stringResource(R.string.delete_account_warning_title),
+                            dialogDescription = stringResource(R.string.delete_account_warning_message)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.error,
+                                RoundedCornerShape(10.dp)
+                            )
+                            .padding(20.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        PrimaryProgressButton(
+                            needsCaution = true,
+                            inProgress = state.isRemoving,
+                            onClick = {
+                                isAccountRemovingDialogVisible = true
+                            },
+                            text = stringResource(R.string.delete_account_button)
+                        )
+                    }
                 }
             }
         }
-        StandardComplexErrorHandler(
-            error = state.error,
-            snackBarHostState = snackBarHostState,
-            notFoundMessage = stringResource(R.string.user_not_found)
-        )
-        StandardComplexErrorHandler(
-            error = state.removingError,
-            snackBarHostState = snackBarHostState,
-            notFoundMessage = stringResource(R.string.user_not_found)
-        )
-    } else if (state is UserEditingScreenState.Starting) {
-        StartingComponent(
-            modifier = Modifier.fillMaxSize()
-        )
-    } else if (state is UserEditingScreenState.Failure) {
-        ErrorComponent(
-            modifier = Modifier.fillMaxSize(),
-            onRetry = {
-                onEvent(UserEditingUiEvent.Restart)
-            }
-        )
-        StandardComplexErrorHandler(
-            error = state.error,
-            snackBarHostState = snackBarHostState,
-            notFoundMessage = stringResource(R.string.user_not_found)
-        )
-    } else if (state is UserEditingScreenState.Removed) {
-        AccountRemovedScreen()
-    }
-}
-
-@Composable
-private fun AccountRemovedScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                modifier = Modifier
-                    .fillMaxWidth(0.3f)
-                    .aspectRatio(1f),
-                imageVector = Icons.Rounded.PersonOff,
-                tint = MaterialTheme.colorScheme.onSurface,
-                contentDescription = stringResource(R.string.delete_account_success)
-            )
-            Title(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                text = stringResource(R.string.delete_account_success)
+        is ScreenState.Starting -> {
+            StartingComponent(
+                modifier = Modifier.fillMaxSize()
             )
         }
+        is ScreenState.Failure -> {
+            ErrorComponent(
+                modifier = Modifier.fillMaxSize(),
+                onRetry = {
+                    onAction(ScreenAction.Restart)
+                }
+            )
+        }
+        else -> Unit
     }
 }

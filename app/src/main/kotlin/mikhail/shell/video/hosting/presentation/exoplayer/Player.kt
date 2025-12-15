@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -85,7 +86,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
+import mikhail.shell.video.hosting.ui.theme.White
+import kotlin.math.PI
+import kotlin.math.acos
+import kotlin.math.max
+import kotlin.math.pow
 
 @Serializable
 data class PlayerState(
@@ -501,41 +506,47 @@ enum class ShapeDirection {
     Rtl, Ltr
 }
 
-fun createStadiumShape(direction: ShapeDirection): Shape {
+const val degPerRad = 360 / (2 * PI.toFloat())
+
+val Float.deg get() = times(degPerRad)
+val Float.rad get() = div(degPerRad)
+
+fun createStadiumShape(
+    direction: ShapeDirection,
+    radiusCoefficient: Float = 1.2f
+): Shape {
     return GenericShape { size, _ ->
-        val diameter = size.height / 1.5f
-        if (direction == ShapeDirection.Ltr) {
-            moveTo(0f, 0f)
-            lineTo(size.width - diameter / 1.2f, 0f)
-            arcTo(
-                rect = Rect(
-                    size.width - diameter,
-                    -0.2f * size.height,
-                    size.width,
-                    1.2f * size.height
-                ),
-                startAngleDegrees = 270f,
-                sweepAngleDegrees = 180f,
-                forceMoveTo = true
-            )
-            lineTo(0f, size.height)
-            lineTo(0f, 0f)
-        } else {
-            moveTo(size.width, 0f)
-            lineTo(diameter / 1.2f, 0f)
-            arcTo(
-                rect = Rect(
-                    0f,
-                    -0.2f * size.height,
-                    diameter,
-                    1.2f * size.height
-                ),
-                startAngleDegrees = 270f,
-                sweepAngleDegrees = -180f,
-                forceMoveTo = true
-            )
-            lineTo(size.width, size.height)
-            lineTo(size.width, 0f)
+        val r = radiusCoefficient * max(size.width, size.height)
+        val a = acos(1 - size.height.pow(2) / (2 * r.pow(2))).deg
+        when (direction) {
+            ShapeDirection.Ltr -> {
+                moveTo(0f, 0f)
+                arcTo(
+                    rect = Rect(
+                        topLeft = Offset(size.width - 2 * r, size.height / 2 - r),
+                        bottomRight = Offset(size.width, size.height / 2 + r)
+                    ),
+                    startAngleDegrees = -a/2,
+                    sweepAngleDegrees = a,
+                    forceMoveTo = false
+                )
+                lineTo(0f, size.height)
+                lineTo(0f, 0f)
+            }
+            ShapeDirection.Rtl -> {
+                moveTo(size.width, 0f)
+                arcTo(
+                    rect = Rect(
+                        topLeft = Offset(0f, size.height / 2 - r),
+                        bottomRight = Offset(2 * r, size.height / 2 + r)
+                    ),
+                    startAngleDegrees = 180 + a / 2,
+                    sweepAngleDegrees = -a,
+                    forceMoveTo = false
+                )
+                lineTo(size.width, size.height)
+                lineTo(size.width, 0f)
+            }
         }
         close()
     }
@@ -564,20 +575,21 @@ fun millisToDurationString(millis: Long): String {
 
 @Composable
 @Preview
-fun PlayerControlsPreview() {
-    VideoHostingTheme {
-        PlayerControls(
-            isPlaying = false,
-            onPlay = {},
-            onPause = {},
-            onSeekForward = {},
-            onSeekBack = {},
-            position = 0,
-            duration = 100500,
-            onSeek = {},
-            onFullscreen = {}
-        )
-    }
+private fun PlayerControlsPreview() {
+    PlayerControls(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f/9),
+        isPlaying = false,
+        onPlay = {},
+        onPause = {},
+        onSeekForward = {},
+        onSeekBack = {},
+        position = 0,
+        duration = 100500,
+        onSeek = {},
+        onFullscreen = {}
+    )
 }
 
 @Composable
@@ -601,4 +613,39 @@ fun isPlayerPrepared(player: Player): Boolean {
         }
     }
     return isPrepared
+}
+
+@Preview
+@Composable
+private fun StadiumShapePreview () {
+    //VideoHostingTheme {
+        ConstraintLayout (
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f/9)
+                .background(Color.Blue)
+        ) {
+            val (seekBack, seekForward) = createRefs()
+            Box(
+                modifier = Modifier
+                    .constrainAs(seekBack) {
+                        start.linkTo(parent.start)
+                    }
+                    .fillMaxWidth(0.4f)
+                    .fillMaxHeight()
+                    .clip(createStadiumShape(ShapeDirection.Ltr))
+                    .background(White)
+            )
+            Box(
+                modifier = Modifier
+                    .constrainAs(seekForward) {
+                        end.linkTo(parent.end)
+                    }
+                    .fillMaxWidth(0.4f)
+                    .fillMaxHeight()
+                    .clip(createStadiumShape(ShapeDirection.Rtl))
+                    .background(White)
+            )
+        }
+    //}
 }

@@ -108,12 +108,12 @@ fun ChannelEditingScreen(
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = state.channel.title.value != state.channel.title.initial,
+                        edited = state.channel.title.value != state.channel.title.initial,
                         empty = state.channel.title.value.isEmpty(),
                         onRevert = {
                             onAction(ScreenAction.ChangeTitle(state.channel.title.initial))
                         },
-                        onDelete = {
+                        onRemove = {
                             onAction(ScreenAction.ChangeTitle(""))
                         }
                     ) {
@@ -143,12 +143,12 @@ fun ChannelEditingScreen(
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = state.channel.alias.value != state.channel.alias.initial,
+                        edited = state.channel.alias.value != state.channel.alias.initial,
                         empty = state.channel.alias.value.isEmpty(),
                         onRevert = {
                             onAction(ScreenAction.ChangeAlias(state.channel.alias.initial))
                         },
-                        onDelete = {
+                        onRemove = {
                             onAction(ScreenAction.ChangeAlias(""))
                         },
                     ) {
@@ -176,12 +176,12 @@ fun ChannelEditingScreen(
                     StandardEditField(
                         modifier = Modifier,
                         firstTime = false,
-                        updated = state.channel.description.value != state.channel.description.initial,
+                        edited = state.channel.description.value != state.channel.description.initial,
                         empty = state.channel.description.value.isEmpty(),
                         onRevert = {
                             onAction(ScreenAction.ChangeDescription(state.channel.description.initial))
                         },
-                        onDelete = {
+                        onRemove = {
                             onAction(ScreenAction.ChangeDescription(""))
                         }
                     ) {
@@ -217,12 +217,12 @@ fun ChannelEditingScreen(
                         StandardEditField(
                             modifier = Modifier,
                             firstTime = false,
-                            updated = state.channel.logo.value is EditingState.Editing || state.channel.logo.value is EditingState.Removing && logoPainter.state is AsyncImagePainter.State.Success,
+                            edited = state.channel.logo.value is EditingState.Editing || state.channel.logo.value is EditingState.Removing && logoPainter.state is AsyncImagePainter.State.Success,
                             empty = !(state.channel.logo.value is EditingState.Editing || logoPainter.state is AsyncImagePainter.State.Success && state.channel.logo.value !is EditingState.Removing),
                             onRevert = {
                                 onAction(ScreenAction.ChangeLogo(state.channel.logo.initial))
                             },
-                            onDelete = {
+                            onRemove = {
                                 onAction(ScreenAction.ChangeLogo(EditingState.Removing))
                             }
                         ) {
@@ -303,12 +303,12 @@ fun ChannelEditingScreen(
                         StandardEditField(
                             modifier = Modifier,
                             firstTime = false,
-                            updated = state.channel.header.value is EditingState.Editing || state.channel.header.value is EditingState.Removing && headerPainter.state is AsyncImagePainter.State.Success,
+                            edited = state.channel.header.value is EditingState.Editing || state.channel.header.value is EditingState.Removing && headerPainter.state is AsyncImagePainter.State.Success,
                             empty = !(state.channel.header.value is EditingState.Editing || headerPainter.state is AsyncImagePainter.State.Success && state.channel.header.value !is EditingState.Removing),
                             onRevert = {
                                 onAction(ScreenAction.ChangeHeader(state.channel.header.initial))
                             },
-                            onDelete = {
+                            onRemove = {
                                 onAction(ScreenAction.ChangeHeader(EditingState.Removing))
                             }
                         ) {

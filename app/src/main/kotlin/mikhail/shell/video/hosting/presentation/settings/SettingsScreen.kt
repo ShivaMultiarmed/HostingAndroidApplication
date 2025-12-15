@@ -19,34 +19,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.Toggle
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.ui.theme.Theme
 import mikhail.shell.video.hosting.ui.theme.UiPreferences
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import mikhail.shell.video.hosting.ui.theme.setLocale
-import mikhail.shell.video.hosting.ui.theme.setTheme
-import mikhail.shell.video.hosting.ui.theme.uiPreferences
 
 @Composable
 fun SettingsScreen(
-    onPopup: () -> Unit = {},
-    onEdit: () -> Unit = {}
+    state: SettingsScreenState,
+    onAction: (SettingsScreenAction) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -54,11 +44,15 @@ fun SettingsScreen(
         topBar = {
             TopBar(
                 title = stringResource(R.string.settings_title),
-                onPopup = onPopup,
+                onPopup = {
+                    onAction(SettingsScreenAction.Cancel)
+                },
                 actions = listOf(
                     {
                         IconButton(
-                            onClick = onEdit
+                            onClick = {
+                                onAction(SettingsScreenAction.EditProfile)
+                            }
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.BorderColor,
@@ -79,29 +73,24 @@ fun SettingsScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val uiPreferences by context.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences())
             Text(
                 modifier = Modifier.padding(10.dp),
                 text = stringResource(R.string.theme_title)
             )
-            var selectedTheme = uiPreferences.theme
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Toggle(
                     modifier = Modifier.fillMaxWidth(),
-                    key = selectedTheme,
+                    key = state.uiSettings.theme,
                     values = mapOf(
                         Theme.LIGHT to Icons.Rounded.WbSunny,
                         Theme.SYSTEM to Icons.Rounded.Timelapse,
                         Theme.DARK to Icons.Rounded.ModeNight
                     ),
                     onValueChanged = {
-                        coroutineScope.launch {
-                            context.setTheme(it)
-                        }
-                        selectedTheme = it
+                        onAction(SettingsScreenAction.ChangeTheme(it))
                     }
                 )
             }
@@ -109,23 +98,19 @@ fun SettingsScreen(
                 modifier = Modifier.padding(10.dp),
                 text = stringResource(R.string.language_title)
             )
-            var selectedLocale = uiPreferences.locale
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Toggle(
                     modifier = Modifier.fillMaxWidth(),
-                    key = selectedLocale,
+                    key = state.uiSettings.locale,
                     values = mapOf(
                         Locale.RUSSIAN to Locale.RUSSIAN.label,
                         Locale.ENGLISH to Locale.ENGLISH.label
                     ),
                     onValueChanged = {
-                        coroutineScope.launch {
-                            context.setLocale(it)
-                        }
-                        selectedLocale = it
+                        onAction(SettingsScreenAction.ChangeLocale(it))
                     }
                 )
             }
@@ -133,14 +118,16 @@ fun SettingsScreen(
     }
 }
 
-enum class Locale(val label: String, val iso: String) {
+enum class Locale(
+    val label: String,
+    val iso: String
+) {
     RUSSIAN("Русский", "ru"),
     ENGLISH("English", "en");
 
     companion object {
-        fun ofTag(tag: String): Locale {
-            return Locale.entries.find { it.iso == tag }
-                ?: throw IllegalArgumentException("Invalid locale tag")
+        fun ofTag(iso: String): Locale {
+            return entries.firstOrNull { it.iso == iso } ?: throw IllegalArgumentException("Invalid locale tag")
         }
     }
 }
@@ -149,6 +136,11 @@ enum class Locale(val label: String, val iso: String) {
 @Preview
 fun SettingsScreenPreview() {
     VideoHostingTheme {
-        SettingsScreen()
+        SettingsScreen(
+            state = SettingsScreenState(
+                uiSettings = UiPreferences()
+            ),
+            onAction = {}
+        )
     }
 }

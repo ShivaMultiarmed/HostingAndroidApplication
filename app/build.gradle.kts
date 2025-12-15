@@ -126,7 +126,6 @@ dependencies {
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 
     implementation (libs.hilt.android)
-    debugImplementation(libs.ui.tooling)
     kapt (libs.hilt.android.compiler)
     kaptAndroidTest (libs.hilt.android.compiler)
     kapt (libs.androidx.hilt.compiler)
