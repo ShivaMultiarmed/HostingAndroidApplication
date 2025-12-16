@@ -20,6 +20,9 @@ import mikhail.shell.video.hosting.domain.usecases.authentication.signup.Confirm
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateNick
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePasswordDuplicate
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = SignUpConfirmationViewModel.Factory::class)
 class SignUpConfirmationViewModel @AssistedInject constructor(
@@ -29,26 +32,23 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
     private val validateNick: ValidateNick,
     private val confirm: ConfirmSignUpWithPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow(SignUpConfirmationState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
-    private val _events = MutableSharedFlow<SignUpConfirmationEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: SignUpConfirmationAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            is SignUpConfirmationAction.NickChanged -> onNickChanged(action.nick)
-            SignUpConfirmationAction.NickFocused -> onNickFocused()
-            SignUpConfirmationAction.NickBlurred -> onNickBlurred()
-            is SignUpConfirmationAction.PasswordChanged -> onPasswordChanged(action.password)
-            SignUpConfirmationAction.PasswordFocused -> onPasswordFocused()
-            SignUpConfirmationAction.PasswordBlurred -> onPasswordBlurred()
-            is SignUpConfirmationAction.PasswordDuplicateChanged -> onPasswordDuplicateChanged(
-                action.passwordDuplicate
-            )
-
-            SignUpConfirmationAction.PasswordDuplicateFocused -> onPasswordDuplicateFocused()
-            SignUpConfirmationAction.PasswordDuplicateBlurred -> onPasswordDuplicateBlurred()
-            SignUpConfirmationAction.Submit -> confirm()
+            is ScreenAction.NickChanged -> onNickChanged(action.nick)
+            ScreenAction.NickFocused -> onNickFocused()
+            ScreenAction.NickBlurred -> onNickBlurred()
+            is ScreenAction.PasswordChanged -> onPasswordChanged(action.password)
+            ScreenAction.PasswordFocused -> onPasswordFocused()
+            ScreenAction.PasswordBlurred -> onPasswordBlurred()
+            is ScreenAction.PasswordDuplicateChanged -> onPasswordDuplicateChanged(action.passwordDuplicate)
+            ScreenAction.PasswordDuplicateFocused -> onPasswordDuplicateFocused()
+            ScreenAction.PasswordDuplicateBlurred -> onPasswordDuplicateBlurred()
+            ScreenAction.Submit -> confirm()
         }
     }
 
@@ -206,7 +206,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                     it.copy(isLoading = false)
                 }
                 viewModelScope.launch {
-                    _events.emit(SignUpConfirmationEvent.Success(authModel))
+                    _events.emit(ScreenEvent.Success(authModel))
                 }
             }.onFailure { error ->
                 _state.update {
@@ -227,7 +227,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                     }
                 } else {
                     viewModelScope.launch   {
-                        _events.emit(SignUpConfirmationEvent.Failure(error))
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 }
             }
@@ -238,17 +238,4 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("token") token: String): SignUpConfirmationViewModel
     }
-}
-
-sealed class SignUpConfirmationAction {
-    data class NickChanged(val nick: String) : SignUpConfirmationAction()
-    data object NickFocused : SignUpConfirmationAction()
-    data object NickBlurred : SignUpConfirmationAction()
-    data class PasswordChanged(val password: String) : SignUpConfirmationAction()
-    data object PasswordFocused : SignUpConfirmationAction()
-    data object PasswordBlurred : SignUpConfirmationAction()
-    data class PasswordDuplicateChanged(val passwordDuplicate: String) : SignUpConfirmationAction()
-    data object PasswordDuplicateFocused : SignUpConfirmationAction()
-    data object PasswordDuplicateBlurred : SignUpConfirmationAction()
-    data object Submit : SignUpConfirmationAction()
 }

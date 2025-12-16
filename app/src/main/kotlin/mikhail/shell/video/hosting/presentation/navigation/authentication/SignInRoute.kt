@@ -1,16 +1,20 @@
 package mikhail.shell.video.hosting.presentation.navigation.authentication
 
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
-import mikhail.shell.video.hosting.presentation.signin.password.SignInUiEvent
 import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
+import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.signInRoute(
     rootBackStack: MutableList<Route>,
@@ -18,28 +22,35 @@ fun EntryProviderScope<Route>.signInRoute(
     userDetailsProvider: UserDetailsProvider
 ) {
     entry(Route.Authentication.SignIn) {
+        val context = LocalContext.current
         val viewModel = hiltViewModel<SignInWithPasswordViewModel>()
-        val state by viewModel.state.collectAsState()
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val events = viewModel.events
+        val snackBarHostState = remember { SnackbarHostState() }
         SignInScreen(
             state = state,
-            onEvent = { event ->
-                when (event) {
-                    SignInUiEvent.SignUp -> authBackStack.add(Route.Authentication.SignUp)
-                    SignInUiEvent.ResetPassword -> authBackStack.add(Route.Authentication.Reset)
-                    else -> viewModel.onEvent(event)
-                }
-            }
+            onAction = viewModel::onAction,
+            snackBarHostState = snackBarHostState
         )
-        LaunchedEffect(state.authModel) {
-            if (state.authModel != null) {
-                userDetailsProvider.save(
-                    UserDetails(
-                        userId = state.authModel!!.userId,
-                        token = state.authModel!!.token
+        events.observe { event ->
+            when (event) {
+                ScreenEvent.SignUpRequested -> authBackStack.add(Route.Authentication.SignUp)
+                ScreenEvent.ResetRequested -> authBackStack.add(Route.Authentication.Reset)
+                is ScreenEvent.Failure -> {
+                    context.getStandardErrorMessage(event.error)?.let {
+                        snackBarHostState.showSnackbar(it)
+                    }
+                }
+                is ScreenEvent.Success -> {
+                    rootBackStack.remove(Route.Authentication)
+                    userDetailsProvider.save(
+                        UserDetails(
+                            userId = event.authModel.userId,
+                            token = event.authModel.token
+                        )
                     )
-                )
-                rootBackStack.add(Route.Recommendations)
-                rootBackStack.remove(Route.Authentication)
+                    rootBackStack.add(Route.Recommendations)
+                }
             }
         }
     }

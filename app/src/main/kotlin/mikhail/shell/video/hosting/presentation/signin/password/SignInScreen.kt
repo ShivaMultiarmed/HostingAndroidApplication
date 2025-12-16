@@ -19,7 +19,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,15 +30,16 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
-import mikhail.shell.video.hosting.presentation.utils.StandardComplexErrorHandler
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenState as ScreenState
 
 @Composable
 fun SignInScreen(
-    state: SignInScreenState,
-    onEvent: (SignInUiEvent) -> Unit
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
+    snackBarHostState: SnackbarHostState
 ) {
-    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -70,7 +70,6 @@ fun SignInScreen(
                     TextError.NOT_EXISTS -> stringResource(R.string.email_not_found_error)
                     else -> null
                 }
-
                 is NetworkError -> stringResource(R.string.user_name_check_failed)
                 else -> null
             }
@@ -82,14 +81,14 @@ fun SignInScreen(
                 label = stringResource(R.string.email_label),
                 value = state.input.userName.value,
                 onValueChange = {
-                    onEvent(SignInUiEvent.UserNameChanged(it))
+                    onAction(ScreenAction.UserNameChanged(it))
                 },
                 errorMsg = emailErrorMsg,
                 onFocus = {
-                    onEvent(SignInUiEvent.UserNameFocused)
+                    onAction(ScreenAction.UserNameFocused)
                 },
                 onBlur = {
-                    onEvent(SignInUiEvent.UserNameBlurred)
+                    onAction(ScreenAction.UserNameBlurred)
                 }
             )
             val passwordErrorMsg = when (state.input.password.error) {
@@ -108,20 +107,20 @@ fun SignInScreen(
                 label = stringResource(R.string.password_label),
                 value = state.input.password.value,
                 onValueChange = {
-                    onEvent(SignInUiEvent.PasswordChanged(it))
+                    onAction(ScreenAction.PasswordChanged(it))
                 },
                 onFocus = {
-                    onEvent(SignInUiEvent.PasswordFocused)
+                    onAction(ScreenAction.PasswordFocused)
                 },
                 onBlur = {
-                    onEvent(SignInUiEvent.PasswordBlurred)
+                    onAction(ScreenAction.PasswordBlurred)
                 },
                 secured = true,
                 errorMsg = passwordErrorMsg
             )
             Text(
                 modifier = Modifier.clickable {
-                    onEvent(SignInUiEvent.ResetPassword)
+                    onAction(ScreenAction.ResetPassword)
                 },
                 text = stringResource(R.string.forgot_password),
                 fontSize = 12.sp
@@ -132,23 +131,18 @@ fun SignInScreen(
             ) {
                 PrimaryProgressButton(
                     inProgress = state.isLoading,
-                    complete = state.authModel != null,
                     onClick = {
-                        onEvent(SignInUiEvent.Submit)
+                        onAction(ScreenAction.Submit)
                     },
                     text = stringResource(R.string.sign_in_main_btn_label)
                 )
                 Text(
                     text = stringResource(R.string.sign_up_link_label),
                     modifier = Modifier.clickable {
-                        onEvent(SignInUiEvent.SignUp)
+                        onAction(ScreenAction.SignUp)
                     }
                 )
             }
         }
-        StandardComplexErrorHandler(
-            error = state.error,
-            snackBarHostState = snackBarHostState
-        )
     }
 }

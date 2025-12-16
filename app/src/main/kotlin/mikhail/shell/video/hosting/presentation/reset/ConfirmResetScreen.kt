@@ -25,11 +25,13 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenState as ScreenState
 
 @Composable
 fun ConfirmResetScreen(
-    state: ResetConfirmationScreenState,
-    onAction: (ResetConfirmationAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -68,16 +70,16 @@ fun ConfirmResetScreen(
                 icon = Icons.Rounded.Password,
                 value = state.user.password.value,
                 onValueChange = {
-                    onAction(ResetConfirmationAction.PasswordChanged(it))
+                    onAction(ScreenAction.PasswordChanged(it))
                 },
                 errorMsg = passwordErrMsg,
                 secured = true,
                 label = stringResource(R.string.password_label),
                 onFocus = {
-                    onAction(ResetConfirmationAction.PasswordFocused)
+                    onAction(ScreenAction.PasswordFocused)
                 },
                 onBlur = {
-                    onAction(ResetConfirmationAction.PasswordBlurred)
+                    onAction(ScreenAction.PasswordBlurred)
                 }
             )
             val passwordDuplicateErrorMsg = when (state.user.passwordDuplicate.error) {
@@ -91,22 +93,22 @@ fun ConfirmResetScreen(
                 icon = Icons.Rounded.Password,
                 value = state.user.passwordDuplicate.value,
                 onValueChange = {
-                    onAction(ResetConfirmationAction.PasswordDuplicatedChanged(it))
+                    onAction(ScreenAction.PasswordDuplicatedChanged(it))
                 },
                 errorMsg = passwordDuplicateErrorMsg,
                 secured = true,
                 label = stringResource(R.string.password_again_label),
                 onFocus = {
-                    onAction(ResetConfirmationAction.PasswordDuplicatedFocused)
+                    onAction(ScreenAction.PasswordDuplicatedFocused)
                 },
                 onBlur = {
-                    onAction(ResetConfirmationAction.PasswordDuplicatedBlurred)
+                    onAction(ScreenAction.PasswordDuplicatedBlurred)
                 }
             )
             PrimaryProgressButton(
                 inProgress = state.isLoading,
                 onClick = {
-                    onAction(ResetConfirmationAction.Submit)
+                    onAction(ScreenAction.Submit)
                 },
                 text = stringResource(R.string.reset_password_button)
             )

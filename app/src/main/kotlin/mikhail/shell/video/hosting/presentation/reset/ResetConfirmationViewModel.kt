@@ -12,13 +12,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.ConfirmResetPassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePasswordDuplicate
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = ResetConfirmationViewModel.Factory::class)
 class ResetConfirmationViewModel @AssistedInject constructor(
@@ -27,21 +28,21 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private val validatePasswordDuplicate: ValidatePasswordDuplicate,
     private val confirm: ConfirmResetPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ResetConfirmationScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
 
-    private val _events = MutableSharedFlow<ResetConfirmationEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(event: ResetConfirmationAction) {
+    fun onAction(event: ScreenAction) {
         when (event) {
-            is ResetConfirmationAction.PasswordChanged -> onPasswordChanged(event.password)
-            ResetConfirmationAction.PasswordFocused -> onPasswordFocused()
-            ResetConfirmationAction.PasswordBlurred -> onPasswordBlurred()
-            is ResetConfirmationAction.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
-            ResetConfirmationAction.PasswordDuplicatedFocused -> onPasswordDuplicateFocused()
-            ResetConfirmationAction.PasswordDuplicatedBlurred -> onPasswordDuplicateBlurred()
-            ResetConfirmationAction.Submit -> confirm()
+            is ScreenAction.PasswordChanged -> onPasswordChanged(event.password)
+            ScreenAction.PasswordFocused -> onPasswordFocused()
+            ScreenAction.PasswordBlurred -> onPasswordBlurred()
+            is ScreenAction.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
+            ScreenAction.PasswordDuplicatedFocused -> onPasswordDuplicateFocused()
+            ScreenAction.PasswordDuplicatedBlurred -> onPasswordDuplicateBlurred()
+            ScreenAction.Submit -> confirm()
         }
     }
 
@@ -139,7 +140,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
                 password = _state.value.user.password.value
             ).onSuccess {
                 viewModelScope.launch {
-                    _events.emit(ResetConfirmationEvent.Success(it))
+                    _events.emit(ScreenEvent.Success(it))
                 }
             }.onFailure { error ->
                 if (error is TextError) {
@@ -152,7 +153,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
                     }
                 } else {
                     viewModelScope.launch {
-                        _events.emit(ResetConfirmationEvent.Failure(error))
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 }
             }
@@ -165,19 +166,4 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("token") token: String): ResetConfirmationViewModel
     }
-}
-
-sealed class ResetConfirmationAction {
-    data class PasswordChanged(val password: String): ResetConfirmationAction()
-    data object PasswordFocused: ResetConfirmationAction()
-    data object PasswordBlurred: ResetConfirmationAction()
-    data class PasswordDuplicatedChanged(val passwordDuplicate: String): ResetConfirmationAction()
-    data object PasswordDuplicatedFocused: ResetConfirmationAction()
-    data object PasswordDuplicatedBlurred: ResetConfirmationAction()
-    data object Submit: ResetConfirmationAction()
-}
-
-sealed class ResetConfirmationEvent {
-    data class Success(val authModel: AuthModel): ResetConfirmationEvent()
-    data class Failure(val error: Error): ResetConfirmationEvent()
 }

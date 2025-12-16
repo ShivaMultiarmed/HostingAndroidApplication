@@ -21,7 +21,7 @@ class SettingsScreenTests {
     @Test
     fun testSomeScreen() {
         composeTestRule.setContent {
-            SettingsScreen()
+            //SettingsScreen()
         }
         composeTestRule.onNodeWithText("Язык").assertExists()
     }

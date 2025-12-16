@@ -26,11 +26,13 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_USERNAM
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingScreenState as ScreenState
 
 @Composable
 internal fun SignUpRequestingScreen(
-    state: SignUpRequestingScreenState,
-    onAction: (SignUpRequestingAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -67,21 +69,21 @@ internal fun SignUpRequestingScreen(
                 icon = Icons.Rounded.Email,
                 value = state.userName.value,
                 onValueChange = {
-                    onAction(SignUpRequestingAction.UserNameChanged(it))
+                    onAction(ScreenAction.UserNameChanged(it))
                 },
                 errorMsg = userNameErrorMsg,
                 label = "E-mail",
                 onFocus = {
-                    onAction(SignUpRequestingAction.UserNameFocused)
+                    onAction(ScreenAction.UserNameFocused)
                 },
                 onBlur = {
-                    onAction(SignUpRequestingAction.UserNameBlurred)
+                    onAction(ScreenAction.UserNameBlurred)
                 }
             )
             PrimaryProgressButton(
                 inProgress = state.isLoading,
                 onClick = {
-                    onAction(SignUpRequestingAction.Submit)
+                    onAction(ScreenAction.Submit)
                 },
                 text = stringResource(R.string.sign_up_main_button)
             )

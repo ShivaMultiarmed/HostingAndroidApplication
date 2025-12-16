@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 
 fun EntryProviderScope<Route>.signUpGraph(
     rootBackStack: MutableList<Route>,
@@ -26,6 +27,9 @@ fun EntryProviderScope<Route>.signUpGraph(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
+            transitionSpec = { SubGraphAnimations.enteringAnimation },
+            popTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
             entryProvider = entryProvider {
                 requestSignUpRoute(authBackStack, signUpBackStack)
                 verifySignUpRoute(signUpBackStack)

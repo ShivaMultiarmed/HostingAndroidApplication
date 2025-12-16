@@ -25,11 +25,13 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenState as ScreenState
 
 @Composable
 fun RequestResetScreen(
-    state: ResetRequestingScreenState,
-    onAction: (ResetRequestingAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -71,21 +73,21 @@ fun RequestResetScreen(
                 icon = Icons.Rounded.Email,
                 value = state.userName.value,
                 onValueChange = {
-                    onAction(ResetRequestingAction.UserNameChanged(it))
+                    onAction(ScreenAction.UserNameChanged(it))
                 },
                 errorMsg = userNameErrorMsg,
                 label = "E-mail",
                 onFocus = {
-                    onAction(ResetRequestingAction.UserNameFocused)
+                    onAction(ScreenAction.UserNameFocused)
                 },
                 onBlur = {
-                    onAction(ResetRequestingAction.UserNameBlurred)
+                    onAction(ScreenAction.UserNameBlurred)
                 }
             )
             PrimaryProgressButton(
                 inProgress = state.isLoading,
                 onClick = {
-                    onAction(ResetRequestingAction.Submit)
+                    onAction(ScreenAction.Submit)
                 },
                 text = stringResource(R.string.go_forward_button)
             )

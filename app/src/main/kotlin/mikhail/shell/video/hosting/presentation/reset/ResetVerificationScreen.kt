@@ -21,11 +21,13 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenState as ScreenState
 
 @Composable
 fun ResetVerificationScreen(
-    state: ResetVerificationState,
-    onAction: (ResetVerificationAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -59,7 +61,7 @@ fun ResetVerificationScreen(
                 isValid = state.code.error == null,
                 length = ValidationRules.CODE_LENGTH,
                 onValueChange = {
-                    onAction(ResetVerificationAction.CodeChanged(it))
+                    onAction(ScreenAction.CodeChanged(it))
                 }
             )
             if (codeErrorMsg != null) {

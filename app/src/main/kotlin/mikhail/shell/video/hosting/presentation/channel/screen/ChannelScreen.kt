@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ErrorDisplay
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 
@@ -39,7 +38,9 @@ fun ChannelScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
+            SnackbarHost(
+                hostState = snackBarHostState
+            )
         }
     ) { padding ->
         Box(
@@ -92,10 +93,6 @@ fun ChannelScreen(
                             }
                         )
                     }
-                    ErrorDisplay(
-                        state.videos.error,
-                        snackBarHostState = snackBarHostState
-                    )
                 }
                 if (shouldShowLogo) {
                     ImageViewerScreen(

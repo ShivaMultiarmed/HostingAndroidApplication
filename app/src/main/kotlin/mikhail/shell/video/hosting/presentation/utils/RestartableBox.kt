@@ -1,31 +1,21 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,103 +29,73 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import kotlin.time.Duration.Companion.milliseconds
+import androidx.compose.ui.unit.times
+
+private val reloadIndicatorSize = 20.dp
+private val reloadThumbSize = 1.5 * reloadIndicatorSize
+private val shadowBaseDiameter = 1.2 * reloadThumbSize
+private val shadowWidth = 5.dp
+private val topPosition = -(shadowBaseDiameter + shadowWidth)
+private val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
 
 @Composable
 fun RestartableBox(
     modifier: Modifier = Modifier,
-    onStart: () -> Unit,
     isStarting: Boolean,
+    canStart: Boolean = true,
+    onStart: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    val reloadIndicatorSize = 30
-    val reloadThumbSize = 1.5f * reloadIndicatorSize
-    val shadowBaseDiameter = 1.2f * reloadThumbSize
-    val shadowWidth = 5
     val resistance = 0.15f
-    val topPosition = -(shadowBaseDiameter + shadowWidth)
-    val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
     val density = LocalDensity.current.density
-    var height by rememberSaveable { mutableFloatStateOf(topPosition) }
-    val animatedHeight by animateDpAsState(height.dp, tween(200))
+    var height by rememberSaveable { mutableStateOf(topPosition) }
+    val animatedHeight by animateDpAsState(height, tween(200))
     var isDragged by rememberSaveable { mutableStateOf(false) }
+    val isStartingUpdated by rememberUpdatedState(isStarting)
     Box(
         modifier = modifier
             .clipToBounds()
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val down = awaitFirstDown(pass = PointerEventPass.Initial)
-                        isDragged = true
-                        drag(down.id) {
-                            if (!isStarting) {
-                                if (height < bottomPosition) {
-                                    height = (height + (it.positionChange().y * density * resistance).toInt()).coerceIn(
-                                            topPosition,
-                                            bottomPosition
-                                        )
+            .then(
+                if (canStart && !isStarting) {
+                    Modifier.pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                                isDragged = true
+                                drag(down.id) {
+                                    if (height < bottomPosition) {
+                                        height =
+                                            (height + (it.positionChange().y * density * resistance).dp).coerceIn(
+                                                topPosition,
+                                                bottomPosition
+                                            )
+                                        if (!(height == topPosition && it.positionChange().y < 0)) {
+                                            it.consume()
+                                        }
+                                    }
                                 }
-                                it.consume()
+                                isDragged = false
+                                if (height == bottomPosition) {
+                                    onStart()
+                                } else if (height < bottomPosition) {
+                                    height = topPosition
+                                }
                             }
                         }
-                        if (height == bottomPosition && !isStarting) {
-                            onStart()
-                        }
-                        if (isStarting || height < bottomPosition) {
-                            height = topPosition
-                        }
-                        isDragged = false
                     }
+                } else {
+                    Modifier
                 }
-            },
+            ),
         contentAlignment = Alignment.TopCenter
     ) {
         content()
-        Box(
-            modifier = Modifier
-                .offset(
-                    y = if (isDragged) height.dp else animatedHeight
-                )
-                .size(shadowBaseDiameter.dp)
-                .background(Color.Transparent)
-                .shadow(
-                    elevation = shadowWidth.dp,
-                    shape = CircleShape
-                )
-                .size(reloadThumbSize.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary)
-                .size(reloadIndicatorSize.dp)
-                .clip(CircleShape)
-                .background(Color.Transparent)
-            ,
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(reloadIndicatorSize.dp)
-                    .rotate(
-                        if (isStarting) {
-                            val infiniteRotation = rememberInfiniteTransition()
-                            infiniteRotation.animateFloat(
-                                initialValue = 0f,
-                                targetValue = 360f,
-                                infiniteRepeatable(
-                                    animation = tween(800),
-                                    repeatMode = RepeatMode.Restart
-                                )
-                            ).value
-                        } else 0f
-                    ),
-                progress = { 0.25f },
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        RestartThumb(
+            isStarting = isStartingUpdated,
+            height = if (isDragged || isStartingUpdated) height else animatedHeight
+        )
     }
     LaunchedEffect(isStarting) {
         if (!isStarting) {
@@ -145,32 +105,41 @@ fun RestartableBox(
 }
 
 @Composable
-@Preview
-fun ReloadableBoxPreview() {
-    VideoHostingTheme {
-        var isLoading by remember { mutableStateOf(false) }
-        val coroutineScope = rememberCoroutineScope()
-        Scaffold { padding ->
-            Column(
+private fun RestartThumb(
+    modifier: Modifier = Modifier,
+    isStarting: Boolean,
+    height: Dp
+) {
+    Box(
+        modifier = modifier
+            .offset(y = height)
+            .size(shadowBaseDiameter)
+            .background(Color.Transparent)
+            .shadow(
+                elevation = shadowWidth,
+                shape = CircleShape
+            )
+            .size(reloadThumbSize)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .size(reloadIndicatorSize)
+            .clip(CircleShape)
+            .background(Color.Transparent),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isStarting) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(reloadIndicatorSize),
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            CircularProgressIndicator(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                RestartableBox(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    onStart = {
-                        coroutineScope.launch {
-                            isLoading = true
-                            delay(3000.milliseconds)
-                            isLoading = false
-                        }
-                    },
-                    isStarting = isLoading
-                ) {
-
-                }
-            }
+                    .size(reloadIndicatorSize)
+                    .rotate((height - topPosition)/(bottomPosition - topPosition) * 360),
+                progress = { 0.25f },
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

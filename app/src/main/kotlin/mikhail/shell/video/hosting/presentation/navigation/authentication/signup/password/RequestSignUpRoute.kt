@@ -13,7 +13,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
@@ -35,15 +35,15 @@ fun EntryProviderScope<Route>.requestSignUpRoute(
         )
         events.observe { event ->
             when (event) {
-                SignUpRequestingEvent.Cancel -> authBackStack.removeLastOrNull()
-                is SignUpRequestingEvent.Failure -> {
+                ScreenEvent.Cancel -> authBackStack.removeLastOrNull()
+                is ScreenEvent.Failure -> {
                     val errorMessage = when (event.error) {
                         is NetworkError -> context.getNetworkErrorMessage(event.error)
                         else -> context.getString(R.string.unexpected_error)
                     }
                     snackBarHostState.showSnackbar(message = errorMessage, duration = SnackbarDuration.Short)
                 }
-                is SignUpRequestingEvent.Success -> signUpBackStack.add(
+                is ScreenEvent.Success -> signUpBackStack.add(
                     Route.Authentication.SignUp.Verification(event.userName)
                 )
             }

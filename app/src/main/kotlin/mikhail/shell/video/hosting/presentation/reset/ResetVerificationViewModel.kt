@@ -12,25 +12,25 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.VerifyResetPassword
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
+import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = ResetVerificationViewModel.Factory::class)
 class ResetVerificationViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
     private val verifyResetPassword: VerifyResetPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ResetVerificationState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
 
-    private val _events = MutableSharedFlow<ResetVerificationEvent>()
+    private val _events = MutableSharedFlow<ResetVerificationScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: ResetVerificationAction) {
+    fun onAction(action: ResetVerificationScreenAction) {
         when (action) {
-            is ResetVerificationAction.CodeChanged -> onCodeChanged(action.code)
+            is ResetVerificationScreenAction.CodeChanged -> onCodeChanged(action.code)
         }
     }
 
@@ -55,7 +55,7 @@ class ResetVerificationViewModel @AssistedInject constructor(
                 code = _state.value.code.value
             ).onSuccess { token ->
                 viewModelScope.launch {
-                    _events.emit(ResetVerificationEvent.Success(token))
+                    _events.emit(ResetVerificationScreenEvent.Success(token))
                 }
             }.onFailure { error ->
                 if (error is TextError) {
@@ -66,7 +66,7 @@ class ResetVerificationViewModel @AssistedInject constructor(
                     }
                 } else {
                     viewModelScope.launch {
-                        _events.emit(ResetVerificationEvent.Failure(error))
+                        _events.emit(ResetVerificationScreenEvent.Failure(error))
                     }
                 }
             }
@@ -80,13 +80,4 @@ class ResetVerificationViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("userId") userId: Long): ResetVerificationViewModel
     }
-}
-
-sealed class ResetVerificationAction {
-    data class CodeChanged(val code: String): ResetVerificationAction()
-}
-
-sealed class ResetVerificationEvent {
-    data class Success(val token: String): ResetVerificationEvent()
-    data class Failure(val error: Error): ResetVerificationEvent()
 }

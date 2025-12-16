@@ -10,6 +10,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelCreationRoute
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 import mikhail.shell.video.hosting.presentation.navigation.video.videoUploadingRoute
 
 fun EntryProviderScope<Route>.userGraph(
@@ -25,6 +26,9 @@ fun EntryProviderScope<Route>.userGraph(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
+            transitionSpec = { SubGraphAnimations.enteringAnimation },
+            popTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
             entryProvider = entryProvider {
                 settingsRoute(
                     profileBackStack = userBackStack

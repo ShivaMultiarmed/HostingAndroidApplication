@@ -22,11 +22,13 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenState as ScreenState
 
 @Composable
 internal fun SignUpVerificationScreen(
-    state: SignUpVerificationScreenState,
-    onAction: (SignUpVerificationAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -59,7 +61,7 @@ internal fun SignUpVerificationScreen(
             CodeInputField(
                 isValid = state.code.error == null,
                 onValueChange = {
-                    onAction(SignUpVerificationAction.CodeChanged(it))
+                    onAction(ScreenAction.CodeChanged(it))
                 }
             )
             if (codeErrorMsg != null) {
@@ -69,7 +71,7 @@ internal fun SignUpVerificationScreen(
             }
             LaunchedEffect(state.code.value) {
                 if (state.code.value.length == ValidationRules.CODE_LENGTH) {
-                    onAction(SignUpVerificationAction.Submit)
+                    onAction(ScreenAction.Submit)
                 }
             }
         }

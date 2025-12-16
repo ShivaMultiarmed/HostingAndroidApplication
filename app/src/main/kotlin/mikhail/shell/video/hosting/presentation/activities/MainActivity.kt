@@ -40,6 +40,7 @@ import mikhail.shell.video.hosting.presentation.exoplayer.PlayerStateSaver
 import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
+import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
@@ -166,6 +167,9 @@ class MainActivity : ComponentActivity() {
                                     rememberSaveableStateHolderNavEntryDecorator(),
                                     rememberViewModelStoreNavEntryDecorator()
                                 ),
+                                transitionSpec = { RootAnimations.enteringAnimation },
+                                popTransitionSpec = { RootAnimations.leavingAnimation },
+                                predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
                                 entryProvider = entryProvider {
                                     authenticationGraph(
                                         rootBackStack = rootBackStack,
@@ -211,7 +215,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     BackHandler(enabled = Route.Authentication in rootBackStack) {
-
+                        // TODO (?)
                     }
                 }
             }

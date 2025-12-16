@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreen
-import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationEvent
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
@@ -41,7 +41,7 @@ fun EntryProviderScope<Route>.resetConfirmationRoute(
         )
         events.observe { event ->
             when (event) {
-                is ResetConfirmationEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     val errMsg = when(event.error) {
                         is NetworkError -> context.getNetworkErrorMessage(event.error)
                         else -> context.getString(R.string.unexpected_error)
@@ -50,7 +50,7 @@ fun EntryProviderScope<Route>.resetConfirmationRoute(
                         snackBarHostState.showSnackbar(errMsg)
                     }
                 }
-                is ResetConfirmationEvent.Success -> {
+                is ScreenEvent.Success -> {
                     userDetailsProvider.save(
                         UserDetails(
                             userId = event.authModel.userId,

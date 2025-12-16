@@ -9,35 +9,35 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.RequestResetPassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenState as ScreenState
 
 @HiltViewModel
 class ResetRequestingViewModel @Inject constructor(
     private val validateUserName: ValidateUserName,
     private val requestResetPassword: RequestResetPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ResetRequestingScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
 
-    private val _events = MutableSharedFlow<ResetRequestingEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: ResetRequestingAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            ResetRequestingAction.Submit -> request()
-            is ResetRequestingAction.UserNameChanged -> onUserNameChanged(action.userName)
-            ResetRequestingAction.UserNameFocused -> onUserNameFocused()
-            ResetRequestingAction.UserNameBlurred -> onUserNameBlurred()
-            ResetRequestingAction.Cancel -> viewModelScope.launch {
-                _events.emit(
-                    ResetRequestingEvent.NavigateBack
-                )
+            ScreenAction.Submit -> request()
+            is ScreenAction.UserNameChanged -> onUserNameChanged(action.userName)
+            ScreenAction.UserNameFocused -> onUserNameFocused()
+            ScreenAction.UserNameBlurred -> onUserNameBlurred()
+            ScreenAction.Cancel -> viewModelScope.launch {
+                _events.emit(ScreenEvent.NavigateBack)
             }
         }
     }
@@ -94,7 +94,7 @@ class ResetRequestingViewModel @Inject constructor(
             requestResetPassword(_state.value.userName.value)
                 .onSuccess { userId ->
                     viewModelScope.launch {
-                        _events.emit(ResetRequestingEvent.Success(userId))
+                        _events.emit(ScreenEvent.Success(userId))
                     }
                 }.onFailure { error ->
                     if (error is TextError) {
@@ -105,7 +105,7 @@ class ResetRequestingViewModel @Inject constructor(
                         }
                     } else {
                         viewModelScope.launch {
-                            _events.emit(ResetRequestingEvent.Failure(error))
+                            _events.emit(ScreenEvent.Failure(error))
                         }
                     }
                 }
@@ -114,18 +114,4 @@ class ResetRequestingViewModel @Inject constructor(
             }
         }
     }
-}
-
-sealed class ResetRequestingAction {
-    data class UserNameChanged(val userName: String) : ResetRequestingAction()
-    data object UserNameFocused : ResetRequestingAction()
-    data object UserNameBlurred : ResetRequestingAction()
-    data object Submit : ResetRequestingAction()
-    data object Cancel : ResetRequestingAction()
-}
-
-sealed class ResetRequestingEvent {
-    data class Success(val userId: Long) : ResetRequestingEvent()
-    data class Failure(val error: Error) : ResetRequestingEvent()
-    data object NavigateBack : ResetRequestingEvent()
 }

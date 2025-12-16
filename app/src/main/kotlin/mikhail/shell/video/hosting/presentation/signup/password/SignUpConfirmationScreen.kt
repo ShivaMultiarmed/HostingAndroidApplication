@@ -28,11 +28,13 @@ import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_NAME_LE
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenState as ScreenState
 
 @Composable
 internal fun SignUpConfirmationScreen(
-    state: SignUpConfirmationState,
-    onAction: (SignUpConfirmationAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -71,16 +73,16 @@ internal fun SignUpConfirmationScreen(
                 icon = Icons.Rounded.Password,
                 value = state.user.password.value,
                 onValueChange = {
-                    onAction(SignUpConfirmationAction.PasswordChanged(it))
+                    onAction(ScreenAction.PasswordChanged(it))
                 },
                 errorMsg = passwordErrMsg,
                 secured = true,
                 label = stringResource(R.string.password_label),
                 onFocus = {
-                    onAction(SignUpConfirmationAction.PasswordFocused)
+                    onAction(ScreenAction.PasswordFocused)
                 },
                 onBlur = {
-                    onAction(SignUpConfirmationAction.PasswordBlurred)
+                    onAction(ScreenAction.PasswordBlurred)
                 }
             )
             val passwordDuplicateErrorMsg = when (state.user.passwordDuplicate.error) {
@@ -94,16 +96,16 @@ internal fun SignUpConfirmationScreen(
                 icon = Icons.Rounded.Password,
                 value = state.user.passwordDuplicate.value,
                 onValueChange = {
-                    onAction(SignUpConfirmationAction.PasswordDuplicateChanged(it))
+                    onAction(ScreenAction.PasswordDuplicateChanged(it))
                 },
                 errorMsg = passwordDuplicateErrorMsg,
                 secured = true,
                 label = stringResource(R.string.password_again_label),
                 onFocus = {
-                    onAction(SignUpConfirmationAction.PasswordDuplicateFocused)
+                    onAction(ScreenAction.PasswordDuplicateFocused)
                 },
                 onBlur = {
-                    onAction(SignUpConfirmationAction.PasswordDuplicateBlurred)
+                    onAction(ScreenAction.PasswordDuplicateBlurred)
                 }
             )
             val nickErrMsg = when (state.user.nick.error) {
@@ -123,21 +125,21 @@ internal fun SignUpConfirmationScreen(
                 icon = Icons.Rounded.Person,
                 value = state.user.nick.value,
                 onValueChange = {
-                    onAction(SignUpConfirmationAction.NickChanged(it))
+                    onAction(ScreenAction.NickChanged(it))
                 },
                 errorMsg = nickErrMsg,
                 label = stringResource(R.string.nick_label),
                 onFocus = {
-                    onAction(SignUpConfirmationAction.NickFocused)
+                    onAction(ScreenAction.NickFocused)
                 },
                 onTypingEnded = {
-                    onAction(SignUpConfirmationAction.NickBlurred)
+                    onAction(ScreenAction.NickBlurred)
                 }
             )
             PrimaryProgressButton(
                 inProgress = state.isLoading,
                 onClick = {
-                    onAction(SignUpConfirmationAction.Submit)
+                    onAction(ScreenAction.Submit)
                 },
                 text = stringResource(R.string.sign_up_main_button)
             )

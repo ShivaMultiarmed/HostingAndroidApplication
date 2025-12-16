@@ -4,13 +4,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
@@ -25,14 +23,15 @@ fun EntryProviderScope<Route>.channelRoute(
     channelBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
-    entry <Route.Channel.View> { route ->
+    entry<Route.Channel.View> { route ->
         val context = LocalContext.current
         val userId by rememberSaveable { mutableLongStateOf(userDetailsProvider.getUserId()) }
         val channelId = route.channelId
-        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { it.create(channelId) }
+        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> {
+            it.create(channelId)
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
-        val coroutineScope = rememberCoroutineScope()
         val snackBarHostState = remember { SnackbarHostState() }
         ChannelScreen(
             userId = userId,
@@ -48,10 +47,8 @@ fun EntryProviderScope<Route>.channelRoute(
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {
-                        coroutineScope.launch {
-                            context.getStandardErrorMessage(event.error)?.let {
-                                snackBarHostState.showSnackbar(it)
-                            }
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
                         }
                     }
                 }

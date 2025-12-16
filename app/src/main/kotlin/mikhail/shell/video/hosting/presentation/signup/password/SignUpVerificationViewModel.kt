@@ -15,6 +15,9 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.RequestSignUpWithPassword
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.VerifySignUpWithPassword
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = SignUpVerificationViewModel.Factory::class)
 class SignUpVerificationViewModel @AssistedInject constructor(
@@ -22,15 +25,15 @@ class SignUpVerificationViewModel @AssistedInject constructor(
     private val requestSignUpWithPassword: RequestSignUpWithPassword,
     private val verifySignUpWithPassword: VerifySignUpWithPassword
 ) : ViewModel() {
-    private val _state = MutableStateFlow<SignUpVerificationScreenState>(SignUpVerificationScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
-    private val _events = MutableSharedFlow<SignUpVerificationEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(event: SignUpVerificationAction) {
+    fun onAction(event: ScreenAction) {
         when (event) {
-            is SignUpVerificationAction.CodeChanged -> onCodeChanged(event.code)
-            SignUpVerificationAction.Submit -> verify()
+            is ScreenAction.CodeChanged -> onCodeChanged(event.code)
+            ScreenAction.Submit -> verify()
         }
     }
 
@@ -49,7 +52,7 @@ class SignUpVerificationViewModel @AssistedInject constructor(
                 code = _state.value.code.value
             ).onSuccess { token ->
                 viewModelScope.launch {
-                    _events.emit(SignUpVerificationEvent.Success(token))
+                    _events.emit(ScreenEvent.Success(token))
                 }
             }.onFailure { error ->
                 if (error is TextError) {
@@ -60,7 +63,7 @@ class SignUpVerificationViewModel @AssistedInject constructor(
                     }
                 } else {
                     viewModelScope.launch {
-                        _events.emit(SignUpVerificationEvent.Failure(error))
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 }
             }
@@ -71,9 +74,4 @@ class SignUpVerificationViewModel @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted("userName") userName: String): SignUpVerificationViewModel
     }
-}
-
-sealed class SignUpVerificationAction {
-    data object Submit : SignUpVerificationAction()
-    data class CodeChanged(val code: String) : SignUpVerificationAction()
 }

@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password
 
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -12,7 +11,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationEvent
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationViewModel
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreen
 import mikhail.shell.video.hosting.presentation.utils.observe
@@ -35,13 +34,13 @@ fun EntryProviderScope<Route>.verifySignUpRoute(
         )
         events.observe { event ->
             when (event) {
-                is SignUpVerificationEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     val errMsg = if (event.error is NetworkError) {
                         context.getNetworkErrorMessage(event.error)
                     } else context.getString(R.string.unexpected_error)
-                    snackBarHostState.showSnackbar(message = errMsg, duration = SnackbarDuration.Short)
+                    snackBarHostState.showSnackbar(errMsg)
                 }
-                is SignUpVerificationEvent.Success -> {
+                is ScreenEvent.Success -> {
                     signUpBackStack.clear()
                     signUpBackStack.add(
                         Route.Authentication.SignUp.Confirmation(event.token)

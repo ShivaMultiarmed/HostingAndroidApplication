@@ -3,13 +3,14 @@ package mikhail.shell.video.hosting.presentation.signin.password
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
@@ -17,6 +18,9 @@ import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheck
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenState as ScreenState
 
 @HiltViewModel
 class SignInWithPasswordViewModel @Inject constructor(
@@ -25,19 +29,28 @@ class SignInWithPasswordViewModel @Inject constructor(
     private val signInWithPassword: SignInWithPassword,
     private val subscribeToNotifications: SubscribeToNotifications
 ) : ViewModel() {
-    private val _state = MutableStateFlow(SignInScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
 
-    fun onEvent(event: SignInUiEvent) {
-        when (event) {
-            SignInUiEvent.Submit -> signIn()
-            is SignInUiEvent.PasswordChanged -> onPasswordChanged(event.password)
-            is SignInUiEvent.UserNameChanged -> onUserNameChanged(event.userName)
-            SignInUiEvent.UserNameFocused -> clearUserNameError()
-            SignInUiEvent.UserNameBlurred -> validateUserName()
-            SignInUiEvent.PasswordFocused -> clearPasswordError()
-            SignInUiEvent.PasswordBlurred -> validatePassword()
-            else -> null
+    private val _events = MutableSharedFlow<ScreenEvent>()
+    val events = _events.asSharedFlow()
+
+    fun onAction(action: ScreenAction) {
+        when (action) {
+            ScreenAction.Submit -> signIn()
+            is ScreenAction.PasswordChanged -> onPasswordChanged(action.password)
+            is ScreenAction.UserNameChanged -> onUserNameChanged(action.userName)
+            ScreenAction.UserNameFocused -> clearUserNameError()
+            ScreenAction.UserNameBlurred -> validateUserName()
+            ScreenAction.PasswordFocused -> clearPasswordError()
+            ScreenAction.PasswordBlurred -> validatePassword()
+            ScreenAction.ResetPassword -> viewModelScope.launch {
+                _events.emit(ScreenEvent.ResetRequested)
+            }
+
+            ScreenAction.SignUp -> viewModelScope.launch {
+                _events.emit(ScreenEvent.SignUpRequested)
+            }
         }
     }
 
@@ -45,9 +58,7 @@ class SignInWithPasswordViewModel @Inject constructor(
         _state.update {
             it.copy(
                 input = it.input.copy(
-                    password = it.input.password.copy(
-                        value = password
-                    )
+                    password = it.input.password.copy(value = password)
                 )
             )
         }
@@ -57,9 +68,7 @@ class SignInWithPasswordViewModel @Inject constructor(
         _state.update {
             it.copy(
                 input = it.input.copy(
-                    password = it.input.password.copy(
-                        error = null
-                    )
+                    password = it.input.password.copy(error = null)
                 )
             )
         }
@@ -70,10 +79,7 @@ class SignInWithPasswordViewModel @Inject constructor(
             it.copy(
                 input = it.input.copy(
                     password = it.input.password.copy(
-                        error = it.input.password.value.let {
-                            val validationResult = validatePassword(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
-                        }
+                        error = validatePassword(it.input.password.value).errorOrNull()
                     )
                 )
             )
@@ -106,7 +112,10 @@ class SignInWithPasswordViewModel @Inject constructor(
                 it.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
-                            error = validateUserName(UserNameCheckPurpose.SIGN_IN,it.input.userName.value).errorOrNull()
+                            error = validateUserName(
+                                UserNameCheckPurpose.SIGN_IN,
+                                it.input.userName.value
+                            ).errorOrNull()
                         )
                     )
                 )
@@ -115,50 +124,72 @@ class SignInWithPasswordViewModel @Inject constructor(
     }
 
     private fun signIn() {
-        validateUserName()
-        validatePassword()
-        val currentInput = _state.value.input
-        if (currentInput.userName.error != null || currentInput.password.error != null) {
+        if (_state.value.isLoading) {
             return
         }
-        _state.update {
-            it.copy(isLoading = true)
-        }
         viewModelScope.launch {
-            signInWithPassword(
-                email = currentInput.userName.value,
-                password = currentInput.password.value
-            ).onSuccess { authModel ->
-                subscribeToNotifications()
-                _state.update {
-                    it.copy(
-                        error = null,
-                        isLoading = false,
-                        authModel = authModel
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = if (error !in listOf(
-                                NetworkError.NOT_FOUND,
-                                NetworkError.BAD_REQUEST
-                            )
-                        ) error else it.error,
-                        input = it.input.copy(
-                            userName = it.input.userName.copy(
-                                error = if (error == NetworkError.NOT_FOUND) TextError.NOT_EXISTS else it.input.password.error
-                            ),
-                            password = it.input.password.copy(
-                                error = if (error == NetworkError.BAD_REQUEST) TextError.NOT_CORRECT else it.input.password.error
-                            )
+            _state.update {
+                it.copy(
+                    input = it.input.copy(
+                        userName = it.input.userName.copy(
+                            error = validateUserName(
+                                UserNameCheckPurpose.SIGN_IN,
+                                it.input.userName.value
+                            ).errorOrNull()
+                        ),
+                        password = it.input.password.copy(
+                            error = validatePassword(it.input.password.value).errorOrNull()
                         )
                     )
+                )
+            }
+            if (
+                _state.value.input.userName.error != null
+                || _state.value.input.password.error != null
+            ) {
+                return@launch
+            }
+            _state.update {
+                it.copy(isLoading = true)
+            }
+            signInWithPassword(
+                email = _state.value.input.userName.value,
+                password = _state.value.input.password.value
+            ).onSuccess { authModel ->
+                subscribeToNotifications()
+                viewModelScope.launch {
+                    _events.emit(ScreenEvent.Success(authModel))
+                }
+                _state.update {
+                    it.copy(isLoading = false)
+                }
+            }.onFailure { error ->
+                if (
+                    error !in listOf(
+                        NetworkError.NOT_FOUND,
+                        NetworkError.BAD_REQUEST
+                    )
+                ) {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            input = it.input.copy(
+                                userName = it.input.userName.copy(
+                                    error = if (error == NetworkError.NOT_FOUND) TextError.NOT_EXISTS else it.input.password.error
+                                ),
+                                password = it.input.password.copy(
+                                    error = if (error == NetworkError.BAD_REQUEST) TextError.NOT_CORRECT else it.input.password.error
+                                )
+                            )
+                        )
+                    }
+                } else {
+                    viewModelScope.launch {
+                        _events.emit(ScreenEvent.Failure(error))
+                    }
                 }
             }
         }
-
     }
 
     private fun subscribeToNotifications() {
@@ -166,16 +197,4 @@ class SignInWithPasswordViewModel @Inject constructor(
             subscribeToNotifications.invoke()
         }
     }
-}
-
-sealed class SignInUiEvent {
-    data class UserNameChanged(val userName: String) : SignInUiEvent()
-    data object UserNameFocused : SignInUiEvent()
-    data object UserNameBlurred : SignInUiEvent()
-    data class PasswordChanged(val password: String) : SignInUiEvent()
-    data object PasswordFocused : SignInUiEvent()
-    data object PasswordBlurred : SignInUiEvent()
-    data object Submit : SignInUiEvent()
-    data object SignUp : SignInUiEvent()
-    data object ResetPassword: SignInUiEvent()
 }

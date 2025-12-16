@@ -7,7 +7,7 @@ data class SignUpVerificationScreenState(
     val code: FieldState<String, Error> = FieldState("")
 )
 
-sealed class SignUpVerificationEvent {
-    data class Failure(val error: Error): SignUpVerificationEvent()
-    data class Success(val token: String): SignUpVerificationEvent()
+sealed class SignUpVerificationScreenEvent {
+    data class Failure(val error: Error): SignUpVerificationScreenEvent()
+    data class Success(val token: String): SignUpVerificationScreenEvent()
 }

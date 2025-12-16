@@ -15,7 +15,7 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.RequestResetScreen
-import mikhail.shell.video.hosting.presentation.reset.ResetRequestingEvent
+import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.reset.ResetRequestingViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
@@ -37,15 +37,15 @@ fun EntryProviderScope<Route>.resetRequestingRoute(
         )
         events.observe { event ->
             when (event) {
-                is ResetRequestingEvent.Success -> resettingBackStack.add(Route.Authentication.Reset.Verification(event.userId))
-                is ResetRequestingEvent.Failure -> coroutineScope.launch {
+                is ScreenEvent.Success -> resettingBackStack.add(Route.Authentication.Reset.Verification(event.userId))
+                is ScreenEvent.Failure -> coroutineScope.launch {
                     val errMsg = when (event.error) {
                         is NetworkError -> context.getNetworkErrorMessage(event.error)
                         else -> context.getString(R.string.unexpected_error)
                     }
                     snackBarHostState.showSnackbar(errMsg)
                 }
-                ResetRequestingEvent.NavigateBack -> authBackStack.removeLastOrNull()
+                ScreenEvent.NavigateBack -> authBackStack.removeLastOrNull()
             }
         }
     }
