@@ -12,8 +12,8 @@ import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreen
-import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenEvent
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsViewModel
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.recommendationsRoute(
     rootBackStack: MutableList<Route>
@@ -31,7 +31,7 @@ fun EntryProviderScope<Route>.recommendationsRoute(
         )
         events.observe { event ->
             when (event) {
-                is RecommendationsScreenEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     if (event.error != NetworkError.AUTHENTICATION) {
                         context.getStandardErrorMessage(event.error)?.let {
                             snackBarHostState.showSnackbar(it)
@@ -40,7 +40,7 @@ fun EntryProviderScope<Route>.recommendationsRoute(
                         rootBackStack.add(Route.Authentication)
                     }
                 }
-                is RecommendationsScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
+                is ScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
             }
         }
     }

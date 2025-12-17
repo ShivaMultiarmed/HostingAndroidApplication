@@ -1,17 +1,19 @@
 package mikhail.shell.video.hosting.presentation.channel.create
 
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenAction as ScreenAction
+
 sealed class ChannelCreationScreenAction {
-    data class ChangeTitle(val title: String) : ChannelCreationScreenAction()
-    data object FocusTitle : ChannelCreationScreenAction()
-    data object BlurTitle : ChannelCreationScreenAction()
-    data class ChangeAlias(val alias: String) : ChannelCreationScreenAction()
-    data object FocusAlias : ChannelCreationScreenAction()
-    data object BlurAlias : ChannelCreationScreenAction()
-    data class ChangeHeader(val header: String?) : ChannelCreationScreenAction()
-    data class ChangeLogo(val logo: String?) : ChannelCreationScreenAction()
-    data class ChangeDescription(val description: String) : ChannelCreationScreenAction()
-    data object FocusDescription : ChannelCreationScreenAction()
-    data object BlurDescription : ChannelCreationScreenAction()
-    data object Submit : ChannelCreationScreenAction()
-    data object Cancel : ChannelCreationScreenAction()
+    data class ChangeTitle(val title: String) : ScreenAction()
+    data object FocusTitle : ScreenAction()
+    data object BlurTitle : ScreenAction()
+    data class ChangeAlias(val alias: String) : ScreenAction()
+    data object FocusAlias : ScreenAction()
+    data object BlurAlias : ScreenAction()
+    data class ChangeHeader(val header: String?) : ScreenAction()
+    data class ChangeLogo(val logo: String?) : ScreenAction()
+    data class ChangeDescription(val description: String) : ScreenAction()
+    data object FocusDescription : ScreenAction()
+    data object BlurDescription : ScreenAction()
+    data object Submit : ScreenAction()
+    data object Cancel : ScreenAction()
 }

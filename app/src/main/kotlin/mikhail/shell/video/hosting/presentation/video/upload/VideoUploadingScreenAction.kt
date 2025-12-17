@@ -1,16 +1,18 @@
 package mikhail.shell.video.hosting.presentation.video.upload
 
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction as ScreenAction
+
 sealed class VideoUploadingScreenAction {
-    data object Cancel : VideoUploadingScreenAction()
-    data object Restart : VideoUploadingScreenAction()
-    data class ChangeChannel(val channelId: Long?) : VideoUploadingScreenAction()
-    data class ChangeTitle(val title: String) : VideoUploadingScreenAction()
-    data object BlurTitle : VideoUploadingScreenAction()
-    data object FocusTitle : VideoUploadingScreenAction()
-    data class ChangeSource(val source: String?) : VideoUploadingScreenAction()
-    data class ChangeCover(val cover: String?) : VideoUploadingScreenAction()
-    data class ChangeDescription(val description: String) : VideoUploadingScreenAction()
-    data object BlurDescription : VideoUploadingScreenAction()
-    data object FocusDescription : VideoUploadingScreenAction()
-    data object Submit : VideoUploadingScreenAction()
+    data object Cancel : ScreenAction()
+    data object Restart : ScreenAction()
+    data class ChangeChannel(val channelId: Long?) : ScreenAction()
+    data class ChangeTitle(val title: String) : ScreenAction()
+    data object BlurTitle : ScreenAction()
+    data object FocusTitle : ScreenAction()
+    data class ChangeSource(val source: String?) : ScreenAction()
+    data class ChangeCover(val cover: String?) : ScreenAction()
+    data class ChangeDescription(val description: String) : ScreenAction()
+    data object BlurDescription : ScreenAction()
+    data object FocusDescription : ScreenAction()
+    data object Submit : ScreenAction()
 }

@@ -39,7 +39,7 @@ import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoSourceUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.IncrementViews
 import mikhail.shell.video.hosting.domain.usecases.videos.RateVideo
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
-import mikhail.shell.video.hosting.presentation.models.toUi
+import mikhail.shell.video.hosting.presentation.comments.models.toUi
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi

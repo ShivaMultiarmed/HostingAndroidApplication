@@ -21,16 +21,18 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.user.screen.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenState as ScreenState
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SubscriptionsScreen(
-    state: SubscriptionsScreenState,
-    onAction: (SubscriptionsScreenAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -55,7 +57,7 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onStart = {
-                    onAction(SubscriptionsScreenAction.Restart)
+                    onAction(ScreenAction.Restart)
                 },
                 isStarting = state.isStarting
             ) {
@@ -84,7 +86,7 @@ fun SubscriptionsScreen(
                                 ),
                             channel = it,
                             onClick = {
-                                onAction(SubscriptionsScreenAction.ChooseChannel(it))
+                                onAction(ScreenAction.ChooseChannel(it))
                             }
                         )
                     },
@@ -98,10 +100,10 @@ fun SubscriptionsScreen(
                     },
                     isLoading = state.isLoading,
                     onReload = {
-                        onAction(SubscriptionsScreenAction.LoadNextPart)
+                        onAction(ScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
-                        onAction(SubscriptionsScreenAction.LoadNextPart)
+                        onAction(ScreenAction.LoadNextPart)
                     },
                     hasMore = state.hasMore
                 )
@@ -118,7 +120,7 @@ fun SubscriptionsScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface),
                 onRetry = {
-                    onAction(SubscriptionsScreenAction.Restart)
+                    onAction(ScreenAction.Restart)
                 }
             )
         }

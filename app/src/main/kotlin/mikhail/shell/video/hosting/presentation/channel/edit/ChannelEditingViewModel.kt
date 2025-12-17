@@ -29,6 +29,8 @@ import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.stateIn
+import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = ChannelEditingViewModel.Factory::class)
@@ -47,26 +49,26 @@ class ChannelEditingViewModel @AssistedInject constructor(
         MutableStateFlow<ScreenState>(ScreenState.Idle)
     val state = _state.onStart { start() }.stateIn(_state.value)
 
-    private val _events = MutableSharedFlow<ChannelEditingScreenEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: ChannelEditingScreenAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            is ChannelEditingScreenAction.ChangeAlias -> onAliasChanged(action.alias)
-            ChannelEditingScreenAction.FocusAlias -> onAliasFocused()
-            ChannelEditingScreenAction.BlurAlias -> onAliasBlurred()
-            is ChannelEditingScreenAction.ChangeDescription -> onDescriptionChanged(action.description)
-            ChannelEditingScreenAction.FocusDescription -> onDescriptionFocused()
-            ChannelEditingScreenAction.BlurDescription -> onDescriptionBlurred()
-            is ChannelEditingScreenAction.ChangeHeader -> onHeaderChanged(action.editingState)
-            is ChannelEditingScreenAction.ChangeLogo -> onLogoChanged(action.editingState)
-            is ChannelEditingScreenAction.ChangeTitle -> onTitleChanged(action.title)
-            ChannelEditingScreenAction.FocusTitle -> onTitleFocused()
-            ChannelEditingScreenAction.BlurTitle -> onTitleBlurred()
-            ChannelEditingScreenAction.Restart -> start()
-            ChannelEditingScreenAction.Submit -> edit()
-            ChannelEditingScreenAction.Cancel -> viewModelScope.launch {
-                _events.emit(ChannelEditingScreenEvent.Cancelled)
+            is ScreenAction.ChangeAlias -> onAliasChanged(action.alias)
+            ScreenAction.FocusAlias -> onAliasFocused()
+            ScreenAction.BlurAlias -> onAliasBlurred()
+            is ScreenAction.ChangeDescription -> onDescriptionChanged(action.description)
+            ScreenAction.FocusDescription -> onDescriptionFocused()
+            ScreenAction.BlurDescription -> onDescriptionBlurred()
+            is ScreenAction.ChangeHeader -> onHeaderChanged(action.editingState)
+            is ScreenAction.ChangeLogo -> onLogoChanged(action.editingState)
+            is ScreenAction.ChangeTitle -> onTitleChanged(action.title)
+            ScreenAction.FocusTitle -> onTitleFocused()
+            ScreenAction.BlurTitle -> onTitleBlurred()
+            ScreenAction.Restart -> start()
+            ScreenAction.Submit -> edit()
+            ScreenAction.Cancel -> viewModelScope.launch {
+                _events.emit(ScreenEvent.Cancelled)
             }
         }
     }
@@ -98,7 +100,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     ScreenState.Failure(error)
                 }
                 viewModelScope.launch {
-                    _events.emit(ChannelEditingScreenEvent.Failure(error))
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }
@@ -345,28 +347,18 @@ class ChannelEditingViewModel @AssistedInject constructor(
                         currentState?.copy(isLoading = false) ?: it
                     }
                     viewModelScope.launch {
-                        _events.emit(ChannelEditingScreenEvent.Failure(error))
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 } else {
                     _state.update {
                         val currentState = it as? ScreenState.Editing
                         currentState?.copy(
                             channel = currentState.channel.copy(
-                                title = currentState.channel.title.copy(
-                                    error = error.titleError
-                                ),
-                                alias = currentState.channel.alias.copy(
-                                    error = error.aliasError
-                                ),
-                                logo = currentState.channel.logo.copy(
-                                    error = error.logoError
-                                ),
-                                header = currentState.channel.header.copy(
-                                    error = error.headerError
-                                ),
-                                description = currentState.channel.description.copy(
-                                    error = error.descriptionError
-                                )
+                                title = currentState.channel.title.copy(error = error.titleError),
+                                alias = currentState.channel.alias.copy(error = error.aliasError),
+                                logo = currentState.channel.logo.copy(error = error.logoError),
+                                header = currentState.channel.header.copy(error = error.headerError),
+                                description = currentState.channel.description.copy(error = error.descriptionError)
                             ),
                             isLoading = false
                         ) ?: it

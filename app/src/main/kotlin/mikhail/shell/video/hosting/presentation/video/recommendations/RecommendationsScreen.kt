@@ -22,11 +22,13 @@ import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenState as ScreenState
 
 @Composable
 fun RecommendationsScreen(
-    state: RecommendationsScreenState,
-    onAction: (RecommendationsScreenAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -50,7 +52,7 @@ fun RecommendationsScreen(
                     .fillMaxSize()
                     .padding(padding),
                 onStart = {
-                    onAction(RecommendationsScreenAction.Restart)
+                    onAction(ScreenAction.Restart)
                 },
                 isStarting = state.isStarting,
             ) {
@@ -62,7 +64,7 @@ fun RecommendationsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             videoWithChannel = it,
                             onClick = {
-                                onAction(RecommendationsScreenAction.ChooseVideo(it))
+                                onAction(ScreenAction.ChooseVideo(it))
                             }
                         )
                     },
@@ -82,10 +84,10 @@ fun RecommendationsScreen(
                     error = state.error,
                     isLoading = state.isLoading,
                     onReload = {
-                        onAction(RecommendationsScreenAction.LoadNextPart)
+                        onAction(ScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
-                        onAction(RecommendationsScreenAction.LoadNextPart)
+                        onAction(ScreenAction.LoadNextPart)
                     }
                 )
             }
@@ -97,7 +99,7 @@ fun RecommendationsScreen(
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
-                    onAction(RecommendationsScreenAction.Restart)
+                    onAction(ScreenAction.Restart)
                 }
             )
         }

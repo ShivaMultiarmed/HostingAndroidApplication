@@ -6,7 +6,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -15,7 +14,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.navigation3.runtime.EntryProviderScope
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
@@ -38,14 +36,14 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
     entry<Route.User.VideoUploading> {
         val userId = rememberSaveable { userDetailsProvider.getUserId() }
         val context = LocalContext.current
-        val coroutineScope = rememberCoroutineScope()
-        val viewModel = hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> { factory ->
-            val mediaSourceFactory = DefaultMediaSourceFactory(context)
-            val player = ExoPlayer.Builder(context)
-                .setMediaSourceFactory(mediaSourceFactory)
-                .build()
-            factory.create(userId, player)
-        }
+        val viewModel =
+            hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> { factory ->
+                val mediaSourceFactory = DefaultMediaSourceFactory(context)
+                val player = ExoPlayer.Builder(context)
+                    .setMediaSourceFactory(mediaSourceFactory)
+                    .build()
+                factory.create(userId, player)
+            }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
@@ -74,6 +72,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                     )
                     userBackStack.add(Channel(event.channelId))
                 }
+
                 is ScreenEvent.Failure if (event.error is NetworkError) -> {
                     val errorMessage = context.getNetworkErrorMessage(event.error)
                     snackBarHostState.showSnackbar(
@@ -81,14 +80,13 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                         duration = SnackbarDuration.Short
                     )
                 }
+
                 is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {
-                        coroutineScope.launch {
-                            context.getStandardErrorMessage(event.error)?.let {
-                                snackBarHostState.showSnackbar(it)
-                            }
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
                         }
                     }
                 }

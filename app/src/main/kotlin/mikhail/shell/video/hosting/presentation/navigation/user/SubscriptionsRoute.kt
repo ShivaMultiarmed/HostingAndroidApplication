@@ -13,9 +13,9 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreen
-import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenEvent
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.subscriptionsRoute(
     rootBackStack: MutableList<Route>,
@@ -35,8 +35,8 @@ fun EntryProviderScope<Route>.subscriptionsRoute(
         )
         events.observe { event ->
             when (event) {
-                is SubscriptionsScreenEvent.ChannelChosen -> subscriptionsBackStack.add(Route.Channel(event.channelId))
-                is SubscriptionsScreenEvent.Failure -> {
+                is ScreenEvent.ChannelChosen -> subscriptionsBackStack.add(Route.Channel(event.channelId))
+                is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {

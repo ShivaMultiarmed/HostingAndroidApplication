@@ -3,12 +3,14 @@ package mikhail.shell.video.hosting.data.repositories
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import mikhail.shell.video.hosting.data.api.AuthApi
+import mikhail.shell.video.hosting.data.dto.SignInErrorResponse
 import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.user.UserCreationError
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
@@ -25,7 +27,16 @@ class AuthRepositoryWithApi @Inject constructor(
     override suspend fun signInWithPassword(
         email: String,
         password: String
-    ): Result<AuthModel, Error> = request {
+    ): Result<AuthModel, Error> = request(
+        httpExceptionHandler(400) {
+            val json = it.response()?.errorBody()?.string()?: return@httpExceptionHandler UnexpectedError
+            val response = gson.fromJson(json, SignInErrorResponse::class.java)
+            SignInError(
+                userNameError = response.userNameError,
+                passwordError = response.passwordError
+            )
+        }
+    ) {
         authApi.signInWithPassword(email, password)
     }
 

@@ -24,6 +24,9 @@ import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = ChannelScreenViewModel.Factory::class)
 class ChannelScreenViewModel @AssistedInject constructor(
@@ -36,28 +39,28 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private val subscribe: Subscribe,
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ChannelScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.onStart { startAll() }.stateIn(_state.value)
 
-    private val _events = MutableSharedFlow<ChannelScreenEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: ChannelScreenAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            ChannelScreenAction.LoadNextPart -> viewModelScope.launch {
+            ScreenAction.LoadNextPart -> viewModelScope.launch {
                 loadVideos(start = false)
             }
-            ChannelScreenAction.RestartVideos -> viewModelScope.launch {
+            ScreenAction.RestartVideos -> viewModelScope.launch {
                 loadVideos(start = true)
             }
-            ChannelScreenAction.RestartChannel -> startAll()
-            ChannelScreenAction.Remove -> remove()
-            is ChannelScreenAction.Subscribe -> subscribe(action.subscription)
-            is ChannelScreenAction.ChooseVideo -> viewModelScope.launch {
-                _events.emit(ChannelScreenEvent.VideoChosen(action.videoId))
+            ScreenAction.RestartChannel -> startAll()
+            ScreenAction.Remove -> remove()
+            is ScreenAction.Subscribe -> subscribe(action.subscription)
+            is ScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(ScreenEvent.VideoChosen(action.videoId))
             }
-            ChannelScreenAction.Edit -> viewModelScope.launch {
-                _events.emit(ChannelScreenEvent.EditingRequest(channelId))
+            ScreenAction.Edit -> viewModelScope.launch {
+                _events.emit(ScreenEvent.EditingRequest(channelId))
             }
         }
     }
@@ -96,7 +99,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 )
             }
             viewModelScope.launch {
-                _events.emit(ChannelScreenEvent.Failure(error))
+                _events.emit(ScreenEvent.Failure(error))
             }
         }
     }
@@ -150,7 +153,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 )
             }
             viewModelScope.launch {
-                _events.emit(ChannelScreenEvent.Failure(error))
+                _events.emit(ScreenEvent.Failure(error))
             }
         }
     }
@@ -185,7 +188,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                     )
                 }
                 viewModelScope.launch {
-                    _events.emit(ChannelScreenEvent.Failure(error))
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }
@@ -201,7 +204,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                     it.copy(isRemoving = false)
                 }
                 viewModelScope.launch {
-                    _events.emit(ChannelScreenEvent.Removed(channelId))
+                    _events.emit(ScreenEvent.Removed(channelId))
                 }
             }.onFailure { error ->
                 _state.update {
@@ -211,7 +214,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                     )
                 }
                 viewModelScope.launch {
-                    _events.emit(ChannelScreenEvent.Failure(error))
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }

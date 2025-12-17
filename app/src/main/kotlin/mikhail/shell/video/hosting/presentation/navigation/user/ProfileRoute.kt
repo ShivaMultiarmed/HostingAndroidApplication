@@ -19,7 +19,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
-import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenEvent
+import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
 import mikhail.shell.video.hosting.presentation.utils.logOut
 import mikhail.shell.video.hosting.presentation.utils.observe
@@ -51,7 +51,7 @@ fun EntryProviderScope<Route>.profileRoute(
         )
         events.observe { event ->
             when (event) {
-                is ProfileScreenEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     if (event.error !in setOf(NetworkError.AUTHENTICATION, NetworkError.NOT_FOUND)) {
                         coroutineScope.launch {
                             context.getStandardErrorMessage(event.error)?.let {
@@ -62,17 +62,17 @@ fun EntryProviderScope<Route>.profileRoute(
                         rootBackStack.add(Route.Authentication)
                     }
                 }
-                is ProfileScreenEvent.ChannelChosen -> currentTabBackStack.add(Route.Channel(event.channelId))
-                ProfileScreenEvent.ChannelCreationRequested -> currentTabBackStack.add(Route.User.ChannelCreation)
-                ProfileScreenEvent.InvitationRequested -> context.startActivity(
+                is ScreenEvent.ChannelChosen -> currentTabBackStack.add(Route.Channel(event.channelId))
+                ScreenEvent.ChannelCreationRequested -> currentTabBackStack.add(Route.User.ChannelCreation)
+                ScreenEvent.InvitationRequested -> context.startActivity(
                     Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, context.getString(R.string.invitation_text))
                     }
                 )
-                ProfileScreenEvent.SettingsRequested -> currentTabBackStack.add(Route.User.Settings)
-                ProfileScreenEvent.VideoUploadingRequested -> currentTabBackStack.add(Route.User.VideoUploading)
-                ProfileScreenEvent.SignedOut -> {
+                ScreenEvent.SettingsRequested -> currentTabBackStack.add(Route.User.Settings)
+                ScreenEvent.VideoUploadingRequested -> currentTabBackStack.add(Route.User.VideoUploading)
+                ScreenEvent.SignedOut -> {
                     player.stop()
                     player.clearMediaItems()
                     coroutineScope.launch {

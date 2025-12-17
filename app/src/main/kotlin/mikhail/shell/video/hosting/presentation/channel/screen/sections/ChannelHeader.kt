@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -46,10 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
-import coil.compose.AsyncImagePainter.State.Success
-import coil.request.ImageRequest
+import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
@@ -60,28 +60,27 @@ import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
+import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import kotlin.math.roundToInt
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 internal fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenAction) -> Unit,
+    onAction: (ScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
-    var hasHeader by rememberSaveable { mutableStateOf<Boolean?>(null) }
     if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
         ChannelHeaderCompact(
             modifier = modifier,
-            hasHeader = hasHeader,
-            headerUrlAssignment = { hasHeader = it },
             channel = channel,
-            onEvent = onEvent,
+            onAction = onAction,
             owns = owns,
             onShowLogo = onShowLogo
         )
@@ -89,17 +88,15 @@ internal fun ChannelHeader(
         ChannelHeaderMedium(
             modifier = modifier,
             channel = channel,
-            onEvent = onEvent,
+            onAction = onAction,
             owns = owns,
             onShowLogo = onShowLogo
         )
     } else {
         ChannelHeaderExpanded(
             modifier = modifier,
-            hasHeader = hasHeader,
-            headerUrlAssignment = { hasHeader = it },
             channel = channel,
-            onEvent = onEvent,
+            onAction = onAction,
             owns = owns,
             onShowLogo = onShowLogo
         )
@@ -109,13 +106,13 @@ internal fun ChannelHeader(
 @Composable
 private fun ChannelHeaderCompact(
     modifier: Modifier = Modifier,
-    hasHeader: Boolean?,
-    headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenAction) -> Unit,
+    onAction: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit = {}
 ) {
+    val header = rememberAsyncImagePainter(channel.header)
+    val logo = rememberAsyncImagePainter(channel.logo)
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -123,9 +120,7 @@ private fun ChannelHeaderCompact(
         verticalArrangement = Arrangement.Top,
     ) {
         ChannelHeader(
-            hasHeader = hasHeader,
-            headerUrlAssignment = headerUrlAssignment,
-            headerUrl = channel.headerUrl
+            header = header
         )
         Row(
             Modifier
@@ -136,8 +131,7 @@ private fun ChannelHeaderCompact(
                 )
         ) {
             ChannelLogo(
-                modifier = Modifier,
-                logo = channel.logo,
+                logo = logo,
                 onShowLogo = onShowLogo
             )
             Row(
@@ -149,17 +143,17 @@ private fun ChannelHeaderCompact(
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
                     ChannelTitle(title = channel.title)
-                    ChannelAlias(alias = channel.alias?: channel.channelId.toString())
+                    ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
                     SubscriberNumberText(subscribers = channel.subscribers)
                 }
                 if (owns) {
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenAction.Edit)
+                            onAction(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenAction.Remove)
+                            onAction(ChannelScreenAction.Remove)
                         }
                     )
                 }
@@ -174,7 +168,7 @@ private fun ChannelHeaderCompact(
             modifier = Modifier.fillMaxWidth(),
             state = channel.subscription,
             onSubscription = {
-                onEvent(ChannelScreenAction.Subscribe(it))
+                onAction(ChannelScreenAction.Subscribe(it))
             }
         )
     }
@@ -185,10 +179,11 @@ private fun ChannelHeaderCompact(
 private fun ChannelHeaderMedium(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenAction) -> Unit,
+    onAction: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit = {}
 ) {
+    val logo = rememberAsyncImagePainter(channel.logo)
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -199,7 +194,7 @@ private fun ChannelHeaderMedium(
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
             },
-            logo = channel.logo,
+            logo = logo,
             onShowLogo = onShowLogo
         )
         val briefRef = createRef()
@@ -211,17 +206,17 @@ private fun ChannelHeaderMedium(
             }
         ) {
             ChannelTitle(title = channel.title)
-            ChannelAlias(alias = channel.alias?: channel.channelId.toString())
+            ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
             Row {
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenAction.Edit)
+                            onAction(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenAction.Remove)
+                            onAction(ChannelScreenAction.Remove)
                         }
                     )
                 }
@@ -236,7 +231,7 @@ private fun ChannelHeaderMedium(
             },
             state = channel.subscription,
             onSubscription = {
-                onEvent(ChannelScreenAction.Subscribe(it))
+                onAction(ChannelScreenAction.Subscribe(it))
             }
         )
     }
@@ -245,20 +240,20 @@ private fun ChannelHeaderMedium(
 @Composable
 private fun ChannelHeaderExpanded(
     modifier: Modifier = Modifier,
-    hasHeader: Boolean?,
-    headerUrlAssignment: (Boolean) -> Unit,
     channel: ChannelForUserUi,
-    onEvent: (ChannelScreenAction) -> Unit,
+    onAction: (ChannelScreenAction) -> Unit,
     owns: Boolean = false,
     onShowLogo: () -> Unit
 ) {
+    val header = rememberAsyncImagePainter(channel.header)
+    val logo = rememberAsyncImagePainter(channel.logo)
     ConstraintLayout(
         modifier = modifier.fillMaxWidth()
     ) {
         val headerRef = createRef()
         ChannelHeader(
             modifier = Modifier.then(
-                if (hasHeader == true) {
+                if (header.exists() == true) {
                     Modifier
                         .fillMaxWidth()
                         .constrainAs(headerRef) {
@@ -268,14 +263,12 @@ private fun ChannelHeaderExpanded(
                         }
                 } else Modifier
             ),
-            hasHeader = hasHeader,
-            headerUrlAssignment = headerUrlAssignment,
-            headerUrl = channel.headerUrl,
+            header = header,
         )
         val logoRef = createRef()
         ChannelLogo(
             modifier = Modifier.constrainAs(logoRef) {
-                if (hasHeader == true) {
+                if (logo.exists() == true) {
                     top.linkTo(headerRef.bottom, (-65).dp)
                 } else {
                     top.linkTo(parent.top)
@@ -283,7 +276,7 @@ private fun ChannelHeaderExpanded(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
-            logo = channel.logo,
+            logo = logo,
             onShowLogo = onShowLogo
         )
         val annotationRef = createRef()
@@ -301,11 +294,11 @@ private fun ChannelHeaderExpanded(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ChannelAlias(alias = channel.alias?: channel.channelId.toString())
+                ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
                 SubscriptionButton(
                     state = channel.subscription,
                     onSubscription = {
-                        onEvent(ChannelScreenAction.Subscribe(it))
+                        onAction(ChannelScreenAction.Subscribe(it))
                     }
                 )
                 SubscriberNumberText(subscribers = channel.subscribers)
@@ -313,10 +306,10 @@ private fun ChannelHeaderExpanded(
                     ChannelActionsButton(
                         channelId = channel.channelId,
                         onEdit = {
-                            onEvent(ChannelScreenAction.Edit)
+                            onAction(ChannelScreenAction.Edit)
                         },
                         onRemove = {
-                            onEvent(ChannelScreenAction.Remove)
+                            onAction(ChannelScreenAction.Remove)
                         }
                     )
                 }
@@ -333,9 +326,7 @@ private fun ChannelHeaderExpanded(
 @Composable
 private fun ChannelHeader(
     modifier: Modifier = Modifier,
-    hasHeader: Boolean?,
-    headerUrlAssignment: (Boolean) -> Unit,
-    headerUrl: String?
+    header: AsyncImagePainter
 ) {
     val context = LocalContext.current
     val widthDp = LocalConfiguration.current.screenWidthDp
@@ -344,54 +335,36 @@ private fun ChannelHeader(
     Box(
         modifier = modifier
             .then(
-                if (hasHeader == true) {
+                if (header.exists() == true) {
                     Modifier
                         .fillMaxWidth()
                         .height(100.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-
                 } else {
                     Modifier
                 }
             )
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(headerUrl)
-                .size(widthPx, heightPx)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        Image(
             modifier = Modifier.matchParentSize(),
-            onState = {
-                when (it) {
-                    is Success -> headerUrlAssignment(true)
-                    is AsyncImagePainter.State.Error -> headerUrlAssignment(false)
-                    else -> Unit
-                }
-            }
+            painter = header,
+            contentScale = ContentScale.Crop,
+            contentDescription = null
         )
     }
 }
 
 @Composable
-fun ChannelLogo(
+private fun ChannelLogo(
     modifier: Modifier = Modifier,
-    logo: String?,
+    logo: AsyncImagePainter,
     onShowLogo: (() -> Unit)? = null
 ) {
-    var logoExists by rememberSaveable { mutableStateOf(null as Boolean?) }
-    AsyncImage(
-        model = logo,
-        contentDescription = stringResource(R.string.channel_logo_description),
-        contentScale = ContentScale.Crop,
-        onSuccess = {
-            logoExists = true
-        },
-        onError = {
-            logoExists = false
-        },
+    val logoExists by rememberSaveable {
+        derivedStateOf { logo.exists() }
+    }
+    Image(
         modifier = modifier
             .size(80.dp)
             .clip(CircleShape)
@@ -399,7 +372,10 @@ fun ChannelLogo(
             .clickable(
                 enabled = logoExists == true && onShowLogo != null,
                 onClick = onShowLogo ?: {}
-            )
+            ),
+        painter = logo,
+        contentDescription = stringResource(R.string.channel_logo_description),
+        contentScale = ContentScale.Crop
     )
 }
 
@@ -504,8 +480,8 @@ private fun ChannelDescriptionSection(
         }
         AnimatedVisibility(
             visible = shouldShowDescription,
-            enter = expandVertically (
-                tween (durationMillis = 300)
+            enter = expandVertically(
+                tween(durationMillis = 300)
             ),
             exit = shrinkVertically(
                 tween(durationMillis = 300)

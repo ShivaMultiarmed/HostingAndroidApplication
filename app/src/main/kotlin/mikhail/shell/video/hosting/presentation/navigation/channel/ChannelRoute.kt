@@ -13,10 +13,10 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreen
-import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenEvent
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.channelRoute(
     rootBackStack: MutableList<Route>,
@@ -41,9 +41,9 @@ fun EntryProviderScope<Route>.channelRoute(
         )
         events.observe { event ->
             when (event) {
-                is ChannelScreenEvent.EditingRequest -> channelBackStack.add(Route.Channel.Edit(channelId))
-                is ChannelScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
-                is ChannelScreenEvent.Failure -> {
+                is ScreenEvent.EditingRequest -> channelBackStack.add(Route.Channel.Edit(channelId))
+                is ScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
+                is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {
@@ -52,7 +52,7 @@ fun EntryProviderScope<Route>.channelRoute(
                         }
                     }
                 }
-                is ChannelScreenEvent.Removed -> channelBackStack.removeLastOrNull() // TODO: replace with current tab backstack
+                is ScreenEvent.Removed -> channelBackStack.removeLastOrNull() // TODO: replace with current tab backstack
             }
         }
     }

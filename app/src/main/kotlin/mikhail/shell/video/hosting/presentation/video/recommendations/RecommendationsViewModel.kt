@@ -16,6 +16,9 @@ import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenState as ScreenState
 
 @HiltViewModel
 class RecommendationsViewModel @Inject constructor(
@@ -23,18 +26,18 @@ class RecommendationsViewModel @Inject constructor(
     private val getChannelLogoUrl: GetChannelLogoUrl,
     private val getVideoCoverUrl: GetVideoCoverUrl,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(RecommendationsScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.onStart { load(start = true) }.stateIn(_state.value)
 
-    private val _events = MutableSharedFlow<RecommendationsScreenEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: RecommendationsScreenAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            RecommendationsScreenAction.LoadNextPart -> load()
-            RecommendationsScreenAction.Restart -> load(start = true)
-            is RecommendationsScreenAction.ChooseVideo -> viewModelScope.launch {
-                _events.emit(RecommendationsScreenEvent.VideoChosen(action.videoId))
+            ScreenAction.LoadNextPart -> load()
+            ScreenAction.Restart -> load(start = true)
+            is ScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(ScreenEvent.VideoChosen(action.videoId))
             }
         }
     }
@@ -84,7 +87,7 @@ class RecommendationsViewModel @Inject constructor(
                     )
                 }
                 viewModelScope.launch {
-                    _events.emit(RecommendationsScreenEvent.Failure(error))
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }

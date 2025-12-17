@@ -5,16 +5,17 @@ import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.FieldState
+import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenState as ScreenState
 
 sealed class ChannelEditingScreenState {
-    data object Idle : ChannelEditingScreenState()
-    data object Starting: ChannelEditingScreenState()
-    data class Failure(val error: Error): ChannelEditingScreenState()
+    data object Idle : ScreenState()
+    data object Starting: ScreenState()
+    data class Failure(val error: Error): ScreenState()
     data class Editing(
         val channel: ChannelEditingInputState,
         val isLoading: Boolean = false
-    ): ChannelEditingScreenState()
-    data object Success: ChannelEditingScreenState()
+    ): ScreenState()
+    data object Success: ScreenState()
 }
 
 data class ChannelEditingInputState(

@@ -21,6 +21,9 @@ import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateC
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenState as ScreenState
 
 @HiltViewModel(assistedFactory = ChannelCreationViewModel.Factory::class)
 class ChannelCreationViewModel @AssistedInject constructor(
@@ -33,31 +36,31 @@ class ChannelCreationViewModel @AssistedInject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        ChannelCreationScreenState(
+        ScreenState(
             channel = ChannelCreationInputState(ownerId)
         )
     )
     val state = _state.asStateFlow()
 
-    private val _events = MutableSharedFlow<ChannelCreationScreenEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: ChannelCreationScreenAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            is ChannelCreationScreenAction.ChangeAlias -> onAliasChanged(action.alias)
-            ChannelCreationScreenAction.FocusAlias -> onAliasFocused()
-            ChannelCreationScreenAction.BlurAlias -> onAliasBlurred()
-            is ChannelCreationScreenAction.ChangeHeader -> onHeaderChanged(action.header)
-            is ChannelCreationScreenAction.ChangeLogo -> onLogoChanged(action.logo)
-            is ChannelCreationScreenAction.ChangeTitle -> onTitleChanged(action.title)
-            ChannelCreationScreenAction.FocusTitle -> onTitleFocused()
-            ChannelCreationScreenAction.BlurTitle -> onTitleBlurred()
-            is ChannelCreationScreenAction.ChangeDescription -> onDescriptionChanged(action.description)
-            ChannelCreationScreenAction.FocusDescription -> onDescriptionFocused()
-            ChannelCreationScreenAction.BlurDescription -> onDescriptionBlurred()
-            is ChannelCreationScreenAction.Submit -> create()
-            ChannelCreationScreenAction.Cancel -> viewModelScope.launch {
-                _events.emit(ChannelCreationScreenEvent.Cancelled)
+            is ScreenAction.ChangeAlias -> onAliasChanged(action.alias)
+            ScreenAction.FocusAlias -> onAliasFocused()
+            ScreenAction.BlurAlias -> onAliasBlurred()
+            is ScreenAction.ChangeHeader -> onHeaderChanged(action.header)
+            is ScreenAction.ChangeLogo -> onLogoChanged(action.logo)
+            is ScreenAction.ChangeTitle -> onTitleChanged(action.title)
+            ScreenAction.FocusTitle -> onTitleFocused()
+            ScreenAction.BlurTitle -> onTitleBlurred()
+            is ScreenAction.ChangeDescription -> onDescriptionChanged(action.description)
+            ScreenAction.FocusDescription -> onDescriptionFocused()
+            ScreenAction.BlurDescription -> onDescriptionBlurred()
+            is ScreenAction.Submit -> create()
+            ScreenAction.Cancel -> viewModelScope.launch {
+                _events.emit(ScreenEvent.Cancelled)
             }
         }
 
@@ -275,7 +278,7 @@ class ChannelCreationViewModel @AssistedInject constructor(
                     it.copy(isLoading = false)
                 }
                 viewModelScope.launch {
-                    _events.emit(ChannelCreationScreenEvent.Created(channelId))
+                    _events.emit(ScreenEvent.Created(channelId))
                 }
             }.onFailure { error ->
                 if (error is ChannelCreationError) {
@@ -293,7 +296,7 @@ class ChannelCreationViewModel @AssistedInject constructor(
                         it.copy(isLoading = false)
                     }
                     viewModelScope.launch {
-                        _events.emit(ChannelCreationScreenEvent.Failure(error))
+                        _events.emit(ScreenEvent.Failure(error))
                     }
                 }
             }

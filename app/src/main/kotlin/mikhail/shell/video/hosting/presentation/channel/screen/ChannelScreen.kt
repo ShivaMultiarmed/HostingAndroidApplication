@@ -3,11 +3,8 @@ package mikhail.shell.video.hosting.presentation.channel.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -18,19 +15,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
-import mikhail.shell.video.hosting.presentation.utils.ImageViewerScreen
+import mikhail.shell.video.hosting.presentation.utils.ImageViewerArea
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenState as ScreenState
 
 @Composable
 fun ChannelScreen(
     userId: Long,
-    state: ChannelScreenState,
-    onAction: (ChannelScreenAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -56,7 +54,7 @@ fun ChannelScreen(
                     ChannelHeader(
                         modifier = Modifier.padding(10.dp),
                         channel = state.channel,
-                        onEvent = onAction,
+                        onAction = onAction,
                         owns = userId == state.channel.ownerId,
                         onShowLogo = {
                             shouldShowLogo = true
@@ -67,18 +65,18 @@ fun ChannelScreen(
                             modifier = Modifier.fillMaxSize(),
                             videos = state.videos.videos,
                             onVideoClick = {
-                                onAction(ChannelScreenAction.ChooseVideo(it))
+                                onAction(ScreenAction.ChooseVideo(it))
                             },
                             onReachedBottom = {
-                                onAction(ChannelScreenAction.LoadNextPart)
+                                onAction(ScreenAction.LoadNextPart)
                             },
                             hasMore = state.videos.hasMore,
                             isStarting = state.videos.isStarting,
                             onRestart = {
-                                onAction(ChannelScreenAction.RestartVideos)
+                                onAction(ScreenAction.RestartVideos)
                             },
                             onReload = {
-                                onAction(ChannelScreenAction.LoadNextPart)
+                                onAction(ScreenAction.LoadNextPart)
                             }
                         )
                     } else if (state.videos.isStarting) {
@@ -89,21 +87,18 @@ fun ChannelScreen(
                         ErrorComponent(
                             modifier = Modifier.fillMaxSize(),
                             onRetry = {
-                                onAction(ChannelScreenAction.RestartVideos)
+                                onAction(ScreenAction.RestartVideos)
                             }
                         )
                     }
                 }
                 if (shouldShowLogo) {
-                    ImageViewerScreen(
-                        state.channel.logo,
+                    ImageViewerArea(
+                        modifier = Modifier.fillMaxSize(),
+                        model = state.channel.logo,
                         onPopup = {
                             shouldShowLogo = false
-                        },
-                        imageModifier = Modifier
-                            .fillMaxWidth(0.95f)
-                            .aspectRatio(1f)
-                            .clip(CircleShape)
+                        }
                     )
                 }
             } else if (state.isStarting) {
@@ -118,7 +113,7 @@ fun ChannelScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface),
                     onRetry = {
-                        onAction(ChannelScreenAction.RestartChannel)
+                        onAction(ScreenAction.RestartChannel)
                     }
                 )
             }

@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
@@ -47,7 +46,6 @@ class SignInWithPasswordViewModel @Inject constructor(
             ScreenAction.ResetPassword -> viewModelScope.launch {
                 _events.emit(ScreenEvent.ResetRequested)
             }
-
             ScreenAction.SignUp -> viewModelScope.launch {
                 _events.emit(ScreenEvent.SignUpRequested)
             }
@@ -112,10 +110,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                 it.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
-                            error = validateUserName(
-                                UserNameCheckPurpose.SIGN_IN,
-                                it.input.userName.value
-                            ).errorOrNull()
+                            error = validateUserName(UserNameCheckPurpose.SIGN_IN, it.input.userName.value).errorOrNull()
                         )
                     )
                 )
@@ -132,10 +127,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                 it.copy(
                     input = it.input.copy(
                         userName = it.input.userName.copy(
-                            error = validateUserName(
-                                UserNameCheckPurpose.SIGN_IN,
-                                it.input.userName.value
-                            ).errorOrNull()
+                            error = validateUserName(UserNameCheckPurpose.SIGN_IN, it.input.userName.value).errorOrNull()
                         ),
                         password = it.input.password.copy(
                             error = validatePassword(it.input.password.value).errorOrNull()
@@ -164,22 +156,13 @@ class SignInWithPasswordViewModel @Inject constructor(
                     it.copy(isLoading = false)
                 }
             }.onFailure { error ->
-                if (
-                    error !in listOf(
-                        NetworkError.NOT_FOUND,
-                        NetworkError.BAD_REQUEST
-                    )
-                ) {
+                if (error is SignInError) {
                     _state.update {
                         it.copy(
                             isLoading = false,
                             input = it.input.copy(
-                                userName = it.input.userName.copy(
-                                    error = if (error == NetworkError.NOT_FOUND) TextError.NOT_EXISTS else it.input.password.error
-                                ),
-                                password = it.input.password.copy(
-                                    error = if (error == NetworkError.BAD_REQUEST) TextError.NOT_CORRECT else it.input.password.error
-                                )
+                                userName = it.input.userName.copy(error = error.userNameError),
+                                password = it.input.password.copy(error = error.passwordError)
                             )
                         )
                     }
@@ -191,7 +174,6 @@ class SignInWithPasswordViewModel @Inject constructor(
             }
         }
     }
-
     private fun subscribeToNotifications() {
         viewModelScope.launch {
             subscribeToNotifications.invoke()

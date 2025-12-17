@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.models
+package mikhail.shell.video.hosting.presentation.comments.models
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone

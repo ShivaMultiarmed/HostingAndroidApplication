@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.presentation.video.screen
 
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.presentation.models.CommentUi
+import mikhail.shell.video.hosting.presentation.comments.models.CommentUi
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.video.models.VideoDetailsUi
 

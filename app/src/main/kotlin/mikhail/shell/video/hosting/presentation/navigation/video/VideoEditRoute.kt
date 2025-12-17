@@ -14,8 +14,8 @@ import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
-import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenEvent
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
+import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.editVideoRoute(
     rootBackStack: MutableList<Route>,
@@ -35,7 +35,7 @@ fun EntryProviderScope<Route>.editVideoRoute(
         )
         events.observe { event ->
             when (event) {
-                is VideoEditingScreenEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {
@@ -46,8 +46,8 @@ fun EntryProviderScope<Route>.editVideoRoute(
                         }
                     }
                 }
-                VideoEditingScreenEvent.Cancelled -> videoBackStack.removeLastOrNull()
-                VideoEditingScreenEvent.Success -> {
+                ScreenEvent.Cancelled -> videoBackStack.removeLastOrNull()
+                ScreenEvent.Success -> {
                     val videoRoute = videoBackStack.find { it is Route.Video.View } as Route.Video.View
                     videoBackStack.clear()
                     videoBackStack.add(videoRoute.copy())

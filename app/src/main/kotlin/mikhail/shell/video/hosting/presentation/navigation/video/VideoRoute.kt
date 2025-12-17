@@ -25,7 +25,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route.Channel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route.User.Profile
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
-import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
 
 @OptIn(UnstableApi::class)
@@ -37,14 +37,14 @@ fun EntryProviderScope<Route>.videoRoute(
     player: Player
 ) {
     // TODO navDeepLink (basePath = "https://$HOST/videos")
-    entry <Route.Video.View> { route ->
+    entry<Route.Video.View> { route ->
         val context = LocalContext.current
         val videoId = rememberSaveable { route.videoId }
-        val coroutineScope = rememberCoroutineScope()
         val userId = rememberSaveable { userDetailsProvider.getUserId() }
-        val viewModel = hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-            factory.create(videoId, player)
-        }
+        val viewModel =
+            hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
+                factory.create(videoId, player)
+            }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
@@ -57,15 +57,16 @@ fun EntryProviderScope<Route>.videoRoute(
         )
         events.observe { event ->
             when (event) {
-                VideoScreenEvent.EditRequested -> videoBackStack.add(Route.Video.Edit(videoId))
-                VideoScreenEvent.ChannelRequested -> {
+                ScreenEvent.EditRequested -> videoBackStack.add(Route.Video.Edit(videoId))
+                ScreenEvent.ChannelRequested -> {
                     val channelId = state.video!!.channelId
                     currentTabBackStack.add(Channel(channelId))
                     rootBackStack.removeLastOrNull()
                 }
-                is VideoScreenEvent.ProfileRequested -> currentTabBackStack.add(Profile(event.userId))
-                VideoScreenEvent.Removed -> rootBackStack.removeLastOrNull()
-                VideoScreenEvent.SharingRequested -> {
+
+                is ScreenEvent.ProfileRequested -> currentTabBackStack.add(Profile(event.userId))
+                ScreenEvent.Removed -> rootBackStack.removeLastOrNull()
+                ScreenEvent.SharingRequested -> {
                     Intent(Intent.ACTION_SEND).apply {
                         setType("text/plain")
                         putExtra(Intent.EXTRA_TEXT, "https://$HOST/videos/$videoId")
@@ -74,21 +75,21 @@ fun EntryProviderScope<Route>.videoRoute(
                         )
                     }
                 }
-                VideoScreenEvent.DownloadRequested -> {
+
+                ScreenEvent.DownloadRequested -> {
                     Intent(context, VideoDownloadingService::class.java).also {
                         it.action = VideoDownloadingService.ACTION_LAUNCH_DOWNLOADING
                         it.putExtra("videoId", videoId)
                         context.startService(it)
                     }
                 }
-                is VideoScreenEvent.Failure -> {
+
+                is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {
-                        coroutineScope.launch {
-                            context.getStandardErrorMessage(event.error)?.let {
-                                snackBarHostState.showSnackbar(it)
-                            }
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
                         }
                     }
                 }

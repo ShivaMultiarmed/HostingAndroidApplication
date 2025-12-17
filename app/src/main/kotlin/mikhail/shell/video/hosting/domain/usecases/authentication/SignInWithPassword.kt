@@ -9,9 +9,13 @@ import javax.inject.Inject
 class SignInWithPassword @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(email: String, password: String): Result<AuthModel, Error> =
-        authRepository.signInWithPassword(
+    suspend operator fun invoke(
+        email: String,
+        password: String
+    ): Result<AuthModel, Error> {
+        return authRepository.signInWithPassword(
             email = email,
             password = password
         )
+    }
 }

@@ -17,6 +17,9 @@ import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateSea
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.video.models.toUi
 import javax.inject.Inject
+import mikhail.shell.video.hosting.presentation.video.search.SearchScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.video.search.SearchScreenEvent as ScreenEvent
+import mikhail.shell.video.hosting.presentation.video.search.SearchScreenState as ScreenState
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
@@ -26,19 +29,19 @@ class SearchViewModel @Inject constructor(
     private val validateSearchQuery: ValidateSearchQuery
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SearchScreenState())
+    private val _state = MutableStateFlow(ScreenState())
     val state = _state.asStateFlow()
 
-    private val _events = MutableSharedFlow<SearchScreenEvent>()
+    private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(action: SearchScreenAction) {
+    fun onAction(action: ScreenAction) {
         when (action) {
-            is SearchScreenAction.ChangeQuery -> onQueryChanged(action.query)
-            SearchScreenAction.LoadNextPart -> load(start = false)
-            SearchScreenAction.Restart, SearchScreenAction.Submit -> load()
-            is SearchScreenAction.ChooseVideo -> viewModelScope.launch {
-                _events.emit(SearchScreenEvent.VideoChosen(action.videoId))
+            is ScreenAction.ChangeQuery -> onQueryChanged(action.query)
+            ScreenAction.LoadNextPart -> load(start = false)
+            ScreenAction.Restart, ScreenAction.Submit -> load()
+            is ScreenAction.ChooseVideo -> viewModelScope.launch {
+                _events.emit(ScreenEvent.VideoChosen(action.videoId))
             }
         }
     }
@@ -103,7 +106,7 @@ class SearchViewModel @Inject constructor(
                     )
                 }
                 viewModelScope.launch {
-                    _events.emit(SearchScreenEvent.Failure(error))
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }

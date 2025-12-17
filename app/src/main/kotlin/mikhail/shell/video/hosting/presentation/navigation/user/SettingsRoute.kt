@@ -6,9 +6,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.settings.SettingsScreen
-import mikhail.shell.video.hosting.presentation.settings.SettingsScreenEvent
 import mikhail.shell.video.hosting.presentation.settings.SettingsScreenViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.settings.SettingsScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.settingsRoute(
     profileBackStack: MutableList<Route>
@@ -23,8 +23,8 @@ fun EntryProviderScope<Route>.settingsRoute(
         )
         events.observe { event ->
             when (event) {
-                SettingsScreenEvent.Cancelled -> profileBackStack.removeLastOrNull()
-                SettingsScreenEvent.ProfileEditingRequested -> profileBackStack.add(Route.User.Edit)
+                ScreenEvent.Cancelled -> profileBackStack.removeLastOrNull()
+                ScreenEvent.ProfileEditingRequested -> profileBackStack.add(Route.User.Edit)
             }
         }
     }

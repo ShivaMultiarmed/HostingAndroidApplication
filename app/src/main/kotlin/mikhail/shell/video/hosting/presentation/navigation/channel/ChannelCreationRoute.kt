@@ -11,10 +11,10 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
-import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenEvent
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
@@ -36,12 +36,12 @@ fun EntryProviderScope<Route>.channelCreationRoute(
         )
         events.observe { event ->
             when (event) {
-                ChannelCreationScreenEvent.Cancelled -> userBackStack.removeLastOrNull()
-                is ChannelCreationScreenEvent.Created -> {
+                ScreenEvent.Cancelled -> userBackStack.removeLastOrNull()
+                is ScreenEvent.Created -> {
                     userBackStack.removeLastOrNull()
                     userBackStack.add(Route.Channel(event.channelId))
                 }
-                is ChannelCreationScreenEvent.Failure -> {
+                is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
                     } else {

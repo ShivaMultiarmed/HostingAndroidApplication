@@ -48,12 +48,14 @@ import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenAction as ScreenAction
+import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenState as ScreenState
 
 @OptIn(UnstableApi::class)
 @Composable
 fun ChannelCreationScreen(
-    state: ChannelCreationScreenState,
-    onAction: (ChannelCreationScreenAction) -> Unit,
+    state: ScreenState,
+    onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
@@ -66,11 +68,11 @@ fun ChannelCreationScreen(
             TopBar(
                 title = stringResource(R.string.channel_create_title),
                 onPopup = {
-                    onAction(ChannelCreationScreenAction.Cancel)
+                    onAction(ScreenAction.Cancel)
                 },
                 inProgress = state.isLoading,
                 onSubmit = {
-                    onAction(ChannelCreationScreenAction.Submit)
+                    onAction(ScreenAction.Submit)
                 }
             )
         },
@@ -97,7 +99,7 @@ fun ChannelCreationScreen(
                 actionItems = if (state.channel.title.value.isNotEmpty()) listOf(
                     DeletingItem(
                         deleting = {
-                            onAction(ChannelCreationScreenAction.ChangeTitle(""))
+                            onAction(ScreenAction.ChangeTitle(""))
                         }
                     )
                 ) else emptyList()
@@ -107,15 +109,15 @@ fun ChannelCreationScreen(
                     icon = Icons.Rounded.Title,
                     value = state.channel.title.value,
                     onValueChange = {
-                        onAction(ChannelCreationScreenAction.ChangeTitle(it))
+                        onAction(ScreenAction.ChangeTitle(it))
                     },
                     label = stringResource(R.string.channel_title_label),
                     errorMsg = titleErrMsg,
                     onFocus = {
-                        onAction(ChannelCreationScreenAction.FocusTitle)
+                        onAction(ScreenAction.FocusTitle)
                     },
                     onBlur = {
-                        onAction(ChannelCreationScreenAction.BlurTitle)
+                        onAction(ScreenAction.BlurTitle)
                     }
                 )
             }
@@ -128,7 +130,7 @@ fun ChannelCreationScreen(
             EditField(
                 actionItems = if (state.channel.alias.value.isNotEmpty()) listOf(
                     DeletingItem(
-                        deleting = { onAction(ChannelCreationScreenAction.ChangeAlias("")) }
+                        deleting = { onAction(ScreenAction.ChangeAlias("")) }
                     )
                 ) else emptyList()
             ) {
@@ -137,15 +139,15 @@ fun ChannelCreationScreen(
                     icon = Icons.Rounded.AlternateEmail,
                     value = state.channel.alias.value,
                     onValueChange = {
-                        onAction(ChannelCreationScreenAction.ChangeAlias(it))
+                        onAction(ScreenAction.ChangeAlias(it))
                     },
                     label = stringResource(R.string.channel_alias_label),
                     errorMsg = aliasErrMsg,
                     onFocus = {
-                        onAction(ChannelCreationScreenAction.FocusAlias)
+                        onAction(ScreenAction.FocusAlias)
                     },
                     onBlur = {
-                        onAction(ChannelCreationScreenAction.BlurAlias)
+                        onAction(ScreenAction.BlurAlias)
                     }
                 )
             }
@@ -157,7 +159,7 @@ fun ChannelCreationScreen(
                 actionItems = if (state.channel.description.value.isNotEmpty()) listOf(
                     DeletingItem(
                         deleting = {
-                            onAction(ChannelCreationScreenAction.ChangeDescription(""))
+                            onAction(ScreenAction.ChangeDescription(""))
                         }
                     )
                 ) else emptyList()
@@ -169,23 +171,23 @@ fun ChannelCreationScreen(
                     icon = Icons.Rounded.DensityMedium,
                     value = state.channel.description.value,
                     onValueChange = {
-                        onAction(ChannelCreationScreenAction.ChangeDescription(it))
+                        onAction(ScreenAction.ChangeDescription(it))
                     },
                     label = stringResource(R.string.channel_description_label),
                     maxLines = 50,
                     errorMsg = descriptionErrMsg,
                     onFocus = {
-                        onAction(ChannelCreationScreenAction.FocusDescription)
+                        onAction(ScreenAction.FocusDescription)
                     },
                     onBlur = {
-                        onAction(ChannelCreationScreenAction.BlurDescription)
+                        onAction(ScreenAction.BlurDescription)
                     }
                 )
             }
             val logoPicker =
                 rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        onAction(ChannelCreationScreenAction.ChangeLogo(it.toString()))
+                        onAction(ScreenAction.ChangeLogo(it.toString()))
                     }
                 }
             val logoErrorMsg = when (state.channel.logo.error) {
@@ -199,7 +201,7 @@ fun ChannelCreationScreen(
             EditField(
                 actionItems = if (state.channel.logo.value != null) listOf(
                     DeletingItem(
-                        deleting = { onAction(ChannelCreationScreenAction.ChangeLogo(null)) }
+                        deleting = { onAction(ScreenAction.ChangeLogo(null)) }
                     )
                 ) else emptyList()
             ) {
@@ -235,7 +237,7 @@ fun ChannelCreationScreen(
             val headerPicker =
                 rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                     if (it != null) {
-                        onAction(ChannelCreationScreenAction.ChangeHeader(it.toString()))
+                        onAction(ScreenAction.ChangeHeader(it.toString()))
                     }
                 }
             val headerErrorMsg = when (state.channel.header.error) {
@@ -249,7 +251,7 @@ fun ChannelCreationScreen(
             EditField(
                 actionItems = if (state.channel.header.value != null) listOf(
                     DeletingItem(
-                        deleting = { onAction(ChannelCreationScreenAction.ChangeHeader(null)) }
+                        deleting = { onAction(ScreenAction.ChangeHeader(null)) }
                     )
                 ) else emptyList()
             ) {
