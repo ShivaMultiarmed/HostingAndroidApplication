@@ -31,7 +31,6 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -361,16 +360,13 @@ private fun ChannelLogo(
     logo: AsyncImagePainter,
     onShowLogo: (() -> Unit)? = null
 ) {
-    val logoExists by rememberSaveable {
-        derivedStateOf { logo.exists() }
-    }
     Image(
         modifier = modifier
             .size(80.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(
-                enabled = logoExists == true && onShowLogo != null,
+                enabled = logo.exists() == true && onShowLogo != null,
                 onClick = onShowLogo ?: {}
             ),
         painter = logo,

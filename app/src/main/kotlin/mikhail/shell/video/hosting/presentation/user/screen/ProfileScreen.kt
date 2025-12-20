@@ -65,6 +65,7 @@ import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -130,7 +131,7 @@ fun ProfileScreen(
                             ProfileScreenContent(
                                 owns = owns,
                                 state = state,
-                                onEvent = onAction,
+                                onAction = onAction,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 }
@@ -143,7 +144,7 @@ fun ProfileScreen(
                             ProfileScreenContent(
                                 owns = owns,
                                 state = state,
-                                onEvent = onAction,
+                                onAction = onAction,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 }
@@ -181,7 +182,7 @@ fun ProfileScreen(
 private fun ProfileScreenContent(
     owns: Boolean,
     state: ProfileScreenState,
-    onEvent: (ProfileScreenAction) -> Unit,
+    onAction: (ProfileScreenAction) -> Unit,
     onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
@@ -205,7 +206,7 @@ private fun ProfileScreenContent(
         )
         if (owns) {
             UserActions(
-                onEvent = onEvent,
+                onEvent = onAction,
                 hasChannels = (state.channelState.channels?.size ?: 0) > 0
             )
         }
@@ -230,8 +231,15 @@ private fun ProfileScreenContent(
                     text = stringResource(R.string.user_channels_title)
                 )
             }
+            val pageableBoxState = rememberPageableBoxState(
+                items = state.channelState.channels,
+                hasMore = state.channelState.hasMore,
+                error = state.channelState.error,
+                isLoading = state.channelState.isLoading,
+            )
             PageableBox(
                 modifier = Modifier.fillMaxSize(),
+                state = pageableBoxState,
                 itemComponent = {
                     ChannelSnippet(
                         modifier = Modifier.then(
@@ -243,7 +251,7 @@ private fun ProfileScreenContent(
                         ),
                         channel = it,
                         onClick = {
-                            onEvent(ProfileScreenAction.ChooseChannel(it))
+                            onAction(ProfileScreenAction.ChooseChannel(it))
                         }
                     )
                 },
@@ -253,15 +261,11 @@ private fun ProfileScreenContent(
                         message = stringResource(R.string.user_channels_empty_message)
                     )
                 },
-                items = state.channelState.channels,
-                hasMore = state.channelState.hasMore,
-                error = state.channelState.error,
-                isLoading = state.channelState.isLoading,
                 onReload = {
-                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
+                    onAction(ProfileScreenAction.LoadNextChannelsPart)
                 },
                 onReachedBottom = {
-                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
+                    onAction(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )
         } else if (state.channelState.isLoading) {
@@ -272,7 +276,7 @@ private fun ProfileScreenContent(
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {
-                    onEvent(ProfileScreenAction.LoadNextChannelsPart)
+                    onAction(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )
         }

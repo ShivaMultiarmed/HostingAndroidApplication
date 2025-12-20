@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequesting
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpRequestingViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
-fun EntryProviderScope<Route>.requestSignUpRoute(
+fun EntryProviderScope<Route>.signingUpRequestingRoute(
     authBackStack: SnapshotStateList<Route>,
     signUpBackStack: SnapshotStateList<Route>
 ) {

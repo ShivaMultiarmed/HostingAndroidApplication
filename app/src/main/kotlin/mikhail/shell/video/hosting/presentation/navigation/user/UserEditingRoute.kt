@@ -17,7 +17,7 @@ import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreen
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingViewModel
-import mikhail.shell.video.hosting.presentation.utils.logOut
+import mikhail.shell.video.hosting.presentation.utils.signOut
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenEvent as ScreenEvent
 
@@ -59,7 +59,7 @@ fun EntryProviderScope<Route>.userEditingRoute(
                 ScreenEvent.Removed -> {
                     player.stop()
                     player.clearMediaItems()
-                    logOut(userDetailsProvider, rootBackStack)
+                    signOut(userDetailsProvider, rootBackStack)
                 }
                 ScreenEvent.Success -> {
                     userBackStack.removeLastOrNull()

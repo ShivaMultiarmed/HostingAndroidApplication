@@ -20,7 +20,9 @@ import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelH
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.ImageViewerArea
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenState as ScreenState
 
@@ -48,58 +50,71 @@ fun ChannelScreen(
         ) {
             if (state.channel != null) {
                 var shouldShowLogo by rememberSaveable { mutableStateOf(false) }
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                RestartableBox(
+                    modifier = Modifier.fillMaxSize(),
+                    isStarting = state.isStarting,
+                    onStart = {
+                        onAction(ScreenAction.RestartChannel)
+                    }
                 ) {
-                    ChannelHeader(
-                        modifier = Modifier.padding(10.dp),
-                        channel = state.channel,
-                        onAction = onAction,
-                        owns = userId == state.channel.ownerId,
-                        onShowLogo = {
-                            shouldShowLogo = true
-                        }
-                    )
-                    if (state.videos.videos != null) {
-                        VideoGridSection(
-                            modifier = Modifier.fillMaxSize(),
-                            videos = state.videos.videos,
-                            onVideoClick = {
-                                onAction(ScreenAction.ChooseVideo(it))
-                            },
-                            onReachedBottom = {
-                                onAction(ScreenAction.LoadNextPart)
-                            },
-                            hasMore = state.videos.hasMore,
-                            isStarting = state.videos.isStarting,
-                            onRestart = {
-                                onAction(ScreenAction.RestartVideos)
-                            },
-                            onReload = {
-                                onAction(ScreenAction.LoadNextPart)
+                    Column (
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        ChannelHeader(
+                            modifier = Modifier.padding(10.dp),
+                            channel = state.channel,
+                            onAction = onAction,
+                            owns = userId == state.channel.ownerId,
+                            onShowLogo = {
+                                shouldShowLogo = true
                             }
                         )
-                    } else if (state.videos.isStarting) {
-                        StartingComponent(
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else if (state.videos.error != null) {
-                        ErrorComponent(
+                        if (state.videos.videos != null) {
+                            val pageableBoxState = rememberPageableBoxState(
+                                items = state.videos.videos,
+                                hasMore = state.videos.hasMore,
+                                isLoading = state.videos.isLoading,
+                                error = state.videos.error
+                            )
+                            VideoGridSection(
+                                modifier = Modifier.fillMaxSize(),
+                                state = pageableBoxState,
+                                onVideoClick = {
+                                    onAction(ScreenAction.ChooseVideo(it))
+                                },
+                                onReachedBottom = {
+                                    onAction(ScreenAction.LoadNextPart)
+                                },
+                                isStarting = state.videos.isStarting,
+                                onRestart = {
+                                    onAction(ScreenAction.RestartVideos)
+                                },
+                                onReload = {
+                                    onAction(ScreenAction.LoadNextPart)
+                                }
+                            )
+                        } else if (state.videos.isStarting) {
+                            StartingComponent(
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else if (state.videos.error != null) {
+                            ErrorComponent(
+                                modifier = Modifier.fillMaxSize(),
+                                onRetry = {
+                                    onAction(ScreenAction.RestartVideos)
+                                }
+                            )
+                        }
+                    }
+                    if (shouldShowLogo) {
+                        ImageViewerArea(
                             modifier = Modifier.fillMaxSize(),
-                            onRetry = {
-                                onAction(ScreenAction.RestartVideos)
+                            model = state.channel.logo,
+                            onPopup = {
+                                shouldShowLogo = false
                             }
                         )
                     }
-                }
-                if (shouldShowLogo) {
-                    ImageViewerArea(
-                        modifier = Modifier.fillMaxSize(),
-                        model = state.channel.logo,
-                        onPopup = {
-                            shouldShowLogo = false
-                        }
-                    )
                 }
             } else if (state.isStarting) {
                 StartingComponent(

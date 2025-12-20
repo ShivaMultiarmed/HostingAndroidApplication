@@ -19,7 +19,7 @@ fun EntryProviderScope<Route>.userGraph(
     userDetailsProvider: UserDetailsProvider,
     player: Player
 ) {
-    entry<Route.User> {
+    entry<Route.User> { userGraph ->
         NavDisplay(
             backStack = userBackStack,
             entryDecorators = listOf(
@@ -30,36 +30,38 @@ fun EntryProviderScope<Route>.userGraph(
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
             predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
             entryProvider = entryProvider {
-                settingsRoute(
-                    profileBackStack = userBackStack
-                )
                 profileRoute(
                     rootBackStack = rootBackStack,
                     currentTabBackStack = userBackStack,
                     userDetailsProvider = userDetailsProvider,
                     player = player
                 )
-                userEditingRoute(
-                    rootBackStack = rootBackStack,
-                    userBackStack = userBackStack,
-                    userDetailsProvider = userDetailsProvider,
-                    player = player
-                )
-                videoUploadingRoute(
-                    rootBackStack = rootBackStack,
-                    userBackStack = userBackStack,
-                    userDetailsProvider = userDetailsProvider
-                )
-                channelCreationRoute(
-                    rootBackStack = rootBackStack,
-                    userBackStack = userBackStack,
-                    userDetailsProvider = userDetailsProvider
-                )
                 channelGraph(
                     rootBackStack = rootBackStack,
                     currentTabBackStack = userBackStack,
                     userDetailsProvider = userDetailsProvider
                 )
+                if (userDetailsProvider.getUserId() == userGraph.userId) {
+                    settingsRoute(
+                        profileBackStack = userBackStack
+                    )
+                    userEditingRoute(
+                        rootBackStack = rootBackStack,
+                        userBackStack = userBackStack,
+                        userDetailsProvider = userDetailsProvider,
+                        player = player
+                    )
+                    channelCreationRoute(
+                        rootBackStack = rootBackStack,
+                        userBackStack = userBackStack,
+                        userDetailsProvider = userDetailsProvider
+                    )
+                    videoUploadingRoute(
+                        rootBackStack = rootBackStack,
+                        userBackStack = userBackStack,
+                        userDetailsProvider = userDetailsProvider
+                    )
+                }
             }
         )
     }

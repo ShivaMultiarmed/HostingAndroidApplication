@@ -21,7 +21,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreen
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.user.screen.ProfileViewModel
-import mikhail.shell.video.hosting.presentation.utils.logOut
+import mikhail.shell.video.hosting.presentation.utils.signOut
 import mikhail.shell.video.hosting.presentation.utils.observe
 
 fun EntryProviderScope<Route>.profileRoute(
@@ -76,7 +76,7 @@ fun EntryProviderScope<Route>.profileRoute(
                     player.stop()
                     player.clearMediaItems()
                     coroutineScope.launch {
-                        logOut(userDetailsProvider, rootBackStack)
+                        signOut(userDetailsProvider, rootBackStack)
                     }
                 }
             }

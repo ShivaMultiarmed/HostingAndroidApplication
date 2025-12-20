@@ -293,4 +293,5 @@
     <string name="wait_for_video_hint">Please wait for video to process</string>
     <string name="code_pattern_not_correct">Only letters and digits allowed</string>
     <string name="forgot_password">Forgot password</string>
+    <string name="query_too_long">The prompt is too long</string>
 </resources>

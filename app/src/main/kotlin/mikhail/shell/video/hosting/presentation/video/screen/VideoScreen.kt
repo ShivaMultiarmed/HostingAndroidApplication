@@ -88,16 +88,15 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
 import mikhail.shell.video.hosting.domain.models.Liking.LIKED
 import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
+import mikhail.shell.video.hosting.presentation.comments.models.CommentUi
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
-import mikhail.shell.video.hosting.presentation.comments.models.CommentUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -109,6 +108,7 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
@@ -345,6 +345,7 @@ fun VideoScreen(
                                         onSubmit = {
                                             onAction(VideoScreenAction.Remove)
                                         },
+                                        isLoading = state.isRemoving,
                                         onDismiss = {
                                             isDeletingDialogOpen = false
                                         },
@@ -509,18 +510,15 @@ fun VideoScreen(
             }
             if (sheetState.isVisible) {
                 CommentsBottomSheet(
+                    userId = userId,
                     sheetState = sheetState,
                     commentsState = state.commentsState,
-                    userId = userId,
-                    snackBarHostState = snackBarHostState,
                     onAction = onAction
                 )
             }
             LaunchedEffect(sheetState.isVisible) {
-                if (sheetState.isVisible) {
-                    onAction(VideoScreenAction.OpenComments)
-                } else {
-                    onAction(VideoScreenAction.CloseComments)
+                if (sheetState.isVisible && state.commentsState.hasMore) {
+                    onAction(VideoScreenAction.LoadNextCommentsPart)
                 }
             }
         } else if (state.isStarting) {
@@ -548,7 +546,6 @@ fun VideoScreen(
 private fun CommentsBottomSheet(
     userId: Long,
     sheetState: SheetState,
-    snackBarHostState: SnackbarHostState,
     commentsState: CommentsState,
     onAction: (VideoScreenAction) -> Unit
 ) {
@@ -559,7 +556,6 @@ private fun CommentsBottomSheet(
             coroutineScope.launch {
                 sheetState.hide()
             }
-            onAction(VideoScreenAction.CloseComments)
         },
         modifier = Modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.background
@@ -571,17 +567,24 @@ private fun CommentsBottomSheet(
                 .padding(10.dp),
         ) {
             if (commentsState.comments != null) {
+                val pageableBoxState = rememberPageableBoxState(
+                    items = commentsState.comments,
+                    hasMore = commentsState.hasMore,
+                    error = commentsState.error,
+                    isLoading = commentsState.isLoading,
+                )
                 PageableBox(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
+                    state = pageableBoxState,
                     itemComponent = {
                         CommentBox(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
                             owns = it.userId == userId,
-                            onEvent = onAction,
+                            onAction = onAction,
                             comment = it,
                         )
                     },
@@ -593,10 +596,6 @@ private fun CommentsBottomSheet(
                             message = stringResource(R.string.comments_empty_message)
                         )
                     },
-                    items = commentsState.comments,
-                    hasMore = commentsState.hasMore,
-                    error = commentsState.error,
-                    isLoading = commentsState.isLoading,
                     onReachedBottom = {
                         onAction(VideoScreenAction.LoadNextCommentsPart)
                     },
@@ -628,8 +627,8 @@ private fun CommentsBottomSheet(
             }
             CommentForm(
                 text = commentsState.comment.text.value,
-                onAction = onAction,
-                error = commentsState.error
+                error = commentsState.comment.text.error,
+                onAction = onAction
             )
         }
     }
@@ -640,7 +639,7 @@ private fun CommentBox(
     modifier: Modifier = Modifier,
     owns: Boolean,
     comment: CommentUi,
-    onEvent: (VideoScreenAction) -> Unit,
+    onAction: (VideoScreenAction) -> Unit,
 ) {
     val context = LocalContext.current
     Column(
@@ -653,7 +652,7 @@ private fun CommentBox(
                 MenuItem(
                     title = stringResource(R.string.comment_edit_button),
                     onClick = {
-                        onEvent(
+                        onAction(
                             VideoScreenAction.EditComment(comment.commentId)
                         )
                         isMenuVisible = false
@@ -662,7 +661,7 @@ private fun CommentBox(
                 MenuItem(
                     title = stringResource(R.string.comment_delete_button),
                     onClick = {
-                        onEvent(VideoScreenAction.RemoveComment(comment.commentId))
+                        onAction(VideoScreenAction.RemoveComment(comment.commentId))
                         isMenuVisible = false
                     }
                 )
@@ -680,7 +679,7 @@ private fun CommentBox(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.tertiaryContainer)
                     .clickable {
-                        onEvent(VideoScreenAction.OpenProfile(comment.userId))
+                        onAction(VideoScreenAction.OpenProfile(comment.userId))
                     },
                 model = comment.avatar,
                 contentDescription = null,
@@ -722,8 +721,8 @@ private fun CommentBox(
 @Composable
 private fun CommentForm(
     text: String,
-    onAction: (VideoScreenAction) -> Unit,
-    error: Error?
+    error: TextError?,
+    onAction: (VideoScreenAction) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -738,9 +737,9 @@ private fun CommentForm(
                 .clip(RoundedCornerShape(5.dp))
                 .border(
                     width = 1.dp,
-                    color = when (error is TextError) {
-                        false -> Color.Transparent
+                    color = when (error != null) {
                         true -> MaterialTheme.colorScheme.error
+                        false -> Color.Transparent
                     },
                     shape = RoundedCornerShape(5.dp)
                 )

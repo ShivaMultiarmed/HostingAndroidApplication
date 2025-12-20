@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificati
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreen
 import mikhail.shell.video.hosting.presentation.utils.observe
 
-fun EntryProviderScope<Route>.verifySignUpRoute(
+fun EntryProviderScope<Route>.signingUpVerificationRoute(
     signUpBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.SignUp.Verification> { bundle ->

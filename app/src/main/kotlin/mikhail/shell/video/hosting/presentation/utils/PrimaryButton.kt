@@ -151,8 +151,14 @@ fun PrimaryButton(
     enabled: Boolean = true,
     needsCaution: Boolean = false,
     colors: ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = if (!needsCaution) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-        contentColor = if (!needsCaution) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onError,
+        containerColor = when {
+            !needsCaution -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.error
+        },
+        contentColor = when {
+            !needsCaution -> MaterialTheme.colorScheme.onPrimary
+            else -> MaterialTheme.colorScheme.onError
+        },
         disabledContainerColor = MaterialTheme.colorScheme.disabled,
         disabledContentColor = MaterialTheme.colorScheme.onDisabled
     ),

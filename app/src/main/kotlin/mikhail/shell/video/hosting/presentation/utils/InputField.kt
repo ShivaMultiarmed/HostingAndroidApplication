@@ -68,8 +68,8 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun InputField(
     modifier: Modifier = Modifier,
-    value: String,
     label: String = "",
+    value: String,
     onValueChange: (String) -> Unit,
     errorMsg: String? = null,
     secured: Boolean = false,

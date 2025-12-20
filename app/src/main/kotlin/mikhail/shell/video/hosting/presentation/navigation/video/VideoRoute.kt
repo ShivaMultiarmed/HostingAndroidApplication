@@ -5,7 +5,6 @@ import androidx.annotation.OptIn
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -13,7 +12,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.EntryProviderScope
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -21,12 +19,10 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.navigation.common.Route.Channel
-import mikhail.shell.video.hosting.presentation.navigation.common.Route.User.Profile
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
-import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
+import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent as ScreenEvent
 
 @OptIn(UnstableApi::class)
 fun EntryProviderScope<Route>.videoRoute(
@@ -60,12 +56,18 @@ fun EntryProviderScope<Route>.videoRoute(
                 ScreenEvent.EditRequested -> videoBackStack.add(Route.Video.Edit(videoId))
                 ScreenEvent.ChannelRequested -> {
                     val channelId = state.video!!.channelId
-                    currentTabBackStack.add(Channel(channelId))
+                    currentTabBackStack.add(Route.Channel(channelId))
                     rootBackStack.removeLastOrNull()
                 }
-
-                is ScreenEvent.ProfileRequested -> currentTabBackStack.add(Profile(event.userId))
-                ScreenEvent.Removed -> rootBackStack.removeLastOrNull()
+                is ScreenEvent.ProfileRequested -> {
+                    rootBackStack.removeLastOrNull()
+                    currentTabBackStack.add(Route.User(event.userId)) // TODO fix this navigation
+                }
+                ScreenEvent.Removed -> {
+                    player.stop()
+                    player.clearMediaItems()
+                    rootBackStack.removeLastOrNull()
+                }
                 ScreenEvent.SharingRequested -> {
                     Intent(Intent.ACTION_SEND).apply {
                         setType("text/plain")
@@ -75,7 +77,6 @@ fun EntryProviderScope<Route>.videoRoute(
                         )
                     }
                 }
-
                 ScreenEvent.DownloadRequested -> {
                     Intent(context, VideoDownloadingService::class.java).also {
                         it.action = VideoDownloadingService.ACTION_LAUNCH_DOWNLOADING
@@ -83,7 +84,6 @@ fun EntryProviderScope<Route>.videoRoute(
                         context.startService(it)
                     }
                 }
-
                 is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)

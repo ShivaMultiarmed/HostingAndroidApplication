@@ -21,6 +21,7 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenState as ScreenState
@@ -47,6 +48,12 @@ fun RecommendationsScreen(
         }
     ) { padding ->
         if (state.videos != null) {
+            val pageableBoxState = rememberPageableBoxState(
+                items = state.videos,
+                hasMore = state.hasMore,
+                error = state.error,
+                isLoading = state.isLoading,
+            )
             RestartableBox(
                 modifier = Modifier
                     .fillMaxSize()
@@ -55,10 +62,12 @@ fun RecommendationsScreen(
                     onAction(ScreenAction.Restart)
                 },
                 isStarting = state.isStarting,
+                canStart = !pageableBoxState.gridState.canScrollBackward
             ) {
                 PageableBox(
                     modifier = Modifier
                         .fillMaxSize(),
+                    state = pageableBoxState,
                     itemComponent = {
                         VideoWithChannelSnippet(
                             modifier = Modifier.fillMaxWidth(),
@@ -79,10 +88,6 @@ fun RecommendationsScreen(
                             )
                         }
                     },
-                    items = state.videos,
-                    hasMore = state.hasMore,
-                    error = state.error,
-                    isLoading = state.isLoading,
                     onReload = {
                         onAction(ScreenAction.LoadNextPart)
                     },

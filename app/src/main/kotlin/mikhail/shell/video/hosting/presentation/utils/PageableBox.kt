@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -15,6 +16,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -26,12 +28,9 @@ import mikhail.shell.video.hosting.domain.errors.Error
 @Composable
 fun <I> PageableBox(
     modifier: Modifier = Modifier,
+    state: PageableBoxState<I>,
     itemComponent: @Composable (I) -> Unit,
     emptyComponent: (@Composable () -> Unit)? = null,
-    items: List<I>,
-    hasMore: Boolean = true,
-    error: Error? = null,
-    isLoading: Boolean = false,
     onReload: () -> Unit,
     onReachedBottom: () -> Unit
 ) {
@@ -40,7 +39,7 @@ fun <I> PageableBox(
     Box(
         modifier = modifier
     ) {
-        if (items.isNotEmpty()) {
+        if (state.items.isNotEmpty()) {
             val lazyGridState = rememberLazyGridState()
             val reachedBottom by remember {
                 derivedStateOf {
@@ -62,7 +61,7 @@ fun <I> PageableBox(
                 verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
             ) {
-                items(items) {
+                items(state.items) {
                     itemComponent(it)
                 }
                 item(
@@ -70,11 +69,11 @@ fun <I> PageableBox(
                         GridItemSpan(maxLineSpan)
                     }
                 ) {
-                    if (isLoading) {
+                    if (state.isLoading) {
                         StartingComponent(
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else if (error != null || hasMore) {
+                    } else if (state.error != null && state.hasMore) {
                         ErrorComponent(
                             modifier = Modifier.fillMaxSize(),
                             onRetry = onReload
@@ -83,12 +82,40 @@ fun <I> PageableBox(
                 }
             }
             LaunchedEffect(reachedBottom) {
-                if (reachedBottom && hasMore) {
+                if (reachedBottom && state.hasMore) {
                     onReachedBottom()
                 }
             }
         } else {
             emptyComponent?.invoke()
         }
+    }
+}
+
+@Stable
+class PageableBoxState<out I>(
+    val gridState: LazyGridState,
+    val items: List<I>,
+    val hasMore: Boolean = true,
+    val error: Error? = null,
+    val isLoading: Boolean = false
+)
+
+@Composable
+fun <I> rememberPageableBoxState(
+    items: List<I>,
+    hasMore: Boolean,
+    error: Error?,
+    isLoading: Boolean
+): PageableBoxState<I> {
+    val gridState = rememberLazyGridState()
+    return remember(items, hasMore, error, isLoading) {
+        PageableBoxState(
+            gridState = gridState,
+            items = items,
+            hasMore = hasMore,
+            error = error,
+            isLoading = isLoading
+        )
     }
 }

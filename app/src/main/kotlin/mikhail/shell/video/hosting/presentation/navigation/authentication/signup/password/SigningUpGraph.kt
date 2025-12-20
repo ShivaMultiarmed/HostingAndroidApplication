@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 
-fun EntryProviderScope<Route>.signUpGraph(
+fun EntryProviderScope<Route>.signingUpGraph(
     rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider,
     authBackStack: SnapshotStateList<Route>
@@ -31,9 +31,9 @@ fun EntryProviderScope<Route>.signUpGraph(
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
             predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
             entryProvider = entryProvider {
-                requestSignUpRoute(authBackStack, signUpBackStack)
-                verifySignUpRoute(signUpBackStack)
-                signUpConfirmationRoute(rootBackStack, userDetailsProvider)
+                signingUpRequestingRoute(authBackStack, signUpBackStack)
+                signingUpVerificationRoute(signUpBackStack)
+                signingUpConfirmationRoute(rootBackStack, userDetailsProvider)
             }
         )
     }

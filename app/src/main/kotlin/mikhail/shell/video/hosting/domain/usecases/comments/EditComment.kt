@@ -12,11 +12,6 @@ class EditComment @Inject constructor(
     private val commentRepository: CommentRepository
 ) {
     suspend operator fun invoke(comment: CommentEditingModel): Result<CommentWithUser, Error> {
-        val validationResult = validateComment(comment.text)
-        return if (validationResult is Result.Failure) {
-            Result.Failure(validationResult.error)
-        } else {
-            commentRepository.edit(comment)
-        }
+        return commentRepository.edit(comment)
     }
 }

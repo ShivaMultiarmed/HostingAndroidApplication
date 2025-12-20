@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
                     val rootBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(if (userDetailsProvider.getUserId() != 0L) Route.Recommendations else Route.Authentication)
+                        mutableStateListOf(if (userDetailsProvider.getUserId() == 0L) Route.Authentication else handleDeepLink()?: Route.Recommendations)
                     }
                     val currentRoute = rootBackStack.lastOrNull()
                     val recommendationsBackStack = rememberSaveable(saver = BackStackSaver) {
@@ -220,6 +220,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun handleDeepLink(): Route? {
+        val BASE_URL = "https://trendy-app\\.ru"
+        if (intent.data == null) {
+            return null
+        }
+        val uri = intent.data.toString()
+        Regex("($BASE_URL/videos/)(\\d{1,8})").find(uri)?.let {
+            val videoId = it.groups[2]?.value?.toLong()?: return null
+            return Route.Video(videoId)
+        }
+        return null
     }
 
     private fun setMediaHandlers() {

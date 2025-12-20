@@ -3,7 +3,7 @@ package mikhail.shell.video.hosting.presentation.utils
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
-suspend fun logOut(
+suspend fun signOut(
     userDetailsProvider: UserDetailsProvider,
     rootBackStack: MutableList<Route>
 ) {

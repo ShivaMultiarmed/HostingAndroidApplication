@@ -49,7 +49,9 @@ fun EntryProviderScope<Route>.signInRoute(
                             token = event.authModel.token
                         )
                     )
-                    rootBackStack.add(Route.Recommendations)
+                    if (rootBackStack.isEmpty()) {
+                        rootBackStack.add(Route.Recommendations)
+                    }
                 }
             }
         }

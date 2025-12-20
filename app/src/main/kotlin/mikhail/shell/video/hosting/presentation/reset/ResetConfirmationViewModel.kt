@@ -34,12 +34,12 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
 
-    fun onAction(event: ScreenAction) {
-        when (event) {
-            is ScreenAction.PasswordChanged -> onPasswordChanged(event.password)
+    fun onAction(action: ScreenAction) {
+        when (action) {
+            is ScreenAction.PasswordChanged -> onPasswordChanged(action.password)
             ScreenAction.PasswordFocused -> onPasswordFocused()
             ScreenAction.PasswordBlurred -> onPasswordBlurred()
-            is ScreenAction.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(event.passwordDuplicate)
+            is ScreenAction.PasswordDuplicatedChanged -> onPasswordDuplicateChanged(action.passwordDuplicate)
             ScreenAction.PasswordDuplicatedFocused -> onPasswordDuplicateFocused()
             ScreenAction.PasswordDuplicatedBlurred -> onPasswordDuplicateBlurred()
             ScreenAction.Submit -> confirm()

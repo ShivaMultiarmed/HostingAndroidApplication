@@ -16,9 +16,9 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreen
-import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.resetConfirmationRoute(
     rootBackStack: MutableList<Route>,
@@ -58,7 +58,9 @@ fun EntryProviderScope<Route>.resetConfirmationRoute(
                         )
                     )
                     rootBackStack.remove(Route.Authentication)
-                    rootBackStack.add(Route.Recommendations)
+                    if (rootBackStack.isEmpty()) {
+                        rootBackStack.add(Route.Recommendations)
+                    }
                 }
             }
         }

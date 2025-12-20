@@ -12,8 +12,6 @@ sealed class VideoScreenAction {
     data object Remove : VideoScreenAction()
     data object Edit : VideoScreenAction()
     data object OpenChannel : VideoScreenAction()
-    data object OpenComments : VideoScreenAction()
-    data object CloseComments : VideoScreenAction()
     data class OpenProfile(val userId: Long) : VideoScreenAction()
     data object SubmitComment : VideoScreenAction()
     data class ChangeCommentText(val text: String): VideoScreenAction()

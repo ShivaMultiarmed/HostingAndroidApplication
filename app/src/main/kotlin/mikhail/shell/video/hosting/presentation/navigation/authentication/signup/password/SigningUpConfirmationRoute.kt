@@ -18,7 +18,7 @@ import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmati
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 
-fun EntryProviderScope<Route>.signUpConfirmationRoute(
+fun EntryProviderScope<Route>.signingUpConfirmationRoute(
     rootBackStack: MutableList<Route>,
     userDetailsProvider: UserDetailsProvider
 ) {
@@ -51,7 +51,9 @@ fun EntryProviderScope<Route>.signUpConfirmationRoute(
                     )
                 )
                 rootBackStack.remove(Route.Authentication)
-                rootBackStack.add(Route.Recommendations)
+                if (rootBackStack.isEmpty()) {
+                    rootBackStack.add(Route.Recommendations)
+                }
             }
         }
     }

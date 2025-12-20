@@ -93,6 +93,9 @@ class ProfileViewModel @AssistedInject constructor(
                     isStarting = false
                 )
             }
+            viewModelScope.launch {
+                _events.emit(ProfileScreenEvent.Failure(error))
+            }
         }
     }
 

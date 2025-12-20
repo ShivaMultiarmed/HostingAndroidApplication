@@ -11,6 +11,7 @@ data class VideoScreenState(
     val video: VideoDetailsUi? = null,
     val error: Error? = null,
     val isViewed: Boolean = false,
+    val isRemoving: Boolean = false,
     val commentsState: CommentsState = CommentsState()
 )
 

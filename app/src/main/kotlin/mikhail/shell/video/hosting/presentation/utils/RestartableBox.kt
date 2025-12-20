@@ -13,9 +13,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,6 +43,15 @@ private val shadowWidth = 5.dp
 private val topPosition = -(shadowBaseDiameter + shadowWidth)
 private val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
 
+private val dpSaver = object : Saver<MutableState<Dp>, Float> {
+    override fun SaverScope.save(value: MutableState<Dp>): Float? {
+        return value.value.value
+    }
+    override fun restore(value: Float): MutableState<Dp>? {
+        return mutableStateOf(value.dp)
+    }
+}
+
 @Composable
 fun RestartableBox(
     modifier: Modifier = Modifier,
@@ -50,7 +62,7 @@ fun RestartableBox(
 ) {
     val resistance = 0.15f
     val density = LocalDensity.current.density
-    var height by rememberSaveable { mutableStateOf(topPosition) }
+    var height by rememberSaveable (saver = dpSaver) { mutableStateOf(topPosition) }
     val animatedHeight by animateDpAsState(height, tween(200))
     var isDragged by rememberSaveable { mutableStateOf(false) }
     val isStartingUpdated by rememberUpdatedState(isStarting)

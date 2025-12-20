@@ -1,10 +1,12 @@
 package mikhail.shell.video.hosting.presentation.utils
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,11 +15,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.ui.theme.onDisabled
 
 @Composable
 fun Dialog(
     onSubmit: () -> Unit,
     onDismiss: () -> Unit = {},
+    isLoading: Boolean = false,
     dialogTitle: String? = null,
     dialogDescription: String? = null
 ) {
@@ -41,17 +45,22 @@ fun Dialog(
         shape = RoundedCornerShape(10.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         confirmButton = {
-            Button(
+            PrimaryButton(
                 modifier = Modifier.clip(CircleShape),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),
-                onClick = onSubmit
-            ) {
-                Text(
-                    text = stringResource(R.string.ok_button)
-                )
+                onClick = onSubmit,
+                needsCaution = true,
+                enabled = !isLoading
+            ){
+                if (!isLoading) {
+                    Text(
+                        text = stringResource(R.string.ok_button)
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        color = MaterialTheme.colorScheme.onDisabled
+                    )
+                }
             }
         },
         dismissButton = {

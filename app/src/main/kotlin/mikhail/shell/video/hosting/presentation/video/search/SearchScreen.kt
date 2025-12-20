@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -45,14 +46,16 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
-import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
+import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.borderBottom
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
@@ -70,7 +73,8 @@ fun SearchScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
+            .background(MaterialTheme.colorScheme.surface)
+            .imePadding(),
         topBar = {
             ConstraintLayout(
                 modifier = Modifier
@@ -88,7 +92,11 @@ fun SearchScreen(
                         onAction(SearchScreenAction.ChangeQuery(it))
                     },
                     label = stringResource(R.string.video_search_label),
-                    icon = Icons.Rounded.Search
+                    icon = Icons.Rounded.Search,
+                    errorMsg = when (state.query.error) {
+                        TextError.LONG -> stringResource(R.string.query_too_long)
+                        else -> null
+                    }
                 )
                 PrimaryProgressButton(
                     modifier = Modifier.constrainAs(button) {
@@ -109,6 +117,12 @@ fun SearchScreen(
         }
     ) { padding ->
         if (state.videos != null) {
+            val pageableBoxState = rememberPageableBoxState(
+                items = state.videos,
+                hasMore = state.hasMore,
+                error = state.error,
+                isLoading = state.isLoading
+            )
             RestartableBox(
                 modifier = Modifier
                     .fillMaxSize()
@@ -116,10 +130,12 @@ fun SearchScreen(
                 onStart = {
                     onAction(SearchScreenAction.Restart)
                 },
-                isStarting = state.isStarting
+                isStarting = state.isStarting,
+                canStart = !pageableBoxState.gridState.canScrollBackward
             ) {
                 PageableBox(
                     modifier = Modifier.fillMaxSize(),
+                    state = pageableBoxState,
                     itemComponent = {
                         VideoWithChannelSnippet(
                             modifier = Modifier.then(
@@ -143,10 +159,6 @@ fun SearchScreen(
                             message = stringResource(R.string.video_found_nothing)
                         )
                     },
-                    items = state.videos,
-                    hasMore = state.hasMore,
-                    error = state.error,
-                    isLoading = state.isLoading,
                     onReload = {
                         onAction(SearchScreenAction.LoadNextPart)
                     },

@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
+import mikhail.shell.video.hosting.presentation.utils.PageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
@@ -22,13 +23,12 @@ import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 @Composable
 internal fun VideoGridSection(
     modifier: Modifier = Modifier,
+    state: PageableBoxState<VideoUi>,
     isStarting: Boolean,
-    videos: List<VideoUi>,
     onVideoClick: (videoId: Long) -> Unit,
     onReachedBottom: () -> Unit,
     onRestart: () -> Unit,
-    onReload: () -> Unit,
-    hasMore: Boolean
+    onReload: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
@@ -36,9 +36,11 @@ internal fun VideoGridSection(
         modifier = modifier,
         onStart = onRestart,
         isStarting = isStarting,
+        canStart = !state.gridState.canScrollBackward
     ) {
         PageableBox(
             modifier = Modifier.fillMaxSize(),
+            state = state,
             itemComponent = {
                 VideoSnippet(
                     modifier = Modifier.then(
@@ -58,8 +60,6 @@ internal fun VideoGridSection(
                     message = stringResource(R.string.no_videos_yet)
                 )
             },
-            items = videos,
-            hasMore = hasMore,
             onReachedBottom = onReachedBottom,
             onReload = onReload
         )

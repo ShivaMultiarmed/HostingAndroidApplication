@@ -25,6 +25,7 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.subscriptions.SubscriptionsScreenState as ScreenState
 
@@ -52,6 +53,12 @@ fun SubscriptionsScreen(
         }
     ) { padding ->
         if (state.channels != null) {
+            val pageableBoxState = rememberPageableBoxState(
+                items = state.channels,
+                isLoading = state.isLoading,
+                hasMore = state.hasMore,
+                error = state.error
+            )
             RestartableBox(
                 modifier = Modifier
                     .fillMaxSize()
@@ -59,7 +66,8 @@ fun SubscriptionsScreen(
                 onStart = {
                     onAction(ScreenAction.Restart)
                 },
-                isStarting = state.isStarting
+                isStarting = state.isStarting,
+                canStart = !pageableBoxState.gridState.canScrollBackward
             ) {
                 PageableBox(
                     modifier = Modifier
@@ -73,7 +81,7 @@ fun SubscriptionsScreen(
                                     .padding(horizontal = 10.dp)
                             }
                         ),
-                    items = state.channels,
+                    state = pageableBoxState,
                     itemComponent = {
                         ChannelSnippet(
                             modifier = Modifier
@@ -98,14 +106,12 @@ fun SubscriptionsScreen(
                             message = stringResource(R.string.no_subscriptions_yet)
                         )
                     },
-                    isLoading = state.isLoading,
                     onReload = {
                         onAction(ScreenAction.LoadNextPart)
                     },
                     onReachedBottom = {
                         onAction(ScreenAction.LoadNextPart)
-                    },
-                    hasMore = state.hasMore
+                    }
                 )
             }
         } else if (state.isStarting) {

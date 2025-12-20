@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
@@ -64,6 +65,7 @@ fun RequestResetScreen(
                     TextError.PATTERN -> stringResource(R.string.user_name_malformed)
                     else -> null
                 }
+                is NetworkError -> stringResource(R.string.user_name_check_failed)
                 else -> null
             }
             InputField(

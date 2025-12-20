@@ -9,7 +9,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.resetGraph
-import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signUpGraph
+import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signingUpGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderScope<Route>.authenticationGraph(
@@ -32,7 +32,7 @@ fun EntryProviderScope<Route>.authenticationGraph(
                     authBackStack = authBackStack,
                     userDetailsProvider = userDetailsProvider
                 )
-                signUpGraph(
+                signingUpGraph(
                     authBackStack = authBackStack,
                     rootBackStack = rootBackStack,
                     userDetailsProvider = userDetailsProvider

@@ -306,4 +306,5 @@
     <string name="wait_for_video_hint">Подождите, пока видео обрабатывается</string>
     <string name="code_pattern_not_correct">Допустимы только буквы и цифры</string>
     <string name="forgot_password">Забыли пароль</string>
+    <string name="query_too_long">Запрос слишком длинный</string>
 </resources>
