@@ -56,7 +56,7 @@ class UserRepositoryWithApi @Inject constructor(
                     nick = user.nick,
                     name = user.name,
                     bio = user.bio,
-                    tel = user.telephone,
+                    tel = user.tel,
                     email = user.email,
                     avatarAction = when (user.avatar) {
                         is EditingAction.Edit -> EditAction.EDIT

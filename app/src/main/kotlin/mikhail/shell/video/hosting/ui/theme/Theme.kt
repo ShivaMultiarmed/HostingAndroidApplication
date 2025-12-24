@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.ui.theme
 
 import android.app.LocaleManager
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Build
 import android.os.LocaleList
 import androidx.activity.compose.LocalActivity
@@ -21,7 +20,6 @@ import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.presentation.settings.Locale
@@ -89,53 +87,16 @@ val LightColorScheme = lightColorScheme(
 
 val ColorScheme.disabled: Color
     @Composable get() {
-        return MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
+        return tertiaryContainer.copy(alpha = 0.6f)
     }
 
 val ColorScheme.onDisabled: Color
     @Composable get() {
-        return MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f)
+        return onTertiaryContainer.copy(alpha = 0.6f)
     }
 
 enum class Theme {
     DARK, LIGHT, SYSTEM
-}
-
-@Composable
-fun getCurrentTheme(): Theme {
-    return LocalContext.current.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences()).value.theme
-}
-
-@Composable
-fun getColorScheme(): ColorScheme {
-    return when (getCurrentTheme()) {
-        SYSTEM -> when {
-            isSystemInDarkTheme() -> DarkColorScheme
-            else -> LightColorScheme
-        }
-
-        DARK -> DarkColorScheme
-        LIGHT -> LightColorScheme
-    }
-}
-
-suspend fun Context.setTheme(theme: Theme) {
-    uiPreferences.updateData {
-        it.copy(theme = theme)
-    }
-}
-
-@Composable
-fun getLocale(): Locale {
-    return LocalContext.current.uiPreferences.data.collectAsStateWithLifecycle(UiPreferences()).value.locale
-}
-
-suspend fun Context.setLocale(locale: Locale) {
-    val config = Configuration(resources.configuration)
-    config.setLocales(LocaleList.forLanguageTags(locale.iso))
-    uiPreferences.updateData {
-        it.copy(locale = locale)
-    }
 }
 
 @Serializable
@@ -148,24 +109,17 @@ val Context.uiPreferences by dataStore("ui_preferences.json", UiPreferencesSeria
 
 class UiPreferencesSerializer : Serializer<UiPreferences> {
     override suspend fun readFrom(input: InputStream): UiPreferences = input.use {
-        it.readBytes()
-            .decodeToString()
-            .let {
-                Json.decodeFromString(deserializer = UiPreferences.serializer(), string = it)
-            }
+        val json = it.readBytes().decodeToString()
+        Json.decodeFromString(deserializer = UiPreferences.serializer(), string = json)
     }
 
     override suspend fun writeTo(
         t: UiPreferences, output: OutputStream
     ) {
-        Json.encodeToString(
-            serializer = UiPreferences.serializer(), value = t
-        ).let {
-            it.encodeToByteArray().let { bytes ->
-                output.use {
-                    it.write(bytes)
-                }
-            }
+        val bytes = Json.encodeToString(serializer = UiPreferences.serializer(), value = t)
+            .encodeToByteArray()
+        output.use {
+            it.write(bytes)
         }
     }
 
@@ -174,32 +128,38 @@ class UiPreferencesSerializer : Serializer<UiPreferences> {
 
 @Composable
 fun VideoHostingTheme(
+    uiPreferences: UiPreferences = UiPreferences(),
     content: @Composable () -> Unit
 ) {
     val activity = LocalActivity.current!!
     val view = LocalView.current
     val context = LocalContext.current
-
-    val colorScheme = getColorScheme()
-    val statusBarIconsColor = colorScheme.onSurface
-    LaunchedEffect(colorScheme) {
+    val colorScheme = when (uiPreferences.theme) {
+        SYSTEM -> when {
+            isSystemInDarkTheme() -> DarkColorScheme
+            else -> LightColorScheme
+        }
+        DARK -> DarkColorScheme
+        LIGHT -> LightColorScheme
+    }
+    LaunchedEffect(uiPreferences.theme) {
+        val statusBarIconsColor = colorScheme.onSurface
         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars =
             (statusBarIconsColor != DarkColorScheme.onSurface)
     }
-
-    val locale = getLocale()
-    LaunchedEffect(locale) {
+    LaunchedEffect(uiPreferences.locale) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getSystemService(LocaleManager::class.java).applicationLocales =
-                LocaleList.forLanguageTags(locale.iso)
+                LocaleList.forLanguageTags(uiPreferences.locale.iso)
         } else {
             AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(locale.iso)
+                LocaleListCompat.forLanguageTags(uiPreferences.locale.iso)
             )
         }
     }
-
     MaterialTheme(
-        colorScheme = colorScheme, typography = Typography, content = content
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
     )
 }

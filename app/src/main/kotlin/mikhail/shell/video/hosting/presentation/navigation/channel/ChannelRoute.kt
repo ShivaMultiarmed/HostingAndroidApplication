@@ -27,8 +27,8 @@ fun EntryProviderScope<Route>.channelRoute(
         val context = LocalContext.current
         val userId by rememberSaveable { mutableLongStateOf(userDetailsProvider.getUserId()) }
         val channelId = route.channelId
-        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> {
-            it.create(channelId)
+        val viewModel = hiltViewModel<ChannelScreenViewModel, ChannelScreenViewModel.Factory> { factory ->
+            factory.create(channelId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events

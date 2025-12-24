@@ -7,6 +7,7 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 
 sealed class VideoUploadingScreenEvent {
     data object Cancelled : ScreenEvent()
+    data class PermissionLacked(val message: String) : ScreenEvent()
     data class Failure(val error: Error): ScreenEvent()
     @OptIn(ExperimentalUuidApi::class)
     data class Success(

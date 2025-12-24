@@ -23,7 +23,7 @@ data class UserEditingInputState(
     val name: FieldState<String, TextError>,
     val avatar: FieldState<EditingState<String?>, FileError>,
     val bio: FieldState<String, TextError>,
-    val telephone: FieldState<String, TextError>,
+    val tel: FieldState<String, TextError>,
     val email: FieldState<String, TextError>
 ) {
     companion object {
@@ -39,7 +39,7 @@ data class UserEditingInputState(
             name = FieldState(name),
             avatar = FieldState(EditingState.Keeping(avatar)),
             bio = FieldState(bio),
-            telephone = FieldState(telephone),
+            tel = FieldState(telephone),
             email = FieldState(email)
         )
     }

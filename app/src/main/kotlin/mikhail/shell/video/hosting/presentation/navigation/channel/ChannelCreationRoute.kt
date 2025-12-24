@@ -23,9 +23,7 @@ fun EntryProviderScope<Route>.channelCreationRoute(
 ) {
     entry <Route.User.ChannelCreation> { route ->
         val context = LocalContext.current
-        val viewModel = hiltViewModel<ChannelCreationViewModel, ChannelCreationViewModel.Factory> { factory ->
-            factory.create(userDetailsProvider.getUserId())
-        }
+        val viewModel = hiltViewModel<ChannelCreationViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }

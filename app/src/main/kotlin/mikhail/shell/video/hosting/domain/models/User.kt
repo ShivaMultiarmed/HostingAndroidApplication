@@ -20,7 +20,7 @@ data class UserEditingModel(
     val nick: String,
     val name: String?,
     val bio: String?,
-    val telephone: String?,
+    val tel: String?,
     val email: String?,
     val avatar: EditingAction<String>
 )

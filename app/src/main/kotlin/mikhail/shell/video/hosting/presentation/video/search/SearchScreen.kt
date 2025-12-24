@@ -281,7 +281,7 @@ fun VideoWithChannelSnippet(
                     fontSize = 12.sp,
                     lineHeight = 13.sp,
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
+                    maxLines = 2
                 )
             }
         }

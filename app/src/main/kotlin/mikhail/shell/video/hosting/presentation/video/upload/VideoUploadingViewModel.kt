@@ -44,7 +44,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val getVideoMetaData: GetVideoMetaData,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ScreenState>(ScreenState.Starting)
+    private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
     val state = _state.onStart { start() }.stateIn(_state.value)
     private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
@@ -65,10 +65,19 @@ class VideoUploadingViewModel @AssistedInject constructor(
             ScreenAction.Cancel -> viewModelScope.launch {
                 _events.emit(ScreenEvent.Cancelled)
             }
+            is ScreenAction.ShowPermissionLack -> viewModelScope.launch {
+                _events.emit(ScreenEvent.PermissionLacked(action.message))
+            }
         }
     }
 
     private fun start() {
+        if (_state.value is ScreenState.Starting) {
+            return
+        }
+        _state.update {
+            ScreenState.Starting
+        }
         viewModelScope.launch {
             getOwnedChannels(
                 userId = userId,
@@ -89,6 +98,9 @@ class VideoUploadingViewModel @AssistedInject constructor(
             }.onFailure { error ->
                 _state.update {
                     ScreenState.Failure(error)
+                }
+                viewModelScope.launch {
+                    _events.emit(ScreenEvent.Failure(error))
                 }
             }
         }
@@ -321,4 +333,3 @@ class VideoUploadingViewModel @AssistedInject constructor(
         ): VideoUploadingViewModel
     }
 }
-

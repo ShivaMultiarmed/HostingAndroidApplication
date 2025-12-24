@@ -74,11 +74,11 @@ class ChannelEditingViewModel @AssistedInject constructor(
     }
 
     private fun start() {
-        if (
-            _state.value is ScreenState.Idle
-            || state.value is ScreenState.Failure
-        ) {
+        if (_state.value is ScreenState.Starting) {
             return
+        }
+        _state.update {
+            ScreenState.Starting
         }
         viewModelScope.launch {
             getChannel(channelId).onSuccess { initialChannel ->
@@ -91,8 +91,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                             description = initialChannel.description ?: "",
                             header = getChannelHeaderUrl(initialChannel.channelId, ImageSize.MEDIUM),
                             logo = getChannelLogoUrl(initialChannel.channelId,ImageSize.MEDIUM)
-                        ),
-                        isLoading = false
+                        )
                     )
                 }
             }.onFailure { error ->
@@ -265,21 +264,23 @@ class ChannelEditingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _state.update {
                 val currentState = it as? ScreenState.Editing
-                currentState?.copy(
+                if (
+                    currentState == null
+                    || currentState.isLoading
+                    ) {
+                    return@launch
+                }
+                currentState.copy(
                     channel = currentState.channel.copy(
                         title = currentState.channel.title.copy(
                             error = currentState.channel.title.value.let {
-                                val validationResult =
-                                    validateChannelTitle(channelId = channelId, title = it)
-                                if (validationResult is Result.Failure) validationResult.error else null
+                                validateChannelTitle(channelId = channelId, title = it).errorOrNull()
                             }
                         ),
                         alias = currentState.channel.alias.copy(
                             error = currentState.channel.alias.value.takeIf { it.isNotEmpty() }
                                 ?.let {
-                                    val validationResult =
-                                        validateChannelAlias(channelId = channelId, alias = it)
-                                    if (validationResult is Result.Failure) validationResult.error else null
+                                    validateChannelAlias(channelId = channelId, alias = it).errorOrNull()
                                 }
                         ),
                         logo = currentState.channel.logo.copy(
@@ -304,7 +305,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                                 }
                         )
                     )
-                ) ?: it
+                )
             }
             val currentState = _state.value as? ScreenState.Editing
             if (currentState == null || currentState.channel.title.error != null && currentState.channel.title.error !is NetworkError
@@ -337,8 +338,8 @@ class ChannelEditingViewModel @AssistedInject constructor(
                     }
                 )
             ).onSuccess { editedChannel ->
-                _state.update {
-                    ScreenState.Success
+                viewModelScope.launch {
+                    _events.emit(ScreenEvent.Success)
                 }
             }.onFailure { error ->
                 if (error !is ChannelEditingError) {

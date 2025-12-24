@@ -9,6 +9,9 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.CaptureVideo
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -30,7 +34,6 @@ import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -42,7 +45,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -63,7 +65,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.NumericError
@@ -86,6 +87,11 @@ import mikhail.shell.video.hosting.presentation.utils.StandardEditField
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChangeChannel
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChangeCover
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChangeDescription
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChangeSource
+import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction.ChangeTitle
 import java.io.File
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState as ScreenState
@@ -102,7 +108,6 @@ fun VideoUploadingScreen(
     val playerState = LocalPlayerState.current
     val windowSize = calculateWindowSizeClass(activity)
     val context = activity as Context
-    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(
@@ -113,396 +118,419 @@ fun VideoUploadingScreen(
         }
     }
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
-    if (state is ScreenState.Editing) {
-        val scrollState = rememberScrollState()
-        var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-        Scaffold(
-            topBar = {
-                if (!isFullScreen) {
+    Scaffold(
+        topBar = {
+            if (!isFullScreen) {
+                if (state is ScreenState.Editing) {
                     TopBar(
                         onPopup = {
                             onAction(ScreenAction.Cancel)
                         },
                         title = stringResource(R.string.video_upload_title),
                         inProgress = state.isLoading,
-                        complete = false,
                         onSubmit = {
                             onAction(ScreenAction.Submit)
                         }
                     )
+                } else {
+                    TopBar(
+                        onPopup = {
+                            onAction(ScreenAction.Cancel)
+                        },
+                        title = stringResource(R.string.video_upload_title)
+                    )
                 }
-            },
-            snackbarHost = {
-                SnackbarHost(snackBarHostState)
-            },
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(snackBarHostState)
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .background(MaterialTheme.colorScheme.background)
-                    .then(
-                        if (isFullScreen) {
-                            Modifier
-                        } else {
-                            Modifier.verticalScroll(scrollState)
-                        }
-                    )
-            ) {
-                if (!isFullScreen) {
-                    val sourceCreator =
-                        rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) {
-                            if (it) {
-                                onAction(ScreenAction.ChangeSource(state.video.source.value))
-                            }
-                        }
-                    val sourcePicker =
-                        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
-                            if (it != null) {
-                                onAction(ScreenAction.ChangeSource(it.toString()))
-                            }
-                        }
-                    val sourceErrMsg = when (state.video.source.error) {
-                        FileError.EMPTY -> stringResource(R.string.video_upload_source_empty)
-                        FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                        FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
-                        FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-                        FileError.LARGE -> stringResource(
-                            R.string.file_too_large_error,
-                            "${MAX_VIDEO_SIZE.mb} MB"
-                        )
-
-                        else -> null
-                    }
-                    val sourceActionItems = when (state.video.source.value) {
-                        null -> listOf()
-                        else -> listOf(
-                            DeletingItem(
-                                deleting = {
-                                    onAction(ScreenAction.ChangeSource(null))
-                                }
-                            )
-                        )
-                    }
-                    var isVideoDialogOpen by rememberSaveable { mutableStateOf(false) }
-                    Row {
-                        EditField(
-                            actionItems = sourceActionItems
-                        ) {
-                            FileInputField(
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = when (state.video.source.value) {
-                                    null -> stringResource(R.string.video_upload_choose_source_label)
-                                    else -> stringResource(R.string.video_upload_choose_another_source_label)
-                                },
-                                onClick = {
-                                    isVideoDialogOpen = true
-                                },
-                                icon = Icons.Rounded.VideoLibrary,
-                                errorMsg = sourceErrMsg
-                            )
-                        }
-                        val recordedVideoDir =
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                        val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
-                        ContextMenu(
-                            isExpanded = isVideoDialogOpen,
-                            onDismiss = {
-                                isVideoDialogOpen = false
-                            },
-                            menuItems = listOf(
-                                MenuItem(
-                                    title = stringResource(R.string.video_upload_create_source_label),
-                                    onClick = {
-                                        val isCameraPermissionGranted =
-                                            cameraPermission.status.isGranted
-                                        if (isCameraPermissionGranted) {
-                                            val file = File(
-                                                recordedVideoDir,
-                                                "${System.currentTimeMillis()}.mp4"
-                                            )
-                                            file.createNewFile()
-                                            val uri = FileProvider.getUriForFile(
-                                                context,
-                                                "${context.packageName}.fileprovider",
-                                                file
-                                            )
-                                            onAction(ScreenAction.ChangeSource(uri.toString()))
-                                            sourceCreator.launch(uri)
-                                        } else if (cameraPermission.status.shouldShowRationale) {
-                                            coroutineScope.launch {
-                                                snackBarHostState.showSnackbar(
-                                                    message = context.getString(R.string.video_upload_camera_permission_rationale),
-                                                    duration = SnackbarDuration.Short
-                                                )
-                                            }
-                                        } else {
-                                            cameraPermission.launchPermissionRequest()
-                                        }
-                                    }
-                                ),
-                                MenuItem(
-                                    title = stringResource(R.string.video_upload_choose_source_label),
-                                    onClick = {
-                                        sourcePicker.launch(
-                                            PickVisualMediaRequest(
-                                                ActivityResultContracts.PickVisualMedia.VideoOnly
-                                            )
-                                        )
-                                    }
-                                )
-                            )
-                        )
-                    }
-                }
-                LaunchedEffect(state.video.source.value) {
-                    if (state.video.source.value != null) {
-                        val newMediaItem = MediaItem.fromUri(state.video.source.value)
-                        player.setMediaItem(newMediaItem)
-                        player.prepare()
-                    } else {
-                        player.stop()
-                        player.clearMediaItems()
-                    }
-                }
-                if (state.video.source.value != null) {
-                    Box(
+                .padding(padding)
+        ) {
+            when (state) {
+                is ScreenState.Editing -> {
+                    val scrollState = rememberScrollState()
+                    var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
+                            .imePadding()
+                            .background(MaterialTheme.colorScheme.background)
                             .then(
                                 if (isFullScreen) {
-                                    Modifier.fillMaxHeight()
-                                } else {
                                     Modifier
+                                } else {
+                                    Modifier.verticalScroll(scrollState)
                                 }
                             )
-                            .background(Color.Black),
-                        contentAlignment = Alignment.Center
                     ) {
-                        PlayerComponent(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .then(
-                                    if (isFullScreen) {
-                                        Modifier.fillMaxSize()
-                                    } else {
-                                        try {
-                                            Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                        } catch (_: IllegalArgumentException) {
-                                            Modifier.aspectRatio(16f / 9)
-                                        }
+                        if (!isFullScreen) {
+                            val sourceCreator =
+                                rememberLauncherForActivityResult(CaptureVideo()) {
+                                    if (it) {
+                                        onAction(ChangeSource(state.video.source.value))
                                     }
-                                ),
-                            player = player,
-                            onRatioObtained = {
-                                aspectRatio = it
-                            },
-                            isFullScreen = isFullScreen,
-                            onFullscreen = {
-                                isFullScreen = it
-                                playerState.value = playerState.value.copy(fullScreen = it)
-                            }
-                        )
-                    }
-                    LaunchedEffect(isFullScreen) {
-                        playerState.value = playerState.value.copy(fullScreen = isFullScreen)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            val window = activity.window!!
-                            WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)
-                            if (isFullScreen) {
-                                window.insetsController?.let {
-                                    it.hide(WindowInsetsCompat.Type.systemBars())
-                                    it.systemBarsBehavior =
-                                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                                 }
-                            } else {
-                                window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
-                            }
-                        }
-                    }
-                }
-                if (!isFullScreen) {
-                    val titleErrMsg = when (state.video.title.error) {
-                        TextError.EMPTY -> stringResource(R.string.text_empty_error)
-                        TextError.LONG -> stringResource(
-                            R.string.text_too_large_error,
-                            MAX_TITLE_LENGTH
-                        )
-
-                        else -> null
-                    }
-                    val titleActionItems =
-                        if (state.video.title.value.isEmpty()) emptyList() else listOf(
-                            ActionItem(
-                                icon = Icons.Rounded.Delete,
-                                action = {
-                                    onAction(ScreenAction.ChangeTitle(""))
-                                }
-                            )
-                        )
-                    EditField(
-                        actionItems = titleActionItems
-                    ) {
-                        InputField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = state.video.title.value,
-                            onValueChange = {
-                                onAction(ScreenAction.ChangeTitle(it))
-                            },
-                            errorMsg = titleErrMsg,
-                            label = stringResource(R.string.video_title_label),
-                            icon = Icons.Rounded.Title,
-                            onFocus = {
-                                onAction(ScreenAction.FocusTitle)
-                            },
-                            onBlur = {
-                                onAction(ScreenAction.BlurTitle)
-                            }
-                        )
-                    }
-
-                    val channelErrMsg = when (state.video.channelId.error) {
-                        NumericError.EMPTY -> stringResource(R.string.video_upload_channel_not_valid_error)
-                        NumericError.NOT_EXISTS -> stringResource(R.string.channel_not_found)
-                        else -> null
-                    }
-                    val channelActionItems = when (state.video.channelId.value) {
-                        null -> emptyList()
-                        else -> listOf(
-                            ActionItem(
-                                icon = Icons.Rounded.Delete,
-                                action = {
-                                    onAction(ScreenAction.ChangeChannel(null))
-                                }
-                            )
-                        )
-                    }
-                    EditField(
-                        actionItems = channelActionItems
-                    ) {
-                        Dropdown(
-                            selected = state.video.channelId.value,
-                            modifier = Modifier.fillMaxWidth(),
-                            placeHolder = stringResource(R.string.video_upload_channel_label),
-                            values = state.channels.associate { it.channelId to it.title },
-                            onValueChange = {
-                                onAction(ScreenAction.ChangeChannel(it))
-                            },
-                            errorMsg = channelErrMsg,
-                            icon = Icons.Rounded.Apps,
-                        )
-                    }
-                    val coverPicker = rememberLauncherForActivityResult(
-                        ActivityResultContracts.GetContent()
-                    ) {
-                        if (it != null) {
-                            onAction(ScreenAction.ChangeCover(it.toString()))
-                        }
-                    }
-                    val coverErrMsg = getFileErrorMessage(state.video.cover.error)
-                    EditField(
-                        actionItems = when (state.video.cover.value) {
-                            null -> emptyList()
-                            else -> listOf(
-                                ActionItem(
-                                    icon = Icons.Rounded.Delete,
-                                    action = {
-                                        onAction(ScreenAction.ChangeCover(null))
+                            val sourcePicker =
+                                rememberLauncherForActivityResult(PickVisualMedia()) {
+                                    if (it != null) {
+                                        onAction(ChangeSource(it.toString()))
                                     }
+                                }
+                            val sourceErrMsg = when (state.video.source.error) {
+                                FileError.EMPTY -> stringResource(R.string.video_upload_source_empty)
+                                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
+                                FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
+                                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                                FileError.LARGE -> stringResource(
+                                    R.string.file_too_large_error,
+                                    "${MAX_VIDEO_SIZE.mb} MB"
                                 )
-                            )
-                        }
-                    ) {
-                        FileInputField(
-                            placeholder = when (state.video.cover.value) {
-                                state.video.cover.value -> stringResource(R.string.video_cover_choose_label)
-                                else -> stringResource(R.string.video_cover_choose_another_label)
-                            },
-                            onClick = {
-                                coverPicker.launch("image/*")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            icon = Icons.Rounded.Image,
-                            errorMsg = coverErrMsg
-                        )
-                    }
-                    if (state.video.cover.value != null) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = stringResource(R.string.video_cover_chosen_label)
-                            )
-                            AsyncImage(
-                                modifier = Modifier
-                                    .then(
-                                        if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
-                                            Modifier.fillMaxWidth()
-                                        } else {
-                                            Modifier.width(350.dp)
+
+                                else -> null
+                            }
+                            val sourceActionItems = when (state.video.source.value) {
+                                null -> listOf()
+                                else -> listOf(
+                                    DeletingItem(
+                                        deleting = {
+                                            onAction(ChangeSource(null))
                                         }
                                     )
-                                    .aspectRatio(16f / 9)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                model = state.video.cover.value,
-                                contentDescription = stringResource(R.string.video_cover_chosen_label),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                    val descriptionErrMsg = when (state.video.description.error) {
-                        TextError.LONG -> stringResource(
-                            R.string.text_too_large_error,
-                            MAX_TITLE_LENGTH
-                        )
-                        else -> null
-                    }
-                    StandardEditField(
-                        empty = state.video.description.value.isEmpty(),
-                        onRemove = {
-                            onAction(ScreenAction.ChangeDescription(""))
-                        }
-                    ) {
-                        InputField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = state.video.description.value,
-                            onValueChange = {
-                                onAction(ScreenAction.ChangeDescription(it))
-                            },
-                            errorMsg = descriptionErrMsg,
-                            label = stringResource(R.string.video_description_label),
-                            icon = Icons.Rounded.Title,
-                            onFocus = {
-                                onAction(ScreenAction.FocusDescription)
-                            },
-                            onBlur = {
-                                onAction(ScreenAction.BlurDescription)
+                                )
                             }
-                        )
+                            var isVideoDialogOpen by rememberSaveable { mutableStateOf(false) }
+                            Row {
+                                EditField(
+                                    actionItems = sourceActionItems
+                                ) {
+                                    FileInputField(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        placeholder = when (state.video.source.value) {
+                                            null -> stringResource(R.string.video_upload_choose_source_label)
+                                            else -> stringResource(R.string.video_upload_choose_another_source_label)
+                                        },
+                                        onClick = {
+                                            isVideoDialogOpen = true
+                                        },
+                                        icon = Icons.Rounded.VideoLibrary,
+                                        errorMsg = sourceErrMsg
+                                    )
+                                }
+                                val recordedVideoDir =
+                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                                val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+                                ContextMenu(
+                                    isExpanded = isVideoDialogOpen,
+                                    onDismiss = {
+                                        isVideoDialogOpen = false
+                                    },
+                                    menuItems = listOf(
+                                        MenuItem(
+                                            title = stringResource(R.string.video_upload_create_source_label),
+                                            onClick = {
+                                                if (cameraPermission.status.isGranted) {
+                                                    val file = File(
+                                                        recordedVideoDir,
+                                                        "${System.currentTimeMillis()}.mp4"
+                                                    )
+                                                    file.createNewFile()
+                                                    val uri = FileProvider.getUriForFile(
+                                                        context,
+                                                        "${context.packageName}.fileprovider",
+                                                        file
+                                                    )
+                                                    onAction(ChangeSource(uri.toString()))
+                                                    sourceCreator.launch(uri)
+                                                } else if (cameraPermission.status.shouldShowRationale) {
+                                                    onAction(
+                                                        ScreenAction.ShowPermissionLack(
+                                                            context.getString(
+                                                                R.string.video_upload_camera_permission_rationale
+                                                            )
+                                                        )
+                                                    )
+                                                } else {
+                                                    cameraPermission.launchPermissionRequest()
+                                                }
+                                            }
+                                        ),
+                                        MenuItem(
+                                            title = stringResource(R.string.video_upload_choose_source_label),
+                                            onClick = {
+                                                sourcePicker.launch(
+                                                    PickVisualMediaRequest(
+                                                        ActivityResultContracts.PickVisualMedia.VideoOnly
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                        LaunchedEffect(state.video.source.value) {
+                            if (state.video.source.value != null) {
+                                val newMediaItem = MediaItem.fromUri(state.video.source.value)
+                                player.setMediaItem(newMediaItem)
+                                player.prepare()
+                            } else {
+                                player.stop()
+                                player.clearMediaItems()
+                            }
+                        }
+                        if (state.video.source.value != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (isFullScreen) {
+                                            Modifier.fillMaxHeight()
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .background(Color.Black),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                PlayerComponent(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .then(
+                                            if (isFullScreen) {
+                                                Modifier.fillMaxSize()
+                                            } else {
+                                                try {
+                                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
+                                                } catch (_: IllegalArgumentException) {
+                                                    Modifier.aspectRatio(16f / 9)
+                                                }
+                                            }
+                                        ),
+                                    player = player,
+                                    onRatioObtained = {
+                                        aspectRatio = it
+                                    },
+                                    isFullScreen = isFullScreen,
+                                    onFullscreen = {
+                                        isFullScreen = it
+                                        playerState.value = playerState.value.copy(fullScreen = it)
+                                    }
+                                )
+                            }
+                            LaunchedEffect(isFullScreen) {
+                                playerState.value = playerState.value.copy(fullScreen = isFullScreen)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    val window = activity.window!!
+                                    WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)
+                                    if (isFullScreen) {
+                                        window.insetsController?.let {
+                                            it.hide(WindowInsetsCompat.Type.systemBars())
+                                            it.systemBarsBehavior =
+                                                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                                        }
+                                    } else {
+                                        window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
+                                    }
+                                }
+                            }
+                        }
+                        if (!isFullScreen) {
+                            val titleErrMsg = when (state.video.title.error) {
+                                TextError.EMPTY -> stringResource(R.string.text_empty_error)
+                                TextError.LONG -> stringResource(
+                                    R.string.text_too_large_error,
+                                    MAX_TITLE_LENGTH
+                                )
+
+                                else -> null
+                            }
+                            val titleActionItems =
+                                if (state.video.title.value.isEmpty()) emptyList() else listOf(
+                                    ActionItem(
+                                        icon = Icons.Rounded.Delete,
+                                        action = {
+                                            onAction(ChangeTitle(""))
+                                        }
+                                    )
+                                )
+                            EditField(
+                                actionItems = titleActionItems
+                            ) {
+                                InputField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    value = state.video.title.value,
+                                    onValueChange = {
+                                        onAction(ChangeTitle(it))
+                                    },
+                                    errorMsg = titleErrMsg,
+                                    label = stringResource(R.string.video_title_label),
+                                    icon = Icons.Rounded.Title,
+                                    onFocus = {
+                                        onAction(ScreenAction.FocusTitle)
+                                    },
+                                    onBlur = {
+                                        onAction(ScreenAction.BlurTitle)
+                                    }
+                                )
+                            }
+
+                            val channelErrMsg = when (state.video.channelId.error) {
+                                NumericError.EMPTY -> stringResource(R.string.video_upload_channel_not_valid_error)
+                                NumericError.NOT_EXISTS -> stringResource(R.string.channel_not_found)
+                                else -> null
+                            }
+                            val channelActionItems = when (state.video.channelId.value) {
+                                null -> emptyList()
+                                else -> listOf(
+                                    ActionItem(
+                                        icon = Icons.Rounded.Delete,
+                                        action = {
+                                            onAction(ChangeChannel(null))
+                                        }
+                                    )
+                                )
+                            }
+                            EditField(
+                                actionItems = channelActionItems
+                            ) {
+                                Dropdown(
+                                    selected = state.video.channelId.value,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeHolder = stringResource(R.string.video_upload_channel_label),
+                                    values = state.channels.associate { it.channelId to it.title },
+                                    onValueChange = {
+                                        onAction(ChangeChannel(it))
+                                    },
+                                    errorMsg = channelErrMsg,
+                                    icon = Icons.Rounded.Apps,
+                                )
+                            }
+                            val coverPicker = rememberLauncherForActivityResult(
+                                GetContent()
+                            ) {
+                                if (it != null) {
+                                    onAction(ChangeCover(it.toString()))
+                                }
+                            }
+                            val coverErrMsg = getFileErrorMessage(state.video.cover.error)
+                            EditField(
+                                actionItems = when (state.video.cover.value) {
+                                    null -> emptyList()
+                                    else -> listOf(
+                                        ActionItem(
+                                            icon = Icons.Rounded.Delete,
+                                            action = {
+                                                onAction(ChangeCover(null))
+                                            }
+                                        )
+                                    )
+                                }
+                            ) {
+                                FileInputField(
+                                    placeholder = when (state.video.cover.value) {
+                                        state.video.cover.value -> stringResource(R.string.video_cover_choose_label)
+                                        else -> stringResource(R.string.video_cover_choose_another_label)
+                                    },
+                                    onClick = {
+                                        coverPicker.launch("image/*")
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    icon = Icons.Rounded.Image,
+                                    errorMsg = coverErrMsg
+                                )
+                            }
+                            if (state.video.cover.value != null) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.video_cover_chosen_label)
+                                    )
+                                    AsyncImage(
+                                        modifier = Modifier
+                                            .then(
+                                                if (windowSize.widthSizeClass == WindowWidthSizeClass.Compact) {
+                                                    Modifier.fillMaxWidth()
+                                                } else {
+                                                    Modifier.width(350.dp)
+                                                }
+                                            )
+                                            .aspectRatio(16f / 9)
+                                            .clip(RoundedCornerShape(10.dp)),
+                                        model = state.video.cover.value,
+                                        contentDescription = stringResource(R.string.video_cover_chosen_label),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                            val descriptionErrMsg = when (state.video.description.error) {
+                                TextError.LONG -> stringResource(
+                                    R.string.text_too_large_error,
+                                    MAX_TITLE_LENGTH
+                                )
+
+                                else -> null
+                            }
+                            StandardEditField(
+                                empty = state.video.description.value.isEmpty(),
+                                onRemove = {
+                                    onAction(ChangeDescription(""))
+                                }
+                            ) {
+                                InputField(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    value = state.video.description.value,
+                                    onValueChange = {
+                                        onAction(ChangeDescription(it))
+                                    },
+                                    errorMsg = descriptionErrMsg,
+                                    label = stringResource(R.string.video_description_label),
+                                    icon = Icons.Rounded.Title,
+                                    onFocus = {
+                                        onAction(ScreenAction.FocusDescription)
+                                    },
+                                    onBlur = {
+                                        onAction(ScreenAction.BlurDescription)
+                                    }
+                                )
+                            }
+                        }
                     }
+
                 }
+
+                is ScreenState.Failure -> {
+                    ErrorComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
+                        onRetry = {
+                            onAction(ScreenAction.Restart)
+                        }
+                    )
+                }
+
+                is ScreenState.Starting -> {
+                    StartingComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface)
+                    )
+                }
+
+                ScreenState.Idle -> Unit
             }
         }
-    } else if (state is ScreenState.Failure) {
-        ErrorComponent(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
-            onRetry = {
-                onAction(ScreenAction.Restart)
-            }
-        )
-    } else if (state is ScreenState.Starting) {
-        StartingComponent(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        )
     }
 }

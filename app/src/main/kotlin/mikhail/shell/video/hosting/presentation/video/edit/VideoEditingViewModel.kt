@@ -39,7 +39,7 @@ class VideoEditingViewModel @AssistedInject constructor(
     private val validateImage: ValidateImage,
     private val editVideo: EditVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ScreenState>(ScreenState.Starting)
+    private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
     val state = _state.onStart { start() }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<ScreenEvent>()
@@ -63,6 +63,12 @@ class VideoEditingViewModel @AssistedInject constructor(
     }
 
     private fun start() {
+        if (_state.value is ScreenState.Starting) {
+            return
+        }
+        _state.update {
+            ScreenState.Starting
+        }
         viewModelScope.launch {
             getVideo(videoId).onSuccess { video ->
                 _state.update {

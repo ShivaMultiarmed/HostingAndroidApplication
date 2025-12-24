@@ -14,5 +14,6 @@ sealed class VideoUploadingScreenAction {
     data class ChangeDescription(val description: String) : ScreenAction()
     data object BlurDescription : ScreenAction()
     data object FocusDescription : ScreenAction()
+    data class ShowPermissionLack(val message: String) : ScreenAction()
     data object Submit : ScreenAction()
 }

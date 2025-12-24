@@ -17,7 +17,6 @@ import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.UserEditingModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
@@ -71,9 +70,9 @@ class UserEditingViewModel @AssistedInject constructor(
             is ScreenAction.ChangeEmail -> onEmailChanged(action.email)
             ScreenAction.FocusEmail -> onEmailFocused()
             ScreenAction.BlurEmail -> onEmailBlurred()
-            is ScreenAction.ChangeTelephone -> onTelChanged(action.telephone)
-            ScreenAction.FocusTelephone -> onTelFocused()
-            ScreenAction.BlurTelephone -> onTelBlurred()
+            is ScreenAction.ChangeTelephone -> onTelephoneChanged(action.telephone)
+            ScreenAction.FocusTelephone -> onTelephoneFocused()
+            ScreenAction.BlurTelephone -> onTelephoneBlurred()
             ScreenAction.Restart -> start()
             ScreenAction.Remove -> remove()
             ScreenAction.Submit -> edit()
@@ -119,10 +118,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 currentState.copy(
                     user = currentState.user.copy(
                         nick = currentState.user.nick.copy(
-                            error = validateNick(
-                                NickCheckPurpose.EDIT,
-                                currentState.user.nick.value
-                            ).errorOrNull()
+                            error = validateNick(NickCheckPurpose.EDIT, currentState.user.nick.value).errorOrNull()
                         )
                     )
                 )
@@ -159,8 +155,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 user = currentState.user.copy(
                     name = currentState.user.name.copy(
                         error = currentState.user.name.value.takeIf { it.isNotEmpty() }?.let {
-                            val validationResult = validateName(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
+                            validateName(it).errorOrNull()
                         }
                     )
                 )
@@ -197,8 +192,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 user = currentState.user.copy(
                     bio = currentState.user.bio.copy(
                         error = currentState.user.bio.value.takeIf { it.isNotEmpty() }?.let {
-                            val validationResult = validateBio(it)
-                            if (validationResult is Result.Failure) validationResult.error else null
+                            validateBio(it).errorOrNull()
                         }
                     )
                 )
@@ -206,35 +200,35 @@ class UserEditingViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onTelChanged(tel: String) {
+    private fun onTelephoneChanged(telephone: String) {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
                 user = currentState.user.copy(
-                    telephone = currentState.user.telephone.copy(value = tel)
+                    tel = currentState.user.tel.copy(value = telephone)
                 )
             ) ?: it
         }
     }
 
-    private fun onTelFocused() {
+    private fun onTelephoneFocused() {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
                 user = currentState.user.copy(
-                    telephone = currentState.user.telephone.copy(error = null)
+                    tel = currentState.user.tel.copy(error = null)
                 )
             ) ?: it
         }
     }
 
-    private fun onTelBlurred() {
+    private fun onTelephoneBlurred() {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
                 user = currentState.user.copy(
-                    telephone = currentState.user.telephone.copy(
-                        error = currentState.user.telephone.value.takeIf { it.isNotEmpty() }?.let {
+                    tel = currentState.user.tel.copy(
+                        error = currentState.user.tel.value.takeIf { it.isNotEmpty() }?.let {
                             validateTelephone(it).errorOrNull()
                         }
                     )
@@ -298,6 +292,12 @@ class UserEditingViewModel @AssistedInject constructor(
     }
 
     private fun start() {
+        if (_state.value is ScreenState.Starting) {
+            return
+        }
+        _state.update {
+            ScreenState.Starting
+        }
         viewModelScope.launch {
             getUser(userId).onSuccess { user ->
                 _state.update {
@@ -306,7 +306,10 @@ class UserEditingViewModel @AssistedInject constructor(
                             nick = user.nick,
                             name = user.name ?: "",
                             bio = user.bio ?: "",
-                            telephone = user.tel ?: "",
+                            telephone = when(user.tel != null) {
+                                true -> "+${user.tel}"
+                                false -> ""
+                            },
                             email = user.email ?: "",
                             avatar = constructAvatarUrl(userId, MEDIUM)
                         )
@@ -337,10 +340,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 currentState.copy(
                     user = currentState.user.copy(
                         nick = currentState.user.nick.copy(
-                            error = validateNick(
-                                NickCheckPurpose.EDIT,
-                                currentState.user.nick.value
-                            ).errorOrNull()
+                            error = validateNick(NickCheckPurpose.EDIT, currentState.user.nick.value).errorOrNull()
                         ),
                         name = currentState.user.name.copy(
                             error = currentState.user.name.value.takeIf { it.isNotEmpty() }?.let {
@@ -357,10 +357,9 @@ class UserEditingViewModel @AssistedInject constructor(
                                 validateEmail(it).errorOrNull()
                             }
                         ),
-                        telephone = currentState.user.telephone.copy(
-                            error = currentState.user.telephone.value.takeIf { it.isNotEmpty() }?.let {
-                                val validationResult = validateTelephone(it)
-                                if (validationResult is Result.Failure) validationResult.error else null
+                        tel = currentState.user.tel.copy(
+                            error = currentState.user.tel.value.takeIf { it.isNotEmpty() }?.let {
+                                validateTelephone(it.removePrefix("+")).errorOrNull()
                             }
                         ),
                         avatar = currentState.user.avatar.copy(
@@ -380,7 +379,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 || user.bio.error != null
                 || user.avatar.error != null
                 || user.email.error != null
-                || user.telephone.error != null
+                || user.tel.error != null
             ) {
                 return@launch
             }
@@ -390,7 +389,7 @@ class UserEditingViewModel @AssistedInject constructor(
                     nick = user.nick.value,
                     name = user.name.value.takeIf { it.isNotEmpty() },
                     bio = user.bio.value.takeIf { it.isNotEmpty() },
-                    telephone = user.telephone.value.takeIf { it.isNotEmpty() }?.removePrefix("+"),
+                    tel = user.tel.value.takeIf { it.isNotEmpty() }?.removePrefix("+"),
                     email = user.email.value.takeIf { it.isNotEmpty() },
                     avatar = when (user.avatar.value) {
                         is EditingState.Editing -> EditingAction.Edit(user.avatar.value.value!!)
@@ -414,7 +413,7 @@ class UserEditingViewModel @AssistedInject constructor(
                                 name = currentState.user.name.copy(error = error.nameError),
                                 bio = currentState.user.bio.copy(error = error.bioError),
                                 email = currentState.user.email.copy(error = error.emailError),
-                                telephone = currentState.user.telephone.copy(error = error.telError),
+                                tel = currentState.user.tel.copy(error = error.telError),
                                 avatar = currentState.user.avatar.copy(error = error.avatarError)
                             ),
                             isLoading = false

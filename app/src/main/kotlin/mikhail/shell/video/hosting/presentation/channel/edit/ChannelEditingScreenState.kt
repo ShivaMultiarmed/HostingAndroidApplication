@@ -15,7 +15,6 @@ sealed class ChannelEditingScreenState {
         val channel: ChannelEditingInputState,
         val isLoading: Boolean = false
     ): ScreenState()
-    data object Success: ScreenState()
 }
 
 data class ChannelEditingInputState(

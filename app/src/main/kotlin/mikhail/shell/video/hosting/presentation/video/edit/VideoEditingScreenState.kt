@@ -7,6 +7,7 @@ import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 sealed class VideoEditingScreenState {
+    data object Idle : VideoEditingScreenState()
     data object Starting : VideoEditingScreenState()
     data class Editing(
         val video: VideoEditingInputState,

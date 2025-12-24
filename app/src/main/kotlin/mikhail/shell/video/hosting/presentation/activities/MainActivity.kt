@@ -33,6 +33,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
+import mikhail.shell.video.hosting.domain.providers.UiPreferencesProvider
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerState
@@ -60,6 +61,8 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userDetailsProvider: UserDetailsProvider
+    @Inject
+    lateinit var uiPreferencesProvider: UiPreferencesProvider
 
     @Inject
     lateinit var player: Player
@@ -77,7 +80,9 @@ class MainActivity : ComponentActivity() {
 
     private fun setPrimaryContent() {
         setContent {
-            VideoHostingTheme {
+            VideoHostingTheme(
+                uiPreferences = uiPreferencesProvider.preferences.collectAsStateWithLifecycle().value
+            ) {
                 val userData by userDetailsProvider.userDetails.collectAsStateWithLifecycle()
                 val playerState =
                     rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }

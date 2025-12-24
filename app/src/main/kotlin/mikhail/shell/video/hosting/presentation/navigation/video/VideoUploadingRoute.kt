@@ -2,7 +2,6 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -17,7 +16,6 @@ import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.Route.Channel
@@ -72,15 +70,6 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                     )
                     userBackStack.add(Channel(event.channelId))
                 }
-
-                is ScreenEvent.Failure if (event.error is NetworkError) -> {
-                    val errorMessage = context.getNetworkErrorMessage(event.error)
-                    snackBarHostState.showSnackbar(
-                        message = errorMessage,
-                        duration = SnackbarDuration.Short
-                    )
-                }
-
                 is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
@@ -89,6 +78,9 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                             snackBarHostState.showSnackbar(it)
                         }
                     }
+                }
+                is ScreenEvent.PermissionLacked -> {
+                    snackBarHostState.showSnackbar(event.message)
                 }
             }
         }

@@ -39,9 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,7 +59,6 @@ import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
-import kotlin.math.roundToInt
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -142,7 +139,7 @@ private fun ChannelHeaderCompact(
                     modifier = Modifier.padding(start = 10.dp)
                 ) {
                     ChannelTitle(title = channel.title)
-                    ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
+                    ChannelAlias(alias = channel.alias)
                     SubscriberNumberText(subscribers = channel.subscribers)
                 }
                 if (owns) {
@@ -205,7 +202,7 @@ private fun ChannelHeaderMedium(
             }
         ) {
             ChannelTitle(title = channel.title)
-            ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
+            ChannelAlias(alias = channel.alias)
             Row {
                 SubscriberNumberText(subscribers = channel.subscribers)
                 if (owns) {
@@ -265,10 +262,11 @@ private fun ChannelHeaderExpanded(
             header = header,
         )
         val logoRef = createRef()
+        val logoExists = logo.exists()
         ChannelLogo(
             modifier = Modifier.constrainAs(logoRef) {
-                if (logo.exists() == true) {
-                    top.linkTo(headerRef.bottom, (-65).dp)
+                if (logoExists == true) {
+                    top.linkTo(headerRef.bottom, -65.dp)
                 } else {
                     top.linkTo(parent.top)
                 }
@@ -293,7 +291,7 @@ private fun ChannelHeaderExpanded(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ChannelAlias(alias = channel.alias ?: channel.channelId.toString())
+                ChannelAlias(alias = channel.alias)
                 SubscriptionButton(
                     state = channel.subscription,
                     onSubscription = {
@@ -327,10 +325,6 @@ private fun ChannelHeader(
     modifier: Modifier = Modifier,
     header: AsyncImagePainter
 ) {
-    val context = LocalContext.current
-    val widthDp = LocalConfiguration.current.screenWidthDp
-    val widthPx = with(LocalDensity.current) { widthDp.dp.toPx().roundToInt() }
-    val heightPx = with(LocalDensity.current) { 100.dp.toPx().roundToInt() }
     Box(
         modifier = modifier
             .then(
@@ -437,9 +431,9 @@ private fun ChannelTitle(
 @Composable
 private fun ChannelAlias(
     modifier: Modifier = Modifier,
-    alias: String
+    alias: String?
 ) {
-    if (alias.isNotBlank()) {
+    if (alias != null) {
         Text(
             text = "@${alias}",
             fontSize = 13.sp,

@@ -2,9 +2,6 @@ package mikhail.shell.video.hosting.presentation.channel.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,28 +13,29 @@ import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
+import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
+import javax.inject.Inject
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenState as ScreenState
 
-@HiltViewModel(assistedFactory = ChannelCreationViewModel.Factory::class)
-class ChannelCreationViewModel @AssistedInject constructor(
-    @Assisted("ownerId") private val ownerId: Long,
+@HiltViewModel
+class ChannelCreationViewModel @Inject constructor(
+    userDetailsProvider: UserDetailsProvider,
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
     private val validateDescription: ValidateDescription,
     private val createChannel: CreateChannel
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(
         ScreenState(
-            channel = ChannelCreationInputState(ownerId)
+            channel = ChannelCreationInputState(userDetailsProvider.getUserId())
         )
     )
     val state = _state.asStateFlow()
@@ -106,9 +104,6 @@ class ChannelCreationViewModel @AssistedInject constructor(
     }
 
     private fun onHeaderChanged(header: String?) {
-        if (_state.value.isLoading) {
-            return
-        }
         _state.update {
             it.copy(
                 channel = it.channel.copy(
@@ -124,9 +119,6 @@ class ChannelCreationViewModel @AssistedInject constructor(
     }
 
     private fun onLogoChanged(logo: String?) {
-        if (_state.value.isLoading) {
-            return
-        }
         _state.update {
             it.copy(
                 channel = it.channel.copy(
@@ -199,21 +191,16 @@ class ChannelCreationViewModel @AssistedInject constructor(
     }
 
     private fun onDescriptionBlurred() {
-        if (_state.value.isLoading) {
-            return
-        }
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    channel = it.channel.copy(
-                        description = it.channel.description.copy(
-                            error = it.channel.description.value.takeIf { it.isNotEmpty() }?.let {
-                                validateDescription(it).errorOrNull()
-                            }
-                        )
+        _state.update {
+            it.copy(
+                channel = it.channel.copy(
+                    description = it.channel.description.copy(
+                        error = it.channel.description.value.takeIf { it.isNotEmpty() }?.let {
+                            validateDescription(it).errorOrNull()
+                        }
                     )
                 )
-            }
+            )
         }
     }
 
@@ -301,10 +288,5 @@ class ChannelCreationViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(@Assisted("ownerId") ownerId: Long): ChannelCreationViewModel
     }
 }

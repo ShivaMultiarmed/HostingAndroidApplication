@@ -8,6 +8,7 @@ import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenState as ScreenState
 
 sealed class VideoUploadingScreenState {
+    data object Idle: ScreenState()
     data object Starting: ScreenState()
     data class Failure(val error: Error): ScreenState()
     data class Editing(
