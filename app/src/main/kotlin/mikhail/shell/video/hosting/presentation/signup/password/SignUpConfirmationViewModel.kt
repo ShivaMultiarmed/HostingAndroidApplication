@@ -16,7 +16,9 @@ import mikhail.shell.video.hosting.domain.errors.user.UserCreationError
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.UserCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
+import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.usecases.authentication.signup.ConfirmSignUpWithPassword
+import mikhail.shell.video.hosting.domain.usecases.user.SaveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateNick
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePasswordDuplicate
@@ -27,6 +29,7 @@ import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmati
 @HiltViewModel(assistedFactory = SignUpConfirmationViewModel.Factory::class)
 class SignUpConfirmationViewModel @AssistedInject constructor(
     @Assisted("token") private val token: String,
+    private val saveUserDetails: SaveUserDetails,
     private val validatePassword: ValidatePassword,
     private val validatePasswordDuplicate: ValidatePasswordDuplicate,
     private val validateNick: ValidateNick,
@@ -202,11 +205,17 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                     password = _state.value.user.password.value
                 )
             ).onSuccess { authModel ->
-                _state.update {
-                    it.copy(isLoading = false)
-                }
                 viewModelScope.launch {
+                    saveUserDetails(
+                        UserDetails(
+                            userId = authModel.userId,
+                            token = authModel.token
+                        )
+                    )
                     _events.emit(ScreenEvent.Success(authModel))
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
                 }
             }.onFailure { error ->
                 _state.update {

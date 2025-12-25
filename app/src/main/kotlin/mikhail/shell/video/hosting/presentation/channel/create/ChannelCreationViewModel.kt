@@ -13,10 +13,10 @@ import mikhail.shell.video.hosting.domain.errors.channel.ChannelCreationError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import javax.inject.Inject
@@ -26,7 +26,7 @@ import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationSc
 
 @HiltViewModel
 class ChannelCreationViewModel @Inject constructor(
-    userDetailsProvider: UserDetailsProvider,
+    private val getUserDetails: GetUserDetails,
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
@@ -35,7 +35,7 @@ class ChannelCreationViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(
         ScreenState(
-            channel = ChannelCreationInputState(userDetailsProvider.getUserId())
+            channel = ChannelCreationInputState(getUserDetails().userId)
         )
     )
     val state = _state.asStateFlow()

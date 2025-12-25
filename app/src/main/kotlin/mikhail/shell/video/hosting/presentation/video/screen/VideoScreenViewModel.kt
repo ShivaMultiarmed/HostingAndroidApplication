@@ -34,6 +34,7 @@ import mikhail.shell.video.hosting.domain.usecases.comments.PostComment
 import mikhail.shell.video.hosting.domain.usecases.comments.RemoveComment
 import mikhail.shell.video.hosting.domain.usecases.comments.ValidateComment
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoSourceUrl
@@ -49,7 +50,8 @@ import kotlin.time.Clock
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
-    @Assisted("player") val player: Player,
+    val player: Player,
+    private val getUserDetails: GetUserDetails,
     private val getVideoDetails: GetVideoDetails,
     private val constructAvatarUrl: ConstructAvatarUrl,
     private val getVideoSourceUrl: GetVideoSourceUrl,
@@ -64,7 +66,7 @@ class VideoScreenViewModel @AssistedInject constructor(
     private val getComments: GetComments,
     private val getChannelLogoUrl: GetChannelLogoUrl
 ) : ViewModel() {
-    private val _state = MutableStateFlow(VideoScreenState())
+    private val _state = MutableStateFlow(VideoScreenState(userId = getUserDetails().userId))
     val state = _state.onStart { start() }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<VideoScreenEvent>()
@@ -483,9 +485,6 @@ class VideoScreenViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            @Assisted("videoId") videoId: Long,
-            @Assisted("player") player: Player
-        ): VideoScreenViewModel
+        fun create(@Assisted("videoId") videoId: Long): VideoScreenViewModel
     }
 }

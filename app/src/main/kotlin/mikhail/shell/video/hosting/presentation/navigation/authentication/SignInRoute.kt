@@ -7,8 +7,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
-import mikhail.shell.video.hosting.domain.providers.UserDetails
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
@@ -18,8 +16,7 @@ import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenEven
 
 fun EntryProviderScope<Route>.signInRoute(
     rootBackStack: MutableList<Route>,
-    authBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider
+    authBackStack: MutableList<Route>
 ) {
     entry(Route.Authentication.SignIn) {
         val context = LocalContext.current
@@ -42,12 +39,6 @@ fun EntryProviderScope<Route>.signInRoute(
                     }
                 }
                 is ScreenEvent.Success -> {
-                    userDetailsProvider.save(
-                        UserDetails(
-                            userId = event.authModel.userId,
-                            token = event.authModel.token
-                        )
-                    )
                     rootBackStack.remove(Route.Authentication)
                     if (rootBackStack.isEmpty()) {
                         rootBackStack.add(Route.Recommendations)

@@ -6,7 +6,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
 import javax.inject.Inject
 
-class SignInWithPassword @Inject constructor(
+class SignIn @Inject constructor(
     private val authRepository: AuthRepository
 ) {
     suspend operator fun invoke(

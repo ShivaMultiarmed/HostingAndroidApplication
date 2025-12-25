@@ -6,9 +6,9 @@ import com.google.gson.Gson
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
@@ -26,7 +26,7 @@ interface VideoUploadingEntryPoint {
 interface NotificationEntryPoint {
     fun getFirebaseMessaging(): FirebaseMessaging
     fun getResubscribe(): SubscribeToNotifications
-    fun getUserDetailsProvider(): UserDetailsProvider
+    fun observeUserDetails(): ObserveUserDetails
     fun getCommentRepository(): CommentRepository
     fun getGson(): Gson
 }

@@ -12,7 +12,7 @@ class DSWithTokenFactory @Inject constructor(
 ) : HttpDataSource.Factory {
     override fun createDataSource(): HttpDataSource {
         val dataSource = DefaultHttpDataSource.Factory().createDataSource()
-        dataSource.setRequestProperty("Authorization", "Bearer ${provider.getJwt()}")
+        dataSource.setRequestProperty("Authorization", "Bearer ${provider.get().token}")
         return dataSource
     }
 

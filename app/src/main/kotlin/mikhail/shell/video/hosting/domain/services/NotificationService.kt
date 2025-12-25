@@ -16,6 +16,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.NotificationEntryPoint
@@ -24,9 +25,8 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
-import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
@@ -36,24 +36,25 @@ class NotificationService: FirebaseMessagingService() {
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var NOTIFICATIONS_COUNT = 0
     lateinit var entryPoint: NotificationEntryPoint
-    private lateinit var userDetailsProvider: UserDetailsProvider
+    private lateinit var observeUserDetails: ObserveUserDetails
     private lateinit var subscribeToNotifications: SubscribeToNotifications
     private lateinit var notificationManager: NotificationManager
-    private lateinit var commentRepository: CommentRepository
     private lateinit var fcm: FirebaseMessaging
     private lateinit var gson: Gson
 
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
         entryPoint = EntryPointAccessors.fromApplication(this, NotificationEntryPoint::class.java)
-        userDetailsProvider = entryPoint.getUserDetailsProvider()
+        observeUserDetails = entryPoint.observeUserDetails()
         subscribeToNotifications = entryPoint.getResubscribe()
-        commentRepository = entryPoint.getCommentRepository()
         fcm = entryPoint.getFirebaseMessaging()
         gson = entryPoint.getGson()
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        if (observeUserDetails().value.userId == 0L) {
+            return
+        }
         val topic = message.from
         val data = message.data
         if (topic?.contains("subscribers") == true) {
@@ -138,15 +139,9 @@ class NotificationService: FirebaseMessagingService() {
         }
     }
 
-    private inline fun <reified T> String.fromJson(): T {
-        return gson.fromJson(this, T::class.java)
+    override fun onDestroy() {
+        coroutineScope.cancel()
+        super.onDestroy()
     }
 
-    private fun resolveTemplate(template: String, map: Map<String, Any>): String {
-        var result = template
-        for ((key, value) in map.entries) {
-            result = result.replace("{$key}", value.toString())
-        }
-        return result
-    }
 }

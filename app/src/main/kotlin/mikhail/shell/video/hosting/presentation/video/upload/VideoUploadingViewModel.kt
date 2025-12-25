@@ -18,6 +18,7 @@ import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoMetaData
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
@@ -33,8 +34,8 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 
 @HiltViewModel(assistedFactory = VideoUploadingViewModel.Factory::class)
 class VideoUploadingViewModel @AssistedInject constructor(
-    @Assisted("userId") private val userId: Long,
     @Assisted("player") val player: Player,
+    private val getUserDetails: GetUserDetails,
     private val getOwnedChannels: GetOwnedChannels,
     private val validateChannel: ValidateChannelId,
     private val validateImage: ValidateImage,
@@ -80,7 +81,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             getOwnedChannels(
-                userId = userId,
+                userId = getUserDetails().userId,
                 partIndex = 0,
                 partSize = 100
             ).onSuccess { channels -> // TODO all channels fetch here?
@@ -327,9 +328,6 @@ class VideoUploadingViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            @Assisted("userId") userId: Long,
-            @Assisted("player") player: Player
-        ): VideoUploadingViewModel
+        fun create(@Assisted("player") player: Player): VideoUploadingViewModel
     }
 }

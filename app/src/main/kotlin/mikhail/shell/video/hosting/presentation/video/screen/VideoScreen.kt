@@ -123,7 +123,6 @@ import kotlin.time.Duration.Companion.minutes
 fun VideoScreen(
     state: VideoScreenState,
     player: Player,
-    userId: Long,
     onAction: (VideoScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
@@ -305,7 +304,7 @@ fun VideoScreen(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
                             )
-                            if (userId == state.video.ownerId) {
+                            if (state.userId == state.video.ownerId) {
                                 var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
                                 var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
                                 Box {
@@ -510,7 +509,7 @@ fun VideoScreen(
             }
             if (sheetState.isVisible) {
                 CommentsBottomSheet(
-                    userId = userId,
+                    userId = state.userId,
                     sheetState = sheetState,
                     commentsState = state.commentsState,
                     onAction = onAction

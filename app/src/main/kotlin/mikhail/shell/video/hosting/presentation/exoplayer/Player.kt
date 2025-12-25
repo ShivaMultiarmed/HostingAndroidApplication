@@ -86,6 +86,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import mikhail.shell.video.hosting.ui.theme.White
 import kotlin.math.PI
 import kotlin.math.acos
@@ -618,7 +619,7 @@ fun isPlayerPrepared(player: Player): Boolean {
 @Preview
 @Composable
 private fun StadiumShapePreview () {
-    //VideoHostingTheme {
+    VideoHostingTheme {
         ConstraintLayout (
             modifier = Modifier
                 .fillMaxWidth()
@@ -647,5 +648,5 @@ private fun StadiumShapePreview () {
                     .background(White)
             )
         }
-    //}
+    }
 }

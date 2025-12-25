@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.User
@@ -13,4 +13,6 @@ interface UserRepository {
     suspend fun remove(): Result<Unit, Error>
     suspend fun existsByNick(purpose: NickCheckPurpose, nick: String): Result<Unit, Error>
     fun constructAvatarUrl(userId: Long, size: ImageSize): String
+    suspend fun subscribeToNotifications(): Result<Unit, Error>
+    suspend fun unsubscribeFromNotifications(): Result<Unit, Error>
 }

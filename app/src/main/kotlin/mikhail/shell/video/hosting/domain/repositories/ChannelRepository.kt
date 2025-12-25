@@ -1,11 +1,11 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.Subscription
 
@@ -29,10 +29,6 @@ interface ChannelRepository {
     ): Result<List<Channel>, Error>
 
     suspend fun subscribe(channelId: Long, subscription: Subscription): Result<ChannelForUser, Error>
-
-    suspend fun subscribeToNotifications(): Result<Unit, Error>
-
-    suspend fun unsubscribeFromNotifications(): Result<Unit, Error>
 
     suspend fun edit(channel: ChannelEditingModel): Result<Channel, Error>
 

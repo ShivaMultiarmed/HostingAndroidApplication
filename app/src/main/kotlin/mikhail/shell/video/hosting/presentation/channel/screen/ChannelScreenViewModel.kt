@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.usecases.channels.GetChannelDetails
 import mikhail.shell.video.hosting.domain.usecases.channels.RemoveChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.Subscribe
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoCoverUrl
 import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoList
 import mikhail.shell.video.hosting.domain.utils.GetChannelHeaderUrl
@@ -31,6 +32,7 @@ import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenStat
 @HiltViewModel(assistedFactory = ChannelScreenViewModel.Factory::class)
 class ChannelScreenViewModel @AssistedInject constructor(
     @Assisted("channelId") private val channelId: Long,
+    private val getUserDetails: GetUserDetails,
     private val getChannelDetails: GetChannelDetails,
     private val getVideoList: GetVideoList,
     private val getChannelLogoUrl: GetChannelLogoUrl,
@@ -39,7 +41,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
     private val subscribe: Subscribe,
     private val removeChannel: RemoveChannel
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ScreenState())
+    private val _state = MutableStateFlow(ScreenState(userId = getUserDetails().userId))
     val state = _state.onStart { startAll() }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<ScreenEvent>()

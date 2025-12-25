@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.presentation.user.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.Player
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -17,6 +18,8 @@ import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.RemoveUserDetails
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.user.models.toUi
@@ -25,13 +28,16 @@ import mikhail.shell.video.hosting.presentation.utils.stateIn
 @HiltViewModel(assistedFactory = ProfileViewModel.Factory::class)
 class ProfileViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
+    private val getUserDetails: GetUserDetails,
+    private val removeUserDetails: RemoveUserDetails,
+    private val player: Player,
     private val getUser: GetUser,
     private val constructAvatarUrl: ConstructAvatarUrl,
     private val getOwnedChannels: GetOwnedChannels,
     private val getChannelLogoUrl: GetChannelLogoUrl,
     private val signOut: SignOut
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ProfileScreenState())
+    private val _state = MutableStateFlow(ProfileScreenState(signedInUserId = getUserDetails().userId))
     val state = _state.onStart { startAll() }.stateIn( _state.value)
 
     private val _events = MutableSharedFlow<ProfileScreenEvent>()
@@ -151,7 +157,10 @@ class ProfileViewModel @AssistedInject constructor(
             return
         }
         viewModelScope.launch {
+            player.stop()
+            player.clearMediaItems()
             signOut.invoke()
+            removeUserDetails()
             _events.emit(ProfileScreenEvent.SignedOut)
         }
     }

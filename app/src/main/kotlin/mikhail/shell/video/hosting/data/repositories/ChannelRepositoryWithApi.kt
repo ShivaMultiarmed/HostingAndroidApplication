@@ -132,16 +132,8 @@ class ChannelRepositoryWithApi @Inject constructor(
         channelApi.subscribe(
             channelId = channelId,
             subscription = subscription.name.lowercase(),
-            fcmToken = fcm.token.await()
+            messagingToken = fcm.token.await()
         ).toDomain()
-    }
-
-    override suspend fun subscribeToNotifications(): Result<Unit, Error> = request {
-        channelApi.subscribeToChannelNotifications(fcm.token.await())
-    }
-
-    override suspend fun unsubscribeFromNotifications(): Result<Unit, Error> = request {
-        channelApi.unsubscribeFromChannelNotifications(fcm.token.await())
     }
 
     override suspend fun edit(channel: ChannelEditingModel): Result<Channel, Error> = request(

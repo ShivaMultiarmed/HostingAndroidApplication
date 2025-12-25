@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
-import mikhail.shell.video.hosting.domain.usecases.channels.UnsubscribeFromNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.UnsubscribeFromNotifications
 import javax.inject.Inject
 
 class SignOut @Inject constructor(

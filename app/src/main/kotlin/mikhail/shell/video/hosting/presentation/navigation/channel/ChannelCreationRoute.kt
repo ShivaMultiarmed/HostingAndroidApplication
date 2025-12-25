@@ -8,7 +8,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreen
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationViewModel
@@ -18,8 +17,7 @@ import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationSc
 
 fun EntryProviderScope<Route>.channelCreationRoute(
     rootBackStack: MutableList<Route>,
-    userBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider,
+    userBackStack: MutableList<Route>
 ) {
     entry <Route.User.ChannelCreation> { route ->
         val context = LocalContext.current

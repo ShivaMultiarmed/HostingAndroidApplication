@@ -5,7 +5,6 @@ import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -14,7 +13,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -28,11 +26,9 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 @OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<Route>.videoUploadingRoute(
     rootBackStack: MutableList<Route>,
-    userBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider
+    userBackStack: MutableList<Route>
 ) {
     entry<Route.User.VideoUploading> {
-        val userId = rememberSaveable { userDetailsProvider.getUserId() }
         val context = LocalContext.current
         val viewModel =
             hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> { factory ->
@@ -40,7 +36,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                 val player = ExoPlayer.Builder(context)
                     .setMediaSourceFactory(mediaSourceFactory)
                     .build()
-                factory.create(userId, player)
+                factory.create(player)
             }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events

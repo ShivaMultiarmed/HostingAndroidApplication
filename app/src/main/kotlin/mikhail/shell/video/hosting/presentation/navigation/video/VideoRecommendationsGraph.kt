@@ -5,14 +5,12 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 
 fun EntryProviderScope<Route>.recommendationsGraph(
     rootBackStack: MutableList<Route>,
-    recommendationsBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider,
+    recommendationsBackStack: MutableList<Route>
 ) {
     entry <Route.Recommendations> {
         NavDisplay(
@@ -22,14 +20,8 @@ fun EntryProviderScope<Route>.recommendationsGraph(
                 rememberViewModelStoreNavEntryDecorator()
             ),
             entryProvider = entryProvider {
-                recommendationsRoute(
-                    rootBackStack = rootBackStack
-                )
-                channelGraph(
-                    rootBackStack = rootBackStack,
-                    currentTabBackStack = recommendationsBackStack,
-                    userDetailsProvider = userDetailsProvider
-                )
+                recommendationsRoute(rootBackStack = rootBackStack)
+                channelGraph(rootBackStack = rootBackStack)
             }
         )
     }

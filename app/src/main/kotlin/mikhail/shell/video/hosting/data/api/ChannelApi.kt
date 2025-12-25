@@ -9,6 +9,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -50,18 +51,8 @@ interface ChannelApi {
     suspend fun subscribe(
         @Path("channel_id") channelId: Long,
         @Field("subscription") subscription: String,
-        @Field("fcm_token") fcmToken: String
+        @Header("Messaging-Token") messagingToken: String
     ): ChannelWithUserDto
-    @POST("channels/notifications/subscription")
-    @FormUrlEncoded
-    suspend fun subscribeToChannelNotifications(
-        @Field("fcm_token") fcmToken: String
-    )
-    @DELETE("channels/notifications/subscription")
-    @FormUrlEncoded
-    suspend fun unsubscribeFromChannelNotifications(
-        @Field("fcm_token") fcmToken: String
-    )
     @GET("channels/{channel_id}")
     suspend fun fetchChannel(@Path("channel_id") channelId: Long): ChannelDto
     @DELETE("channels/{channel_id}")

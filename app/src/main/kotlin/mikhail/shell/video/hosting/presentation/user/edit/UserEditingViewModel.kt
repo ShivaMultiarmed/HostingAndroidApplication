@@ -2,9 +2,7 @@ package mikhail.shell.video.hosting.presentation.user.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import androidx.media3.common.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +20,9 @@ import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
+import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUser
+import mikhail.shell.video.hosting.domain.usecases.user.RemoveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateBio
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateEmail
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateName
@@ -31,13 +31,16 @@ import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateTelep
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.stateIn
+import javax.inject.Inject
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenState as ScreenState
 
-@HiltViewModel(assistedFactory = UserEditingViewModel.Factory::class)
-class UserEditingViewModel @AssistedInject constructor(
-    @Assisted("userId") private val userId: Long,
+@HiltViewModel
+class UserEditingViewModel @Inject constructor(
+    private val getUserDetails: GetUserDetails,
+    private val removeUserDetails: RemoveUserDetails,
+    private val player: Player,
     private val getUser: GetUser,
     private val validateNick: ValidateNick,
     private val validateName: ValidateName,
@@ -299,10 +302,12 @@ class UserEditingViewModel @AssistedInject constructor(
             ScreenState.Starting
         }
         viewModelScope.launch {
+            val userId = getUserDetails().userId
             getUser(userId).onSuccess { user ->
                 _state.update {
                     ScreenState.Editing(
                         user = UserEditingInputState.initialize(
+                            userId = userId,
                             nick = user.nick,
                             name = user.name ?: "",
                             bio = user.bio ?: "",
@@ -385,7 +390,7 @@ class UserEditingViewModel @AssistedInject constructor(
             }
             editUser(
                 user = UserEditingModel(
-                    userId = userId,
+                    userId = user.userId,
                     nick = user.nick.value,
                     name = user.name.value.takeIf { it.isNotEmpty() },
                     bio = user.bio.value.takeIf { it.isNotEmpty() },
@@ -399,7 +404,7 @@ class UserEditingViewModel @AssistedInject constructor(
                 )
             ).onSuccess {
                 viewModelScope.launch {
-                    _events.emit(ScreenEvent.Success)
+                    _events.emit(ScreenEvent.Success(user.userId))
                 }
             }.onFailure { error ->
                 _state.update {
@@ -443,6 +448,9 @@ class UserEditingViewModel @AssistedInject constructor(
         viewModelScope.launch {
             removeUser().onSuccess {
                 viewModelScope.launch {
+                    player.stop()
+                    player.clearMediaItems()
+                    removeUserDetails()
                     _events.emit(ScreenEvent.Removed)
                 }
             }.onFailure { error ->
@@ -451,10 +459,5 @@ class UserEditingViewModel @AssistedInject constructor(
                 }
             }
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(@Assisted("userId") userId: Long): UserEditingViewModel
     }
 }

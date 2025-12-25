@@ -12,8 +12,10 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
-import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
-import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.providers.UserDetails
+import mikhail.shell.video.hosting.domain.usecases.authentication.SignIn
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.usecases.user.SaveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
@@ -24,9 +26,10 @@ import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenStat
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
+    private val saveUserDetails: SaveUserDetails,
     private val validateUserName: ValidateUserName,
     private val validatePassword: ValidatePassword,
-    private val signInWithPassword: SignInWithPassword,
+    private val signIn: SignIn,
     private val subscribeToNotifications: SubscribeToNotifications
 ) : ViewModel() {
     private val _state = MutableStateFlow(ScreenState())
@@ -148,16 +151,22 @@ class SignInViewModel @Inject constructor(
             _state.update {
                 it.copy(isLoading = true)
             }
-            signInWithPassword(
+            signIn(
                 email = _state.value.input.userName.value,
                 password = _state.value.input.password.value
             ).onSuccess { authModel ->
-                subscribeToNotifications()
                 viewModelScope.launch {
+                    saveUserDetails(
+                        UserDetails(
+                            userId = authModel.userId,
+                            token = authModel.token
+                        )
+                    )
+                    subscribeToNotifications()
                     _events.emit(ScreenEvent.Success(authModel))
-                }
-                _state.update {
-                    it.copy(isLoading = false)
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
                 }
             }.onFailure { error ->
                 if (error is SignInError) {
@@ -179,11 +188,6 @@ class SignInViewModel @Inject constructor(
                     }
                 }
             }
-        }
-    }
-    private fun subscribeToNotifications() {
-        viewModelScope.launch {
-            subscribeToNotifications.invoke()
         }
     }
 }

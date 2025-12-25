@@ -19,6 +19,7 @@ sealed class UserEditingScreenState {
 }
 
 data class UserEditingInputState(
+    val userId: Long,
     val nick: FieldState<String, Error>,
     val name: FieldState<String, TextError>,
     val avatar: FieldState<EditingState<String?>, FileError>,
@@ -28,6 +29,7 @@ data class UserEditingInputState(
 ) {
     companion object {
         fun initialize(
+            userId: Long,
             nick: String,
             name: String,
             avatar: String,
@@ -35,6 +37,7 @@ data class UserEditingInputState(
             telephone: String,
             email: String
         ) = UserEditingInputState(
+            userId = userId,
             nick = FieldState(nick),
             name = FieldState(name),
             avatar = FieldState(EditingState.Keeping(avatar)),

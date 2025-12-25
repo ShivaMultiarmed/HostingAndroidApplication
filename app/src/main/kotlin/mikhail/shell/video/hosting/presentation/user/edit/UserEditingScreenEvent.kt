@@ -6,6 +6,6 @@ import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenEvent
 sealed class UserEditingScreenEvent {
     data object Cancelled: ScreenEvent()
     data object Removed: ScreenEvent()
-    data object Success: ScreenEvent()
+    data class Success(val userId: Long): ScreenEvent()
     data class Failure(val error: Error): ScreenEvent()
 }

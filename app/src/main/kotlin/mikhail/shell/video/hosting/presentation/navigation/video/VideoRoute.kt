@@ -9,13 +9,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
@@ -28,24 +26,20 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent as
 fun EntryProviderScope<Route>.videoRoute(
     rootBackStack: MutableList<Route>,
     currentTabBackStack: MutableList<Route>,
-    videoBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider,
-    player: Player
+    videoBackStack: MutableList<Route>
 ) {
-    // TODO navDeepLink (basePath = "https://$HOST/videos")
     entry<Route.Video.View> { route ->
         val context = LocalContext.current
         val videoId = rememberSaveable { route.videoId }
-        val userId = rememberSaveable { userDetailsProvider.getUserId() }
         val viewModel =
             hiltViewModel<VideoScreenViewModel, VideoScreenViewModel.Factory> { factory ->
-                factory.create(videoId, player)
+                factory.create(videoId)
             }
+        val player = viewModel.player
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
         VideoScreen(
-            userId = userId,
             state = state,
             player = player,
             onAction = viewModel::onAction,

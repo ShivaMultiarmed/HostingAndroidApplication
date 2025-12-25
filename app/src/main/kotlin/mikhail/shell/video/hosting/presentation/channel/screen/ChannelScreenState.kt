@@ -5,6 +5,7 @@ import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
 data class ChannelScreenState(
+    val userId: Long,
     val channel: ChannelForUserUi? = null,
     val isStarting: Boolean = false,
     val isSubscribing: Boolean = false,

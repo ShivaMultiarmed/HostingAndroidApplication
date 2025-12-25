@@ -12,8 +12,6 @@ data class UserDetails(
 interface UserDetailsProvider {
     val userDetails: StateFlow<UserDetails>
     fun get(): UserDetails
-    fun getUserId(): Long
-    fun getJwt(): String
     suspend fun save(userDetails: UserDetails)
     suspend fun remove()
 }

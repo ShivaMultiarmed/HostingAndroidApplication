@@ -7,8 +7,9 @@ import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.video.models.VideoDetailsUi
 
 data class VideoScreenState(
-    val isStarting: Boolean = false,
+    val userId: Long,
     val video: VideoDetailsUi? = null,
+    val isStarting: Boolean = false,
     val error: Error? = null,
     val isViewed: Boolean = false,
     val isRemoving: Boolean = false,

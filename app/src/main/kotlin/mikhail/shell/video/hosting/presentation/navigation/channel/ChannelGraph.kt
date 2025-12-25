@@ -7,14 +7,11 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 
 fun EntryProviderScope<Route>.channelGraph(
-    rootBackStack: MutableList<Route>,
-    currentTabBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider
+    rootBackStack: MutableList<Route>
 ) {
     entry<Route.Channel> { graph ->
         val channelBackStack = rememberSaveable {
@@ -32,8 +29,7 @@ fun EntryProviderScope<Route>.channelGraph(
             entryProvider = entryProvider {
                 channelRoute(
                     rootBackStack = rootBackStack,
-                    channelBackStack = channelBackStack,
-                    userDetailsProvider = userDetailsProvider
+                    channelBackStack = channelBackStack
                 )
                 channelEditingRoute(
                     rootBackStack = rootBackStack,

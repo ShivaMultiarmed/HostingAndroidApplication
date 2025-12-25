@@ -9,18 +9,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.providers.UserDetails
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenEvent as ScreenEvent
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.signingUpConfirmationRoute(
-    rootBackStack: MutableList<Route>,
-    userDetailsProvider: UserDetailsProvider
+    rootBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.SignUp.Confirmation> { route ->
         val viewModel = hiltViewModel<SignUpConfirmationViewModel, SignUpConfirmationViewModel.Factory> { factory ->
@@ -36,23 +33,20 @@ fun EntryProviderScope<Route>.signingUpConfirmationRoute(
             snackBarHostState = snackBarHostState
         )
         events.observe { event ->
-            if (event is ScreenEvent.Failure) {
-                val errMsg = if (event.error is NetworkError) {
-                    context.getNetworkErrorMessage(event.error)
-                } else {
-                     context.getString(R.string.unexpected_error)
+            when (event) {
+                is ScreenEvent.Failure -> {
+                    val errMsg = if (event.error is NetworkError) {
+                        context.getNetworkErrorMessage(event.error)
+                    } else {
+                        context.getString(R.string.unexpected_error)
+                    }
+                    snackBarHostState.showSnackbar(errMsg)
                 }
-                snackBarHostState.showSnackbar(errMsg)
-            } else if (event is ScreenEvent.Success) {
-                userDetailsProvider.save(
-                    UserDetails(
-                        userId = event.authModel.userId,
-                        token = event.authModel.token
-                    )
-                )
-                rootBackStack.remove(Route.Authentication)
-                if (rootBackStack.isEmpty()) {
-                    rootBackStack.add(Route.Recommendations)
+                is ScreenEvent.Success -> {
+                    rootBackStack.remove(Route.Authentication)
+                    if (rootBackStack.isEmpty()) {
+                        rootBackStack.add(Route.Recommendations)
+                    }
                 }
             }
         }

@@ -1,6 +1,8 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
+import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
@@ -25,7 +27,8 @@ import javax.inject.Inject
 class UserRepositoryWithApi @Inject constructor(
     private val userApi: UserApi,
     private val fileProvider: FileProvider,
-    private val gson: Gson
+    private val gson: Gson,
+    private val fcm: FirebaseMessaging
 ) : UserRepository {
 
     override suspend fun get(userId: Long): Result<User, Error> = request {
@@ -89,6 +92,14 @@ class UserRepositoryWithApi @Inject constructor(
         size: ImageSize
     ): String {
         return "$API_BASE_URL/users/$userId/avatar?size=${size.name.lowercase()}"
+    }
+
+    override suspend fun subscribeToNotifications(): Result<Unit, Error> = request {
+        userApi.subscribeToNotifications(fcm.token.await())
+    }
+
+    override suspend fun unsubscribeFromNotifications(): Result<Unit, Error> = request {
+        userApi.unsubscribeFromNotifications(fcm.token.await())
     }
 }
 

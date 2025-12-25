@@ -28,7 +28,6 @@ import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenStat
 
 @Composable
 fun ChannelScreen(
-    userId: Long,
     state: ScreenState,
     onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
@@ -64,7 +63,7 @@ fun ChannelScreen(
                             modifier = Modifier.padding(10.dp),
                             channel = state.channel,
                             onAction = onAction,
-                            owns = userId == state.channel.ownerId,
+                            owns = state.userId == state.channel.ownerId,
                             onShowLogo = {
                                 shouldShowLogo = true
                             }

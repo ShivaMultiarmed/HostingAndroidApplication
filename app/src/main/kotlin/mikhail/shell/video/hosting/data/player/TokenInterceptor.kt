@@ -11,7 +11,7 @@ class TokenInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val requestBuilder = originalRequest.newBuilder()
-        val token = provider.getJwt()
+        val token = provider.get().token
         if (
             !originalRequest.url.toString().contains("auth")
             && !(originalRequest.url.toString().contains("users/existence") && originalRequest.url.toString().contains("sign_up"))

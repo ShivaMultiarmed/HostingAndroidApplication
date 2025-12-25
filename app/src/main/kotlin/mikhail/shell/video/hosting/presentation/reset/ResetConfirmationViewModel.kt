@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
+import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.ConfirmResetPassword
+import mikhail.shell.video.hosting.domain.usecases.user.SaveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePasswordDuplicate
 import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenAction as ScreenAction
@@ -24,6 +26,7 @@ import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenSta
 @HiltViewModel(assistedFactory = ResetConfirmationViewModel.Factory::class)
 class ResetConfirmationViewModel @AssistedInject constructor(
     @Assisted("token") private val token: String,
+    private val saveUserDetails: SaveUserDetails,
     private val validatePassword: ValidatePassword,
     private val validatePasswordDuplicate: ValidatePasswordDuplicate,
     private val confirm: ConfirmResetPassword
@@ -138,9 +141,15 @@ class ResetConfirmationViewModel @AssistedInject constructor(
             confirm(
                 token = token,
                 password = _state.value.user.password.value
-            ).onSuccess {
+            ).onSuccess { authModel ->
                 viewModelScope.launch {
-                    _events.emit(ScreenEvent.Success(it))
+                    saveUserDetails(
+                        UserDetails(
+                            userId = authModel.userId,
+                            token = authModel.token
+                        )
+                    )
+                    _events.emit(ScreenEvent.Success(authModel))
                 }
             }.onFailure { error ->
                 if (error is TextError) {

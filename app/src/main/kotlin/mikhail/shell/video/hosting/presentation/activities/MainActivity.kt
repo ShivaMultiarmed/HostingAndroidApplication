@@ -33,8 +33,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
-import mikhail.shell.video.hosting.domain.providers.UiPreferencesProvider
-import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
+import mikhail.shell.video.hosting.domain.usecases.ui.ObserveUiPreferences
+import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
 import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerState
 import mikhail.shell.video.hosting.presentation.exoplayer.PlayerStateSaver
@@ -60,9 +60,9 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var userDetailsProvider: UserDetailsProvider
+    lateinit var observeUserDetails: ObserveUserDetails
     @Inject
-    lateinit var uiPreferencesProvider: UiPreferencesProvider
+    lateinit var observeUiPreferences: ObserveUiPreferences
 
     @Inject
     lateinit var player: Player
@@ -81,9 +81,9 @@ class MainActivity : ComponentActivity() {
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme(
-                uiPreferences = uiPreferencesProvider.preferences.collectAsStateWithLifecycle().value
+                uiPreferences = observeUiPreferences().collectAsStateWithLifecycle().value
             ) {
-                val userData by userDetailsProvider.userDetails.collectAsStateWithLifecycle()
+                val userData by observeUserDetails().collectAsStateWithLifecycle()
                 val playerState =
                     rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
                 CompositionLocalProvider(
@@ -91,8 +91,13 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val rootBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(if (userDetailsProvider.getUserId() == 0L) Route.Authentication else handleDeepLink()?: Route.Recommendations)
+                    val rootBackStack = rememberSaveable {
+                        mutableStateListOf(
+                            when {
+                                userData.userId == 0L -> Route.Authentication
+                                else -> handleDeepLink()?: Route.Recommendations
+                            }
+                        )
                     }
                     val currentRoute = rootBackStack.lastOrNull()
                     val recommendationsBackStack = rememberSaveable(saver = BackStackSaver) {
@@ -176,35 +181,25 @@ class MainActivity : ComponentActivity() {
                                 popTransitionSpec = { RootAnimations.leavingAnimation },
                                 predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
                                 entryProvider = entryProvider {
-                                    authenticationGraph(
-                                        rootBackStack = rootBackStack,
-                                        userDetailsProvider = userDetailsProvider
-                                    )
+                                    authenticationGraph(rootBackStack = rootBackStack)
                                     recommendationsGraph(
                                         rootBackStack = rootBackStack,
-                                        recommendationsBackStack = recommendationsBackStack,
-                                        userDetailsProvider = userDetailsProvider
+                                        recommendationsBackStack = recommendationsBackStack
                                     )
                                     subscriptionsGraph(
                                         rootBackStack = rootBackStack,
-                                        subscriptionsBackStack = subscriptionsBackStack,
-                                        userDetailsProvider = userDetailsProvider
+                                        subscriptionsBackStack = subscriptionsBackStack
                                     )
                                     searchGraph(
                                         rootBackStack = rootBackStack,
-                                        searchBackStack = searchBackStack,
-                                        userDetailsProvider = userDetailsProvider
+                                        searchBackStack = searchBackStack
                                     )
                                     userGraph(
                                         rootBackStack = rootBackStack,
-                                        player = player,
-                                        userBackStack = userBackStack,
-                                        userDetailsProvider = userDetailsProvider
+                                        userBackStack = userBackStack
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
-                                        player = player,
-                                        userDetailsProvider = userDetailsProvider,
                                         currentBackStack = currentBackStack
                                     )
                                 }
