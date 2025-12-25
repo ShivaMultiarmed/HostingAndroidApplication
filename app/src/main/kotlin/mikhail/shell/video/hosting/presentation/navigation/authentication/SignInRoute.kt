@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreen
-import mikhail.shell.video.hosting.presentation.signin.password.SignInWithPasswordViewModel
+import mikhail.shell.video.hosting.presentation.signin.password.SignInViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenEvent as ScreenEvent
 
@@ -23,7 +23,7 @@ fun EntryProviderScope<Route>.signInRoute(
 ) {
     entry(Route.Authentication.SignIn) {
         val context = LocalContext.current
-        val viewModel = hiltViewModel<SignInWithPasswordViewModel>()
+        val viewModel = hiltViewModel<SignInViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
@@ -42,13 +42,13 @@ fun EntryProviderScope<Route>.signInRoute(
                     }
                 }
                 is ScreenEvent.Success -> {
-                    rootBackStack.remove(Route.Authentication)
                     userDetailsProvider.save(
                         UserDetails(
                             userId = event.authModel.userId,
                             token = event.authModel.token
                         )
                     )
+                    rootBackStack.remove(Route.Authentication)
                     if (rootBackStack.isEmpty()) {
                         rootBackStack.add(Route.Recommendations)
                     }

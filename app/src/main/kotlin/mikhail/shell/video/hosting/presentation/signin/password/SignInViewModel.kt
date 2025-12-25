@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignInWithPassword
 import mikhail.shell.video.hosting.domain.usecases.channels.SubscribeToNotifications
@@ -22,7 +23,7 @@ import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenEven
 import mikhail.shell.video.hosting.presentation.signin.password.SignInScreenState as ScreenState
 
 @HiltViewModel
-class SignInWithPasswordViewModel @Inject constructor(
+class SignInViewModel @Inject constructor(
     private val validateUserName: ValidateUserName,
     private val validatePassword: ValidatePassword,
     private val signInWithPassword: SignInWithPassword,
@@ -105,6 +106,9 @@ class SignInWithPasswordViewModel @Inject constructor(
     }
 
     private fun validateUserName() {
+        if (_state.value.isLoading) {
+            return
+        }
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -136,7 +140,7 @@ class SignInWithPasswordViewModel @Inject constructor(
                 )
             }
             if (
-                _state.value.input.userName.error != null
+                _state.value.input.userName.error != null && _state.value.input.userName.error !is NetworkError
                 || _state.value.input.password.error != null
             ) {
                 return@launch
@@ -169,6 +173,9 @@ class SignInWithPasswordViewModel @Inject constructor(
                 } else {
                     viewModelScope.launch {
                         _events.emit(ScreenEvent.Failure(error))
+                    }
+                    _state.update {
+                        it.copy(isLoading = false)
                     }
                 }
             }
