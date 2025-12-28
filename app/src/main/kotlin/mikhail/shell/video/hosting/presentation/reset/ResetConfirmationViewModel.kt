@@ -113,6 +113,9 @@ class ResetConfirmationViewModel @AssistedInject constructor(
     }
 
     private fun confirm() {
+        if (_state.value.isLoading) {
+            return
+        }
         _state.update {
             it.copy(
                 user = it.user.copy(

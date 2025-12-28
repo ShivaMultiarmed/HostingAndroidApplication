@@ -7,6 +7,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
+import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.reset.ConfirmResetScreen
@@ -15,7 +17,8 @@ import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.reset.ResetConfirmationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.resetConfirmationRoute(
-    rootBackStack: MutableList<Route>
+    rootBackStack: MutableList<Route>,
+    resettingBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.Reset.Confirmation> { route ->
         val context = LocalContext.current
@@ -34,8 +37,15 @@ fun EntryProviderScope<Route>.resetConfirmationRoute(
         events.observe { event ->
             when (event) {
                 is ScreenEvent.Failure -> {
-                    context.getStandardErrorMessage(event.error)?.let {
-                        snackBarHostState.showSnackbar(it)
+                    if (event.error != NetworkError.AUTHENTICATION) {
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
+                        }
+                    } else {
+                        snackBarHostState.showSnackbar(
+                            context.getString(R.string.code_not_valid)
+                        )
+                        resettingBackStack.removeLastOrNull()
                     }
                 }
                 is ScreenEvent.Success -> {

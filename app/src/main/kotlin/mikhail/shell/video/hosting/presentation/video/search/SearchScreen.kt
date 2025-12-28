@@ -84,9 +84,11 @@ fun SearchScreen(
                         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
                     )
             ) {
-                val button = createRef()
+                val (search, button) = createRefs()
                 InputField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .constrainAs(search) {},
                     value = state.query.value,
                     onValueChange = {
                         onAction(SearchScreenAction.ChangeQuery(it))
@@ -101,7 +103,7 @@ fun SearchScreen(
                 PrimaryProgressButton(
                     modifier = Modifier.constrainAs(button) {
                         end.linkTo(parent.end, 10.dp)
-                        top.linkTo(parent.top)
+                        top.linkTo(search.top)
                         bottom.linkTo(parent.bottom)
                     },
                     enabled = state.query.value.isNotEmpty(),

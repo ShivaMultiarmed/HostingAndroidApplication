@@ -17,12 +17,14 @@ import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.UserEditingModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
+import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUser
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.UnsubscribeFromNotifications
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateBio
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateEmail
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateName
@@ -50,6 +52,8 @@ class UserEditingViewModel @Inject constructor(
     private val validateTelephone: ValidateTelephone,
     private val constructAvatarUrl: ConstructAvatarUrl,
     private val editUser: EditUser,
+    private val unsubscribeFromNotifications: UnsubscribeFromNotifications,
+    private val signOut: SignOut,
     private val removeUser: RemoveUser
 ) : ViewModel() {
     private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
@@ -436,7 +440,7 @@ class UserEditingViewModel @Inject constructor(
 
     private fun remove() {
         _state.update {
-            val currentState = _state.value as? ScreenState.Editing
+            val currentState = it as? ScreenState.Editing
             if (
                 currentState == null
                 || currentState.isRemoving
@@ -446,16 +450,25 @@ class UserEditingViewModel @Inject constructor(
             currentState.copy(isRemoving = true)
         }
         viewModelScope.launch {
+            unsubscribeFromNotifications()
+            player.stop()
+            player.clearMediaItems()
             removeUser().onSuccess {
                 viewModelScope.launch {
-                    player.stop()
-                    player.clearMediaItems()
                     removeUserDetails()
                     _events.emit(ScreenEvent.Removed)
+                }
+                _state.update {
+                    val currentState = (_state.value as? ScreenState.Editing)?: return@onSuccess
+                    currentState.copy(isRemoving = false)
                 }
             }.onFailure { error ->
                 viewModelScope.launch {
                     _events.emit(ScreenEvent.Failure(error))
+                }
+                _state.update {
+                    val currentState = (_state.value as? ScreenState.Editing)?: return@onFailure
+                    currentState.copy(isRemoving = false)
                 }
             }
         }

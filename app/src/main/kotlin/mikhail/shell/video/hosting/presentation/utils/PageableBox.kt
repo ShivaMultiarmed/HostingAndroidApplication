@@ -81,7 +81,7 @@ fun <I> PageableBox(
                     }
                 }
             }
-            LaunchedEffect(reachedBottom) {
+            LaunchedEffect(reachedBottom, state.hasMore) {
                 if (reachedBottom && state.hasMore) {
                     onReachedBottom()
                 }

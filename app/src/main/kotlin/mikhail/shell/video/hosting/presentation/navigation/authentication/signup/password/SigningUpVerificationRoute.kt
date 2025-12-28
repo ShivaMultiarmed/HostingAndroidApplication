@@ -7,21 +7,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
-import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenEvent as ScreenEvent
-import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationViewModel
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreen
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationViewModel
 import mikhail.shell.video.hosting.presentation.utils.observe
+import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.signingUpVerificationRoute(
     signUpBackStack: MutableList<Route>
 ) {
-    entry<Route.Authentication.SignUp.Verification> { bundle ->
+    entry<Route.Authentication.SignUp.Verification> { route ->
         val viewModel = hiltViewModel<SignUpVerificationViewModel, SignUpVerificationViewModel.Factory> { factory ->
-            factory.create(bundle.userName)
+            factory.create(route.userName)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
@@ -35,13 +33,12 @@ fun EntryProviderScope<Route>.signingUpVerificationRoute(
         events.observe { event ->
             when (event) {
                 is ScreenEvent.Failure -> {
-                    val errMsg = if (event.error is NetworkError) {
-                        context.getNetworkErrorMessage(event.error)
-                    } else context.getString(R.string.unexpected_error)
-                    snackBarHostState.showSnackbar(errMsg)
+                    context.getStandardErrorMessage(event.error)?.let {
+                        snackBarHostState.showSnackbar(it)
+                    }
                 }
                 is ScreenEvent.Success -> {
-                    signUpBackStack.clear()
+                    signUpBackStack.removeLastOrNull()
                     signUpBackStack.add(
                         Route.Authentication.SignUp.Confirmation(event.token)
                     )

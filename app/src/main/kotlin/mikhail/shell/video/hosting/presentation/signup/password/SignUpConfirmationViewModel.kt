@@ -81,9 +81,10 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                 it.copy(
                     user = it.user.copy(
                         nick = it.user.nick.copy(
-                            error = it.user.nick.value.let {
-                                validateNick(NickCheckPurpose.SIGN_UP, it).errorOrNull()
-                            }
+                            error = validateNick(
+                                NickCheckPurpose.SIGN_UP,
+                                it.user.nick.value
+                            ).errorOrNull()
                         )
                     )
                 )
@@ -116,9 +117,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
             it.copy(
                 user = it.user.copy(
                     password = it.user.password.copy(
-                        error = it.user.password.value.let {
-                            validatePassword(it).errorOrNull()
-                        }
+                        error = validatePassword(it.user.password.value).errorOrNull()
                     )
                 )
             )
@@ -150,12 +149,10 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
             it.copy(
                 user = it.user.copy(
                     passwordDuplicate = it.user.passwordDuplicate.copy(
-                        error = it.user.passwordDuplicate.value.let { passDuplicate ->
-                            validatePasswordDuplicate(
-                                password = it.user.password.value,
-                                passwordDuplicate = passDuplicate
-                            ).errorOrNull()
-                        }
+                        error = validatePasswordDuplicate(
+                            password = it.user.password.value,
+                            passwordDuplicate = it.user.passwordDuplicate.value
+                        ).errorOrNull()
                     )
                 )
             )
@@ -168,22 +165,19 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                 it.copy(
                     user = it.user.copy(
                         nick = it.user.nick.copy(
-                            error = it.user.nick.value.let {
-                                validateNick(NickCheckPurpose.SIGN_UP, it).errorOrNull()
-                            }
+                            error = validateNick(
+                                NickCheckPurpose.SIGN_UP,
+                                it.user.nick.value
+                            ).errorOrNull()
                         ),
                         password = it.user.password.copy(
-                            error = it.user.password.value.let {
-                                validatePassword(it).errorOrNull()
-                            }
+                            error = validatePassword(it.user.password.value).errorOrNull()
                         ),
                         passwordDuplicate = it.user.passwordDuplicate.copy(
-                            error = it.user.passwordDuplicate.value.let { passDuplicate ->
-                                validatePasswordDuplicate(
-                                    password = it.user.password.value,
-                                    passwordDuplicate = passDuplicate
-                                ).errorOrNull()
-                            }
+                            error = validatePasswordDuplicate(
+                                password = it.user.password.value,
+                                passwordDuplicate = it.user.passwordDuplicate.value
+                            ).errorOrNull()
                         )
                     )
                 )
@@ -192,7 +186,7 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                 _state.value.user.nick.error != null
                 || _state.value.user.password.error != null
                 || _state.value.user.passwordDuplicate.error != null
-                ) {
+            ) {
                 return@launch
             }
             _state.update {
@@ -218,9 +212,6 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                     }
                 }
             }.onFailure { error ->
-                _state.update {
-                    it.copy(isLoading = false)
-                }
                 if (error is UserCreationError) {
                     _state.update {
                         it.copy(
@@ -235,9 +226,12 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                         )
                     }
                 } else {
-                    viewModelScope.launch   {
+                    viewModelScope.launch {
                         _events.emit(ScreenEvent.Failure(error))
                     }
+                }
+                _state.update {
+                    it.copy(isLoading = false)
                 }
             }
         }

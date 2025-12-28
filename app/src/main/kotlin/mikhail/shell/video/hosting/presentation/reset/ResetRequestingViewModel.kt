@@ -74,6 +74,9 @@ class ResetRequestingViewModel @Inject constructor(
     }
 
     private fun request() {
+        if (_state.value.isLoading) {
+            return
+        }
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -94,7 +97,7 @@ class ResetRequestingViewModel @Inject constructor(
             requestResetPassword(_state.value.userName.value)
                 .onSuccess { userId ->
                     viewModelScope.launch {
-                        _events.emit(ScreenEvent.Success(userId))
+                        _events.emit(ScreenEvent.Success(userId, state.value.userName.value))
                     }
                 }.onFailure { error ->
                     if (error is TextError) {

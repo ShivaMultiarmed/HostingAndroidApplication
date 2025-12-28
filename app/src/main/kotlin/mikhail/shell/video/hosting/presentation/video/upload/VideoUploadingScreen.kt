@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -489,11 +490,14 @@ fun VideoUploadingScreen(
                                 }
                             ) {
                                 InputField(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(300.dp),
                                     value = state.video.description.value,
                                     onValueChange = {
                                         onAction(ChangeDescription(it))
                                     },
+                                    maxLines = 50,
                                     errorMsg = descriptionErrMsg,
                                     label = stringResource(R.string.video_description_label),
                                     icon = Icons.Rounded.Title,

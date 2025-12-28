@@ -14,21 +14,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.filled.ModeComment
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -68,13 +70,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -103,6 +108,7 @@ import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
+import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -127,18 +133,22 @@ fun VideoScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
+    val density = LocalDensity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val playerState = LocalPlayerState.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var bottomSheetHeight by remember {
+        mutableStateOf(0.dp)
+    }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
         snackbarHost = {
             SnackbarHost(
-                modifier = Modifier.imePadding(),
+                modifier = Modifier.padding(bottom = bottomSheetHeight),
                 hostState = snackBarHostState
             )
         }
@@ -172,6 +182,7 @@ fun VideoScreen(
                         isFullScreen
                     }
                 }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -266,6 +277,12 @@ fun VideoScreen(
                             .background(MaterialTheme.colorScheme.background)
                             .padding(12.dp)
                             .verticalScroll(scrollState)
+                            .onGloballyPositioned { coordinates ->
+                                val newHeight = with(density) { coordinates.size.height.toDp() }
+                                if (bottomSheetHeight != newHeight) {
+                                    bottomSheetHeight = newHeight
+                                }
+                            }
                     ) {
                         Box(
                             modifier = Modifier
@@ -461,7 +478,7 @@ fun VideoScreen(
                                 }
                             )
                         }
-                        Column(
+                        ConstraintLayout(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp)
@@ -472,43 +489,54 @@ fun VideoScreen(
                                         sheetState.show()
                                     }
                                 }
-                                .padding(10.dp)
+                                .padding(vertical = 6.dp, horizontal = 10.dp),
                         ) {
+                            val (label, button) = createRefs()
                             Text(
+                                modifier = Modifier.constrainAs(label) {
+                                    start.linkTo(parent.start)
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                },
                                 text = stringResource(R.string.comments_title),
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
-                                val leaveCommentBg = tertiaryContainer.copy(
-                                    red = tertiaryContainer.red - 10f / 255,
-                                    green = tertiaryContainer.green - 10f / 255,
-                                    blue = tertiaryContainer.blue - 10f / 255
+                            val buttonBg = MaterialTheme.colorScheme.tertiaryContainer.let {
+                                it.copy(
+                                    red = it.red - 20f / 255,
+                                    green = it.green - 20f / 255,
+                                    blue = it.blue - 20f / 255
                                 )
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(top = 10.dp)
-                                        .clip(CircleShape)
-                                        .background(leaveCommentBg)
-                                        .padding(vertical = 3.dp, horizontal = 10.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.comments_leave_hint),
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                                    )
-                                }
                             }
-
+                            IconButton(
+                                modifier = Modifier.constrainAs(button) {
+                                    end.linkTo(parent.end)
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                },
+                                onClick = {
+                                    coroutineScope.launch {
+                                        sheetState.show()
+                                    }
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = buttonBg,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            ) {
+                                Icon(
+                                    modifier = Modifier.size(20.dp),
+                                    imageVector = Icons.Default.ModeComment,
+                                    contentDescription = null
+                                )
+                            }
                         }
                     }
                 }
             }
             if (sheetState.isVisible) {
                 CommentsBottomSheet(
+                    modifier = Modifier.height(bottomSheetHeight),
                     userId = state.userId,
                     sheetState = sheetState,
                     commentsState = state.commentsState,
@@ -543,6 +571,7 @@ fun VideoScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CommentsBottomSheet(
+    modifier: Modifier = Modifier,
     userId: Long,
     sheetState: SheetState,
     commentsState: CommentsState,
@@ -556,73 +585,66 @@ private fun CommentsBottomSheet(
                 sheetState.hide()
             }
         },
-        modifier = Modifier.fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.4f)
+                .imePadding()
                 .padding(10.dp),
         ) {
-            if (commentsState.comments != null) {
-                val pageableBoxState = rememberPageableBoxState(
-                    items = commentsState.comments,
-                    hasMore = commentsState.hasMore,
-                    error = commentsState.error,
-                    isLoading = commentsState.isLoading,
-                )
-                PageableBox(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    state = pageableBoxState,
-                    itemComponent = {
-                        CommentBox(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp),
-                            owns = it.userId == userId,
-                            onAction = onAction,
-                            comment = it,
-                        )
-                    },
-                    emptyComponent = {
-                        EmptyComponent(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp),
-                            message = stringResource(R.string.comments_empty_message)
-                        )
-                    },
-                    onReachedBottom = {
-                        onAction(VideoScreenAction.LoadNextCommentsPart)
-                    },
-                    onReload = {
-                        onAction(VideoScreenAction.LoadNextCommentsPart)
-                    }
-                )
-            } else if (commentsState.isStarting) {
-                StartingComponent(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
-            } else if (commentsState.error != null) {
-                ErrorComponent(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    onRetry = {
-                        onAction(VideoScreenAction.RestartComments)
-                    }
-                )
-            } else {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                if (commentsState.comments != null) {
+                    val pageableBoxState = rememberPageableBoxState(
+                        items = commentsState.comments,
+                        hasMore = commentsState.hasMore,
+                        error = commentsState.error,
+                        isLoading = commentsState.isLoading,
+                    )
+                    PageableBox(
+                        modifier = Modifier.matchParentSize(),
+                        state = pageableBoxState,
+                        itemComponent = {
+                            CommentBox(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp),
+                                owns = it.userId == userId,
+                                onAction = onAction,
+                                comment = it,
+                            )
+                        },
+                        emptyComponent = {
+                            EmptyComponent(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp),
+                                message = stringResource(R.string.comments_empty_message)
+                            )
+                        },
+                        onReachedBottom = {
+                            onAction(VideoScreenAction.LoadNextCommentsPart)
+                        },
+                        onReload = {
+                            onAction(VideoScreenAction.LoadNextCommentsPart)
+                        }
+                    )
+                } else if (commentsState.isStarting) {
+                    StartingComponent(
+                        modifier = Modifier.matchParentSize()
+                    )
+                } else if (commentsState.error != null) {
+                    ErrorComponent(
+                        modifier = Modifier.matchParentSize(),
+                        onRetry = {
+                            onAction(VideoScreenAction.RestartComments)
+                        }
+                    )
+                }
             }
             CommentForm(
                 text = commentsState.comment.text.value,
@@ -723,17 +745,17 @@ private fun CommentForm(
     error: TextError?,
     onAction: (VideoScreenAction) -> Unit
 ) {
-    Row(
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .padding(vertical = 5.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 5.dp, horizontal = 10.dp)
     ) {
-        BasicTextField(
+        val (textField, button) = createRefs()
+        InputField(
             modifier = Modifier
                 .clip(RoundedCornerShape(5.dp))
+                .heightIn(max = 300.dp)
                 .border(
                     width = 1.dp,
                     color = when (error != null) {
@@ -743,31 +765,24 @@ private fun CommentForm(
                     shape = RoundedCornerShape(5.dp)
                 )
                 .background(MaterialTheme.colorScheme.tertiaryContainer)
-                .weight(1f),
+                .constrainAs(textField) {
+                    start.linkTo(parent.start)
+                    bottom.linkTo(parent.bottom)
+                    end.linkTo(button.start, 10.dp)
+                    width = Dimension.fillToConstraints
+                },
             value = text,
-            maxLines = 100,
+            maxLines = 20,
             onValueChange = {
                 onAction(VideoScreenAction.ChangeCommentText(it))
             },
-            textStyle = TextStyle(
-                fontSize = 16.sp
-            ),
-            decorationBox = { innerText ->
-                Box(
-                    modifier = Modifier.padding(5.dp)
-                ) {
-                    if (text.isNotEmpty()) {
-                        innerText()
-                    } else {
-                        Text(
-                            fontSize = 16.sp,
-                            text = stringResource(R.string.comments_leave_hint)
-                        )
-                    }
-                }
-            }
+            label = stringResource(R.string.comments_leave_hint)
         )
         PrimaryProgressButton(
+            modifier = Modifier.constrainAs(button) {
+                end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom)
+            },
             enabled = text.isNotEmpty(),
             onClick = {
                 onAction(VideoScreenAction.SubmitComment)

@@ -5,5 +5,6 @@ import mikhail.shell.video.hosting.presentation.utils.FieldState
 
 data class ResetVerificationScreenState(
     val code: FieldState<String, TextError> = FieldState(""),
+    val isRequestingCode: Boolean = false,
     val isLoading: Boolean = false
 )

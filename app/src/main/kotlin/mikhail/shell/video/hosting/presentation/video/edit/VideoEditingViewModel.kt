@@ -172,7 +172,9 @@ class VideoEditingViewModel @AssistedInject constructor(
             currentState?.copy(
                 video = currentState.video.copy(
                     description = currentState.video.description.copy(
-                        error = validateDescription(currentState.video.description.value).errorOrNull()
+                        error = currentState.video.description.value.takeIf { it.isNotEmpty() }?.let {
+                            validateDescription(it).errorOrNull()
+                        }
                     )
                 )
             ) ?: it
@@ -199,7 +201,9 @@ class VideoEditingViewModel @AssistedInject constructor(
                         }
                     ),
                     description = currentState.video.description.copy(
-                        error = validateDescription(currentState.video.description.value).errorOrNull()
+                        error = currentState.video.description.value.takeIf { it.isNotEmpty() }?.let {
+                            validateDescription(it).errorOrNull()
+                        }
                     )
                 )
             )

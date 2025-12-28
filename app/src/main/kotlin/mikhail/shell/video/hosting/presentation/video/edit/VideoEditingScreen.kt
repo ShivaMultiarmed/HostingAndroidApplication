@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -240,11 +241,7 @@ fun VideoEditingScreen(
                             }
                         }
                         val descriptionErrMsg = when (state.video.description.error) {
-                            TextError.LONG -> stringResource(
-                                R.string.text_too_large_error,
-                                MAX_TITLE_LENGTH
-                            )
-
+                            TextError.LONG -> stringResource(R.string.text_too_large_error,MAX_TITLE_LENGTH)
                             else -> null
                         }
                         StandardEditField(
@@ -259,12 +256,17 @@ fun VideoEditingScreen(
                             }
                         ) {
                             InputField(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp),
                                 value = state.video.description.value,
-                                onValueChange = { onAction(VideoEditingScreenAction.ChangeDescription(it)) },
+                                onValueChange = {
+                                    onAction(VideoEditingScreenAction.ChangeDescription(it))
+                                },
                                 errorMsg = descriptionErrMsg,
                                 label = stringResource(R.string.video_description_label),
                                 icon = Icons.Rounded.ViewHeadline,
+                                maxLines = 50,
                                 onFocus = {
                                     onAction(VideoEditingScreenAction.FocusDescription)
                                 },

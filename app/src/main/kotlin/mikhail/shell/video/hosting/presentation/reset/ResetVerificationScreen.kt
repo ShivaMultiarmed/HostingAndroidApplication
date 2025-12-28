@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.reset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,8 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.SecondaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenState as ScreenState
@@ -55,6 +58,7 @@ fun ResetVerificationScreen(
             val codeErrorMsg = when (state.code.error) {
                 TextError.NOT_CORRECT -> stringResource(R.string.code_not_correct)
                 TextError.PATTERN -> stringResource(R.string.code_pattern_not_correct)
+                TextError.NOT_VALID -> stringResource(R.string.code_not_valid)
                 else -> null
             }
             CodeInputField(
@@ -67,6 +71,24 @@ fun ResetVerificationScreen(
             if (codeErrorMsg != null) {
                 Text(
                     text = codeErrorMsg
+                )
+            }
+            Row {
+                SecondaryProgressButton(
+                    enabled = !state.isLoading,
+                    inProgress = state.isRequestingCode,
+                    text = stringResource(R.string.request_code),
+                    onClick = {
+                        onAction(ScreenAction.RequestCode)
+                    }
+                )
+                PrimaryProgressButton(
+                    enabled = !state.isRequestingCode,
+                    inProgress = state.isLoading,
+                    text = stringResource(R.string.ok_button),
+                    onClick = {
+                        onAction(ScreenAction.Submit)
+                    }
                 )
             }
         }

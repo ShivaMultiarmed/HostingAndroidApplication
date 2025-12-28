@@ -34,7 +34,10 @@ fun EntryProviderScope<Route>.resetGraph(
                     resettingBackStack = resettingBackStack
                 )
                 resetVerificationRoute(resettingBackStack = resettingBackStack)
-                resetConfirmationRoute(rootBackStack = rootBackStack)
+                resetConfirmationRoute(
+                    rootBackStack = rootBackStack,
+                    resettingBackStack = resettingBackStack
+                )
             }
         )
     }

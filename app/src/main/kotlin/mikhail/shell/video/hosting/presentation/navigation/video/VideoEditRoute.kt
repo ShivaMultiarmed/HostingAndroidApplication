@@ -22,7 +22,9 @@ fun EntryProviderScope<Route>.editVideoRoute(
     entry<Route.Video.Edit> { route ->
         val context = LocalContext.current
         val viewModel =
-            hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { it.create(route.videoId) }
+            hiltViewModel<VideoEditingViewModel, VideoEditingViewModel.Factory> { factory ->
+                factory.create(route.videoId)
+            }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }

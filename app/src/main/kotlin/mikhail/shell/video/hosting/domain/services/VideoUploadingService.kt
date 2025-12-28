@@ -55,7 +55,7 @@ class VideoUploadingService : Service() {
         removeVideo = videoUploadingEntryPoint.getRemoveVideo()
     }
 
-    @kotlin.OptIn(ExperimentalUuidApi::class)
+    @OptIn(ExperimentalUuidApi::class)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let { notNullIntent ->
             if (notNullIntent.action == ACTION_LAUNCH_UPLOADING) {

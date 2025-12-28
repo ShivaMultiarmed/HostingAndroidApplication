@@ -7,9 +7,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
-import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
+import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreen
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationViewModel
@@ -17,7 +16,8 @@ import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpConfirmationScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.signingUpConfirmationRoute(
-    rootBackStack: MutableList<Route>
+    rootBackStack: MutableList<Route>,
+    signUpBackStack: MutableList<Route>
 ) {
     entry<Route.Authentication.SignUp.Confirmation> { route ->
         val viewModel = hiltViewModel<SignUpConfirmationViewModel, SignUpConfirmationViewModel.Factory> { factory ->
@@ -35,12 +35,13 @@ fun EntryProviderScope<Route>.signingUpConfirmationRoute(
         events.observe { event ->
             when (event) {
                 is ScreenEvent.Failure -> {
-                    val errMsg = if (event.error is NetworkError) {
-                        context.getNetworkErrorMessage(event.error)
+                    if (event.error != NetworkError.AUTHENTICATION) {
+                        context.getStandardErrorMessage(event.error)?.let {
+                            snackBarHostState.showSnackbar(it)
+                        }
                     } else {
-                        context.getString(R.string.unexpected_error)
+                        signUpBackStack.removeLastOrNull()
                     }
-                    snackBarHostState.showSnackbar(errMsg)
                 }
                 is ScreenEvent.Success -> {
                     rootBackStack.remove(Route.Authentication)

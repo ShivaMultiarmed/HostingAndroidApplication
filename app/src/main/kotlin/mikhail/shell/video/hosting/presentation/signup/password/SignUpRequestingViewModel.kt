@@ -67,6 +67,9 @@ class SignUpRequestingViewModel @Inject constructor(
     }
 
     private fun request() {
+        if (_state.value.isLoading) {
+            return
+        }
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -78,22 +81,30 @@ class SignUpRequestingViewModel @Inject constructor(
             if (_state.value.userName.error != null) {
                 return@launch
             }
+            _state.update {
+                it.copy(isLoading = true)
+            }
             request.invoke(_state.value.userName.value).onSuccess {
                 viewModelScope.launch {
                     _events.emit(ScreenEvent.Success(_state.value.userName.value))
+                }
+                _state.update {
+                    it.copy(isLoading = false)
                 }
             }.onFailure { error ->
                 if (error is TextError) {
                     _state.update {
                         it.copy(
-                            userName = it.userName.copy(
-                                error = error
-                            )
+                            userName = it.userName.copy(error = error),
+                            isLoading = false
                         )
                     }
                 } else {
                     viewModelScope.launch {
                         _events.emit(ScreenEvent.Failure(error))
+                    }
+                    _state.update {
+                        it.copy(isLoading = false)
                     }
                 }
             }

@@ -9,7 +9,7 @@ class ValidateSearchQuery @Inject constructor() {
     operator fun invoke(query: String): Result<Unit, TextError> {
         return if (query.isBlank()) {
             Result.Failure(TextError.EMPTY)
-        } else if (query.length > ValidationRules.MAX_TEXT_LENGTH) {
+        } else if (query.length > ValidationRules.MAX_TITLE_LENGTH) {
             Result.Failure(TextError.LONG)
         } else {
             Result.Success(Unit)

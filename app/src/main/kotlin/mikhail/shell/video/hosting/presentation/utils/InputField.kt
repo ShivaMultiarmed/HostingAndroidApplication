@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.utils
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -83,43 +82,44 @@ fun InputField(
     onBlur: (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    Column(
-        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        var focusedEarlier by rememberSaveable { mutableStateOf(false) }
-        var focused by rememberSaveable { mutableStateOf(false) }
-        var isTyping by rememberSaveable { mutableStateOf(false) }
-        var exposeText by rememberSaveable { mutableStateOf(!secured) }
-        TextField(
-            modifier = modifier.onFocusChanged {
-                focused = it.isFocused
-                if (focused) {
-                    onFocus?.invoke()
-                    if (!focusedEarlier) {
-                        focusedEarlier = true
-                    }
-                } else if (focusedEarlier) {
-                    onBlur?.invoke()
+    var focusedEarlier by rememberSaveable { mutableStateOf(false) }
+    var focused by rememberSaveable { mutableStateOf(false) }
+    var isTyping by rememberSaveable { mutableStateOf(false) }
+    var exposeText by rememberSaveable { mutableStateOf(!secured) }
+    TextField(
+        modifier = modifier.onFocusChanged {
+            focused = it.isFocused
+            if (focused) {
+                onFocus?.invoke()
+                if (!focusedEarlier) {
+                    focusedEarlier = true
                 }
-            },
-            keyboardOptions = if (secured) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
-            value = value,
-            onValueChange = {
-                if (!isTyping) {
-                    isTyping = true
-                    onTypingStarted?.invoke()
-                }
-                onValueChange(it)
-            },
-            label = {
-                Box {
-                    Text(
-                        text = label
-                    )
-                }
-            },
-            leadingIcon = {
-                if (icon != null) {
+            } else if (focusedEarlier) {
+                onBlur?.invoke()
+            }
+        },
+        keyboardOptions = when {
+            secured -> KeyboardOptions(keyboardType = KeyboardType.Password)
+            else -> keyboardOptions
+        },
+        value = value,
+        onValueChange = {
+            if (!isTyping) {
+                isTyping = true
+                onTypingStarted?.invoke()
+            }
+            onValueChange(it)
+        },
+        label = {
+            Box {
+                Text(
+                    text = label
+                )
+            }
+        },
+        leadingIcon = when {
+            icon != null -> {
+                @Composable {
                     Box(
                         contentAlignment = Alignment.TopCenter
                     ) {
@@ -136,60 +136,71 @@ fun InputField(
                         )
                     }
                 }
-            },
-            shape = RoundedCornerShape(0.dp),
-            colors = TextFieldDefaults.colors(
-                errorIndicatorColor = MaterialTheme.colorScheme.error,
-                unfocusedIndicatorColor = Color.Transparent,
-                errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                errorLabelColor = MaterialTheme.colorScheme.error,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
-                focusedLabelColor = MaterialTheme.colorScheme.primary
-            ),
-            visualTransformation = if (secured && !exposeText) PasswordVisualTransformation()
-            else VisualTransformation.None,
-            isError = errorMsg != null,
-            textStyle = TextStyle.Default.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                lineHeight = 16.sp
-            ),
-            maxLines = 1,
-            singleLine = maxLines == 1,
-            readOnly = readOnly,
-            enabled = enabled,
-            trailingIcon = {
-                if (secured) {
-                    IconButton(
-                        onClick = {
-                            exposeText = !exposeText
-                        }
-                    ) {
-                        Icon(
-                            contentDescription = null,
-                            imageVector = if (exposeText) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff
-                        )
+            }
+
+            else -> null
+        },
+        shape = RoundedCornerShape(0.dp),
+        colors = TextFieldDefaults.colors(
+            errorIndicatorColor = MaterialTheme.colorScheme.error,
+            unfocusedIndicatorColor = Color.Transparent,
+            errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            errorLabelColor = MaterialTheme.colorScheme.error,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            focusedContainerColor = MaterialTheme.colorScheme.secondary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
+            focusedLabelColor = MaterialTheme.colorScheme.primary
+        ),
+        visualTransformation = when {
+            secured && !exposeText -> PasswordVisualTransformation()
+            else -> VisualTransformation.None
+        },
+        isError = errorMsg != null,
+        textStyle = TextStyle.Default.copy(
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 14.sp,
+            lineHeight = 16.sp
+        ),
+        maxLines = maxLines,
+        singleLine = maxLines == 1,
+        readOnly = readOnly,
+        enabled = enabled,
+        trailingIcon = {
+            if (secured) {
+                IconButton(
+                    onClick = {
+                        exposeText = !exposeText
                     }
+                ) {
+                    Icon(
+                        contentDescription = null,
+                        imageVector = when {
+                            exposeText -> Icons.Rounded.Visibility
+                            else -> Icons.Rounded.VisibilityOff
+                        }
+                    )
                 }
-            },
-            supportingText = {
-                if (errorMsg != null) {
+            }
+        },
+        supportingText = when {
+            errorMsg != null -> {
+                @Composable {
                     ErrorText(
                         errorMsg = errorMsg
                     )
                 }
             }
-        )
-        LaunchedEffect(isTyping) {
-            if (isTyping) {
-                delay(2.seconds)
-                isTyping = false
-                onTypingEnded?.invoke()
-            }
+            else -> null
+        }
+    )
+    LaunchedEffect(isTyping) {
+        if (isTyping) {
+            delay(2.seconds)
+            isTyping = false
+            onTypingEnded?.invoke()
         }
     }
+
 }
 
 @Composable

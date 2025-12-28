@@ -34,7 +34,10 @@ fun EntryProviderScope<Route>.signingUpGraph(
                     signUpBackStack = signUpBackStack
                 )
                 signingUpVerificationRoute(signUpBackStack = signUpBackStack)
-                signingUpConfirmationRoute(rootBackStack = rootBackStack)
+                signingUpConfirmationRoute(
+                    rootBackStack = rootBackStack,
+                    signUpBackStack = signUpBackStack
+                )
             }
         )
     }

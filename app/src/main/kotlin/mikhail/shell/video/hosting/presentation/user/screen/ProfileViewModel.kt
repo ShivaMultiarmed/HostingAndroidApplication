@@ -20,6 +20,7 @@ import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.RemoveUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.UnsubscribeFromNotifications
 import mikhail.shell.video.hosting.domain.utils.GetChannelLogoUrl
 import mikhail.shell.video.hosting.presentation.channel.models.toUi
 import mikhail.shell.video.hosting.presentation.user.models.toUi
@@ -35,6 +36,7 @@ class ProfileViewModel @AssistedInject constructor(
     private val constructAvatarUrl: ConstructAvatarUrl,
     private val getOwnedChannels: GetOwnedChannels,
     private val getChannelLogoUrl: GetChannelLogoUrl,
+    private val unsubscribeFromNotifications: UnsubscribeFromNotifications,
     private val signOut: SignOut
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileScreenState(signedInUserId = getUserDetails().userId))
@@ -156,12 +158,19 @@ class ProfileViewModel @AssistedInject constructor(
         if (_state.value.isSigningOut) {
             return
         }
+        _state.update {
+            it.copy(isSigningOut = true)
+        }
         viewModelScope.launch {
+            unsubscribeFromNotifications()
+            signOut.invoke()
             player.stop()
             player.clearMediaItems()
-            signOut.invoke()
             removeUserDetails()
             _events.emit(ProfileScreenEvent.SignedOut)
+            _state.update {
+                it.copy(isSigningOut = false)
+            }
         }
     }
 

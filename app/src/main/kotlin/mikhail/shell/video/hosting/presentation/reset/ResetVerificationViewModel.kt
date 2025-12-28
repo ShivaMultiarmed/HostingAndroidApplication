@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.models.errorOrNull
+import mikhail.shell.video.hosting.domain.usecases.authentication.ValidateCode
+import mikhail.shell.video.hosting.domain.usecases.authentication.reset.RequestResetPassword
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.VerifyResetPassword
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenState as ScreenState
@@ -20,6 +23,9 @@ import mikhail.shell.video.hosting.presentation.reset.ResetVerificationScreenSta
 @HiltViewModel(assistedFactory = ResetVerificationViewModel.Factory::class)
 class ResetVerificationViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: Long,
+    @Assisted("userName") private val userName: String,
+    private val validateCode: ValidateCode,
+    private val requestResetPassword: RequestResetPassword,
     private val verifyResetPassword: VerifyResetPassword
 ) : ViewModel() {
     private val _state = MutableStateFlow(ScreenState())
@@ -31,6 +37,8 @@ class ResetVerificationViewModel @AssistedInject constructor(
     fun onAction(action: ResetVerificationScreenAction) {
         when (action) {
             is ResetVerificationScreenAction.CodeChanged -> onCodeChanged(action.code)
+            ResetVerificationScreenAction.RequestCode -> requestCode()
+            ResetVerificationScreenAction.Submit -> verify()
         }
     }
 
@@ -40,12 +48,44 @@ class ResetVerificationViewModel @AssistedInject constructor(
                 code = it.code.copy(value = code)
             )
         }
-        if (code.length == ValidationRules.CODE_LENGTH) {
+        if (_state.value.code.value.length == ValidationRules.CODE_LENGTH) {
             verify()
         }
     }
 
+    private fun requestCode() {
+        if (_state.value.isRequestingCode) {
+            return
+        }
+        _state.update {
+            it.copy(isRequestingCode = true)
+        }
+        viewModelScope.launch {
+            requestResetPassword(userName).onFailure { error ->
+                viewModelScope.launch {
+                    _events.emit(ResetVerificationScreenEvent.Failure(error))
+                }
+            }
+            _state.update {
+                it.copy(isRequestingCode = false)
+            }
+        }
+    }
+
     private fun verify() {
+        if (_state.value.isLoading) {
+            return
+        }
+        _state.update {
+            it.copy(
+                code = it.code.copy(
+                    error = validateCode(it.code.value).errorOrNull()
+                )
+            )
+        }
+        if (_state.value.code.error != null) {
+            return
+        }
         _state.update {
             it.copy(isLoading = true)
         }
@@ -71,13 +111,16 @@ class ResetVerificationViewModel @AssistedInject constructor(
                 }
             }
             _state.update {
-                it.copy(isLoading = true)
+                it.copy(isLoading = false)
             }
         }
     }
 
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("userId") userId: Long): ResetVerificationViewModel
+        fun create(
+            @Assisted("userId") userId: Long,
+            @Assisted("userName") userName: String
+        ): ResetVerificationViewModel
     }
 }

@@ -10,11 +10,9 @@ class CreateChannel @Inject constructor(
     private val channelRepository: ChannelRepository
 ) {
     suspend operator fun invoke(channel: ChannelCreationModel): Result<Long, Error> {
-        val creationResult = channelRepository.create(
-            channel = channel
-        )
+        val creationResult = channelRepository.create(channel)
         return if (creationResult is Result.Success) {
-            Result.Success(creationResult.data.channelId!!)
+            Result.Success(creationResult.data.channelId)
         } else {
             creationResult as Result.Failure
             Result.Failure(creationResult.error)

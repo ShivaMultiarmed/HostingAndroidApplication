@@ -157,8 +157,8 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
         val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(4) + SupervisorJob())
+        val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
         return try {
-            val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
             val sourceSize = fileProvider.getFileSize(source)!!
             val bytesTransferred = AtomicLong(0)
             coroutineScope.async {
@@ -206,6 +206,7 @@ class VideoRepositoryWithApi @Inject constructor(
             }
             Result.Failure(error)
         } finally {
+            sourceInputStream.close()
             coroutineScope.cancel()
         }
     }
@@ -333,7 +334,7 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     private companion object {
-        const val BUFFER_SIZE = 10 * 1024 * 1024
+        const val BUFFER_SIZE = 1024 * 1024
     }
 }
 

@@ -12,9 +12,10 @@ class TokenInterceptor @Inject constructor(
         val originalRequest = chain.request()
         val requestBuilder = originalRequest.newBuilder()
         val token = provider.get().token
+        val url = originalRequest.url.toString()
         if (
-            !originalRequest.url.toString().contains("auth")
-            && !(originalRequest.url.toString().contains("users/existence") && originalRequest.url.toString().contains("sign_up"))
+            !(url.contains("auth") && !url.contains("signout"))
+            && !(url.contains("users/existence") && url.contains("sign_up"))
             ) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }

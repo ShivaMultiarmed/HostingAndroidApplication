@@ -254,9 +254,9 @@ class ChannelCreationViewModel @Inject constructor(
             createChannel(
                 channel = ChannelCreationModel(
                     title = _state.value.channel.title.value,
-                    alias = _state.value.channel.alias.value,
+                    alias = _state.value.channel.alias.value.takeIf { it.isNotEmpty() },
                     ownerId = _state.value.channel.ownerId,
-                    description = _state.value.channel.description.value,
+                    description = _state.value.channel.description.value.takeIf { it.isNotEmpty() },
                     logo = _state.value.channel.logo.value,
                     header = _state.value.channel.header.value
                 )

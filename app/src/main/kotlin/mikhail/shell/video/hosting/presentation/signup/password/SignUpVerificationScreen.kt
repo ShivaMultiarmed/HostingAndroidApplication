@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.signup.password
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -12,15 +13,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
-import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
+import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
+import mikhail.shell.video.hosting.presentation.utils.SecondaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.signup.password.SignUpVerificationScreenState as ScreenState
@@ -56,6 +57,7 @@ internal fun SignUpVerificationScreen(
             val codeErrorMsg = when (state.code.error) {
                 TextError.NOT_CORRECT -> stringResource(R.string.code_not_correct)
                 TextError.PATTERN -> stringResource(R.string.code_pattern_not_correct)
+                TextError.NOT_VALID -> stringResource(R.string.code_not_valid)
                 else -> null
             }
             CodeInputField(
@@ -69,10 +71,23 @@ internal fun SignUpVerificationScreen(
                     text = codeErrorMsg
                 )
             }
-            LaunchedEffect(state.code.value) {
-                if (state.code.value.length == ValidationRules.CODE_LENGTH) {
-                    onAction(ScreenAction.Submit)
-                }
+            Row {
+                SecondaryProgressButton(
+                    enabled = !state.isLoading,
+                    inProgress = state.isRequestingCode,
+                    text = stringResource(R.string.request_code),
+                    onClick = {
+                        onAction(ScreenAction.RequestCode)
+                    }
+                )
+                PrimaryProgressButton(
+                    enabled = !state.isRequestingCode,
+                    inProgress = state.isLoading,
+                    text = stringResource(R.string.ok_button),
+                    onClick = {
+                        onAction(ScreenAction.Submit)
+                    }
+                )
             }
         }
     }

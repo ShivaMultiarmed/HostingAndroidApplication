@@ -25,8 +25,8 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
-import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
 
@@ -55,14 +55,14 @@ class NotificationService: FirebaseMessagingService() {
         if (observeUserDetails().value.userId == 0L) {
             return
         }
-        val topic = message.from
+        val topic = message.from?: return
         val data = message.data
-        if (topic?.contains("subscribers") == true) {
+        if (topic.contains(Regex("channels\\.[0-9]{1,18}\\.subscribers"))) {
             val videoId = data["video_id"]!!.toLong()
             val channelTitle = data["channel_title"]!!
             val videoTitle = data["video_title"]!!
             postNewVideoNotification(videoId, channelTitle, videoTitle)
-        } else if (topic?.contains("uploads") == true) {
+        } else if (topic.contains(Regex("channels\\.[0-9]{1,18}\\.uploads"))) {
             if (data.contains("source_error")) {
                 val sourceError =
                     try {

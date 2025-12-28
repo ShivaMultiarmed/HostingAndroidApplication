@@ -294,4 +294,6 @@
     <string name="code_pattern_not_correct">Only letters and digits allowed</string>
     <string name="forgot_password">Forgot password</string>
     <string name="query_too_long">The prompt is too long</string>
+    <string name="request_code">Request a code</string>
+    <string name="code_expired">The code is expired. Request another one</string>
 </resources>
