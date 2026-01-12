@@ -109,7 +109,7 @@ fun SubscriptionsScreen(
                     onReload = {
                         onAction(ScreenAction.LoadNextPart)
                     },
-                    onReachedBottom = {
+                    onReachedEnd = {
                         onAction(ScreenAction.LoadNextPart)
                     }
                 )

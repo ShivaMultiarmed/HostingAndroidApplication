@@ -39,7 +39,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
@@ -52,6 +51,7 @@ import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
+import mikhail.shell.video.hosting.presentation.utils.rememberAsyncImagePainter
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -84,6 +84,7 @@ fun VideoEditingScreen(
                             onAction(VideoEditingScreenAction.Submit)
                         }
                     }
+
                     else -> null
                 }
             )
@@ -142,12 +143,18 @@ fun VideoEditingScreen(
                         val coverPicker =
                             rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                                 if (it != null) {
-                                    onAction(VideoEditingScreenAction.ChangeCover(EditingState.Editing(it.toString())))
+                                    onAction(
+                                        VideoEditingScreenAction.ChangeCover(
+                                            EditingState.Editing(
+                                                it.toString()
+                                            )
+                                        )
+                                    )
                                 }
                             }
                         val coverErrMsg = getFileErrorMessage(state.video.cover.error)
                         val coverPainter =
-                            rememberAsyncImagePainter((state.video.cover.initial as EditingState.Keeping<String?>).value)
+                            rememberAsyncImagePainter((state.video.cover.initial as EditingState.Keeping<String?>).value!!)
                         Column {
                             StandardEditField(
                                 firstTime = false,
@@ -163,8 +170,11 @@ fun VideoEditingScreen(
                                 FileInputField(
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = { coverPicker.launch("image/*") },
-                                    placeholder = when (state.video.cover.value) {
-                                        !is EditingState.Editing -> stringResource(R.string.video_cover_choose_another_label)
+                                    placeholder = when {
+                                        state.video.cover.value is EditingState.Editing
+                                                || coverPainter.exists() == true
+                                                && state.video.cover.value is EditingState.Keeping
+                                                    -> stringResource(R.string.video_cover_choose_another_label)
                                         else -> stringResource(R.string.video_cover_choose_label)
                                     },
                                     icon = Icons.Rounded.Wallpaper,
@@ -241,7 +251,11 @@ fun VideoEditingScreen(
                             }
                         }
                         val descriptionErrMsg = when (state.video.description.error) {
-                            TextError.LONG -> stringResource(R.string.text_too_large_error,MAX_TITLE_LENGTH)
+                            TextError.LONG -> stringResource(
+                                R.string.text_too_large_error,
+                                MAX_TITLE_LENGTH
+                            )
+
                             else -> null
                         }
                         StandardEditField(
@@ -277,11 +291,13 @@ fun VideoEditingScreen(
                         }
                     }
                 }
+
                 is VideoEditingScreenState.Starting -> {
                     StartingComponent(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
+
                 is VideoEditingScreenState.Failure -> {
                     ErrorComponent(
                         modifier = Modifier.fillMaxSize(),
@@ -290,6 +306,7 @@ fun VideoEditingScreen(
                         }
                     )
                 }
+
                 is VideoEditingScreenState.Idle -> Unit
             }
         }

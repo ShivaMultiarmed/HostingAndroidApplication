@@ -91,41 +91,50 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val rootBackStack = rememberSaveable {
+                    val rootBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(
                             when {
                                 userData.userId == 0L -> Route.Authentication
-                                else -> handleDeepLink()?: Route.Recommendations
+                                else -> Route.Recommendations
                             }
                         )
                     }
-                    val currentRoute = rootBackStack.lastOrNull()
-                    val recommendationsBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(Route.Recommendations.View)
+                    val currentRootRoute = rootBackStack.lastOrNull()
+                    val recommendationsBackStack = rememberSaveable (saver = BackStackSaver) {
+                        mutableStateListOf<Route>(Route.Recommendations.View)
                     }
-                    val subscriptionsBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(Route.Subscriptions.View)
+                    val subscriptionsBackStack = rememberSaveable (saver = BackStackSaver) {
+                        mutableStateListOf<Route>(Route.Subscriptions.View)
                     }
-                    val searchBackStack = rememberSaveable(saver = BackStackSaver) {
-                        mutableStateListOf(Route.Search.View)
+                    val searchBackStack = rememberSaveable (saver = BackStackSaver) {
+                        mutableStateListOf<Route>(Route.Search.View)
                     }
-                    val userBackStack = rememberSaveable(saver = BackStackSaver, inputs = arrayOf(userData.userId)) {
-                        mutableStateListOf(Route.User.Profile(userData.userId))
+                    val userBackStack = rememberSaveable(
+                        saver = BackStackSaver,
+                        inputs = arrayOf(userData.userId)
+                    ) {
+                        mutableStateListOf<Route>(Route.User.Profile(userData.userId))
                     }
-                    val currentBackStack = when (currentRoute) {
+                    val currentBackStack = when (currentRootRoute) {
                         Route.Recommendations -> recommendationsBackStack
                         Route.Subscriptions -> subscriptionsBackStack
                         Route.Search -> searchBackStack
                         is Route.User -> userBackStack
                         else -> recommendationsBackStack
                     }
+                    LaunchedEffect(Unit) {
+                        handleDeepLink(
+                            rootBackStack = rootBackStack,
+                            currentBackStack = currentBackStack
+                        )
+                    }
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
-                    LaunchedEffect(currentRoute) {
+                    LaunchedEffect(currentRootRoute) {
                         WindowCompat.getInsetsController(
                             activity.window,
                             view
                         ).isAppearanceLightStatusBars = when {
-                            currentRoute is Route.Video.View -> false
+                            currentRootRoute is Route.Video.View -> false
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
@@ -133,9 +142,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
                             if (
-                                currentRoute != null
-                                && currentRoute != Route.Authentication
-                                && currentRoute !is Route.Video
+                                currentRootRoute != null
+                                && currentRootRoute != Route.Authentication
+                                && currentRootRoute !is Route.Video
                                 && !LocalPlayerState.current.value.fullScreen
                             ) {
                                 BottomNavBar(
@@ -144,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                             rootBackStack.add(navItem.route)
                                         } else {
                                             val routeToSwitch = rootBackStack.find { it == navItem.route }!!
-                                            if (currentRoute == routeToSwitch) {
+                                            if (currentRootRoute == routeToSwitch) {
                                                 currentBackStack.subList(1, currentBackStack.size).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
@@ -161,10 +170,9 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    if (currentRoute is Route.Video) {
-                                        Color.Black
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
+                                    when (currentRootRoute) {
+                                        is Route.Video -> Color.Black
+                                        else -> MaterialTheme.colorScheme.surface
                                     }
                                 )
                                 .padding(padding)
@@ -204,7 +212,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             )
-                            if (currentRoute !is Route.Video && isPlayerPrepared(player)) {
+                            if (currentRootRoute !is Route.Video && isPlayerPrepared(player)) {
                                 MiniPlayer(
                                     player = player,
                                     onFullScreen = {
@@ -222,17 +230,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handleDeepLink(): Route? {
-        val BASE_URL = "https://trendy-app\\.ru"
+    private fun handleDeepLink(
+        rootBackStack: MutableList<Route>,
+        currentBackStack: MutableList<Route>
+    ) {
+        val BASE_URL = Regex.escape("https://trendy-app.ru")
         if (intent.data == null) {
-            return null
+            return
         }
         val uri = intent.data.toString()
-        Regex("($BASE_URL/videos/)(\\d{1,8})").find(uri)?.let {
-            val videoId = it.groups[2]?.value?.toLong()?: return null
-            return Route.Video(videoId)
+        intent.data = null
+        Regex("^($BASE_URL/videos/)(\\d{1,8})$").find(uri)?.let {
+            val videoId = it.groups[2]?.value?.toLongOrNull()?: return@let
+            rootBackStack.add(Route.Video(videoId))
+            return
         }
-        return null
     }
 
     private fun setMediaHandlers() {

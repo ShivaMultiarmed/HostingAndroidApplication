@@ -1,6 +1,9 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -15,6 +18,7 @@ import mikhail.shell.video.hosting.presentation.video.search.SearchScreen
 import mikhail.shell.video.hosting.presentation.video.search.SearchViewModel
 import mikhail.shell.video.hosting.presentation.video.search.SearchScreenEvent as ScreenEvent
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 fun EntryProviderScope<Route>.searchRoute(
     rootBackStack: MutableList<Route>
 ) {
@@ -27,6 +31,7 @@ fun EntryProviderScope<Route>.searchRoute(
         SearchScreen(
             state = state,
             onAction = viewModel::onAction,
+            windowSize = calculateWindowSizeClass(LocalActivity.current!!),
             snackBarHostState = snackBarHostState
         )
         events.observe { event ->

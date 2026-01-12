@@ -71,6 +71,7 @@ fun InputField(
     value: String,
     onValueChange: (String) -> Unit,
     errorMsg: String? = null,
+    isError: Boolean = errorMsg != null,
     secured: Boolean = false,
     maxLines: Int = 1,
     readOnly: Boolean = false,
@@ -155,7 +156,7 @@ fun InputField(
             secured && !exposeText -> PasswordVisualTransformation()
             else -> VisualTransformation.None
         },
-        isError = errorMsg != null,
+        isError = isError,
         textStyle = TextStyle.Default.copy(
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 14.sp,

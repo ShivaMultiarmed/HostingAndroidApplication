@@ -43,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -64,6 +63,7 @@ import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
+import mikhail.shell.video.hosting.presentation.utils.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScreenAction as ScreenAction
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -242,7 +242,7 @@ fun ChannelEditingScreen(
                             }
                         val logoErrMsg = getFileErrorMessage(state.channel.logo.error)
                         val logoPainter =
-                            rememberAsyncImagePainter((state.channel.logo.initial as EditingState.Keeping).value)
+                            rememberAsyncImagePainter((state.channel.logo.initial as EditingState.Keeping).value!!)
                         Column {
                             StandardEditField(
                                 modifier = Modifier,
@@ -259,9 +259,12 @@ fun ChannelEditingScreen(
                                 FileInputField(
                                     modifier = Modifier.fillMaxWidth(),
                                     icon = Icons.Rounded.Person,
-                                    placeholder = when (state.channel.logo.value) {
-                                        !is EditingState.Editing -> stringResource(R.string.channel_logo_choose_label)
-                                        else -> stringResource(R.string.channel_logo_choose_another_label)
+                                    placeholder = when  {
+                                        state.channel.logo.value is EditingState.Editing
+                                            || logoPainter.exists() == true
+                                                && state.channel.logo.value is EditingState.Keeping
+                                                    -> stringResource(R.string.channel_logo_choose_another_label)
+                                        else -> stringResource(R.string.channel_logo_choose_label)
                                     },
                                     onClick = {
                                         logoPicker.launch("image/*")
@@ -332,7 +335,7 @@ fun ChannelEditingScreen(
                             }
                         val headerErrMsg = getFileErrorMessage(state.channel.header.error)
                         val headerPainter =
-                            rememberAsyncImagePainter((state.channel.header.initial as EditingState.Keeping).value)
+                            rememberAsyncImagePainter((state.channel.header.initial as EditingState.Keeping).value!!)
                         Column {
                             StandardEditField(
                                 modifier = Modifier,
@@ -349,9 +352,11 @@ fun ChannelEditingScreen(
                                 FileInputField(
                                     modifier = Modifier.fillMaxWidth(),
                                     icon = Icons.Rounded.Wallpaper,
-                                    placeholder = when (state.channel.header.value) {
-                                        !is EditingState.Editing -> stringResource(R.string.channel_choose_header_label)
-                                        else -> stringResource(R.string.channel_choose_another_header_label)
+                                    placeholder = when {
+                                        state.channel.header.value is EditingState.Editing
+                                                || headerPainter.exists() == true
+                                                && state.channel.header.value is EditingState.Keeping -> stringResource(R.string.channel_choose_another_header_label)
+                                        else -> stringResource(R.string.channel_choose_header_label)
                                     },
                                     onClick = {
                                         headerPicker.launch("image/*")

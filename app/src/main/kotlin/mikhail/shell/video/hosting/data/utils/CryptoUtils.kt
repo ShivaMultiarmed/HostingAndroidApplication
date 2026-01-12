@@ -40,7 +40,7 @@ object CryptoUtils {
             )
         }
         .generateKey()
-    fun getKey(): SecretKey {
+    private fun getKey(): SecretKey {
         val existingKeyEntry = keystore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
         return existingKeyEntry?.secretKey?: generateKey()
     }

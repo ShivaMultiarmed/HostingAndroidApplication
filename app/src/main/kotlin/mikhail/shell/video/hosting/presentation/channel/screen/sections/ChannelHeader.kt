@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.Subscription
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
@@ -58,6 +57,7 @@ import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.exists
+import mikhail.shell.video.hosting.presentation.utils.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction as ScreenAction
 

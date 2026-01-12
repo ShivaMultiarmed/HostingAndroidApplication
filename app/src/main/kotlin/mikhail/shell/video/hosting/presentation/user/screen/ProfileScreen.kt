@@ -264,7 +264,7 @@ private fun ProfileScreenContent(
                 onReload = {
                     onAction(ProfileScreenAction.LoadNextChannelsPart)
                 },
-                onReachedBottom = {
+                onReachedEnd = {
                     onAction(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )

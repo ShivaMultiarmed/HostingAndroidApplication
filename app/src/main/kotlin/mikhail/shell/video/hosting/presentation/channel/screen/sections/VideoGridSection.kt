@@ -60,7 +60,7 @@ internal fun VideoGridSection(
                     message = stringResource(R.string.no_videos_yet)
                 )
             },
-            onReachedBottom = onReachedBottom,
+            onReachedEnd = onReachedBottom,
             onReload = onReload
         )
     }

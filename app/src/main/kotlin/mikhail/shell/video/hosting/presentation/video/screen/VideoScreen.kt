@@ -626,7 +626,7 @@ private fun CommentsBottomSheet(
                                 message = stringResource(R.string.comments_empty_message)
                             )
                         },
-                        onReachedBottom = {
+                        onReachedEnd = {
                             onAction(VideoScreenAction.LoadNextCommentsPart)
                         },
                         onReload = {

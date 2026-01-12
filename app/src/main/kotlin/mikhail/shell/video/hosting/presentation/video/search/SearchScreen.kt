@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
@@ -28,6 +29,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -46,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
@@ -60,14 +61,14 @@ import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
 import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     state: SearchScreenState,
     onAction: (SearchScreenAction) -> Unit,
+    windowSize: WindowSizeClass,
     snackBarHostState: SnackbarHostState
 ) {
-    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
 
     Scaffold(
@@ -79,6 +80,7 @@ fun SearchScreen(
             ConstraintLayout(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .borderBottom(
                         strokeWidth = 3,
                         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
@@ -88,23 +90,23 @@ fun SearchScreen(
                 InputField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .constrainAs(search) {},
+                        .constrainAs(search) {
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        },
                     value = state.query.value,
                     onValueChange = {
                         onAction(SearchScreenAction.ChangeQuery(it))
                     },
                     label = stringResource(R.string.video_search_label),
                     icon = Icons.Rounded.Search,
-                    errorMsg = when (state.query.error) {
-                        TextError.LONG -> stringResource(R.string.query_too_long)
-                        else -> null
-                    }
+                    isError = state.query.error != null
                 )
                 PrimaryProgressButton(
                     modifier = Modifier.constrainAs(button) {
                         end.linkTo(parent.end, 10.dp)
                         top.linkTo(search.top)
-                        bottom.linkTo(parent.bottom)
+                        bottom.linkTo(search.bottom)
                     },
                     enabled = state.query.value.isNotEmpty(),
                     onClick = {
@@ -164,7 +166,7 @@ fun SearchScreen(
                     onReload = {
                         onAction(SearchScreenAction.LoadNextPart)
                     },
-                    onReachedBottom = {
+                    onReachedEnd = {
                         onAction(SearchScreenAction.LoadNextPart)
                     }
                 )

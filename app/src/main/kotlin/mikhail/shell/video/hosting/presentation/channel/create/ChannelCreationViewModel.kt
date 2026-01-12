@@ -17,6 +17,7 @@ import mikhail.shell.video.hosting.domain.usecases.channels.CreateChannel
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelAlias
 import mikhail.shell.video.hosting.domain.usecases.channels.validation.ValidateChannelTitle
 import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
 import mikhail.shell.video.hosting.domain.utils.ValidateImage
 import javax.inject.Inject
@@ -31,6 +32,7 @@ class ChannelCreationViewModel @Inject constructor(
     private val validateChannelAlias: ValidateChannelAlias,
     private val validateImage: ValidateImage,
     private val validateDescription: ValidateDescription,
+    private val subscribeToNotifications: SubscribeToNotifications,
     private val createChannel: CreateChannel
 ) : ViewModel() {
     private val _state = MutableStateFlow(
@@ -253,19 +255,20 @@ class ChannelCreationViewModel @Inject constructor(
             }
             createChannel(
                 channel = ChannelCreationModel(
+                    ownerId = _state.value.channel.ownerId,
                     title = _state.value.channel.title.value,
                     alias = _state.value.channel.alias.value.takeIf { it.isNotEmpty() },
-                    ownerId = _state.value.channel.ownerId,
                     description = _state.value.channel.description.value.takeIf { it.isNotEmpty() },
                     logo = _state.value.channel.logo.value,
                     header = _state.value.channel.header.value
                 )
             ).onSuccess { channelId ->
+                viewModelScope.launch {
+                    subscribeToNotifications()
+                    _events.emit(ScreenEvent.Created(channelId))
+                }
                 _state.update {
                     it.copy(isLoading = false)
-                }
-                viewModelScope.launch {
-                    _events.emit(ScreenEvent.Created(channelId))
                 }
             }.onFailure { error ->
                 if (error is ChannelCreationError) {

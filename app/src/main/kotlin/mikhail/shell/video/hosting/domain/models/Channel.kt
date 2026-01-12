@@ -18,9 +18,9 @@ data class ChannelForUser(
     val subscription: Subscription
 )
 data class ChannelCreationModel(
+    val ownerId: Long,
     val title: String,
     val alias: String?,
-    val ownerId: Long,
     val description: String?,
     val logo: String?,
     val header: String?

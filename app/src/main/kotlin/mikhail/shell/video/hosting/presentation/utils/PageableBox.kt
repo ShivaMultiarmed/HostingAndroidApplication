@@ -32,7 +32,7 @@ fun <I> PageableBox(
     itemComponent: @Composable (I) -> Unit,
     emptyComponent: (@Composable () -> Unit)? = null,
     onReload: () -> Unit,
-    onReachedBottom: () -> Unit
+    onReachedEnd: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
@@ -71,11 +71,15 @@ fun <I> PageableBox(
                 ) {
                     if (state.isLoading) {
                         StartingComponent(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 10.dp)
                         )
                     } else if (state.error != null && state.hasMore) {
                         ErrorComponent(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 10.dp),
                             onRetry = onReload
                         )
                     }
@@ -83,7 +87,7 @@ fun <I> PageableBox(
             }
             LaunchedEffect(reachedBottom, state.hasMore) {
                 if (reachedBottom && state.hasMore) {
-                    onReachedBottom()
+                    onReachedEnd()
                 }
             }
         } else {

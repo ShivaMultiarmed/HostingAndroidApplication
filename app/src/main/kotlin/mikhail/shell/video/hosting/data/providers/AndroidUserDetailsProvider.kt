@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.data.utils.CryptoUtils
 import mikhail.shell.video.hosting.domain.providers.UserDetails
@@ -50,31 +51,27 @@ class UserDetailsSerializer : Serializer<UserDetails> {
     override val defaultValue = UserDetails()
 
     override suspend fun readFrom(input: InputStream): UserDetails {
-        return input.use {
-            it
-                .readBytes()
-                .decodeToString()
-                .let { json ->
-                    val ud = Json.decodeFromString(
-                        deserializer = UserDetails.serializer(),
-                        string = json
-                    )
-                    ud.copy(token = CryptoUtils.decrypt(ud.token))
-                }
+        return withContext(Dispatchers.Default) {
+            val json = input.use {
+                it.readBytes()
+            }.decodeToString()
+            val ud = Json.decodeFromString(
+                deserializer = UserDetails.serializer(),
+                string = json
+            )
+            ud.copy(token = CryptoUtils.decrypt(ud.token))
         }
     }
-
     override suspend fun writeTo(t: UserDetails, output: OutputStream) {
-        Json
-            .encodeToString(
-                serializer = UserDetails.serializer(),
-                value = t.copy(token = CryptoUtils.encrypt(t.token))
-            )
-            .encodeToByteArray()
-            .let { bytes ->
-                output.use {
-                    it.write(bytes)
-                }
+        withContext(Dispatchers.Default) {
+            val bytes = Json.encodeToString(
+                    serializer = UserDetails.serializer(),
+                    value = t.copy(token = CryptoUtils.encrypt(t.token))
+                )
+                .encodeToByteArray()
+            output.use {
+                it.write(bytes)
             }
+        }
     }
 }

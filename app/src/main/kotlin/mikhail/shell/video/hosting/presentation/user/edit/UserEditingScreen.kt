@@ -44,7 +44,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -62,6 +61,7 @@ import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
+import mikhail.shell.video.hosting.presentation.utils.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenState as ScreenState
 
@@ -203,8 +203,7 @@ fun UserEditingScreen(
                                     onAction(ScreenAction.ChangeAvatar(EditingState.Editing(it.toString())))
                                 }
                             }
-                        val avatarPainter = rememberAsyncImagePainter(
-                                (state.user.avatar.initial as EditingState.Keeping).value)
+                        val avatarPainter = rememberAsyncImagePainter((state.user.avatar.initial as EditingState.Keeping).value!!)
                         val avatarErrMsg = getFileErrorMessage(state.user.avatar.error)
                         Column {
                             StandardEditField(
@@ -222,9 +221,11 @@ fun UserEditingScreen(
                                 FileInputField(
                                     modifier = Modifier.fillMaxWidth(),
                                     icon = Icons.Rounded.Image,
-                                    placeholder = when (state.user.avatar.value) {
-                                        !is EditingState.Editing -> stringResource(R.string.profile_choose_avatar_label)
-                                        else -> stringResource(R.string.profile_choose_another_avatar_label)
+                                    placeholder = when  {
+                                        state.user.avatar.value is EditingState.Editing
+                                            || avatarPainter.exists() == true
+                                                && state.user.avatar.value is EditingState.Keeping -> stringResource(R.string.profile_choose_another_avatar_label)
+                                        else -> stringResource(R.string.profile_choose_avatar_label)
                                     },
                                     onClick = {
                                         avatarPicker.launch("image/*")
