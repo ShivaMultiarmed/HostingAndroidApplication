@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
@@ -168,7 +169,7 @@ fun ProfileScreen(
         if (state.user != null && shouldShowAvatar) {
             ImageViewerArea(
                 modifier = Modifier.fillMaxSize(),
-                model = state.user.avatar,
+                model = state.user.avatar[ImageSize.LARGE],
                 onPopup = {
                     shouldShowAvatar = false
                 }
@@ -294,7 +295,10 @@ private fun UserDetailsSection(
     var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
     val avatar = @Composable {
         AsyncImage(
-            model = user.avatar,
+            model = when(windowSize.widthSizeClass) {
+               WindowWidthSizeClass.Expanded -> user.avatar[ImageSize.LARGE]
+               else -> user.avatar[ImageSize.MEDIUM]
+            },
             contentScale = ContentScale.Crop,
             contentDescription = stringResource(R.string.profile_avatar_hint),
             modifier = Modifier

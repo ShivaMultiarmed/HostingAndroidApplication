@@ -12,7 +12,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimat
 
 fun EntryProviderScope<Route>.videoGraph(
     rootBackStack: MutableList<Route>,
-    currentBackStack: MutableList<Route>
+    currentTabBackStack: MutableList<Route>
 ) {
     entry<Route.Video> { graph ->
         val videoBackStack = rememberSaveable {
@@ -30,7 +30,7 @@ fun EntryProviderScope<Route>.videoGraph(
             entryProvider = entryProvider {
                 videoRoute(
                     rootBackStack = rootBackStack,
-                    currentTabBackStack = currentBackStack,
+                    currentTabBackStack = currentTabBackStack,
                     videoBackStack = videoBackStack
                 )
                 editVideoRoute(

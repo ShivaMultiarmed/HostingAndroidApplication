@@ -1,5 +1,7 @@
 package mikhail.shell.video.hosting.presentation.activities
 
+import android.app.ComponentCaller
+import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.media.session.MediaSession
@@ -72,6 +74,9 @@ class MainActivity : ComponentActivity() {
     lateinit var mediaHandler: MediaHandler
     lateinit var mediaSession: MediaSession
 
+    lateinit var rootBackStack: MutableList<Route>
+    lateinit var currentTabBackStack: MutableList<Route>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setPrimaryContent()
@@ -91,7 +96,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    val rootBackStack = rememberSaveable(saver = BackStackSaver) {
+                    rootBackStack = rememberSaveable(saver = BackStackSaver) {
                         mutableStateListOf(
                             when {
                                 userData.userId == 0L -> Route.Authentication
@@ -115,18 +120,12 @@ class MainActivity : ComponentActivity() {
                     ) {
                         mutableStateListOf<Route>(Route.User.Profile(userData.userId))
                     }
-                    val currentBackStack = when (currentRootRoute) {
+                    currentTabBackStack = when (currentRootRoute) {
                         Route.Recommendations -> recommendationsBackStack
                         Route.Subscriptions -> subscriptionsBackStack
                         Route.Search -> searchBackStack
                         is Route.User -> userBackStack
                         else -> recommendationsBackStack
-                    }
-                    LaunchedEffect(Unit) {
-                        handleDeepLink(
-                            rootBackStack = rootBackStack,
-                            currentBackStack = currentBackStack
-                        )
                     }
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
                     LaunchedEffect(currentRootRoute) {
@@ -134,7 +133,7 @@ class MainActivity : ComponentActivity() {
                             activity.window,
                             view
                         ).isAppearanceLightStatusBars = when {
-                            currentRootRoute is Route.Video.View -> false
+                            currentRootRoute is Route.Video -> false
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
@@ -154,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                         } else {
                                             val routeToSwitch = rootBackStack.find { it == navItem.route }!!
                                             if (currentRootRoute == routeToSwitch) {
-                                                currentBackStack.subList(1, currentBackStack.size).clear()
+                                                currentTabBackStack.subList(1, currentTabBackStack.size).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
                                                 rootBackStack.add(routeToSwitch)
@@ -208,7 +207,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
-                                        currentBackStack = currentBackStack
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                 }
                             )
@@ -230,16 +229,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handleDeepLink(
-        rootBackStack: MutableList<Route>,
-        currentBackStack: MutableList<Route>
-    ) {
+    private fun handleDeepLink(intent: Intent) {
         val BASE_URL = Regex.escape("https://trendy-app.ru")
         if (intent.data == null) {
             return
         }
         val uri = intent.data.toString()
-        intent.data = null
         Regex("^($BASE_URL/videos/)(\\d{1,8})$").find(uri)?.let {
             val videoId = it.groups[2]?.value?.toLongOrNull()?: return@let
             rootBackStack.add(Route.Video(videoId))
@@ -256,6 +251,10 @@ class MainActivity : ComponentActivity() {
         registerReceiver(mediaReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
     }
 
+    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
+        super.onNewIntent(intent, caller)
+        handleDeepLink(intent)
+    }
 
     override fun onStop() {
         if (!isChangingConfigurations) {

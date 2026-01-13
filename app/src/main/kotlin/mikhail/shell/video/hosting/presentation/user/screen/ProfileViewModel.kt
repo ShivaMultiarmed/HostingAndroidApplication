@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
@@ -88,7 +89,10 @@ class ProfileViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     user = user.toUi(
-                        avatar = constructAvatarUrl(userId, MEDIUM)
+                        avatar = mapOf(
+                            ImageSize.MEDIUM to constructAvatarUrl(userId, ImageSize.MEDIUM),
+                            ImageSize.LARGE to constructAvatarUrl(userId, ImageSize.LARGE)
+                        )
                     ),
                     error = null,
                     isStarting = false

@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.ChannelHeader
 import mikhail.shell.video.hosting.presentation.channel.screen.sections.VideoGridSection
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -108,7 +109,7 @@ fun ChannelScreen(
                     if (shouldShowLogo) {
                         ImageViewerArea(
                             modifier = Modifier.fillMaxSize(),
-                            model = state.channel.logo,
+                            model = state.channel.logo[ImageSize.LARGE],
                             onPopup = {
                                 shouldShowLogo = false
                             }

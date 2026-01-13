@@ -87,8 +87,16 @@ class ChannelScreenViewModel @AssistedInject constructor(
             _state.update {
                 it.copy(
                     channel = channel.toUi(
-                        logo = getChannelLogoUrl(channelId = channelId, size = ImageSize.MEDIUM),
-                        header = getChannelHeaderUrl(channelId = channelId, size = ImageSize.LARGE)
+                        logo = mapOf(
+                            ImageSize.SMALL to getChannelLogoUrl(channelId = channelId, size = ImageSize.SMALL),
+                            ImageSize.MEDIUM to getChannelLogoUrl(channelId = channelId, size = ImageSize.MEDIUM),
+                            ImageSize.LARGE to getChannelLogoUrl(channelId = channelId, size = ImageSize.LARGE),
+                        ),
+                        header = mapOf(
+                            ImageSize.SMALL to getChannelHeaderUrl(channelId = channelId, size = ImageSize.SMALL),
+                            ImageSize.MEDIUM to getChannelHeaderUrl(channelId = channelId, size = ImageSize.MEDIUM),
+                            ImageSize.LARGE to getChannelHeaderUrl(channelId = channelId, size = ImageSize.LARGE)
+                        )
                     ),
                     isStarting = false
                 )
