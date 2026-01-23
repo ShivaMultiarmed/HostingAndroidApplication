@@ -96,13 +96,13 @@ fun FileProvider.uriToPart(
     uri: String,
     partName: String
 ): MultipartBody.Part {
-    val mimeType = getFileMimeType(uri)
+    val mimeType = get(uri)!!.mimeType
     val extension = MimeTypeMap
         .getSingleton()
         .getExtensionFromMimeType(mimeType)
-    val bytes = getFileAsInputStream(uri)!!.use { it.readBytes() }
+    val bytes = getAsInputStream(uri)!!.use { it.readBytes() }
     val fileName = "$partName.$extension"
-    val requestBody = bytes.toRequestBody(contentType = mimeType?.toMediaTypeOrNull())
+    val requestBody = bytes.toRequestBody(contentType = mimeType.toMediaTypeOrNull())
     return MultipartBody.Part.createFormData(
         name = partName,
         filename = fileName,

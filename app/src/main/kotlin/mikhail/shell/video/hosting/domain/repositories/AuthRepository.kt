@@ -4,7 +4,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.UserCreationModel
-import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 
 interface AuthRepository {
     suspend fun signInWithPassword(

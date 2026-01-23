@@ -59,7 +59,6 @@ fun Double.hasPortion() = floor(this) < this
 @Composable
 fun getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): String? {
     return when(error) {
-        FileError.NAME_NOT_VALID -> stringResource(R.string.file_name_not_valid)
         FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
         FileError.EMPTY -> stringResource(R.string.file_empty)
         FileError.LARGE -> stringResource(R.string.file_too_large_error, "${maxSize.mb} MB")

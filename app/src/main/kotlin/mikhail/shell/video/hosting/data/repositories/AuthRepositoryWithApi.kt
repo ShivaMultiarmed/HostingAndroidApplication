@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.domain.models.AuthModel
 import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.UserCreationModel
 import mikhail.shell.video.hosting.domain.repositories.AuthRepository
-import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import retrofit2.Response
 import javax.inject.Inject
 

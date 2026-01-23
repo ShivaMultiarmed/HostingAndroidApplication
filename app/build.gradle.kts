@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+    // alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
-    id ("kotlin-kapt")
+    id ("com.google.devtools.ksp")
     id ("dagger.hilt.android.plugin")
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
@@ -16,7 +16,7 @@ android {
     compileSdk = 36
     defaultConfig {
         applicationId = "mikhail.shell.video.hosting"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 36
         versionCode = 15
         versionName = "2.0.0"
@@ -126,9 +126,9 @@ dependencies {
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 
     implementation (libs.hilt.android)
-    kapt (libs.hilt.android.compiler)
-    kaptAndroidTest (libs.hilt.android.compiler)
-    kapt (libs.androidx.hilt.compiler)
+    ksp(libs.hilt.android.compiler)
+    kspAndroidTest (libs.hilt.android.compiler)
+    ksp (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
     testImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.hilt.android.testing)
@@ -152,4 +152,6 @@ dependencies {
 
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
+
+    implementation("org.apache.tika:tika-core:3.2.3")
 }

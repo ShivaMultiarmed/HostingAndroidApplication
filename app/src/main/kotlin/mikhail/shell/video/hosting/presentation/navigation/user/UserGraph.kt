@@ -1,14 +1,13 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelCreationRoute
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
+import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 import mikhail.shell.video.hosting.presentation.navigation.video.videoUploadingRoute
 
 fun EntryProviderScope<Route>.userGraph(
@@ -18,10 +17,7 @@ fun EntryProviderScope<Route>.userGraph(
     entry<Route.User> { userGraph ->
         NavDisplay(
             backStack = userBackStack,
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
+            entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
             predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },

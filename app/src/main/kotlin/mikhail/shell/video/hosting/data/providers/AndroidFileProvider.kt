@@ -3,52 +3,40 @@ package mikhail.shell.video.hosting.data.providers
 import android.content.Context
 import android.provider.OpenableColumns
 import androidx.core.net.toUri
+import dagger.hilt.android.qualifiers.ApplicationContext
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.providers.FileProvider
+import org.apache.tika.Tika
 import java.io.InputStream
 
-class AndroidFileProvider(context: Context) : FileProvider {
-
+class AndroidFileProvider(
+    @ApplicationContext context: Context
+) : FileProvider {
     private val contentResolver = context.contentResolver
-    override fun getFileName(uri: String): String? {
-        return contentResolver.query(uri.toUri(), arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
+
+    override fun get(uri: String): File? {
+        return contentResolver.query(
+            uri.toUri(),
+            arrayOf(
+                OpenableColumns.DISPLAY_NAME,
+                OpenableColumns.SIZE
+            ),
+            null,
+            null,
+            null
+        )?.use {
             if (it.moveToFirst()) {
-                it.getString(0)
-            } else {
-                null
-            }
+                File(
+                    uri = uri,
+                    name = it.getString(0)?: "",
+                    mimeType = Tika().detect(uri)?: "application/octet-stream",
+                    size = it.getLong(1)
+                )
+            } else null
         }
     }
 
-    override fun getFileAsInputStream(uri: String): InputStream? {
+    override fun getAsInputStream(uri: String): InputStream? {
         return contentResolver.openInputStream(uri.toUri())
-    }
-
-    override fun getFileMimeType(uri: String): String? {
-        return contentResolver.getType(uri.toUri())
-    }
-
-    override fun getFileSize(uri: String): Long? {
-        return contentResolver.query(uri.toUri(), arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
-            if (it.moveToFirst()) {
-                it.getLong(0)
-            } else {
-                null
-            }
-        }
-    }
-
-    override fun getFile(uri: String): File? {
-        return File(
-            uri = uri,
-            mimeType = getFileMimeType(uri)?: "application/octet-stream",
-            size = getFileSize(uri)?: 0
-        )
-    }
-
-    override fun exists(uri: String): Boolean {
-        return contentResolver
-            .query(uri.toUri(), arrayOf(OpenableColumns.SIZE), null, null, null)
-            ?.use { it.moveToFirst() } == true
     }
 }

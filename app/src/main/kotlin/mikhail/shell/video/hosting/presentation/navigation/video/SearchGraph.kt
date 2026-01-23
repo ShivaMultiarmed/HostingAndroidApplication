@@ -1,12 +1,11 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.presentation.navigation.channel.channelGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 
 fun EntryProviderScope<Route>.searchGraph(
     rootBackStack: MutableList<Route>,
@@ -15,10 +14,7 @@ fun EntryProviderScope<Route>.searchGraph(
     entry <Route.Search> {
         NavDisplay(
             backStack = searchBackStack,
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
+            entryDecorators = defaultNavDecorators,
             entryProvider = entryProvider {
                 searchRoute(rootBackStack = rootBackStack)
                 channelGraph(rootBackStack = rootBackStack)

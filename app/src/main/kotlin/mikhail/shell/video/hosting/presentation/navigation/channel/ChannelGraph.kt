@@ -2,13 +2,12 @@ package mikhail.shell.video.hosting.presentation.navigation.channel
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
+import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 
 fun EntryProviderScope<Route>.channelGraph(
     rootBackStack: MutableList<Route>
@@ -19,10 +18,7 @@ fun EntryProviderScope<Route>.channelGraph(
         }
         NavDisplay(
             backStack = channelBackStack,
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
+            entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
             predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },

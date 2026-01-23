@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,12 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,7 +46,8 @@ data class BottomNavItem (
 
 @Composable
 fun BottomNavBar(
-    onClick: (BottomNavItem) -> Unit,
+    selectedTabRoute: Route,
+    onClick: (Route) -> Unit,
     userId: Long
 ) {
     val context = LocalContext.current
@@ -84,17 +80,26 @@ fun BottomNavBar(
         )
     }
     BottomNavBar(
+        selectedItem = when (selectedTabRoute) {
+            Route.Recommendations -> navItems[0]
+            Route.Subscriptions -> navItems[1]
+            Route.Search -> navItems[2]
+            is Route.User -> navItems[3]
+            else -> navItems[0]
+        },
         navItems = navItems,
-        onClick = onClick
+        onClick = {
+            onClick(it.route)
+        }
     )
 }
 
 @Composable
 private fun BottomNavBar(
     navItems: List<BottomNavItem>,
+    selectedItem: BottomNavItem,
     onClick: (BottomNavItem) -> Unit
 ) {
-    var selectedItemNumber by rememberSaveable { mutableIntStateOf(0) }
     Row(
         modifier = Modifier
             .borderTop(
@@ -106,14 +111,13 @@ private fun BottomNavBar(
             .background(MaterialTheme.colorScheme.surface),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        navItems.forEachIndexed { i, it ->
+        navItems.forEach {
             BottomNavBarItem(
                 modifier = Modifier.width(90.dp),
-                selected = selectedItemNumber == i,
+                selected = selectedItem == it,
                 navItem = it,
                 onClick = {
-                    selectedItemNumber = i
-                    onClick(navItems[selectedItemNumber])
+                    onClick(it)
                 }
             )
         }
@@ -121,7 +125,7 @@ private fun BottomNavBar(
 }
 
 @Composable
-fun RowScope.BottomNavBarItem(
+fun BottomNavBarItem(
     modifier: Modifier = Modifier,
     navItem: BottomNavItem,
     selected: Boolean,

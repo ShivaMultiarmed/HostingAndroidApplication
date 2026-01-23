@@ -10,7 +10,7 @@ class GetVideoMetaData @Inject constructor(
     private val fileProvider: FileProvider
 ) {
     suspend operator fun invoke(uri: String): Result<File, FileError> {
-        return fileProvider.getFile(uri) ?.let {
+        return fileProvider.get(uri) ?.let {
             Result.Success(it)
         }?: return Result.Failure(FileError.NOT_FOUND)
     }

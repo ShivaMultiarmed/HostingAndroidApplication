@@ -11,6 +11,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -21,6 +24,7 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.isAtStart
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.video.search.VideoWithChannelSnippet
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenAction as ScreenAction
@@ -54,6 +58,11 @@ fun RecommendationsScreen(
                 error = state.error,
                 isLoading = state.isLoading,
             )
+            val isAtStart by remember {
+                derivedStateOf {
+                    pageableBoxState.gridState.isAtStart()
+                }
+            }
             RestartableBox(
                 modifier = Modifier
                     .fillMaxSize()
@@ -62,7 +71,7 @@ fun RecommendationsScreen(
                     onAction(ScreenAction.Restart)
                 },
                 isStarting = state.isStarting,
-                canStart = !pageableBoxState.gridState.canScrollBackward
+                canStart = isAtStart
             ) {
                 PageableBox(
                     modifier = Modifier

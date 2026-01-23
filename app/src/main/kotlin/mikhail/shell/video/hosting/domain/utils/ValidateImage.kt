@@ -11,17 +11,15 @@ class ValidateImage @Inject constructor(
     private val fileProvider: FileProvider
 ) {
     operator fun invoke(uri: String): Result<Unit, FileError> {
-        val error = if (!fileProvider.exists(uri)) {
-            FileError.NOT_FOUND
-        } else if (fileProvider.getFileMimeType(uri) == null || !(fileProvider.getFileMimeType(uri)?:"").startsWith("image")) {
-            FileError.NOT_SUPPORTED
-        } else if (fileProvider.getFileName(uri) == null || !fileProvider.getFileName(uri)!!.matches(FILE_NAME_REGEX.toRegex())) {
-            FileError.NAME_NOT_VALID
-        } else if (fileProvider.getFileSize(uri)!! == 0L) {
-            FileError.EMPTY
-        } else if (fileProvider.getFileSize(uri)!! > ValidationRules.MAX_IMAGE_SIZE) {
-            FileError.LARGE
-        } else null
+        val file = fileProvider.get(uri)
+        val error = when {
+            file == null -> FileError.NOT_FOUND
+            file.size == 0L -> FileError.EMPTY
+            !file.name.matches(FILE_NAME_REGEX.toRegex())
+                    || !file.mimeType.startsWith("image") -> FileError.NOT_SUPPORTED
+            file.size > ValidationRules.MAX_IMAGE_SIZE -> FileError.LARGE
+            else -> null
+        }
         return if (error != null) {
             Result.Failure(error)
         } else {

@@ -40,10 +40,9 @@ fun <I> PageableBox(
         modifier = modifier
     ) {
         if (state.items.isNotEmpty()) {
-            val lazyGridState = rememberLazyGridState()
             val reachedBottom by remember {
                 derivedStateOf {
-                    lazyGridState.reachedBottom(buffer = 4)
+                    state.gridState.reachedBottom(buffer = 4)
                 }
             }
             LazyVerticalGrid(
@@ -57,7 +56,7 @@ fun <I> PageableBox(
                     }
                 ),
                 columns = GridCells.Adaptive(300.dp),
-                state = lazyGridState,
+                state = state.gridState,
                 verticalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(if (isWidthCompact) 0.dp else 10.dp),
             ) {
@@ -122,4 +121,8 @@ fun <I> rememberPageableBoxState(
             isLoading = isLoading
         )
     }
+}
+
+fun LazyGridState.isAtStart(): Boolean {
+    return firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0
 }

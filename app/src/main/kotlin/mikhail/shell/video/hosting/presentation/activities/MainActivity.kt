@@ -19,20 +19,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSerializable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
 import mikhail.shell.video.hosting.domain.usecases.ui.ObserveUiPreferences
@@ -45,12 +46,12 @@ import mikhail.shell.video.hosting.presentation.navigation.authentication.authen
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.recommendationsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
-import mikhail.shell.video.hosting.presentation.utils.BackStackSaver
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -63,6 +64,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var observeUserDetails: ObserveUserDetails
+
     @Inject
     lateinit var observeUiPreferences: ObserveUiPreferences
 
@@ -75,7 +77,7 @@ class MainActivity : ComponentActivity() {
     lateinit var mediaSession: MediaSession
 
     lateinit var rootBackStack: MutableList<Route>
-    lateinit var currentTabBackStack: MutableList<Route>
+    lateinit var currentTabBackStack: MutableState<MutableList<Route>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,7 +98,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
-                    rootBackStack = rememberSaveable(saver = BackStackSaver) {
+                    rootBackStack = rememberSaveable {
                         mutableStateListOf(
                             when {
                                 userData.userId == 0L -> Route.Authentication
@@ -105,36 +107,48 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     val currentRootRoute = rootBackStack.lastOrNull()
-                    val recommendationsBackStack = rememberSaveable (saver = BackStackSaver) {
+                    val recommendationsBackStack = rememberSaveable {
                         mutableStateListOf<Route>(Route.Recommendations.View)
                     }
-                    val subscriptionsBackStack = rememberSaveable (saver = BackStackSaver) {
+                    val subscriptionsBackStack = rememberSaveable {
                         mutableStateListOf<Route>(Route.Subscriptions.View)
                     }
-                    val searchBackStack = rememberSaveable (saver = BackStackSaver) {
+                    val searchBackStack = rememberSaveable {
                         mutableStateListOf<Route>(Route.Search.View)
                     }
-                    val userBackStack = rememberSaveable(
-                        saver = BackStackSaver,
-                        inputs = arrayOf(userData.userId)
-                    ) {
+                    val userBackStack = rememberSaveable(userData.userId) {
                         mutableStateListOf<Route>(Route.User.Profile(userData.userId))
                     }
-                    currentTabBackStack = when (currentRootRoute) {
-                        Route.Recommendations -> recommendationsBackStack
-                        Route.Subscriptions -> subscriptionsBackStack
-                        Route.Search -> searchBackStack
-                        is Route.User -> userBackStack
-                        else -> recommendationsBackStack
+                    var currentTabRoute by rememberSerializable {
+                        mutableStateOf<Route>(Route.Recommendations)
+                    }
+                    currentTabBackStack = rememberSaveable {
+                        mutableStateOf(recommendationsBackStack)
                     }
                     val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
-                    LaunchedEffect(currentRootRoute) {
+                    LaunchedEffect(currentRootRoute is Route.Video) {
                         WindowCompat.getInsetsController(
                             activity.window,
                             view
                         ).isAppearanceLightStatusBars = when {
                             currentRootRoute is Route.Video -> false
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
+                        }
+                    }
+                    val isTabRoute = currentRootRoute in setOf(Route.Recommendations, Route.Subscriptions, Route.Search)
+                            || currentRootRoute is Route.User
+                    LaunchedEffect(isTabRoute) {
+                        if (isTabRoute && currentRootRoute != null) {
+                            currentTabRoute = currentRootRoute
+                        }
+                    }
+                    LaunchedEffect(currentTabRoute) {
+                        currentTabBackStack.value = when (currentTabRoute) {
+                            Route.Recommendations -> recommendationsBackStack
+                            Route.Subscriptions -> subscriptionsBackStack
+                            Route.Search -> searchBackStack
+                            is Route.User -> userBackStack
+                            else -> return@LaunchedEffect
                         }
                     }
                     Scaffold(
@@ -147,13 +161,15 @@ class MainActivity : ComponentActivity() {
                                 && !LocalPlayerState.current.value.fullScreen
                             ) {
                                 BottomNavBar(
-                                    onClick = { navItem ->
-                                        if (!rootBackStack.contains(navItem.route)) {
-                                            rootBackStack.add(navItem.route)
+                                    selectedTabRoute = currentRootRoute,
+                                    onClick = { navRoute ->
+                                        if (!rootBackStack.contains(navRoute)) {
+                                            rootBackStack.add(navRoute)
                                         } else {
-                                            val routeToSwitch = rootBackStack.find { it == navItem.route }!!
+                                            val routeToSwitch =
+                                                rootBackStack.find { it == navRoute }!!
                                             if (currentRootRoute == routeToSwitch) {
-                                                currentTabBackStack.subList(1, currentTabBackStack.size).clear()
+                                                currentTabBackStack.value.subList(1, currentTabBackStack.value.size).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
                                                 rootBackStack.add(routeToSwitch)
@@ -180,10 +196,7 @@ class MainActivity : ComponentActivity() {
                             NavDisplay(
                                 modifier = Modifier.fillMaxSize(),
                                 backStack = rootBackStack,
-                                entryDecorators = listOf(
-                                    rememberSaveableStateHolderNavEntryDecorator(),
-                                    rememberViewModelStoreNavEntryDecorator()
-                                ),
+                                entryDecorators = defaultNavDecorators,
                                 transitionSpec = { RootAnimations.enteringAnimation },
                                 popTransitionSpec = { RootAnimations.leavingAnimation },
                                 predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
@@ -207,7 +220,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
-                                        currentTabBackStack = currentTabBackStack
+                                        currentTabBackStack = currentTabBackStack.value
                                     )
                                 }
                             )
@@ -236,7 +249,7 @@ class MainActivity : ComponentActivity() {
         }
         val uri = intent.data.toString()
         Regex("^($BASE_URL/videos/)(\\d{1,8})$").find(uri)?.let {
-            val videoId = it.groups[2]?.value?.toLongOrNull()?: return@let
+            val videoId = it.groups[2]?.value?.toLongOrNull() ?: return@let
             rootBackStack.add(Route.Video(videoId))
             return
         }

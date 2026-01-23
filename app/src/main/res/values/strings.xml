@@ -282,7 +282,6 @@
     <string name="no_videos_yet">No videos yet</string>
     <string name="channel_title_check_error">Couldn\'t check title</string>
     <string name="channel_alias_check_error">Couldn\'t check nick</string>
-    <string name="file_name_not_valid">File name is not valid</string>
     <string name="file_empty">File is empty</string>
     <string name="name_empty">Name is empty</string>
     <string name="bio_empty">Bio is empty</string>

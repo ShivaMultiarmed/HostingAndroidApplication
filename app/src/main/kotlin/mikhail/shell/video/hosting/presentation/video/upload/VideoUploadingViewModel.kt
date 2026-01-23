@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
-import mikhail.shell.video.hosting.domain.models.Result
 import mikhail.shell.video.hosting.domain.models.VideoCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
@@ -266,7 +265,6 @@ class VideoUploadingViewModel @AssistedInject constructor(
         }
         val video = currentState.video
         viewModelScope.launch {
-            val videoMetaData = getVideoMetaData(video.source.value!!) as Result.Success // TODO: handle failure cases
             _state.update {
                 val currentState = _state.value as? ScreenState.Editing
                 currentState?.copy(isLoading = true) ?: it
@@ -277,7 +275,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     description = video.description.value.takeIf { it.isNotEmpty() },
                     title = video.title.value,
                     cover = video.cover.value,
-                    metaData = videoMetaData.data
+                    source = video.source.value!!
                 )
             ).onSuccess { pendingVideo ->
                 viewModelScope.launch {

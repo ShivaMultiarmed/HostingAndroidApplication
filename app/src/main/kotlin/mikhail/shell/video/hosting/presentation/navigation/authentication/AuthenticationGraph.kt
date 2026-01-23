@@ -2,14 +2,14 @@ package mikhail.shell.video.hosting.presentation.navigation.authentication
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.resetGraph
 import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signingUpGraph
+import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 
 fun EntryProviderScope<Route>.authenticationGraph(
     rootBackStack: MutableList<Route>
@@ -20,10 +20,10 @@ fun EntryProviderScope<Route>.authenticationGraph(
         }
         NavDisplay(
             backStack = authBackStack,
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
+            entryDecorators = defaultNavDecorators,
+            transitionSpec = { RootAnimations.enteringAnimation },
+            popTransitionSpec = { RootAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
             entryProvider = entryProvider {
                 signInRoute(
                     rootBackStack = rootBackStack,

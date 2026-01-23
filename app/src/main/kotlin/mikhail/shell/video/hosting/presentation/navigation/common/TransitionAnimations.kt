@@ -11,8 +11,14 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
 
 object RootAnimations {
-    val enteringAnimation = ContentTransform(EnterTransition.None, ExitTransition.None)
-    val leavingAnimation = ContentTransform(EnterTransition.None, ExitTransition.None)
+    val enteringAnimation = ContentTransform(
+        EnterTransition.None,
+        ExitTransition.None
+    )
+    val leavingAnimation = ContentTransform(
+        EnterTransition.None,
+        ExitTransition.None
+    )
 }
 
 object SubGraphAnimations {

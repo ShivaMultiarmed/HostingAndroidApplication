@@ -42,7 +42,7 @@ data class VideoCreationModel(
     val title: String,
     val description: String?,
     val cover: String?,
-    val metaData: File
+    val source: String
 )
 
 data class VideoEditingModel(

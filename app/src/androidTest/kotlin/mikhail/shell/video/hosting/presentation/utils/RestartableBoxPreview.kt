@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,8 +29,13 @@ import kotlin.time.Duration.Companion.milliseconds
 @Preview(device = "id:pixel_9a")
 private fun RestartableBoxPreview() {
     var isStarting by remember { mutableStateOf(false) }
-    val lazyListState = rememberLazyListState()
+    val lazyGridState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
+    val isAtStart by remember {
+        derivedStateOf {
+            lazyGridState.isAtStart()
+        }
+    }
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -36,8 +43,7 @@ private fun RestartableBoxPreview() {
                 .padding(padding)
         ) {
             RestartableBox(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 onStart = {
                     coroutineScope.launch {
                         isStarting = true
@@ -45,14 +51,15 @@ private fun RestartableBoxPreview() {
                         isStarting = false
                     }
                 },
-                canStart = !lazyListState.canScrollBackward,
+                canStart = isAtStart,
                 isStarting = isStarting
             ) {
-                LazyColumn(
+                LazyVerticalGrid (
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(0.4f),
-                    state = lazyListState
+                    state = lazyGridState,
+                    columns = GridCells.Fixed(1)
                 ) {
                     items(20) {
                         Box(

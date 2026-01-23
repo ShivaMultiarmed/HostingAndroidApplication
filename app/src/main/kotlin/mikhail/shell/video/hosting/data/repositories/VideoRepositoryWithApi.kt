@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.data.repositories
 
-import android.webkit.MimeTypeMap
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
@@ -125,13 +124,7 @@ class VideoRepositoryWithApi @Inject constructor(
             val coverPart = video.cover?.let {
                 fileProvider.uriToPart(it, "cover")
             }
-            val sourceFileName = video.metaData.uri.let {
-                val mimeType = fileProvider.getFileMimeType(video.metaData.uri)!!
-                val extension = MimeTypeMap
-                    .getSingleton()
-                    .getExtensionFromMimeType(mimeType)
-                "source.$extension"
-            }
+            val source = fileProvider.get(video.source)!!
             videoApi.uploadVideoDetails(
                 video = VideoUploadingRequest(
                     title = video.title,
@@ -139,9 +132,9 @@ class VideoRepositoryWithApi @Inject constructor(
                     description = video.description
                 ),
                 source = VideoMetaData(
-                    fileName = sourceFileName,
-                    mimeType = video.metaData.mimeType,
-                    size = video.metaData.size
+                    fileName = source.name,
+                    mimeType = source.mimeType,
+                    size = source.size
                 ),
                 cover = coverPart
             ).let {
@@ -157,9 +150,9 @@ class VideoRepositoryWithApi @Inject constructor(
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
         val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(4) + SupervisorJob())
-        val sourceInputStream = fileProvider.getFileAsInputStream(source)!!
+        val sourceInputStream = fileProvider.getAsInputStream(source)!!
         return try {
-            val sourceSize = fileProvider.getFileSize(source)!!
+            val sourceSize = fileProvider.get(source)!!.size
             val bytesTransferred = AtomicLong(0)
             coroutineScope.async {
                 val uploadJobs = mutableListOf<Job>()

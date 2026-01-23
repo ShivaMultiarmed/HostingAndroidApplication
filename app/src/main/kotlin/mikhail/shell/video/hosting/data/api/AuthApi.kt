@@ -2,7 +2,7 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.UserCreationRequest
 import mikhail.shell.video.hosting.domain.models.AuthModel
-import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded

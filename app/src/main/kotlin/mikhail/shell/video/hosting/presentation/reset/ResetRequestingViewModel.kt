@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.RequestResetPassword
-import mikhail.shell.video.hosting.domain.usecases.user.validation.UserNameCheckPurpose
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
 import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenAction as ScreenAction

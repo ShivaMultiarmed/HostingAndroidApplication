@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.domain.usecases.user.validation
+package mikhail.shell.video.hosting.domain.models
 
 enum class UserNameCheckPurpose {
     SIGN_IN,
