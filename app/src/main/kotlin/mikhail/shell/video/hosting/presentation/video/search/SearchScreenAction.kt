@@ -8,4 +8,5 @@ sealed class SearchScreenAction {
     data object Restart : ScreenAction()
     data object LoadNextPart : ScreenAction()
     data class ChooseVideo(val videoId: Long) : ScreenAction()
+    data class ChooseChannel(val channelId: Long) : ScreenAction()
 }

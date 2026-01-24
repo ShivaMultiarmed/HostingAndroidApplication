@@ -21,7 +21,7 @@
 
 
     <string name="file_too_large_error">Файл не должен превышать %s</string>
-    <string name="type_not_valid_error">Некорректный формат файла</string>
+    <string name="type_not_supported">Формат файла не поддерживается</string>
     <string name="file_not_found_error">Файл не найден</string>
 
     <string name="phone_number_malformed_error">Введите корректный номер телефона</string>
@@ -308,4 +308,6 @@
     <string name="query_too_long">Запрос слишком длинный</string>
     <string name="request_code">Запросить код</string>
     <string name="code_expired">Код просрочен. Запросите новый</string>
+    <string name="file_not_valid">Файл не корректен</string>
+    <string name="conflict_error">Произошёл конфликт</string>
 </resources>

@@ -35,26 +35,30 @@ suspend fun <D> request(
     resultHandler: suspend () -> D
 ): Result<D, Error> {
     return try {
-        Result.Success(resultHandler())
-    } catch (e: HttpException) {
-        val error = httpExceptionHandlers[e.code()]?.invoke(e)?: when (e.code()) {
-            400 -> NetworkError.BAD_REQUEST
-            401 -> NetworkError.AUTHENTICATION
-            403 -> NetworkError.FORBIDDEN
-            404 -> NetworkError.NOT_FOUND
-            409 -> NetworkError.CONFLICT
-            500 -> NetworkError.SERVER_ERROR
-            else -> unexpectedExceptionHandler(e)
+        try {
+            Result.Success(resultHandler())
+        } catch (e: HttpException) {
+            val error = httpExceptionHandlers[e.code()]?.invoke(e)?: when (e.code()) {
+                400 -> NetworkError.BAD_REQUEST
+                401 -> NetworkError.AUTHENTICATION
+                403 -> NetworkError.FORBIDDEN
+                404 -> NetworkError.NOT_FOUND
+                409 -> NetworkError.CONFLICT
+                500 -> NetworkError.SERVER_ERROR
+                else -> unexpectedExceptionHandler(e)
+            }
+            Result.Failure(error)
+        } catch (e: Exception) {
+            val error = when (e) {
+                is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
+                is ConnectException -> NetworkError.CONNECTION_ERROR
+                is IOException -> NetworkError.SERVER_NOT_AVAILABLE
+                else -> unexpectedExceptionHandler(e)
+            }
+            Result.Failure(error)
         }
-        Result.Failure(error)
     } catch (e: Exception) {
-        val error = when (e) {
-            is SocketTimeoutException -> NetworkError.TIMEOUT_EXCEEDED
-            is ConnectException -> NetworkError.CONNECTION_ERROR
-            is IOException -> NetworkError.SERVER_NOT_AVAILABLE
-            else -> unexpectedExceptionHandler(e)
-        }
-        Result.Failure(error)
+        Result.Failure(unexpectedExceptionHandler(e))
     }
 }
 

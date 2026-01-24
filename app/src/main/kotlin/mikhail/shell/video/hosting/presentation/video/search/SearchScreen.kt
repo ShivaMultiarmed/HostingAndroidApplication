@@ -70,7 +70,6 @@ fun SearchScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -143,15 +142,17 @@ fun SearchScreen(
                     itemComponent = {
                         VideoWithChannelSnippet(
                             modifier = Modifier.then(
-                                if (isWidthCompact) {
-                                    Modifier
-                                } else {
-                                    Modifier.clip(RoundedCornerShape(15.dp))
+                                when {
+                                    isWidthCompact -> Modifier
+                                    else -> Modifier.clip(RoundedCornerShape(15.dp))
                                 }
                             ),
                             videoWithChannel = it,
-                            onClick = {
+                            onClickVideo = {
                                 onAction(SearchScreenAction.ChooseVideo(it))
+                            },
+                            onClickChannel = {
+                                onAction(SearchScreenAction.ChooseChannel(it))
                             }
                         )
                     },
@@ -195,7 +196,8 @@ fun SearchScreen(
 fun VideoWithChannelSnippet(
     modifier: Modifier = Modifier,
     videoWithChannel: VideoWithChannelUi,
-    onClick: (Long) -> Unit
+    onClickVideo: (Long) -> Unit,
+    onClickChannel: (Long) -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(LocalActivity.current!!)
@@ -204,12 +206,12 @@ fun VideoWithChannelSnippet(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .clickable {
-                onClick(videoWithChannel.videoId)
-            }
             .then(
                 if (isWidthCompact) Modifier else Modifier.padding(10.dp)
             )
+            .clickable {
+                onClickVideo(videoWithChannel.videoId)
+            }
     ) {
         AsyncImage(
             modifier = Modifier
@@ -233,7 +235,10 @@ fun VideoWithChannelSnippet(
             AsyncImage(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .clickable {
+                        onClickChannel(videoWithChannel.channelId)
+                    },
                 model = videoWithChannel.channelLogo,
                 contentDescription = videoWithChannel.channelTitle,
                 contentScale = ContentScale.Crop

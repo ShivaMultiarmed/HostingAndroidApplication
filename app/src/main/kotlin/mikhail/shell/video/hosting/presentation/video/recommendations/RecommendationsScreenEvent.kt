@@ -5,5 +5,6 @@ import mikhail.shell.video.hosting.presentation.video.recommendations.Recommenda
 
 sealed class RecommendationsScreenEvent {
     data class VideoChosen(val videoId: Long): ScreenEvent()
+    data class ChannelChosen(val channelId: Long): ScreenEvent()
     data class Failure(val error: Error): ScreenEvent()
 }

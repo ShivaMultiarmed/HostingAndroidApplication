@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_NAME_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
@@ -126,8 +127,8 @@ fun UserEditingScreen(
                                 TextError.EXISTS -> stringResource(R.string.nick_exists_error)
                                 else -> null
                             }
-
                             is NetworkError -> stringResource(R.string.nick_validation_unavailable)
+                            UnexpectedError -> stringResource(R.string.unexpected_error)
                             else -> null
                         }
                         StandardEditField(

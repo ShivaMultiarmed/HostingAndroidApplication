@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
@@ -128,6 +129,7 @@ fun ChannelEditingScreen(
                             )
                             TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
                             is NetworkError -> stringResource(R.string.channel_title_check_error)
+                            UnexpectedError -> stringResource(R.string.unexpected_error)
                             else -> null
                         }
                         StandardEditField(
@@ -164,9 +166,9 @@ fun ChannelEditingScreen(
                                 R.string.text_too_large_error,
                                 MAX_TITLE_LENGTH
                             )
-
                             TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
                             is NetworkError -> stringResource(R.string.channel_alias_check_error)
+                            UnexpectedError -> stringResource(R.string.unexpected_error)
                             else -> null
                         }
                         StandardEditField(

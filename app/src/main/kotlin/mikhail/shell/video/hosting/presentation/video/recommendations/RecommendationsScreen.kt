@@ -81,8 +81,11 @@ fun RecommendationsScreen(
                         VideoWithChannelSnippet(
                             modifier = Modifier.fillMaxWidth(),
                             videoWithChannel = it,
-                            onClick = {
+                            onClickVideo = {
                                 onAction(ScreenAction.ChooseVideo(it))
+                            },
+                            onClickChannel = {
+                                onAction(ScreenAction.ChooseChannel(it))
                             }
                         )
                     },

@@ -16,7 +16,8 @@ import mikhail.shell.video.hosting.presentation.video.recommendations.Recommenda
 import mikhail.shell.video.hosting.presentation.video.recommendations.RecommendationsScreenEvent as ScreenEvent
 
 fun EntryProviderScope<Route>.recommendationsRoute(
-    rootBackStack: MutableList<Route>
+    rootBackStack: MutableList<Route>,
+    recommendationsBackStack: MutableList<Route>
 ) {
     entry <Route.Recommendations.View> {
         val context = LocalContext.current
@@ -41,6 +42,7 @@ fun EntryProviderScope<Route>.recommendationsRoute(
                     }
                 }
                 is ScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
+                is ScreenEvent.ChannelChosen -> recommendationsBackStack.add(Route.Channel(event.channelId))
             }
         }
     }

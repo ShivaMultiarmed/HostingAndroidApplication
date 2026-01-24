@@ -16,7 +16,10 @@ fun EntryProviderScope<Route>.recommendationsGraph(
             backStack = recommendationsBackStack,
             entryDecorators = defaultNavDecorators,
             entryProvider = entryProvider {
-                recommendationsRoute(rootBackStack = rootBackStack)
+                recommendationsRoute(
+                    rootBackStack = rootBackStack,
+                    recommendationsBackStack = recommendationsBackStack
+                )
                 channelGraph(rootBackStack = rootBackStack)
             }
         )

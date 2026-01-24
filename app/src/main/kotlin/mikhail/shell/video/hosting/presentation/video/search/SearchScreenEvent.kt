@@ -6,4 +6,5 @@ import mikhail.shell.video.hosting.presentation.video.search.SearchScreenEvent a
 sealed class SearchScreenEvent {
     data class Failure(val error: Error) : ScreenEvent()
     data class VideoChosen(val videoId: Long) : ScreenEvent()
+    data class ChannelChosen(val channelId: Long) : ScreenEvent()
 }

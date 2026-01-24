@@ -38,6 +38,7 @@ import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
@@ -93,6 +94,7 @@ fun ChannelCreationScreen(
                 TextError.LONG -> stringResource(R.string.text_too_large_error,ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_title_exists_error)
                 is NetworkError -> stringResource(R.string.channel_title_check_error)
+                UnexpectedError -> stringResource(R.string.unexpected_error)
                 else -> null
             }
             EditField(
@@ -125,6 +127,7 @@ fun ChannelCreationScreen(
                 TextError.LONG -> stringResource(R.string.text_too_large_error, ValidationRules.MAX_TITLE_LENGTH)
                 TextError.EXISTS -> stringResource(R.string.channel_alias_exists_error)
                 is NetworkError -> stringResource(R.string.channel_alias_check_error)
+                UnexpectedError -> stringResource(R.string.unexpected_error)
                 else -> null
             }
             EditField(
@@ -192,7 +195,7 @@ fun ChannelCreationScreen(
                 }
             val logoErrorMsg = when (state.channel.logo.error) {
                 FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
                 FileError.EMPTY -> stringResource(R.string.file_empty)
                 FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
                 else -> null
@@ -241,7 +244,7 @@ fun ChannelCreationScreen(
                 }
             val headerErrorMsg = when (state.channel.header.error) {
                 FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
                 FileError.EMPTY -> stringResource(R.string.file_empty)
                 FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
                 else -> null

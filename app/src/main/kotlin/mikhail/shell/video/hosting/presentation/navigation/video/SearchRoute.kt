@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.Route.Video
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.search.SearchScreen
 import mikhail.shell.video.hosting.presentation.video.search.SearchViewModel
@@ -20,7 +21,8 @@ import mikhail.shell.video.hosting.presentation.video.search.SearchScreenEvent a
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 fun EntryProviderScope<Route>.searchRoute(
-    rootBackStack: MutableList<Route>
+    rootBackStack: MutableList<Route>,
+    searchBackStack: MutableList<Route>
 ) {
     entry<Route.Search.View> {
         val context = LocalContext.current
@@ -36,7 +38,7 @@ fun EntryProviderScope<Route>.searchRoute(
         )
         events.observe { event ->
             when (event) {
-                is ScreenEvent.VideoChosen -> rootBackStack.add(Route.Video(event.videoId))
+                is ScreenEvent.VideoChosen -> rootBackStack.add(Video(event.videoId))
                 is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
@@ -46,6 +48,7 @@ fun EntryProviderScope<Route>.searchRoute(
                         }
                     }
                 }
+                is ScreenEvent.ChannelChosen -> searchBackStack.add(Route.Channel(event.channelId))
             }
         }
     }

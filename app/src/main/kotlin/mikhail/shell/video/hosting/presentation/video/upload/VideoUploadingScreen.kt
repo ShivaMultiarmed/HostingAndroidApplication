@@ -188,7 +188,7 @@ fun VideoUploadingScreen(
                             val sourceErrMsg = when (state.video.source.error) {
                                 FileError.EMPTY -> stringResource(R.string.video_upload_source_empty)
                                 FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
+                                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
                                 FileError.LARGE -> stringResource(
                                     R.string.file_too_large_error,
                                     "${MAX_VIDEO_SIZE.mb} MB"

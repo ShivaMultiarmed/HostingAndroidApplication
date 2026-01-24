@@ -20,7 +20,7 @@
     <string name="text_too_large_error">Max length is %d</string>
 
     <string name="file_too_large_error">Max file size is %s</string>
-    <string name="type_not_valid_error">Invalid file type</string>
+    <string name="type_not_supported">File type is not supported</string>
     <string name="file_not_found_error">File is not found</string>
 
     <string name="phone_number_malformed_error">Phone number is malformed</string>
@@ -295,4 +295,6 @@
     <string name="query_too_long">The prompt is too long</string>
     <string name="request_code">Request a code</string>
     <string name="code_expired">The code is expired. Request another one</string>
+    <string name="file_not_valid">File is invalid</string>
+    <string name="conflict_error">Conflict occured</string>
 </resources>

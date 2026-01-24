@@ -7,6 +7,9 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -16,6 +19,7 @@ import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
+import mikhail.shell.video.hosting.presentation.utils.isAtStart
 import mikhail.shell.video.hosting.presentation.video.VideoSnippet
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
 
@@ -32,11 +36,16 @@ internal fun VideoGridSection(
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    val isAtStart by remember {
+        derivedStateOf {
+            state.gridState.isAtStart()
+        }
+    }
     RestartableBox(
         modifier = modifier,
         onStart = onRestart,
         isStarting = isStarting,
-        canStart = !state.gridState.canScrollBackward
+        canStart = isAtStart
     ) {
         PageableBox(
             modifier = Modifier.fillMaxSize(),
@@ -44,10 +53,9 @@ internal fun VideoGridSection(
             itemComponent = {
                 VideoSnippet(
                     modifier = Modifier.then(
-                        if (isWidthCompact) {
-                            Modifier
-                        } else {
-                            Modifier.clip(RoundedCornerShape(15.dp))
+                        when {
+                            isWidthCompact -> Modifier
+                            else -> Modifier.clip(RoundedCornerShape(15.dp))
                         }
                     ),
                     video = it,

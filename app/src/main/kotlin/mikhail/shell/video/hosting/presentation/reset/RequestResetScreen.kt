@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -66,6 +67,7 @@ fun RequestResetScreen(
                     else -> null
                 }
                 is NetworkError -> stringResource(R.string.user_name_check_failed)
+                UnexpectedError -> stringResource(R.string.unexpected_error)
                 else -> null
             }
             InputField(

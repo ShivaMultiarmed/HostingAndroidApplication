@@ -16,7 +16,10 @@ fun EntryProviderScope<Route>.searchGraph(
             backStack = searchBackStack,
             entryDecorators = defaultNavDecorators,
             entryProvider = entryProvider {
-                searchRoute(rootBackStack = rootBackStack)
+                searchRoute(
+                    rootBackStack = rootBackStack,
+                    searchBackStack = searchBackStack
+                )
                 channelGraph(rootBackStack = rootBackStack)
             }
         )

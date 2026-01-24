@@ -43,6 +43,9 @@ class SearchViewModel @Inject constructor(
             is ScreenAction.ChooseVideo -> viewModelScope.launch {
                 _events.emit(ScreenEvent.VideoChosen(action.videoId))
             }
+            is ScreenAction.ChooseChannel -> viewModelScope.launch {
+                _events.emit(ScreenEvent.ChannelChosen(action.channelId))
+            }
         }
     }
 

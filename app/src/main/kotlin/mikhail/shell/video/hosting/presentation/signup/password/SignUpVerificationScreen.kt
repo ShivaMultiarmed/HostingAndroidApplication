@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.presentation.utils.CodeInputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.SecondaryProgressButton
@@ -58,6 +59,7 @@ internal fun SignUpVerificationScreen(
                 TextError.NOT_CORRECT -> stringResource(R.string.code_not_correct)
                 TextError.PATTERN -> stringResource(R.string.code_pattern_not_correct)
                 TextError.NOT_VALID -> stringResource(R.string.code_not_valid)
+                UnexpectedError -> stringResource(R.string.unexpected_error)
                 else -> null
             }
             CodeInputField(

@@ -7,6 +7,7 @@ import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.validation.mb
 import java.util.Locale
+import kotlin.contracts.ExperimentalContracts
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -27,7 +28,7 @@ fun Long.toFullSubscribers(context: Context): String {
     return context.resources.getQuantityString(
         R.plurals.subscribers_number,
         quantityForWordForm,
-        this.toSubscribers()
+        toSubscribers()
     )
 }
 
@@ -45,8 +46,7 @@ fun Long.toRoundString(): String {
     } else {
         if (roundedNumber.hasPortion()) {
             String.format(Locale.getAvailableLocales().firstOrNull(),"%.2f", roundedNumber)
-        }
-        else {
+        } else {
             roundedNumber.toLong().toString()
         }
     } + " " + toCorrectSuffix()
@@ -56,13 +56,15 @@ fun Double.round(n: Int) = round(this * n) / n
 
 fun Double.hasPortion() = floor(this) < this
 
+@OptIn(ExperimentalContracts::class)
 @Composable
 fun getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): String? {
     return when(error) {
         FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
         FileError.EMPTY -> stringResource(R.string.file_empty)
         FileError.LARGE -> stringResource(R.string.file_too_large_error, "${maxSize.mb} MB")
-        FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_valid_error)
-        else -> null
+        FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
+        FileError.NOT_VALID -> stringResource(R.string.file_not_valid)
+        null -> null
     }
 }

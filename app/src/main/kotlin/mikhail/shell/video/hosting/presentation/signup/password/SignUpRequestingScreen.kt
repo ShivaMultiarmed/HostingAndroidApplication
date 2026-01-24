@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_USERNAME_LENGTH
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
@@ -60,6 +61,7 @@ internal fun SignUpRequestingScreen(
                 TextError.LONG -> stringResource(R.string.text_too_large_error, MAX_USERNAME_LENGTH)
                 TextError.PATTERN -> stringResource(R.string.email_malformed_error)
                 TextError.EXISTS -> stringResource(R.string.email_exists_msg_error)
+                UnexpectedError -> stringResource(R.string.unexpected_error)
                 else -> null
             }
             InputField(
