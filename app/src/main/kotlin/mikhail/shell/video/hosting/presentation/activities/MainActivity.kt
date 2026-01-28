@@ -135,9 +135,10 @@ class MainActivity : ComponentActivity() {
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
-                    val isTabRoute = currentRootRoute in setOf(Route.Recommendations, Route.Subscriptions, Route.Search)
-                            || currentRootRoute is Route.User
-                    LaunchedEffect(isTabRoute) {
+
+                    LaunchedEffect(currentRootRoute) {
+                        val isTabRoute = currentRootRoute in setOf(Route.Recommendations, Route.Subscriptions, Route.Search)
+                                || currentRootRoute is Route.User
                         if (isTabRoute && currentRootRoute != null) {
                             currentTabRoute = currentRootRoute
                         }
@@ -169,7 +170,10 @@ class MainActivity : ComponentActivity() {
                                             val routeToSwitch =
                                                 rootBackStack.find { it == navRoute }!!
                                             if (currentRootRoute == routeToSwitch) {
-                                                currentTabBackStack.value.subList(1, currentTabBackStack.value.size).clear()
+                                                currentTabBackStack.value.subList(
+                                                    1,
+                                                    currentTabBackStack.value.size
+                                                ).clear()
                                             } else {
                                                 rootBackStack.remove(routeToSwitch)
                                                 rootBackStack.add(routeToSwitch)
@@ -220,7 +224,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
-                                        currentTabBackStack = currentTabBackStack.value
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                 }
                             )

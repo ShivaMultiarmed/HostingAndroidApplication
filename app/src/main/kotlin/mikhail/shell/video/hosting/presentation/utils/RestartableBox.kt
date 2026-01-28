@@ -54,7 +54,7 @@ private val topPosition = -(shadowBaseDiameter + shadowWidth)
 private val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
 private val activationZone = bottomPosition..(1.2f * (bottomPosition - topPosition))
 
-private val dpSaver = object : Saver<MutableState<Dp>, Float> {
+val dpSaver = object : Saver<MutableState<Dp>, Float> {
     override fun SaverScope.save(value: MutableState<Dp>): Float {
         return value.value.value
     }

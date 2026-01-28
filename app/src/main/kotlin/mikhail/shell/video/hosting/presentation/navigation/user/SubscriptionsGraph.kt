@@ -25,6 +25,7 @@ fun EntryProviderScope<Route>.subscriptionsGraph(
                     subscriptionsBackStack = subscriptionsBackStack
                 )
                 channelGraph(rootBackStack = rootBackStack)
+                userGraph(rootBackStack = rootBackStack)
             }
         )
     }

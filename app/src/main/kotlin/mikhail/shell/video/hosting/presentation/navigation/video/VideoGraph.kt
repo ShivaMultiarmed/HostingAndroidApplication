@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation3.runtime.EntryProviderScope
@@ -11,7 +12,7 @@ import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDeco
 
 fun EntryProviderScope<Route>.videoGraph(
     rootBackStack: MutableList<Route>,
-    currentTabBackStack: MutableList<Route>
+    currentTabBackStack: State<MutableList<Route>>
 ) {
     entry<Route.Video> { graph ->
         val videoBackStack = rememberSaveable {

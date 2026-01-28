@@ -3,6 +3,7 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,8 +26,8 @@ import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenEvent as
 @OptIn(UnstableApi::class)
 fun EntryProviderScope<Route>.videoRoute(
     rootBackStack: MutableList<Route>,
-    currentTabBackStack: MutableList<Route>,
-    videoBackStack: MutableList<Route>
+    videoBackStack: MutableList<Route>,
+    currentTabBackStack: State<MutableList<Route>>
 ) {
     entry<Route.Video.View> { route ->
         val context = LocalContext.current
@@ -50,12 +51,12 @@ fun EntryProviderScope<Route>.videoRoute(
                 ScreenEvent.EditRequested -> videoBackStack.add(Route.Video.Edit(videoId))
                 ScreenEvent.ChannelRequested -> {
                     val channelId = state.video!!.channelId
-                    currentTabBackStack.add(Route.Channel(channelId))
+                    currentTabBackStack.value.add(Route.Channel(channelId))
                     rootBackStack.removeLastOrNull()
                 }
                 is ScreenEvent.ProfileRequested -> {
+                    currentTabBackStack.value.add(Route.User(event.userId))
                     rootBackStack.removeLastOrNull()
-                    currentTabBackStack.add(Route.User(event.userId)) // TODO fix this navigation
                 }
                 ScreenEvent.Removed -> {
                     player.stop()

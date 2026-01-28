@@ -9,6 +9,7 @@ import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.
 import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signingUpGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 
 fun EntryProviderScope<Route>.authenticationGraph(
@@ -21,9 +22,9 @@ fun EntryProviderScope<Route>.authenticationGraph(
         NavDisplay(
             backStack = authBackStack,
             entryDecorators = defaultNavDecorators,
-            transitionSpec = { RootAnimations.enteringAnimation },
-            popTransitionSpec = { RootAnimations.leavingAnimation },
-            predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
+            transitionSpec = { SubGraphAnimations.enteringAnimation },
+            popTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
             entryProvider = entryProvider {
                 signInRoute(
                     rootBackStack = rootBackStack,

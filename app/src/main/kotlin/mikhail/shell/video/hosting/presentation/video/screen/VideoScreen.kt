@@ -14,13 +14,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -275,14 +277,14 @@ fun VideoScreen(
                                 )
                             )
                             .background(MaterialTheme.colorScheme.background)
-                            .padding(12.dp)
-                            .verticalScroll(scrollState)
                             .onGloballyPositioned { coordinates ->
                                 val newHeight = with(density) { coordinates.size.height.toDp() }
                                 if (bottomSheetHeight != newHeight) {
                                     bottomSheetHeight = newHeight
                                 }
                             }
+                            .padding(12.dp)
+                            .verticalScroll(scrollState)
                     ) {
                         Box(
                             modifier = Modifier
@@ -535,8 +537,11 @@ fun VideoScreen(
                 }
             }
             if (sheetState.isVisible) {
+                val imeInset = with(LocalDensity.current) {
+                    WindowInsets.ime.getBottom(LocalDensity.current).toDp()
+                }
                 CommentsBottomSheet(
-                    modifier = Modifier.height(bottomSheetHeight),
+                    modifier = Modifier.height(bottomSheetHeight + 10.dp - BottomSheetDefaults.SheetPeekHeight - imeInset),
                     userId = state.userId,
                     sheetState = sheetState,
                     commentsState = state.commentsState,
@@ -579,19 +584,24 @@ private fun CommentsBottomSheet(
 ) {
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
+        modifier = Modifier
+            .fillMaxWidth(),
         sheetState = sheetState,
         onDismissRequest = {
             coroutineScope.launch {
                 sheetState.hide()
             }
         },
+        shape = RoundedCornerShape(
+            topStart = 10.dp,
+            topEnd = 10.dp
+        ),
         containerColor = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .imePadding()
-                .padding(10.dp),
+                .padding( 10.dp),
         ) {
             Box(
                 modifier = Modifier
