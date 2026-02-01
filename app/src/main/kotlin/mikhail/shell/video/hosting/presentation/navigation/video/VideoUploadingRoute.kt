@@ -3,26 +3,34 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.navigation.common.Route.Channel
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreen
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
 import kotlin.uuid.ExperimentalUuidApi
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreenEvent as ScreenEvent
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<Route>.videoUploadingRoute(
     rootBackStack: MutableList<Route>,
@@ -30,10 +38,13 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
 ) {
     entry<Route.User.VideoUploading> {
         val context = LocalContext.current
+        val playerState = rememberSerializable {
+            mutableStateOf(PlayerState())
+        }
         val viewModel =
             hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> { factory ->
-                val mediaSourceFactory = DefaultMediaSourceFactory(context)
-                val player = ExoPlayer.Builder(context)
+                val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(context)
+                val player: Player = ExoPlayer.Builder(context)
                     .setMediaSourceFactory(mediaSourceFactory)
                     .build()
                 factory.create(player)
@@ -41,12 +52,14 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
-        VideoUploadingScreen(
-            state = state,
-            player = viewModel.player,
-            onAction = viewModel::onAction,
-            snackBarHostState = snackBarHostState
-        )
+        CompositionLocalProvider(LocalPlayerState provides playerState) {
+            VideoUploadingScreen(
+                state = state,
+                player = viewModel.player,
+                onAction = viewModel::onAction,
+                snackBarHostState = snackBarHostState
+            )
+        }
         events.observe { event ->
             when (event) {
                 ScreenEvent.Cancelled -> userBackStack.removeLastOrNull()
@@ -64,8 +77,9 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                             intent.putExtra("source", event.source)
                         }
                     )
-                    userBackStack.add(Channel(event.channelId))
+                    userBackStack.add(Route.Channel(event.channelId))
                 }
+
                 is ScreenEvent.Failure -> {
                     if (event.error == NetworkError.AUTHENTICATION) {
                         rootBackStack.add(Route.Authentication)
@@ -75,6 +89,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
                         }
                     }
                 }
+
                 is ScreenEvent.PermissionLacked -> {
                     snackBarHostState.showSnackbar(event.message)
                 }

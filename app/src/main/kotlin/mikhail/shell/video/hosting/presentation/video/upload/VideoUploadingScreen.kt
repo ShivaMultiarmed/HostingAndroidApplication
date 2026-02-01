@@ -8,7 +8,6 @@ import android.view.WindowInsetsController
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.CaptureVideo
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -55,7 +54,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -73,8 +71,8 @@ import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_VIDEO_SIZE
 import mikhail.shell.video.hosting.domain.validation.mb
-import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
@@ -106,16 +104,15 @@ fun VideoUploadingScreen(
     snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
-    val playerState = LocalPlayerState.current
+    var playerState by LocalPlayerState.current
     val windowSize = calculateWindowSizeClass(activity)
     val context = activity as Context
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf("android.permission.POST_NOTIFICATIONS"),
-                0
-            )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+        LaunchedEffect(Unit) {
+            if (!notificationPermission.status.isGranted && !notificationPermission.status.shouldShowRationale) {
+                notificationPermission.launchPermissionRequest()
+            }
         }
     }
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
@@ -174,15 +171,22 @@ fun VideoUploadingScreen(
                     ) {
                         if (!isFullScreen) {
                             val sourceCreator =
-                                rememberLauncherForActivityResult(CaptureVideo()) {
-                                    if (it) {
-                                        onAction(ChangeSource(state.video.source.value))
+                                rememberLauncherForActivityResult(CaptureVideo()) { isRecorded ->
+                                    val videoSourceInputState = if (isRecorded) {
+                                        VideoSourceInputState(
+                                            current = state.video.source.value.pending
+                                        )
+                                    } else {
+                                        VideoSourceInputState(
+                                            current = null
+                                        )
                                     }
+                                    onAction(ChangeSource(videoSourceInputState))
                                 }
                             val sourcePicker =
                                 rememberLauncherForActivityResult(PickVisualMedia()) {
                                     if (it != null) {
-                                        onAction(ChangeSource(it.toString()))
+                                        onAction(ChangeSource(VideoSourceInputState(current = it.toString())))
                                     }
                                 }
                             val sourceErrMsg = when (state.video.source.error) {
@@ -196,12 +200,12 @@ fun VideoUploadingScreen(
 
                                 else -> null
                             }
-                            val sourceActionItems = when (state.video.source.value) {
+                            val sourceActionItems = when (state.video.source.value.current) {
                                 null -> listOf()
                                 else -> listOf(
                                     DeletingItem(
                                         deleting = {
-                                            onAction(ChangeSource(null))
+                                            onAction(ChangeSource(VideoSourceInputState()))
                                         }
                                     )
                                 )
@@ -213,7 +217,7 @@ fun VideoUploadingScreen(
                                 ) {
                                     FileInputField(
                                         modifier = Modifier.fillMaxWidth(),
-                                        placeholder = when (state.video.source.value) {
+                                        placeholder = when (state.video.source.value.current) {
                                             null -> stringResource(R.string.video_upload_choose_source_label)
                                             else -> stringResource(R.string.video_upload_choose_another_source_label)
                                         },
@@ -226,7 +230,8 @@ fun VideoUploadingScreen(
                                 }
                                 val recordedVideoDir =
                                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                                val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+                                val cameraPermission =
+                                    rememberPermissionState(Manifest.permission.CAMERA)
                                 ContextMenu(
                                     isExpanded = isVideoDialogOpen,
                                     onDismiss = {
@@ -247,8 +252,14 @@ fun VideoUploadingScreen(
                                                         "${context.packageName}.fileprovider",
                                                         file
                                                     )
-                                                    onAction(ChangeSource(uri.toString()))
                                                     sourceCreator.launch(uri)
+                                                    onAction(
+                                                        ChangeSource(
+                                                            VideoSourceInputState(
+                                                                pending = uri.toString()
+                                                            )
+                                                        )
+                                                    )
                                                 } else if (cameraPermission.status.shouldShowRationale) {
                                                     onAction(
                                                         ScreenAction.ShowPermissionLack(
@@ -267,7 +278,7 @@ fun VideoUploadingScreen(
                                             onClick = {
                                                 sourcePicker.launch(
                                                     PickVisualMediaRequest(
-                                                        ActivityResultContracts.PickVisualMedia.VideoOnly
+                                                        PickVisualMedia.VideoOnly
                                                     )
                                                 )
                                             }
@@ -276,9 +287,9 @@ fun VideoUploadingScreen(
                                 )
                             }
                         }
-                        LaunchedEffect(state.video.source.value) {
-                            if (state.video.source.value != null) {
-                                val newMediaItem = MediaItem.fromUri(state.video.source.value)
+                        LaunchedEffect(state.video.source.value.current) {
+                            if (state.video.source.value.current != null) {
+                                val newMediaItem = MediaItem.fromUri(state.video.source.value.current)
                                 player.setMediaItem(newMediaItem)
                                 player.prepare()
                             } else {
@@ -286,7 +297,7 @@ fun VideoUploadingScreen(
                                 player.clearMediaItems()
                             }
                         }
-                        if (state.video.source.value != null) {
+                        if (state.video.source.value.current != null) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -321,12 +332,12 @@ fun VideoUploadingScreen(
                                     isFullScreen = isFullScreen,
                                     onFullscreen = {
                                         isFullScreen = it
-                                        playerState.value = playerState.value.copy(fullScreen = it)
+                                        playerState = playerState.copy(fullScreen = it)
                                     }
                                 )
                             }
                             LaunchedEffect(isFullScreen) {
-                                playerState.value = playerState.value.copy(fullScreen = isFullScreen)
+                                playerState = playerState.copy(fullScreen = isFullScreen)
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                     val window = activity.window!!
                                     WindowCompat.setDecorFitsSystemWindows(window, !isFullScreen)

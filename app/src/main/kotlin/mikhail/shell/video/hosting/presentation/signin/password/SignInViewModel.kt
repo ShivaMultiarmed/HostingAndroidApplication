@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.authentication.SignInError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.usecases.authentication.SignIn
-import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.user.SaveUserDetails
-import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidatePassword
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject

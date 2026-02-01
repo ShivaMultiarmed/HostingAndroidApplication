@@ -9,7 +9,7 @@ sealed class VideoUploadingScreenAction {
     data class ChangeTitle(val title: String) : ScreenAction()
     data object BlurTitle : ScreenAction()
     data object FocusTitle : ScreenAction()
-    data class ChangeSource(val source: String?) : ScreenAction()
+    data class ChangeSource(val source: VideoSourceInputState) : ScreenAction()
     data class ChangeCover(val cover: String?) : ScreenAction()
     data class ChangeDescription(val description: String) : ScreenAction()
     data object BlurDescription : ScreenAction()

@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.presentation.exoplayer
+package mikhail.shell.video.hosting.presentation.player
 
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -9,13 +9,17 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,21 +57,27 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,16 +100,19 @@ import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import mikhail.shell.video.hosting.ui.theme.White
 import kotlin.math.PI
 import kotlin.math.acos
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.pow
 
 @Serializable
 data class PlayerState(
+    val prepared: Boolean = false,
+    val hidden: Boolean = true,
     val fullScreen: Boolean = false
 )
 
 val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
-    override fun restore(value: String): MutableState<PlayerState>? {
+    override fun restore(value: String): MutableState<PlayerState> {
         return mutableStateOf(
             Json.decodeFromString(
                 deserializer = PlayerState.serializer(),
@@ -107,7 +120,8 @@ val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
             )
         )
     }
-    override fun SaverScope.save(value: MutableState<PlayerState>): String? {
+
+    override fun SaverScope.save(value: MutableState<PlayerState>): String {
         return Json.encodeToString(
             serializer = PlayerState.serializer(),
             value = value.value
@@ -115,7 +129,9 @@ val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
     }
 }
 
-val LocalPlayerState = compositionLocalOf { mutableStateOf(PlayerState()) }
+val LocalPlayerState = compositionLocalOf {
+    mutableStateOf(PlayerState())
+}
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -133,26 +149,23 @@ fun PlayerComponent(
     val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-    val playerListener = remember {
+    val playerListener = retain {
         object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained(aspectRatio)
             }
-
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 if (playerState != Player.STATE_BUFFERING) {
                     isPlaying = newIsPlaying
                 }
             }
-
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
                 if (playbackState == Player.STATE_READY && duration < 0L) {
                     duration = player.duration
                 }
             }
-
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -163,8 +176,7 @@ fun PlayerComponent(
         }
     }
     Box(
-        modifier = modifier
-            .background(Color.Black),
+        modifier = modifier.background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
@@ -192,17 +204,14 @@ fun PlayerComponent(
             onSeekBack = {
                 val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
                 player.seekTo(newPosition)
-                delay(500)
             },
             onSeekForward = {
                 val newPosition =
                     (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
                 player.seekTo(newPosition)
-                delay(500)
             },
             onSeek = {
                 player.seekTo(it)
-                delay(300)
             },
             isFullScreen = isFullScreen,
             onFullscreen = onFullscreen
@@ -248,35 +257,45 @@ fun PlayerComponent(
 }
 
 @Composable
-fun PlayerControls(
+internal fun PlayerControls(
     modifier: Modifier = Modifier,
     isPlaying: Boolean,
     position: Long,
     duration: Long,
     onPlay: () -> Unit,
     onPause: () -> Unit,
-    onSeek: suspend (Long) -> Unit,
-    onSeekBack: suspend () -> Unit,
-    onSeekForward: suspend () -> Unit,
+    onSeek: (Long) -> Unit,
+    onSeekBack: () -> Unit,
+    onSeekForward: () -> Unit,
     isFullScreen: Boolean = false,
     onFullscreen: ((Boolean) -> Unit)? = null,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var shouldShowControls by rememberSaveable { mutableStateOf(false) }
+
+    var isInteracting by rememberSaveable {
+        mutableStateOf(false)
+    }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    val controlsShowDuration = 3000
+    var notActiveTimer by rememberSaveable { mutableIntStateOf(0) }
     var controlsAlpha by rememberSaveable { mutableFloatStateOf(0f) }
     val animatedControlsAlpha by animateFloatAsState(
         targetValue = controlsAlpha,
-        animationSpec = tween(
-            durationMillis = 250
-        )
+        animationSpec = tween(300)
     )
-    val interactionSource = remember { MutableInteractionSource() }
-    LaunchedEffect(shouldShowControls) {
-        if (shouldShowControls) {
-            controlsAlpha = 1f
-            delay(3000)
-            controlsAlpha = 0f
-            shouldShowControls = false
+    LaunchedEffect(notActiveTimer) {
+        when (notActiveTimer) {
+            controlsShowDuration -> controlsAlpha = 1f
+            0 -> controlsAlpha = 0f
+        }
+    }
+    LaunchedEffect(isInteracting) {
+        if (isInteracting) {
+            notActiveTimer = controlsShowDuration
+        } else if (notActiveTimer > 0) {
+            delay(controlsShowDuration.toLong())
+            notActiveTimer = 0
         }
     }
     ConstraintLayout(
@@ -284,44 +303,65 @@ fun PlayerControls(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
-            ) {
-                shouldShowControls = true
+            ) {}
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        val change = event.changes.firstOrNull() ?: continue
+                        when {
+                            !change.previousPressed && change.pressed -> { // Pointer down
+                                isInteracting = true
+                            }
+                            change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
+                                isInteracting = true
+                            }
+                            change.previousPressed && !change.pressed -> { // Pointer up or Cancelled
+                                isInteracting = false
+                            }
+                        }
+                    }
+                }
             }
     ) {
-        val (playBtn, seekBack, seekForward, seekBar) = createRefs()
-        var seekBackProgress by rememberSaveable { mutableFloatStateOf(0f) }
-        val animatedSeekBackProgress by animateFloatAsState(
-            targetValue = seekBackProgress,
-            animationSpec = tween(
-                durationMillis = 150
-            )
+        val (seekBack, seekForward, playBtn, seekBar) = createRefs()
+
+        var seekBackAlpha by rememberSaveable { mutableFloatStateOf(0f) }
+        val animatedSeekBackAlpha by animateFloatAsState(
+            targetValue = seekBackAlpha,
+            animationSpec = tween(durationMillis = 300)
         )
         Box(
             modifier = Modifier
-                .fillMaxHeight(1f)
+                .graphicsLayer(alpha = animatedSeekBackAlpha)
+                .fillMaxHeight()
                 .fillMaxWidth(0.35f)
                 .constrainAs(seekBack) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     start.linkTo(parent.start)
                 }
-                .clip(createStadiumShape(ShapeDirection.Ltr))
-                .alpha(animatedSeekBackProgress)
-                .background(
-                    Color(255f, 255f, 255f, 0.3f)
+                .clip(createStadiumShape(Direction.Ltr))
+                .then(
+                    when {
+                        animatedSeekBackAlpha > 0 -> Modifier.shimmer(
+                            direction = Direction.Rtl,
+                            baseColor = Color(255f, 255f, 255f, 0.15f)
+                        )
+                        else -> Modifier
+                    }
                 )
                 .combinedClickable(
                     onClick = {
-                        shouldShowControls = true
+                        isInteracting = true
+                        isInteracting = false
                     },
                     onDoubleClick = {
                         coroutineScope.launch {
-                            seekBackProgress = 1f
-                            launch {
-                                onSeekBack()
-                            }
-                            delay(150)
-                            seekBackProgress = 0f
+                            seekBackAlpha = 1f
+                            onSeekBack()
+                            delay(300)
+                            seekBackAlpha = 0f
                         }
                     }
                 ),
@@ -334,39 +374,42 @@ fun PlayerControls(
                 contentDescription = stringResource(R.string.player_seek_backward_hint)
             )
         }
-        var seekForwardProgress by rememberSaveable { mutableFloatStateOf(0f) }
-        val animatedSeekForwardProgress by animateFloatAsState(
-            targetValue = seekForwardProgress,
-            animationSpec = tween(
-                durationMillis = 150
-            )
+        var seekForwardAlpha by rememberSaveable { mutableFloatStateOf(0f) }
+        val animatedSeekForwardAlpha by animateFloatAsState(
+            targetValue = seekForwardAlpha,
+            animationSpec = tween(durationMillis = 300)
         )
         Box(
             modifier = Modifier
-                .fillMaxHeight(1f)
+                .graphicsLayer(alpha = animatedSeekForwardAlpha)
+                .fillMaxHeight()
                 .fillMaxWidth(0.35f)
                 .constrainAs(seekForward) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
                 }
-                .clip(createStadiumShape(ShapeDirection.Rtl))
-                .alpha(animatedSeekForwardProgress)
-                .background(
-                    Color(255f, 255f, 255f, 0.3f)
+                .clip(createStadiumShape(Direction.Rtl))
+                .then(
+                    when {
+                        animatedSeekForwardAlpha > 0 -> Modifier.shimmer(
+                            direction = Direction.Ltr,
+                            baseColor = Color(255f, 255f, 255f, 0.15f)
+                        )
+                        else -> Modifier
+                    }
                 )
                 .combinedClickable(
                     onClick = {
-                        shouldShowControls = true
+                        isInteracting = true
+                        isInteracting = false
                     },
                     onDoubleClick = {
                         coroutineScope.launch {
-                            seekForwardProgress = 1f
-                            launch {
-                                onSeekForward()
-                            }
-                            delay(150)
-                            seekForwardProgress = 0f
+                            seekForwardAlpha = 1f
+                            onSeekForward()
+                            delay(300)
+                            seekForwardAlpha = 0f
                         }
                     }
                 ),
@@ -379,17 +422,15 @@ fun PlayerControls(
                 contentDescription = stringResource(R.string.player_seek_forward_hint)
             )
         }
-        if (animatedControlsAlpha > 0f) {
+        if (animatedControlsAlpha > 0) {
             IconButton(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
+                    .graphicsLayer(alpha = animatedControlsAlpha)
                     .background(Color(255f, 255f, 255f, 0.7f))
                     .constrainAs(playBtn) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
+                        centerTo(parent)
                     },
                 onClick = {
                     if (isPlaying) {
@@ -400,12 +441,14 @@ fun PlayerControls(
                 }
             ) {
                 Icon(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape),
                     imageVector = when (isPlaying) {
                         true -> Icons.Rounded.Pause
                         false -> Icons.Rounded.PlayArrow
                     },
                     tint = Color(0f, 0f, 0f, 0.8f),
-                    modifier = Modifier.size(28.dp),
                     contentDescription = stringResource(R.string.player_main_button_hint)
                 )
             }
@@ -413,6 +456,7 @@ fun PlayerControls(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .graphicsLayer(alpha = animatedControlsAlpha)
                         .constrainAs(seekBar) {
                             bottom.linkTo(parent.bottom)
                             start.linkTo(parent.start)
@@ -426,10 +470,13 @@ fun PlayerControls(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        val currentPositionString = millisToDurationString(position)
-                        val overallDurationString = millisToDurationString(duration)
+                        val durationSecs = ceil((duration - 1).toFloat() / 1000).toLong()
+                        val positionSecs =
+                            ceil(position.toFloat() / 1000).toLong().coerceIn(0..durationSecs)
+                        val durationString = durationSecs.secsToDurationString()
+                        val positionString = positionSecs.secsToDurationString()
                         Text(
-                            text = "$currentPositionString / $overallDurationString",
+                            text = "$positionString / $durationString",
                             color = Color.White,
                             fontSize = 11.sp
                         )
@@ -456,20 +503,41 @@ fun PlayerControls(
                             .height(35.dp)
                             .padding(horizontal = 15.dp)
                     ) {
-                        val width = this.constraints.maxWidth
-                        val height = this.constraints.maxHeight
+                        val width = constraints.maxWidth
+                        val height = constraints.maxHeight
                         val primaryColor = MaterialTheme.colorScheme.primary
                         val progress = position.toFloat() / duration
                         Canvas(
                             modifier = Modifier
                                 .matchParentSize()
                                 .pointerInput(Unit) {
-                                    detectDragGestures { change, _ ->
-                                        val newProgress =
-                                            (change.position.x / size.width).coerceIn(0f..1f)
-                                        val newPosition = (newProgress * duration).toLong()
-                                        coroutineScope.launch {
-                                            onSeek(newPosition)
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            val event = awaitPointerEvent(PointerEventPass.Main)
+                                            val change = event.changes.firstOrNull() ?: continue
+                                            when {
+                                                !change.previousPressed && change.pressed -> { // Pointer down
+                                                    isInteracting = true
+                                                    val newProgress =
+                                                        (change.position.x / size.width).coerceIn(0f..1f)
+                                                    val newPosition =
+                                                        (newProgress * duration).toLong()
+                                                    onSeek(newPosition)
+                                                }
+
+                                                change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
+                                                    isInteracting = true
+                                                    val newProgress =
+                                                        (change.position.x / size.width).coerceIn(0f..1f)
+                                                    val newPosition =
+                                                        (newProgress * duration).toLong()
+                                                    onSeek(newPosition)
+                                                }
+
+                                                change.previousPressed && !change.pressed -> { // Pointer up or Cancelled
+                                                    isInteracting = false
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -503,7 +571,7 @@ fun PlayerControls(
     }
 }
 
-enum class ShapeDirection {
+enum class Direction {
     Rtl, Ltr
 }
 
@@ -513,28 +581,29 @@ val Float.deg get() = times(degPerRad)
 val Float.rad get() = div(degPerRad)
 
 fun createStadiumShape(
-    direction: ShapeDirection,
+    direction: Direction,
     radiusCoefficient: Float = 1.2f
 ): Shape {
     return GenericShape { size, _ ->
         val r = radiusCoefficient * max(size.width, size.height)
         val a = acos(1 - size.height.pow(2) / (2 * r.pow(2))).deg
         when (direction) {
-            ShapeDirection.Ltr -> {
+            Direction.Ltr -> {
                 moveTo(0f, 0f)
                 arcTo(
                     rect = Rect(
                         topLeft = Offset(size.width - 2 * r, size.height / 2 - r),
                         bottomRight = Offset(size.width, size.height / 2 + r)
                     ),
-                    startAngleDegrees = -a/2,
+                    startAngleDegrees = -a / 2,
                     sweepAngleDegrees = a,
                     forceMoveTo = false
                 )
                 lineTo(0f, size.height)
                 lineTo(0f, 0f)
             }
-            ShapeDirection.Rtl -> {
+
+            Direction.Rtl -> {
                 moveTo(size.width, 0f)
                 arcTo(
                     rect = Rect(
@@ -553,17 +622,16 @@ fun createStadiumShape(
     }
 }
 
-fun millisToDurationString(millis: Long): String {
-    val totalSecs = millis / 1000
+fun Long.secsToDurationString(): String {
     val stringBuilder = StringBuilder()
-    val secs = totalSecs % 60
+    val secs = this % 60
     stringBuilder.insert(0, secs)
     if (secs < 10) {
         stringBuilder.insert(0, "0")
     }
-    val mins = totalSecs / 60 % 60
+    val mins = this / 60 % 60
     stringBuilder.insert(0, "$mins:")
-    val hours = totalSecs / 60 / 60
+    val hours = this / 60 / 60
     if (hours > 0) {
         if (mins < 10) {
             stringBuilder.insert(0, "0")
@@ -577,26 +645,52 @@ fun millisToDurationString(millis: Long): String {
 @Composable
 @Preview
 private fun PlayerControlsPreview() {
+    var isPlaying by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var position by rememberSaveable {
+        mutableLongStateOf(0)
+    }
+    val duration = 100_000L
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (position < duration) {
+                delay(100)
+                position += 100
+            }
+        }
+    }
     PlayerControls(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(16f/9),
-        isPlaying = false,
-        onPlay = {},
-        onPause = {},
-        onSeekForward = {},
-        onSeekBack = {},
-        position = 0,
-        duration = 100500,
-        onSeek = {},
+            .aspectRatio(16f / 9),
+        isPlaying = isPlaying,
+        onPlay = {
+            isPlaying = true
+        },
+        onPause = {
+            isPlaying = false
+        },
+        onSeekForward = {
+            position += 1000
+        },
+        onSeekBack = {
+            position -= 1000
+        },
+        position = position,
+        duration = duration,
+        onSeek = {
+            position = it
+        },
         onFullscreen = {}
     )
 }
 
 @Composable
-fun isPlayerPrepared(player: Player): Boolean {
-    val initialValue = player.currentMediaItem != null
-    var isPrepared by rememberSaveable { mutableStateOf(initialValue) }
+internal fun Player.isPrepared(): Boolean {
+    var isPrepared by rememberSaveable {
+        mutableStateOf(currentMediaItem != null)
+    }
     DisposableEffect(Unit) {
         val playerListener = object : Player.Listener {
             override fun onMediaItemTransition(
@@ -607,23 +701,33 @@ fun isPlayerPrepared(player: Player): Boolean {
                 isPrepared = uri != null
             }
         }
-        player.addListener(playerListener)
+        addListener(playerListener)
         onDispose {
-            isPrepared = player.currentMediaItem != null
-            player.removeListener(playerListener)
+            isPrepared = currentMediaItem != null
+            removeListener(playerListener)
         }
     }
     return isPrepared
 }
 
+@Composable
+fun Player.rememberPlayerState(): MutableState<PlayerState> {
+    val state = LocalPlayerState.current
+    val isPrepared = isPrepared()
+    LaunchedEffect(isPrepared) {
+        state.value = state.value.copy(prepared = isPrepared)
+    }
+    return state
+}
+
 @Preview
 @Composable
-private fun StadiumShapePreview () {
+private fun StadiumShapePreview() {
     VideoHostingTheme {
-        ConstraintLayout (
+        ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f/9)
+                .aspectRatio(16f / 9)
                 .background(Color.Blue)
         ) {
             val (seekBack, seekForward) = createRefs()
@@ -634,7 +738,7 @@ private fun StadiumShapePreview () {
                     }
                     .fillMaxWidth(0.4f)
                     .fillMaxHeight()
-                    .clip(createStadiumShape(ShapeDirection.Ltr))
+                    .clip(createStadiumShape(Direction.Ltr))
                     .background(White)
             )
             Box(
@@ -644,9 +748,55 @@ private fun StadiumShapePreview () {
                     }
                     .fillMaxWidth(0.4f)
                     .fillMaxHeight()
-                    .clip(createStadiumShape(ShapeDirection.Rtl))
+                    .clip(createStadiumShape(Direction.Rtl))
                     .background(White)
             )
         }
     }
+}
+
+fun Modifier.shimmer(
+    direction: Direction,
+    baseColor: Color = Color(0xFF7F7E7E),
+    accentColor: Color = Color(
+        red = (baseColor.red * 1.6f).coerceAtMost(1f),
+        green = (baseColor.green * 1.6f).coerceAtMost(1f),
+        blue = (baseColor.blue * 1.6f).coerceAtMost(1f),
+    )
+): Modifier = composed {
+    var width by remember {
+        mutableFloatStateOf(0f)
+    }
+    val offsetX by rememberInfiniteTransition().animateFloat(
+        initialValue = if (direction == Direction.Ltr) -2 * width else 2 * width,
+        targetValue = if (direction == Direction.Ltr) 2 * width else -2 * width,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+    val background = Brush.horizontalGradient(
+        colors = listOf(
+            baseColor,
+            accentColor,
+            baseColor
+        ),
+        startX = offsetX,
+        endX = width + offsetX
+    )
+    return@composed Modifier
+        .background(background)
+        .onGloballyPositioned {
+            width = it.size.width.toFloat()
+        }
+}
+
+@Composable
+@Preview
+fun ShimmerEffectPreview() {
+    Box(
+        modifier = Modifier
+            .size(300.dp)
+            .shimmer(direction = Direction.Ltr)
+    )
 }

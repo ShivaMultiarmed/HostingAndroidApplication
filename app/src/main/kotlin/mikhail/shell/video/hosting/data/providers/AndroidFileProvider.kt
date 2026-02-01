@@ -6,10 +6,10 @@ import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import mikhail.shell.video.hosting.domain.models.File
 import mikhail.shell.video.hosting.domain.providers.FileProvider
-import org.apache.tika.Tika
 import java.io.InputStream
+import javax.inject.Inject
 
-class AndroidFileProvider(
+class AndroidFileProvider @Inject constructor(
     @ApplicationContext context: Context
 ) : FileProvider {
     private val contentResolver = context.contentResolver
@@ -29,7 +29,7 @@ class AndroidFileProvider(
                 File(
                     uri = uri,
                     name = it.getString(0)?: "",
-                    mimeType = Tika().detect(uri)?: "application/octet-stream",
+                    mimeType = contentResolver.getType(uri.toUri())?: "application/octet-stream",
                     size = it.getLong(1)
                 )
             } else null

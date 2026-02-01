@@ -86,14 +86,10 @@ val LightColorScheme = lightColorScheme(
 )
 
 val ColorScheme.disabled: Color
-    @Composable get() {
-        return tertiaryContainer.copy(alpha = 0.6f)
-    }
+    get() = tertiaryContainer.copy(alpha = 0.6f)
 
 val ColorScheme.onDisabled: Color
-    @Composable get() {
-        return onTertiaryContainer.copy(alpha = 0.6f)
-    }
+    get() = onTertiaryContainer.copy(alpha = 0.6f)
 
 enum class Theme {
     DARK, LIGHT, SYSTEM
@@ -128,12 +124,12 @@ class UiPreferencesSerializer : Serializer<UiPreferences> {
 
 @Composable
 fun VideoHostingTheme(
-    uiPreferences: UiPreferences = UiPreferences(),
+    uiPreferences: UiPreferences,
     content: @Composable () -> Unit
 ) {
     val activity = LocalActivity.current!!
-    val view = LocalView.current
     val context = LocalContext.current
+    val view = LocalView.current
     val colorScheme = when (uiPreferences.theme) {
         SYSTEM -> when {
             isSystemInDarkTheme() -> DarkColorScheme
@@ -147,16 +143,28 @@ fun VideoHostingTheme(
         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars =
             (statusBarIconsColor != DarkColorScheme.onSurface)
     }
+
     LaunchedEffect(uiPreferences.locale) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getSystemService(LocaleManager::class.java).applicationLocales =
-                LocaleList.forLanguageTags(uiPreferences.locale.iso)
+                LocaleList.forLanguageTags(uiPreferences.locale.tag)
         } else {
             AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(uiPreferences.locale.iso)
+                LocaleListCompat.forLanguageTags(uiPreferences.locale.tag)
             )
         }
     }
+    VideoHostingTheme(
+        colorScheme = colorScheme,
+        content = content
+    )
+}
+
+@Composable
+internal fun VideoHostingTheme(
+    colorScheme: ColorScheme = if (isSystemInDarkTheme()) DarkColorScheme else LightColorScheme,
+    content: @Composable () -> Unit
+) {
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

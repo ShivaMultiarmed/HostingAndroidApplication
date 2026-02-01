@@ -13,7 +13,7 @@ sealed class VideoUploadingScreenState {
     data class Failure(val error: Error): ScreenState()
     data class Editing(
         val channels: List<ChannelOptionUi>,
-        val video: VideoUploadingInput,
+        val video: VideoUploadingInputState,
         val isLoading: Boolean = false
     ): ScreenState()
 }
@@ -23,10 +23,15 @@ data class ChannelOptionUi(
     val title: String
 )
 
-data class VideoUploadingInput(
+data class VideoUploadingInputState(
     val title: FieldState<String, Error> = FieldState(""),
     val channelId: FieldState<Long?, NumericError> = FieldState(null),
-    val source: FieldState<String?, FileError> = FieldState(null),
+    val source: FieldState<VideoSourceInputState, FileError> = FieldState(VideoSourceInputState()),
     val cover: FieldState<String?, FileError> = FieldState(null),
     val description: FieldState<String, TextError> = FieldState("")
+)
+
+data class VideoSourceInputState(
+    val current: String? = null,
+    val pending: String? = null
 )

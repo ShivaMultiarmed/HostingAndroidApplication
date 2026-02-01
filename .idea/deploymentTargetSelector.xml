@@ -16,9 +16,6 @@
       <SelectionState runConfigName="AccountRemovedScreen">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="PrimaryButtonPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="CodeInputPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2025-08-13T08:38:18.556154400Z">
@@ -42,6 +39,9 @@
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="get_ValidFile_ReturnsUnit()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="player_RegularOperations_RunSmoothly()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

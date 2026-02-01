@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.video
 
+import androidx.compose.runtime.MutableState
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -11,7 +12,8 @@ import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 
 fun EntryProviderScope<Route>.recommendationsGraph(
     rootBackStack: MutableList<Route>,
-    recommendationsBackStack: MutableList<Route>
+    recommendationsBackStack: MutableList<Route>,
+    currentTabBackStack: MutableState<MutableList<Route>>
 ) {
     entry <Route.Recommendations> {
         NavDisplay(
@@ -25,8 +27,14 @@ fun EntryProviderScope<Route>.recommendationsGraph(
                     rootBackStack = rootBackStack,
                     recommendationsBackStack = recommendationsBackStack
                 )
-                channelGraph(rootBackStack = rootBackStack)
-                userGraph(rootBackStack = rootBackStack)
+                channelGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentTabBackStack
+                )
+                userGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentTabBackStack
+                )
             }
         )
     }

@@ -12,12 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
+import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PipTopBar
 
 @Composable
 fun MiniPlayer(
+    modifier: Modifier = Modifier,
     player: Player,
     isFullScreen: Boolean = false,
     onFullScreen: (videoId: Long) -> Unit
@@ -25,7 +26,7 @@ fun MiniPlayer(
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
     val maxDimension = 250.dp
     PipContainer(
-        modifier = Modifier
+        modifier = modifier
             .then(
                 if (aspectRatio < 1f) {
                     Modifier.height(maxDimension)

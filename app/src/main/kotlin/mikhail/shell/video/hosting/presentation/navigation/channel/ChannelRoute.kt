@@ -1,6 +1,7 @@
 package mikhail.shell.video.hosting.presentation.navigation.channel
 
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -17,7 +18,8 @@ import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenEven
 
 fun EntryProviderScope<Route>.channelRoute(
     rootBackStack: MutableList<Route>,
-    channelBackStack: MutableList<Route>
+    channelBackStack: MutableList<Route>,
+    currentTabBackStack: MutableState<MutableList<Route>>
 ) {
     entry<Route.Channel.View> { route ->
         val context = LocalContext.current
@@ -46,7 +48,7 @@ fun EntryProviderScope<Route>.channelRoute(
                         }
                     }
                 }
-                is ScreenEvent.Removed -> channelBackStack.removeLastOrNull() // TODO: replace with current tab backstack
+                is ScreenEvent.Removed -> currentTabBackStack.value.removeLastOrNull()
             }
         }
     }

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
+import androidx.compose.runtime.MutableState
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -10,7 +11,8 @@ import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDeco
 
 fun EntryProviderScope<Route>.subscriptionsGraph(
     rootBackStack: MutableList<Route>,
-    subscriptionsBackStack: MutableList<Route>
+    subscriptionsBackStack: MutableList<Route>,
+    currentTabBackStack: MutableState<MutableList<Route>>
 ) {
     entry <Route.Subscriptions> {
         NavDisplay(
@@ -24,8 +26,14 @@ fun EntryProviderScope<Route>.subscriptionsGraph(
                     rootBackStack = rootBackStack,
                     subscriptionsBackStack = subscriptionsBackStack
                 )
-                channelGraph(rootBackStack = rootBackStack)
-                userGraph(rootBackStack = rootBackStack)
+                channelGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentTabBackStack
+                )
+                userGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentTabBackStack
+                )
             }
         )
     }

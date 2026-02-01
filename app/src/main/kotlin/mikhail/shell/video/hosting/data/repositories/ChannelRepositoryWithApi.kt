@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.ChannelApi
@@ -9,6 +11,7 @@ import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
 import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
+import mikhail.shell.video.hosting.data.utils.invalidateCache
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.Error
@@ -29,6 +32,7 @@ import mikhail.shell.video.hosting.domain.repositories.ChannelRepository
 import javax.inject.Inject
 
 class ChannelRepositoryWithApi @Inject constructor(
+    @param:ApplicationContext private val appContext: Context,
     private val channelApi: ChannelApi,
     private val fcm: FirebaseMessaging,
     private val fileProvider: FileProvider,
@@ -157,7 +161,7 @@ class ChannelRepositoryWithApi @Inject constructor(
             is EditingAction.Edit -> fileProvider.uriToPart(uri = channel.logo.value, partName = "logo")
             else -> null
         }
-        channelApi.editChannel(
+        val editedChannel = channelApi.editChannel(
             channel = ChannelEditingRequest(
                 channelId = channel.channelId,
                 title = channel.title,
@@ -177,6 +181,11 @@ class ChannelRepositoryWithApi @Inject constructor(
             logo = logoPart,
             header = headerPart
         ).toDomain()
+        ImageSize.entries.forEach { size ->
+            appContext.invalidateCache(constructLogoUrl(editedChannel.channelId, size))
+            appContext.invalidateCache(constructHeaderUrl(editedChannel.channelId, size))
+        }
+        return@request editedChannel
     }
 
     override suspend fun fetchChannel(channelId: Long): Result<Channel, Error> = request {

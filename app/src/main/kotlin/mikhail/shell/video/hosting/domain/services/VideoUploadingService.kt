@@ -17,7 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -40,7 +40,7 @@ class VideoUploadingService : Service() {
     private lateinit var removeVideo: DeleteVideo
     private var NOTIFICATION_COUNT = 0
     private lateinit var notificationManager: NotificationManager
-    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private var uploadJob: Job? = null
 
     private val videoIdState = MutableStateFlow<Long?>(null)
@@ -88,16 +88,16 @@ class VideoUploadingService : Service() {
                                         displayWaitHintNotification()
                                     }.onFailure {
                                         displayFailureNotification(it)
-                                        // TODO (?)
                                     }
                                 }
                             }
                         } catch (_: CancellationException) {
-                            // TODO
+                            // TODO: log
                         }
                     }
                 }
             } else if (notNullIntent.action == ACTION_CANCEL_UPLOADING) {
+                // TODO: test cancelling
                 coroutineScope.launch {
                     videoIdState
                         .mapNotNull { it }
@@ -182,6 +182,11 @@ class VideoUploadingService : Service() {
         }
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    override fun onDestroy() {
+        coroutineScope.cancel()
+        super.onDestroy()
     }
 
     companion object {

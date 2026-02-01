@@ -1,4 +1,4 @@
-package mikhail.shell.video.hosting.data.player
+package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import okhttp3.Interceptor
@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class TokenInterceptor @Inject constructor(
     private val provider: UserDetailsProvider
-): Interceptor {
+) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val requestBuilder = originalRequest.newBuilder()
@@ -16,7 +16,7 @@ class TokenInterceptor @Inject constructor(
         if (
             !(url.contains("auth") && !url.contains("signout"))
             && !(url.contains("users/existence") && url.contains("sign_up"))
-            ) {
+        ) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }
         return chain.proceed(requestBuilder.build())

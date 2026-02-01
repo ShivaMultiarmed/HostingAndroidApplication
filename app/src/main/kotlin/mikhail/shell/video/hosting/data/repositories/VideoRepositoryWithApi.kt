@@ -1,7 +1,9 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.content.Context
 import com.google.common.net.HttpHeaders
 import com.google.gson.Gson
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +19,7 @@ import mikhail.shell.video.hosting.data.dto.VideoEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.VideoUploadingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
+import mikhail.shell.video.hosting.data.utils.invalidateCache
 import mikhail.shell.video.hosting.data.utils.parseFileSize
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.toRequestBody
@@ -52,6 +55,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class VideoRepositoryWithApi @Inject constructor(
+    @param:ApplicationContext private val appContext: Context,
     private val videoApi: VideoApi,
     private val fileProvider: FileProvider,
     private val gson: Gson
@@ -252,7 +256,7 @@ class VideoRepositoryWithApi @Inject constructor(
                 is EditingAction.Edit -> fileProvider.uriToPart(video.cover.value, "cover")
                 else -> null
             }
-            videoApi.editVideo(
+            val editedVideo = videoApi.editVideo(
                 video = VideoEditingRequest(
                     videoId = video.videoId,
                     title = video.title,
@@ -265,6 +269,10 @@ class VideoRepositoryWithApi @Inject constructor(
                 ),
                 cover = coverPart
             ).toDomain()
+            ImageSize.entries.forEach { size ->
+                appContext.invalidateCache(getCoverUrl(editedVideo.videoId, size))
+            }
+            return@request editedVideo
         }
     }
 

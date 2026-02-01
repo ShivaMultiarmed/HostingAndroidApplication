@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.channel
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation3.runtime.EntryProviderScope
@@ -10,7 +11,8 @@ import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimat
 import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 
 fun EntryProviderScope<Route>.channelGraph(
-    rootBackStack: MutableList<Route>
+    rootBackStack: MutableList<Route>,
+    currentTabBackStack: MutableState<MutableList<Route>>
 ) {
     entry<Route.Channel> { graph ->
         val channelBackStack = rememberSaveable {
@@ -25,7 +27,8 @@ fun EntryProviderScope<Route>.channelGraph(
             entryProvider = entryProvider {
                 channelRoute(
                     rootBackStack = rootBackStack,
-                    channelBackStack = channelBackStack
+                    channelBackStack = channelBackStack,
+                    currentTabBackStack = currentTabBackStack
                 )
                 channelEditingRoute(
                     rootBackStack = rootBackStack,

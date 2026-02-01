@@ -20,7 +20,9 @@ class HostingApplication: Application() {
     }
     override fun onCreate() {
         super.onCreate()
+
         Coil.setImageLoader(imageLoader)
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         val videoUploadingChannel = NotificationChannel(
             "video_uploading",

@@ -120,14 +120,14 @@ fun SettingsScreen(
 
 enum class Locale(
     val label: String,
-    val iso: String
+    val tag: String
 ) {
     RUSSIAN("Русский", "ru"),
     ENGLISH("English", "en");
 
     companion object {
-        fun ofTag(iso: String): Locale {
-            return entries.firstOrNull { it.iso == iso } ?: throw IllegalArgumentException("Invalid locale tag")
+        fun ofTag(tag: String): Locale {
+            return entries.firstOrNull { it.tag == tag } ?: throw IllegalArgumentException("Invalid locale tag")
         }
     }
 }

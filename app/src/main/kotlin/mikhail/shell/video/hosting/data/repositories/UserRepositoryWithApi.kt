@@ -1,12 +1,15 @@
 package mikhail.shell.video.hosting.data.repositories
 
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
+import mikhail.shell.video.hosting.data.utils.invalidateCache
 import mikhail.shell.video.hosting.data.utils.request
 import mikhail.shell.video.hosting.data.utils.uriToPart
 import mikhail.shell.video.hosting.domain.errors.Error
@@ -25,6 +28,7 @@ import mikhail.shell.video.hosting.domain.repositories.UserRepository
 import javax.inject.Inject
 
 class UserRepositoryWithApi @Inject constructor(
+    @param:ApplicationContext private val appContext: Context,
     private val userApi: UserApi,
     private val fileProvider: FileProvider,
     private val gson: Gson,
@@ -54,7 +58,7 @@ class UserRepositoryWithApi @Inject constructor(
                 is EditingAction.Edit -> fileProvider.uriToPart(uri = user.avatar.value, partName = "avatar")
                 else -> null
             }
-            userApi.edit(
+            val editedUser = userApi.edit(
                 user = UserEditingRequest(
                     nick = user.nick,
                     name = user.name,
@@ -69,6 +73,10 @@ class UserRepositoryWithApi @Inject constructor(
                 ),
                 avatar = avatarPart
             ).toDomain()
+            ImageSize.entries.forEach { size ->
+                appContext.invalidateCache(constructAvatarUrl(editedUser.userId, size))
+            }
+            return@request editedUser
         }
     }
 

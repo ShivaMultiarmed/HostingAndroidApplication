@@ -23,7 +23,8 @@ class AndroidUserDetailsProvider @Inject constructor(
     @param:ApplicationContext private val appContext: Context,
 ) : UserDetailsProvider {
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val dataStore = appContext.userDetailsDataStore
+    private val dataStore = appContext.userDetails
+
     override val userDetails = dataStore.data.stateIn(
         scope = coroutineScope,
         started = SharingStarted.Eagerly,
@@ -45,7 +46,7 @@ class AndroidUserDetailsProvider @Inject constructor(
     }
 }
 
-val Context.userDetailsDataStore by dataStore("user_details_ds.json", UserDetailsSerializer())
+val Context.userDetails by dataStore("user_details_ds.json", UserDetailsSerializer())
 
 class UserDetailsSerializer : Serializer<UserDetails> {
     override val defaultValue = UserDetails()

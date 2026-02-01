@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class ValidateCode @Inject constructor() {
     operator fun invoke(code: String): Result<Unit, TextError> {
-        return if (code.isEmpty()) {
+        return if (code.isBlank()) {
             Result.Failure(TextError.EMPTY)
         } else if (!code.matches(regex)) {
             Result.Failure(TextError.PATTERN)

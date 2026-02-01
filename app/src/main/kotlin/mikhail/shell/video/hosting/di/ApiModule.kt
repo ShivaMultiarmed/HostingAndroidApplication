@@ -19,7 +19,7 @@ import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.converters.EnumConverter
 import mikhail.shell.video.hosting.data.converters.InstantConverter
-import mikhail.shell.video.hosting.data.player.TokenInterceptor
+import mikhail.shell.video.hosting.data.api.TokenInterceptor
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
@@ -38,7 +38,9 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideAndroidFileProvider(@ApplicationContext appContext: Context): FileProvider = AndroidFileProvider(appContext)
+    fun provideAndroidFileProvider(
+        @ApplicationContext appContext: Context
+    ): FileProvider = AndroidFileProvider(appContext)
 
     @Provides
     @Singleton

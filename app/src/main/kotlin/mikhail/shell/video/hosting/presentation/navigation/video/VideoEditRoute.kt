@@ -3,6 +3,8 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.RetainedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -10,6 +12,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreen
 import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingViewModel
@@ -50,6 +53,13 @@ fun EntryProviderScope<Route>.editVideoRoute(
                     videoBackStack.clear()
                     videoBackStack.add(videoRoute.copy())
                 }
+            }
+        }
+        var playerState by LocalPlayerState.current
+        RetainedEffect (Unit) {
+            playerState = playerState.copy(hidden = false)
+            onRetire {
+                playerState = playerState.copy(hidden = true)
             }
         }
     }

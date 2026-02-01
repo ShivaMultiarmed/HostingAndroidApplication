@@ -18,7 +18,6 @@ import mikhail.shell.video.hosting.domain.models.VideoCreationModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.channels.GetOwnedChannels
 import mikhail.shell.video.hosting.domain.usecases.user.GetUserDetails
-import mikhail.shell.video.hosting.domain.usecases.videos.GetVideoMetaData
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.validation.ValidateChannelId
 import mikhail.shell.video.hosting.domain.utils.ValidateDescription
@@ -41,7 +40,6 @@ class VideoUploadingViewModel @AssistedInject constructor(
     private val validateVideoSource: ValidateVideoSource,
     private val validateTitle: ValidateTitle,
     private val validateDescription: ValidateDescription,
-    private val getVideoMetaData: GetVideoMetaData,
     private val uploadVideo: UploadVideo
 ) : ViewModel() {
     private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
@@ -83,7 +81,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                 userId = getUserDetails().userId,
                 partIndex = 0,
                 partSize = 100
-            ).onSuccess { channels -> // TODO all channels fetch here?
+            ).onSuccess { channels ->
                 _state.update {
                     ScreenState.Editing(
                         channels = channels.map {
@@ -92,7 +90,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                                 title = it.title
                             )
                         },
-                        video = VideoUploadingInput()
+                        video = VideoUploadingInputState()
                     )
                 }
             }.onFailure { error ->
@@ -155,14 +153,14 @@ class VideoUploadingViewModel @AssistedInject constructor(
         }
     }
 
-    private fun onSourceChanged(source: String?) {
+    private fun onSourceChanged(source: VideoSourceInputState) {
         _state.update {
             val currentState = it as? ScreenState.Editing
             currentState?.copy(
                 video = currentState.video.copy(
                     source = currentState.video.source.copy(
                         value = source,
-                        error = validateVideoSource(source).errorOrNull()
+                        error = validateVideoSource(source.current).errorOrNull()
                     )
                 )
             ) ?: it
@@ -236,7 +234,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                         error = validateTitle(currentState.video.title.value).errorOrNull()
                     ),
                     source = currentState.video.source.copy(
-                        error = validateVideoSource(currentState.video.source.value).errorOrNull()
+                        error = validateVideoSource(currentState.video.source.value.current).errorOrNull()
                     ),
                     cover = currentState.video.cover.copy(
                         error = currentState.video.cover.value?.let {
@@ -275,7 +273,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                     description = video.description.value.takeIf { it.isNotEmpty() },
                     title = video.title.value,
                     cover = video.cover.value,
-                    source = video.source.value!!
+                    source = video.source.value.current!!
                 )
             ).onSuccess { pendingVideo ->
                 viewModelScope.launch {
@@ -283,7 +281,7 @@ class VideoUploadingViewModel @AssistedInject constructor(
                         ScreenEvent.Success(
                             tmpId = pendingVideo.tmpId,
                             channelId = video.channelId.value,
-                            source = currentState.video.source.value
+                            source = currentState.video.source.value.current
                         )
                     )
                 }

@@ -213,7 +213,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                         video = it.video!!.copy(
                             likes = video.likes,
                             dislikes = video.dislikes,
-                            liking = liking // TODO replace with VideoDetails (with liking state)
+                            liking = video.liking
                         )
                     )
                 }

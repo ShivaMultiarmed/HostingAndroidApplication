@@ -58,13 +58,13 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.retain.RetainedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,9 +84,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.AsyncImage
@@ -102,8 +99,8 @@ import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.comments.models.CommentUi
-import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerComponent
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
@@ -136,7 +133,6 @@ fun VideoScreen(
 ) {
     val activity = LocalActivity.current!!
     val density = LocalDensity.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val playerState = LocalPlayerState.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -232,7 +228,7 @@ fun VideoScreen(
                         }
                     )
                 }
-                LaunchedEffect(isFullScreenReached) {
+                RetainedEffect (isFullScreenReached) {
                     playerState.value = playerState.value.copy(fullScreen = isFullScreenReached)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         val window = activity.window
@@ -247,22 +243,14 @@ fun VideoScreen(
                             window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
                         }
                     }
+                    onRetire {}
                 }
-                LaunchedEffect(targetOrientation) {
+                RetainedEffect (targetOrientation) {
                     if (activity.requestedOrientation != targetOrientation) {
                         activity.requestedOrientation = targetOrientation
                     }
-                }
-                DisposableEffect(Unit) {
-                    val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_STOP) {
-                            activity.requestedOrientation =
-                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        }
-                    }
-                    lifecycleOwner.lifecycle.addObserver(observer)
-                    onDispose {
-                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    onRetire {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     }
                 }
                 if (!isFullScreenReached) {
@@ -570,6 +558,7 @@ fun VideoScreen(
             )
         }
     }
+
 }
 
 
@@ -601,7 +590,7 @@ private fun CommentsBottomSheet(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding( 10.dp),
+                .padding(10.dp),
         ) {
             Box(
                 modifier = Modifier

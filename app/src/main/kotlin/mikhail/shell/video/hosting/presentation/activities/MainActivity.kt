@@ -7,7 +7,6 @@ import android.media.AudioManager
 import android.media.session.MediaSession
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -36,12 +35,10 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.StateFlow
+import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.usecases.ui.ObserveUiPreferences
 import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
-import mikhail.shell.video.hosting.presentation.exoplayer.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerState
-import mikhail.shell.video.hosting.presentation.exoplayer.PlayerStateSaver
-import mikhail.shell.video.hosting.presentation.exoplayer.isPlayerPrepared
 import mikhail.shell.video.hosting.presentation.navigation.authentication.authenticationGraph
 import mikhail.shell.video.hosting.presentation.navigation.common.BottomNavBar
 import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
@@ -52,10 +49,14 @@ import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.recommendationsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.PlayerState
+import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
 import mikhail.shell.video.hosting.ui.theme.DarkColorScheme
+import mikhail.shell.video.hosting.ui.theme.UiPreferences
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
 
@@ -63,10 +64,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var observeUserDetails: ObserveUserDetails
+    lateinit var observeUiPreferences: ObserveUiPreferences
+    lateinit var uiPreferences: StateFlow<UiPreferences>
 
     @Inject
-    lateinit var observeUiPreferences: ObserveUiPreferences
+    lateinit var observeUserDetails: ObserveUserDetails
+    lateinit var userDetails: StateFlow<UserDetails>
 
     @Inject
     lateinit var player: Player
@@ -83,16 +86,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setPrimaryContent()
         setMediaHandlers()
+        setDataFlows()
     }
 
     private fun setPrimaryContent() {
         setContent {
             VideoHostingTheme(
-                uiPreferences = observeUiPreferences().collectAsStateWithLifecycle().value
+                uiPreferences = uiPreferences.collectAsStateWithLifecycle().value
             ) {
-                val userData by observeUserDetails().collectAsStateWithLifecycle()
-                val playerState =
-                    rememberSaveable(saver = PlayerStateSaver) { mutableStateOf(PlayerState()) }
+                val userData = userDetails.collectAsStateWithLifecycle().value
+                val playerState = rememberSerializable {
+                    mutableStateOf(PlayerState())
+                }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState
                 ) {
@@ -135,10 +140,19 @@ class MainActivity : ComponentActivity() {
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
-
+                    var playerState by player.rememberPlayerState()
                     LaunchedEffect(currentRootRoute) {
-                        val isTabRoute = currentRootRoute in setOf(Route.Recommendations, Route.Subscriptions, Route.Search)
-                                || currentRootRoute is Route.User
+                        playerState = playerState.copy(
+                            hidden = currentRootRoute == Route.Authentication || currentRootRoute is Route.Video
+                        )
+                        if (currentRootRoute == Route.Authentication && player.isPlaying) {
+                            player.pause()
+                        }
+                        val isTabRoute = currentRootRoute in setOf(
+                            Route.Recommendations,
+                            Route.Subscriptions,
+                            Route.Search
+                        ) || currentRootRoute is Route.User
                         if (isTabRoute && currentRootRoute != null) {
                             currentTabRoute = currentRootRoute
                         }
@@ -152,6 +166,15 @@ class MainActivity : ComponentActivity() {
                             else -> return@LaunchedEffect
                         }
                     }
+                    LaunchedEffect(currentRootRoute) {
+                        if (currentRootRoute != null
+                            && currentRootRoute != Route.Authentication
+                            && currentRootRoute !is Route.Video) {
+                            playerState = playerState.copy(
+                                hidden = false
+                            )
+                        }
+                    }
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
@@ -159,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                 currentRootRoute != null
                                 && currentRootRoute != Route.Authentication
                                 && currentRootRoute !is Route.Video
-                                && !LocalPlayerState.current.value.fullScreen
+                                && !playerState.fullScreen
                             ) {
                                 BottomNavBar(
                                     selectedTabRoute = currentRootRoute,
@@ -180,7 +203,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     },
-                                    userId = userData.userId
+                                    profileUserId = userData.userId
                                 )
                             }
                         }
@@ -199,7 +222,13 @@ class MainActivity : ComponentActivity() {
                         ) {
                             NavDisplay(
                                 modifier = Modifier.fillMaxSize(),
-                                backStack = rootBackStack,
+                                backStack = when {
+                                    Route.Authentication in rootBackStack -> rootBackStack.subList(
+                                        rootBackStack.lastIndex,
+                                        rootBackStack.size
+                                    )
+                                    else -> rootBackStack
+                                },
                                 entryDecorators = defaultNavDecorators,
                                 transitionSpec = { RootAnimations.enteringAnimation },
                                 popTransitionSpec = { RootAnimations.leavingAnimation },
@@ -208,19 +237,23 @@ class MainActivity : ComponentActivity() {
                                     authenticationGraph(rootBackStack = rootBackStack)
                                     recommendationsGraph(
                                         rootBackStack = rootBackStack,
-                                        recommendationsBackStack = recommendationsBackStack
+                                        recommendationsBackStack = recommendationsBackStack,
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                     subscriptionsGraph(
                                         rootBackStack = rootBackStack,
-                                        subscriptionsBackStack = subscriptionsBackStack
+                                        subscriptionsBackStack = subscriptionsBackStack,
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                     searchGraph(
                                         rootBackStack = rootBackStack,
-                                        searchBackStack = searchBackStack
+                                        searchBackStack = searchBackStack,
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                     userGraph(
                                         rootBackStack = rootBackStack,
-                                        userBackStack = userBackStack
+                                        userBackStack = userBackStack,
+                                        currentTabBackStack = currentTabBackStack
                                     )
                                     videoGraph(
                                         rootBackStack = rootBackStack,
@@ -228,8 +261,9 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             )
-                            if (currentRootRoute !is Route.Video && isPlayerPrepared(player)) {
+                            if (!playerState.hidden && playerState.prepared) {
                                 MiniPlayer(
+                                    modifier = Modifier,
                                     player = player,
                                     onFullScreen = {
                                         rootBackStack.add(Route.Video(it))
@@ -237,9 +271,6 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    }
-                    BackHandler(enabled = Route.Authentication in rootBackStack) {
-                        // TODO (?)
                     }
                 }
             }
@@ -257,6 +288,11 @@ class MainActivity : ComponentActivity() {
             rootBackStack.add(Route.Video(videoId))
             return
         }
+    }
+
+    private fun setDataFlows() {
+        uiPreferences = observeUiPreferences()
+        userDetails = observeUserDetails()
     }
 
     private fun setMediaHandlers() {

@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.navigation.user
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation3.runtime.EntryProviderScope
@@ -14,14 +15,12 @@ import mikhail.shell.video.hosting.presentation.navigation.video.videoUploadingR
 
 fun EntryProviderScope<Route>.userGraph(
     rootBackStack: MutableList<Route>,
+    currentTabBackStack: MutableState<MutableList<Route>>,
     userBackStack: MutableList<Route>? = null
 ) {
     entry<Route.User> { graph ->
-        val userBackStack = when (userBackStack) {
-            null -> rememberSaveable {
-                mutableStateListOf<Route>(Route.User.Profile(graph.userId))
-            }
-            else -> userBackStack
+        val userBackStack = userBackStack ?: rememberSaveable {
+            mutableStateListOf<Route>(Route.User.Profile(graph.userId))
         }
         NavDisplay(
             backStack = userBackStack,
@@ -34,7 +33,10 @@ fun EntryProviderScope<Route>.userGraph(
                     rootBackStack = rootBackStack,
                     currentTabBackStack = userBackStack
                 )
-                channelGraph(rootBackStack = rootBackStack)
+                channelGraph(
+                    rootBackStack = rootBackStack,
+                    currentTabBackStack = currentTabBackStack
+                )
                 settingsRoute(profileBackStack = userBackStack)
                 userEditingRoute(
                     rootBackStack = rootBackStack,

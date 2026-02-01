@@ -28,13 +28,17 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.data.providers.userDetails
+import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.presentation.utils.borderTop
 
 data class BottomNavItem (
@@ -48,11 +52,11 @@ data class BottomNavItem (
 fun BottomNavBar(
     selectedTabRoute: Route,
     onClick: (Route) -> Unit,
-    userId: Long
+    profileUserId: Long
 ) {
     val context = LocalContext.current
-    val navItems = remember(userId) {
-        mutableStateListOf(
+    val navItems = remember(profileUserId) {
+        listOf(
             BottomNavItem(
                 Route.Recommendations,
                 context.getString(R.string.recommendations_title),
@@ -72,7 +76,7 @@ fun BottomNavBar(
                 Icons.Rounded.Search
             ),
             BottomNavItem(
-                Route.User(userId),
+                Route.User(profileUserId),
                 context.getString(R.string.nav_profile_item_label),
                 Icons.Outlined.Person,
                 Icons.Rounded.Person
