@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.application.gradle)
     // alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
@@ -16,11 +16,11 @@ android {
     compileSdk = 36
     defaultConfig {
         applicationId = "mikhail.shell.video.hosting"
-        minSdk = 28
+        minSdk = 26
         targetSdk = 36
-        versionCode = 15
-        versionName = "2.0.0"
-        testInstrumentationRunner = "mikhail.shell.video.hosting.HostingTestsRunner"
+        versionCode = 16
+        versionName = "3.0.0"
+        testInstrumentationRunner = "mikhail.shell.video.hosting.VideoHostingTestsRunner"
     }
     signingConfigs {
         create("staging") {
@@ -41,21 +41,18 @@ android {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.2/api/v2\"")
-            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "true")
             signingConfig = signingConfigs.getByName("debug")
         }
         create("staging") {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://trendy-app.ru/api\"")
-            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             signingConfig = signingConfigs.getByName("staging")
         }
         release {
             isDebuggable = false
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"https://trendy-app.ru/api\"")
-            buildConfigField("boolean", "TRUST_ALL_CERTIFICATES", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -111,12 +108,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.core)
 
-
     implementation(libs.androidx.compose.foundation)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material.icons.extended)
-    // implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.material3.window.size.klass.android)
@@ -127,7 +122,6 @@ dependencies {
 
     implementation (libs.hilt.android)
     ksp(libs.hilt.android.compiler)
-    kspAndroidTest (libs.hilt.android.compiler)
     ksp (libs.androidx.hilt.compiler)
     implementation (libs.androidx.hilt.navigation.compose)
     testImplementation(libs.hilt.android.testing)
@@ -152,6 +146,4 @@ dependencies {
 
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
-
-    implementation("org.apache.tika:tika-core:3.2.3")
 }

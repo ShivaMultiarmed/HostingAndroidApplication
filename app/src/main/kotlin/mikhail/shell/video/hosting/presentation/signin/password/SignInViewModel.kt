@@ -164,9 +164,6 @@ class SignInViewModel @Inject constructor(
                     )
                     subscribeToNotifications()
                     _events.emit(ScreenEvent.Success(authModel))
-                    _state.update {
-                        it.copy(isLoading = false)
-                    }
                 }
             }.onFailure { error ->
                 if (error is SignInError) {

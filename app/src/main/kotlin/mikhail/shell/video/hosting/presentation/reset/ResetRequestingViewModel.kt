@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.errors.TextError
+import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.models.errorOrNull
 import mikhail.shell.video.hosting.domain.usecases.authentication.reset.RequestResetPassword
-import mikhail.shell.video.hosting.domain.models.UserNameCheckPurpose
 import mikhail.shell.video.hosting.domain.usecases.user.validation.ValidateUserName
 import javax.inject.Inject
 import mikhail.shell.video.hosting.presentation.reset.ResetRequestingScreenAction as ScreenAction
@@ -111,10 +111,10 @@ class ResetRequestingViewModel @Inject constructor(
                             _events.emit(ScreenEvent.Failure(error))
                         }
                     }
+                    _state.update {
+                        it.copy(isLoading = false)
+                    }
                 }
-            _state.update {
-                it.copy(isLoading = false)
-            }
         }
     }
 }

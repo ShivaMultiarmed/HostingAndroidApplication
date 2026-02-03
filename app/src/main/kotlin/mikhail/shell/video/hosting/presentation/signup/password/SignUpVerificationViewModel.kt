@@ -98,9 +98,6 @@ class SignUpVerificationViewModel @AssistedInject constructor(
                 viewModelScope.launch {
                     _events.emit(ScreenEvent.Success(token))
                 }
-                _state.update {
-                    it.copy(isLoading = false)
-                }
             }.onFailure { error ->
                 if (error is TextError) {
                     _state.update {

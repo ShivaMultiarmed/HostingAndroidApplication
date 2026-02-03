@@ -109,9 +109,9 @@ class ResetVerificationViewModel @AssistedInject constructor(
                         _events.emit(ResetVerificationScreenEvent.Failure(error))
                     }
                 }
-            }
-            _state.update {
-                it.copy(isLoading = false)
+                _state.update {
+                    it.copy(isLoading = false)
+                }
             }
         }
     }

@@ -207,9 +207,6 @@ class SignUpConfirmationViewModel @AssistedInject constructor(
                         )
                     )
                     _events.emit(ScreenEvent.Success(authModel))
-                    _state.update {
-                        it.copy(isLoading = false)
-                    }
                 }
             }.onFailure { error ->
                 if (error is UserCreationError) {

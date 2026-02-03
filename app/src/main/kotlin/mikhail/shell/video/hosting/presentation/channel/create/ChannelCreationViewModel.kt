@@ -267,9 +267,6 @@ class ChannelCreationViewModel @Inject constructor(
                     subscribeToNotifications()
                     _events.emit(ScreenEvent.Created(channelId))
                 }
-                _state.update {
-                    it.copy(isLoading = false)
-                }
             }.onFailure { error ->
                 if (error is ChannelCreationError) {
                     _state.update {

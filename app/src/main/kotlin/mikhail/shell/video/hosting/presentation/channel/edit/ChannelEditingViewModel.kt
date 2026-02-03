@@ -337,7 +337,7 @@ class ChannelEditingViewModel @AssistedInject constructor(
                         is EditingState.Removing -> EditingAction.Remove
                     }
                 )
-            ).onSuccess { editedChannel ->
+            ).onSuccess {
                 viewModelScope.launch {
                     _events.emit(ScreenEvent.Success)
                 }

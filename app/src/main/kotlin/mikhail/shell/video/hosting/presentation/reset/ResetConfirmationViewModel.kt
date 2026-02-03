@@ -58,6 +58,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
             )
         }
     }
+
     private fun onPasswordFocused() {
         _state.update {
             it.copy(
@@ -67,6 +68,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
             )
         }
     }
+
     private fun onPasswordBlurred() {
         _state.update {
             it.copy(
@@ -88,6 +90,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
             )
         }
     }
+
     private fun onPasswordDuplicateFocused() {
         _state.update {
             it.copy(
@@ -97,6 +100,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
             )
         }
     }
+
     private fun onPasswordDuplicateBlurred() {
         _state.update {
             it.copy(
@@ -134,7 +138,7 @@ class ResetConfirmationViewModel @AssistedInject constructor(
         if (
             _state.value.user.password.error != null
             || _state.value.user.passwordDuplicate.error != null
-            ) {
+        ) {
             return
         }
         _state.update {
@@ -168,12 +172,13 @@ class ResetConfirmationViewModel @AssistedInject constructor(
                         _events.emit(ScreenEvent.Failure(error))
                     }
                 }
-            }
-            _state.update {
-                it.copy(isLoading = false)
+                _state.update {
+                    it.copy(isLoading = false)
+                }
             }
         }
     }
+
     @AssistedFactory
     interface Factory {
         fun create(@Assisted("token") token: String): ResetConfirmationViewModel
