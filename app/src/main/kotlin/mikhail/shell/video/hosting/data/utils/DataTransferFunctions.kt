@@ -57,8 +57,8 @@ suspend fun <D> request(
             }
             Result.Failure(error)
         }
-    } catch (e: Exception) {
-        Result.Failure(unexpectedExceptionHandler(e))
+    } catch (_: Exception) {
+        Result.Failure(UnexpectedError)
     }
 }
 

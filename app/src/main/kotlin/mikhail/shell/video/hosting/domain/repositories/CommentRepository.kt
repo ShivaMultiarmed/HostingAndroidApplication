@@ -9,7 +9,7 @@ import kotlin.time.Instant
 
 interface CommentRepository {
     suspend fun post(comment: CommentCreationModel): Result<CommentWithUser, Error>
-    suspend fun getPart(before: Instant, videoId: Long, partSize: Int): Result<List<CommentWithUser>, Error>
+    suspend fun getPart(before: Instant?, videoId: Long, partSize: Int): Result<List<CommentWithUser>, Error>
     suspend fun remove(commentId: Long): Result<Unit, Error>
     suspend fun edit(comment: CommentEditingModel): Result<CommentWithUser, Error>
 }

@@ -18,7 +18,7 @@ interface CommentApi {
     @GET("comments/videos/{video_id}")
     suspend fun fetch(
         @Path("video_id") videoId: Long,
-        @Query("before") before: Instant,
+        @Query("before") before: Instant?,
         @Query("part_size") partSize: Int
     ): List<CommentWithUserDto>
     @DELETE("comments/{comment_id}")

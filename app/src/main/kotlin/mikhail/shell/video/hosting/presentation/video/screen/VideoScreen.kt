@@ -796,7 +796,7 @@ fun LocalDateTime.toPresentation(
     timeZone: TimeZone = TimeZone.currentSystemDefault()
 ): String {
     val now = Clock.System.now()
-    val currentInstant = this.toInstant(timeZone)
+    val currentInstant = toInstant(timeZone)
     val stringBuilder = StringBuilder()
     if (now - 5.minutes < currentInstant) {
         stringBuilder.append(context.getString(R.string.date_time_just_now_message))

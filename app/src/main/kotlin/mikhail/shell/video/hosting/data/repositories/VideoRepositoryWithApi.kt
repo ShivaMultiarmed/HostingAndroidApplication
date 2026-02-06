@@ -29,7 +29,7 @@ import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
-import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Liking
@@ -262,9 +262,9 @@ class VideoRepositoryWithApi @Inject constructor(
                     title = video.title,
                     description = video.description,
                     coverAction = when (video.cover) {
-                        is EditingAction.Edit -> EditAction.EDIT
-                        EditingAction.Keep -> EditAction.KEEP
-                        EditingAction.Remove -> EditAction.REMOVE
+                        is EditingAction.Edit -> EditingActionDto.EDIT
+                        EditingAction.Keep -> EditingActionDto.KEEP
+                        EditingAction.Remove -> EditingActionDto.REMOVE
                     }
                 ),
                 cover = coverPart
@@ -355,5 +355,5 @@ data class VideoEditingRequest(
     val videoId: Long,
     val title: String,
     val description: String?,
-    val coverAction: EditAction
+    val coverAction: EditingActionDto
 )

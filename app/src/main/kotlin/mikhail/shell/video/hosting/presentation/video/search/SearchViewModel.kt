@@ -82,7 +82,7 @@ class SearchViewModel @Inject constructor(
             ).onSuccess { videos ->
                 _state.update {
                     it.copy(
-                        videos = ((if (!start) it.videos else null) ?: emptyList()) + videos.map {
+                        videos = (((if (!start) it.videos else null) ?: emptyList()) + videos.map {
                             it.toUi(
                                 channelLogo = getChannelLogoUrl(
                                     channelId = it.channel.channelId,
@@ -93,7 +93,7 @@ class SearchViewModel @Inject constructor(
                                     size = ImageSize.MEDIUM
                                 )
                             )
-                        },
+                        }).distinctBy { it.videoId },
                         error = null,
                         isStarting = false,
                         isLoading = false,

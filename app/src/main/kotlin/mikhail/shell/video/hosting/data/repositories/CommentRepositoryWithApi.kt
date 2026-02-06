@@ -38,7 +38,7 @@ class CommentRepositoryWithApi @Inject constructor(
         commentApi.remove(commentId)
     }
 
-    override suspend fun getPart(before: Instant, videoId: Long, partSize: Int): Result<List<CommentWithUser>, Error> = request {
+    override suspend fun getPart(before: Instant?, videoId: Long, partSize: Int): Result<List<CommentWithUser>, Error> = request {
         commentApi.fetch(videoId, before, partSize).map { it.toDomain() }
     }
 }

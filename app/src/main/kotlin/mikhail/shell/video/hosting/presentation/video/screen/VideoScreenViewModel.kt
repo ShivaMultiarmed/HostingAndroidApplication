@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.models.CommentCreationModel
 import mikhail.shell.video.hosting.domain.models.CommentEditingModel
 import mikhail.shell.video.hosting.domain.models.ImageSize
@@ -45,7 +44,6 @@ import mikhail.shell.video.hosting.presentation.comments.models.toUi
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.utils.stateIn
 import mikhail.shell.video.hosting.presentation.video.models.toUi
-import kotlin.time.Clock
 
 @HiltViewModel(assistedFactory = VideoScreenViewModel.Factory::class)
 class VideoScreenViewModel @AssistedInject constructor(
@@ -77,14 +75,12 @@ class VideoScreenViewModel @AssistedInject constructor(
             is VideoScreenAction.Like -> rate(action.liking)
             VideoScreenAction.RestartComments -> {
                 if (_state.value.commentsState.comments == null) {
-                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                    loadComments(now)
+                    loadComments(null)
                 }
             }
 
             VideoScreenAction.LoadNextCommentsPart -> {
                 val before = _state.value.commentsState.comments?.lastOrNull()?.dateTime
-                    ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 loadComments(before)
             }
 
@@ -424,7 +420,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
     }
 
-    private fun loadComments(before: LocalDateTime) {
+    private fun loadComments(before: LocalDateTime?) {
         if (_state.value.commentsState.isStarting || _state.value.commentsState.isLoading) {
             return
         }
@@ -438,7 +434,7 @@ class VideoScreenViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             getComments(
-                before = before.toInstant(TimeZone.currentSystemDefault()),
+                before = before?.toInstant(TimeZone.currentSystemDefault()),
                 videoId = videoId,
                 partSize = PART_SIZE
             ).onSuccess { comments ->

@@ -16,7 +16,7 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
-import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
@@ -66,9 +66,9 @@ class UserRepositoryWithApi @Inject constructor(
                     tel = user.tel,
                     email = user.email,
                     avatarAction = when (user.avatar) {
-                        is EditingAction.Edit -> EditAction.EDIT
-                        EditingAction.Keep -> EditAction.KEEP
-                        EditingAction.Remove -> EditAction.REMOVE
+                        is EditingAction.Edit -> EditingActionDto.EDIT
+                        EditingAction.Keep -> EditingActionDto.KEEP
+                        EditingAction.Remove -> EditingActionDto.REMOVE
                     }
                 ),
                 avatar = avatarPart
@@ -122,7 +122,7 @@ data class UserEditingRequest(
     val bio: String?,
     val tel: String?,
     val email: String?,
-    val avatarAction: EditAction
+    val avatarAction: EditingActionDto
 )
 
 data class UserEditingErrorResponse(

@@ -11,7 +11,7 @@ class GetComments @Inject constructor(
     private val repository: CommentRepository
 ) {
     suspend operator fun invoke(
-        before: Instant,
+        before: Instant? = null,
         videoId: Long,
         partSize: Int
     ): Result<List<CommentWithUser>, Error> =

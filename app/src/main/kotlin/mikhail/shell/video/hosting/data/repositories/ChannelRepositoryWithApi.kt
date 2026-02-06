@@ -22,7 +22,7 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
-import mikhail.shell.video.hosting.domain.models.EditAction
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
@@ -168,14 +168,14 @@ class ChannelRepositoryWithApi @Inject constructor(
                 alias = channel.alias,
                 description = channel.description,
                 headerAction = when (channel.header) {
-                    is EditingAction.Edit -> EditAction.EDIT
-                    EditingAction.Keep -> EditAction.KEEP
-                    EditingAction.Remove -> EditAction.REMOVE
+                    is EditingAction.Edit -> EditingActionDto.EDIT
+                    EditingAction.Keep -> EditingActionDto.KEEP
+                    EditingAction.Remove -> EditingActionDto.REMOVE
                 },
                 logoAction = when (channel.logo) {
-                    is EditingAction.Edit -> EditAction.EDIT
-                    EditingAction.Keep -> EditAction.KEEP
-                    EditingAction.Remove -> EditAction.REMOVE
+                    is EditingAction.Edit -> EditingActionDto.EDIT
+                    EditingAction.Keep -> EditingActionDto.KEEP
+                    EditingAction.Remove -> EditingActionDto.REMOVE
                 }
             ),
             logo = logoPart,
@@ -208,6 +208,6 @@ data class ChannelEditingRequest(
     val title: String,
     val alias: String?,
     val description: String?,
-    val headerAction: EditAction,
-    val logoAction: EditAction
+    val headerAction: EditingActionDto,
+    val logoAction: EditingActionDto
 )
