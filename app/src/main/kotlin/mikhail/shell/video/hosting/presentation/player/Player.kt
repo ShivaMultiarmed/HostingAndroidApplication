@@ -1,3 +1,5 @@
+@file:kotlin.OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+
 package mikhail.shell.video.hosting.presentation.player
 
 import android.media.AudioFocusRequest
@@ -23,11 +25,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,10 +43,14 @@ import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.FullscreenExit
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +63,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.retain.RetainedEffect
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
@@ -79,10 +86,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.media3.common.MediaItem
@@ -96,11 +105,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
-import mikhail.shell.video.hosting.ui.theme.White
 import kotlin.math.PI
 import kotlin.math.acos
-import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -133,39 +139,85 @@ val LocalPlayerState = compositionLocalOf {
     mutableStateOf(PlayerState())
 }
 
+@Serializable
+data class MiniPlayerPosition(
+    val x: Int = 0,
+    val y: Int = 0
+)
+
+val LocalMiniPlayerPositionState = compositionLocalOf {
+    mutableStateOf(MiniPlayerPosition())
+}
+
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    player: Player,
+    playerProvider: () -> Player,
     isFullScreen: Boolean = false,
     onFullscreen: ((Boolean) -> Unit)? = null,
-    onRatioObtained: (ratio: Float) -> Unit = {}
+    onRatioObtained: ((Float) -> Unit)? = null
 ) {
+    val context = LocalContext.current
+    val player = retain {
+        playerProvider()
+    }
     var playerState by rememberSaveable { mutableIntStateOf(player.playbackState) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
     var duration by rememberSaveable { mutableLongStateOf(player.duration) }
     var position by rememberSaveable { mutableLongStateOf(player.currentPosition) }
-    val context = LocalContext.current
     var savedPlayState by rememberSaveable { mutableStateOf(player.isPlaying) }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-    val playerListener = retain {
-        object : Player.Listener {
+    Box(
+        modifier = modifier.background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        VideoSurface(
+            modifier = Modifier.matchParentSize(),
+            playerProvider = playerProvider
+        )
+        val seekRange = 5000L
+        PlayerControls(
+            modifier = Modifier.matchParentSize(),
+            position = position,
+            duration = duration,
+            isPlaying = isPlaying,
+            onPlay = player::play,
+            onPause = player::pause,
+            onSeekBack = {
+                val newPosition = (player.currentPosition - seekRange).coerceAtLeast(0)
+                player.seekTo(newPosition)
+            },
+            onSeekForward = {
+                val newPosition =
+                    (player.currentPosition + seekRange).coerceAtMost(player.duration - 1)
+                player.seekTo(newPosition)
+            },
+            onSeek = player::seekTo,
+            isFullScreen = isFullScreen,
+            onFullscreen = onFullscreen
+        )
+    }
+    RetainedEffect(Unit) {
+        val playerListener = object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
-                onRatioObtained(aspectRatio)
+                onRatioObtained?.invoke(aspectRatio)
             }
+
             override fun onIsPlayingChanged(newIsPlaying: Boolean) {
                 if (playerState != Player.STATE_BUFFERING) {
                     isPlaying = newIsPlaying
                 }
             }
+
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
                 if (playbackState == Player.STATE_READY && duration < 0L) {
                     duration = player.duration
                 }
             }
+
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -174,56 +226,22 @@ fun PlayerComponent(
                 position = newPosition.positionMs
             }
         }
-    }
-    Box(
-        modifier = modifier.background(Color.Black),
-        contentAlignment = Alignment.Center
-    ) {
-        AndroidView(
-            modifier = Modifier
-                .matchParentSize(),
-            factory = {
-                PlayerView(it).apply {
-                    useController = false
-                    this.player = player
-                    this.player!!.addListener(playerListener)
-                }
-            },
-            onRelease = {
-                it.player!!.removeListener(playerListener)
-            }
-        )
-        PlayerControls(
-            modifier = Modifier
-                .matchParentSize(),
-            position = position,
-            duration = duration,
-            isPlaying = isPlaying,
-            onPlay = player::play,
-            onPause = player::pause,
-            onSeekBack = {
-                val newPosition = (player.currentPosition - 5 * 1000).coerceAtLeast(0)
-                player.seekTo(newPosition)
-            },
-            onSeekForward = {
-                val newPosition =
-                    (player.currentPosition + 5 * 1000).coerceAtMost(player.duration - 1)
-                player.seekTo(newPosition)
-            },
-            onSeek = {
-                player.seekTo(it)
-            },
-            isFullScreen = isFullScreen,
-            onFullscreen = onFullscreen
-        )
-    }
-    LaunchedEffect(isPlaying) {
-        while (isActive && isPlaying) {
-            position = player.currentPosition
-            delay(1000)
+
+        player.addListener(playerListener)
+
+        onRetire {
+            player.removeListener(playerListener)
         }
     }
-    DisposableEffect(Unit) {
+    LaunchedEffect(isPlaying) {
+        val changePeriod = 250L
+        while (isActive && isPlaying) {
+            position = player.currentPosition
+            val delayDuration = changePeriod - (position % changePeriod)
+            delay(delayDuration)
+        }
+    }
+    RetainedEffect(Unit) {
         val audioManager = context.getSystemService(AudioManager::class.java)
         val audioListener = AudioManager.OnAudioFocusChangeListener {
             if (it == AUDIOFOCUS_LOSS_TRANSIENT) {
@@ -247,13 +265,29 @@ fun PlayerComponent(
             .setOnAudioFocusChangeListener(audioListener).build()
         audioManager.requestAudioFocus(audioFocusRequest)
 
-        onDispose {
+        onRetire {
             audioManager.abandonAudioFocusRequest(audioFocusRequest)
         }
     }
     BackHandler(enabled = isFullScreen) {
         onFullscreen?.invoke(false)
     }
+}
+
+@Composable
+internal fun VideoSurface(
+    modifier: Modifier = Modifier,
+    playerProvider: () -> Player
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = {
+            PlayerView(it).apply {
+                useController = false
+                this.player = playerProvider()
+            }
+        }
+    )
 }
 
 @Composable
@@ -270,16 +304,26 @@ internal fun PlayerControls(
     isFullScreen: Boolean = false,
     onFullscreen: ((Boolean) -> Unit)? = null,
 ) {
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val windowSizeClass = remember {
+        WindowSizeClass.calculateFromSize(
+            DpSize(windowSize.width, windowSize.height)
+        )
+    }
     val coroutineScope = rememberCoroutineScope()
-
     var isInteracting by rememberSaveable {
         mutableStateOf(false)
     }
-    val interactionSource = remember { MutableInteractionSource() }
-
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
     val controlsShowDuration = 3000
-    var notActiveTimer by rememberSaveable { mutableIntStateOf(0) }
-    var controlsAlpha by rememberSaveable { mutableFloatStateOf(0f) }
+    var notActiveTimer by rememberSaveable {
+        mutableIntStateOf(0)
+    }
+    var controlsAlpha by rememberSaveable {
+        mutableFloatStateOf(0f)
+    }
     val animatedControlsAlpha by animateFloatAsState(
         targetValue = controlsAlpha,
         animationSpec = tween(300)
@@ -313,10 +357,12 @@ internal fun PlayerControls(
                             !change.previousPressed && change.pressed -> { // Pointer down
                                 isInteracting = true
                             }
+
                             change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
                                 isInteracting = true
                             }
-                            change.previousPressed && !change.pressed -> { // Pointer up or Cancelled
+
+                            change.previousPressed && !change.pressed -> { // Pointer up or Canceled
                                 isInteracting = false
                             }
                         }
@@ -346,8 +392,10 @@ internal fun PlayerControls(
                     when {
                         animatedSeekBackAlpha > 0 -> Modifier.shimmer(
                             direction = Direction.Rtl,
-                            baseColor = Color(255f, 255f, 255f, 0.15f)
+                            baseColor = Color.White.copy(alpha = 0.15f),
+                            accentColor = Color.White.copy(alpha = 0.3f)
                         )
+
                         else -> Modifier
                     }
                 )
@@ -394,8 +442,10 @@ internal fun PlayerControls(
                     when {
                         animatedSeekForwardAlpha > 0 -> Modifier.shimmer(
                             direction = Direction.Ltr,
-                            baseColor = Color(255f, 255f, 255f, 0.15f)
+                            baseColor = Color.White.copy(alpha = 0.15f),
+                            accentColor = Color.White.copy(alpha = 0.3f)
                         )
+
                         else -> Modifier
                     }
                 )
@@ -417,21 +467,30 @@ internal fun PlayerControls(
         ) {
             Icon(
                 modifier = Modifier.size(25.dp),
-                tint = Color(0f, 0f, 0f, 0.6f),
+                tint = Color.Black.copy(alpha = 0.6f),
                 imageVector = Icons.Rounded.FastForward,
                 contentDescription = stringResource(R.string.player_seek_forward_hint)
             )
         }
         if (animatedControlsAlpha > 0) {
-            IconButton(
+            Button(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(
+                        when (windowSizeClass.widthSizeClass) {
+                            WindowWidthSizeClass.Compact -> 40.dp
+                            WindowWidthSizeClass.Medium -> 50.dp
+                            else -> 60.dp
+                        }
+                    )
                     .clip(CircleShape)
                     .graphicsLayer(alpha = animatedControlsAlpha)
-                    .background(Color(255f, 255f, 255f, 0.7f))
                     .constrainAs(playBtn) {
                         centerTo(parent)
                     },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White.copy(alpha = 0.7f)
+                ),
+                contentPadding = PaddingValues(4.dp),
                 onClick = {
                     if (isPlaying) {
                         onPause()
@@ -442,13 +501,13 @@ internal fun PlayerControls(
             ) {
                 Icon(
                     modifier = Modifier
-                        .size(28.dp)
+                        .fillMaxSize()
                         .clip(CircleShape),
                     imageVector = when (isPlaying) {
                         true -> Icons.Rounded.Pause
                         false -> Icons.Rounded.PlayArrow
                     },
-                    tint = Color(0f, 0f, 0f, 0.8f),
+                    tint = Color.Black.copy(alpha = 0.8f),
                     contentDescription = stringResource(R.string.player_main_button_hint)
                 )
             }
@@ -466,22 +525,39 @@ internal fun PlayerControls(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 15.dp),
+                            .padding(
+                                horizontal = when (windowSizeClass.widthSizeClass) {
+                                    WindowWidthSizeClass.Compact -> 15.dp
+                                    WindowWidthSizeClass.Medium -> 17.dp
+                                    else -> 20.dp
+                                }
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        val durationSecs = ceil((duration - 1).toFloat() / 1000).toLong()
-                        val positionSecs =
-                            ceil(position.toFloat() / 1000).toLong().coerceIn(0..durationSecs)
-                        val durationString = durationSecs.secsToDurationString()
-                        val positionString = positionSecs.secsToDurationString()
+                        val durationString = duration.formatDuration()
+                        val positionString = position.formatDuration()
                         Text(
                             text = "$positionString / $durationString",
                             color = Color.White,
-                            fontSize = 11.sp
+                            fontSize = when (windowSizeClass.widthSizeClass) {
+                                WindowWidthSizeClass.Compact -> 11.sp
+                                WindowWidthSizeClass.Medium -> 14.sp
+                                else -> 16.sp
+                            }
                         )
                         if (onFullscreen != null) {
-                            IconButton(
+                            Button(
+                                modifier = Modifier.size(
+                                    when (windowSizeClass.widthSizeClass) {
+                                        WindowWidthSizeClass.Compact -> 28.dp
+                                        WindowWidthSizeClass.Medium -> 32.dp
+                                        else -> 36.dp
+                                    }
+                                ),
+                                shape = CircleShape,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(Color.Transparent),
                                 onClick = {
                                     onFullscreen(!isFullScreen)
                                 }
@@ -497,71 +573,93 @@ internal fun PlayerControls(
                             }
                         }
                     }
-                    BoxWithConstraints(
+                    val barHeight = when (windowSizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Compact -> 6.dp
+                        WindowWidthSizeClass.Medium -> 8.dp
+                        else -> 9.dp
+                    }
+                    val thumbRadius = 1.1f * barHeight
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(35.dp)
-                            .padding(horizontal = 15.dp)
-                    ) {
-                        val width = constraints.maxWidth
-                        val height = constraints.maxHeight
-                        val primaryColor = MaterialTheme.colorScheme.primary
-                        val progress = position.toFloat() / duration
-                        Canvas(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            val event = awaitPointerEvent(PointerEventPass.Main)
-                                            val change = event.changes.firstOrNull() ?: continue
-                                            when {
-                                                !change.previousPressed && change.pressed -> { // Pointer down
-                                                    isInteracting = true
-                                                    val newProgress =
-                                                        (change.position.x / size.width).coerceIn(0f..1f)
-                                                    val newPosition =
-                                                        (newProgress * duration).toLong()
-                                                    onSeek(newPosition)
-                                                }
+                            .padding(
+                                horizontal = when (windowSizeClass.widthSizeClass) {
+                                    WindowWidthSizeClass.Compact -> 15.dp
+                                    WindowWidthSizeClass.Medium -> 17.dp
+                                    else -> 20.dp
+                                }
+                            )
+                            .padding(
+                                top = when (windowSizeClass.widthSizeClass) {
+                                    WindowWidthSizeClass.Compact -> 6.dp
+                                    WindowWidthSizeClass.Medium -> 7.dp
+                                    else -> 8.dp
+                                },
+                                bottom = when (windowSizeClass.widthSizeClass) {
+                                    WindowWidthSizeClass.Compact -> 15.dp
+                                    WindowWidthSizeClass.Medium -> 17.dp
+                                    else -> 20.dp
+                                }
+                            )
+                            .pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        val event = awaitPointerEvent(PointerEventPass.Main)
+                                        val change = event.changes.firstOrNull() ?: continue
+                                        when {
+                                            !change.previousPressed && change.pressed -> { // Pointer down
+                                                isInteracting = true
+                                                val newProgress =
+                                                    (change.position.x / size.width).coerceIn(0f..1f)
+                                                val newPosition =
+                                                    (newProgress * duration).toLong()
+                                                onSeek(newPosition)
+                                            }
 
-                                                change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
-                                                    isInteracting = true
-                                                    val newProgress =
-                                                        (change.position.x / size.width).coerceIn(0f..1f)
-                                                    val newPosition =
-                                                        (newProgress * duration).toLong()
-                                                    onSeek(newPosition)
-                                                }
+                                            change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
+                                                isInteracting = true
+                                                val newProgress =
+                                                    (change.position.x / size.width).coerceIn(0f..1f)
+                                                val newPosition =
+                                                    (newProgress * duration).toLong()
+                                                onSeek(newPosition)
+                                            }
 
-                                                change.previousPressed && !change.pressed -> { // Pointer up or Cancelled
-                                                    isInteracting = false
-                                                }
+                                            change.previousPressed && !change.pressed -> { // Pointer up or Canceled
+                                                isInteracting = false
                                             }
                                         }
                                     }
                                 }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2 * thumbRadius)
                         ) {
-                            val barHeight = 12f
+                            val barHeightPx = barHeight.toPx()
+                            val widthPx = size.width
+                            val heightPx = size.height
+                            val progress = position.toFloat() / duration
                             drawRoundRect(
                                 color = Color(200f, 200f, 200f, 0.7f),
-                                topLeft = Offset(0f, height / 2f - barHeight * 3f),
-                                size = Size(width.toFloat(), barHeight),
-                                cornerRadius = CornerRadius(barHeight)
+                                topLeft = Offset(0f, heightPx / 2f - barHeightPx / 2f),
+                                size = Size(widthPx, barHeightPx),
+                                cornerRadius = CornerRadius(barHeightPx)
                             )
                             drawRoundRect(
                                 color = primaryColor,
-                                topLeft = Offset(0f, height / 2f - barHeight * 3f),
-                                size = Size(width * progress, barHeight),
-                                cornerRadius = CornerRadius(barHeight)
+                                topLeft = Offset(0f, heightPx / 2f - barHeightPx / 2f),
+                                size = Size(widthPx * progress, barHeightPx),
+                                cornerRadius = CornerRadius(barHeightPx)
                             )
                             drawCircle(
                                 color = primaryColor,
-                                radius = 1.3f * barHeight,
-                                center = Offset(
-                                    width * progress,
-                                    height / 2f - barHeight * 3f + barHeight / 2
-                                )
+                                radius = 1.3f * barHeightPx,
+                                center = Offset(widthPx * progress, heightPx / 2f)
                             )
                         }
                     }
@@ -622,16 +720,17 @@ fun createStadiumShape(
     }
 }
 
-fun Long.secsToDurationString(): String {
+fun Long.formatDuration(): String {
+    val totalSecs = (this + 500) / 1000
     val stringBuilder = StringBuilder()
-    val secs = this % 60
+    val secs = totalSecs % 60
     stringBuilder.insert(0, secs)
     if (secs < 10) {
         stringBuilder.insert(0, "0")
     }
-    val mins = this / 60 % 60
+    val mins = totalSecs / 60 % 60
     stringBuilder.insert(0, "$mins:")
-    val hours = this / 60 / 60
+    val hours = totalSecs / 60 / 60
     if (hours > 0) {
         if (mins < 10) {
             stringBuilder.insert(0, "0")
@@ -639,51 +738,6 @@ fun Long.secsToDurationString(): String {
         stringBuilder.insert(0, "$hours:")
     }
     return stringBuilder.toString()
-}
-
-
-@Composable
-@Preview
-private fun PlayerControlsPreview() {
-    var isPlaying by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var position by rememberSaveable {
-        mutableLongStateOf(0)
-    }
-    val duration = 100_000L
-    LaunchedEffect(isPlaying) {
-        if (isPlaying) {
-            while (position < duration) {
-                delay(100)
-                position += 100
-            }
-        }
-    }
-    PlayerControls(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(16f / 9),
-        isPlaying = isPlaying,
-        onPlay = {
-            isPlaying = true
-        },
-        onPause = {
-            isPlaying = false
-        },
-        onSeekForward = {
-            position += 1000
-        },
-        onSeekBack = {
-            position -= 1000
-        },
-        position = position,
-        duration = duration,
-        onSeek = {
-            position = it
-        },
-        onFullscreen = {}
-    )
 }
 
 @Composable
@@ -720,41 +774,6 @@ fun Player.rememberPlayerState(): MutableState<PlayerState> {
     return state
 }
 
-@Preview
-@Composable
-private fun StadiumShapePreview() {
-    VideoHostingTheme {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9)
-                .background(Color.Blue)
-        ) {
-            val (seekBack, seekForward) = createRefs()
-            Box(
-                modifier = Modifier
-                    .constrainAs(seekBack) {
-                        start.linkTo(parent.start)
-                    }
-                    .fillMaxWidth(0.4f)
-                    .fillMaxHeight()
-                    .clip(createStadiumShape(Direction.Ltr))
-                    .background(White)
-            )
-            Box(
-                modifier = Modifier
-                    .constrainAs(seekForward) {
-                        end.linkTo(parent.end)
-                    }
-                    .fillMaxWidth(0.4f)
-                    .fillMaxHeight()
-                    .clip(createStadiumShape(Direction.Rtl))
-                    .background(White)
-            )
-        }
-    }
-}
-
 fun Modifier.shimmer(
     direction: Direction,
     baseColor: Color = Color(0xFF7F7E7E),
@@ -789,14 +808,4 @@ fun Modifier.shimmer(
         .onGloballyPositioned {
             width = it.size.width.toFloat()
         }
-}
-
-@Composable
-@Preview
-fun ShimmerEffectPreview() {
-    Box(
-        modifier = Modifier
-            .size(300.dp)
-            .shimmer(direction = Direction.Ltr)
-    )
 }

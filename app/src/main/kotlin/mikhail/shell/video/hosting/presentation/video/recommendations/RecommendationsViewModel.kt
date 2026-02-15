@@ -62,7 +62,7 @@ class RecommendationsViewModel @Inject constructor(
             ).onSuccess { videos ->
                 _state.update {
                     it.copy(
-                        videos = (((if (start) null else it.videos) ?: emptyList()) + videos.map {
+                        videos = (((if (start) null else it.videos) ?: listOf()) + videos.map {
                             it.toUi(
                                 channelLogo = getChannelLogoUrl(
                                     channelId = it.channel.channelId,

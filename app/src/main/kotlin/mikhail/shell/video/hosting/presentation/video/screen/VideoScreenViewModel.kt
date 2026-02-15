@@ -111,6 +111,10 @@ class VideoScreenViewModel @AssistedInject constructor(
             VideoScreenAction.Share -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.SharingRequested)
             }
+
+            else -> viewModelScope.launch {
+                _events.emit(VideoScreenEvent.ExitRequested)
+            }
         }
     }
 
@@ -302,7 +306,7 @@ class VideoScreenViewModel @AssistedInject constructor(
                                         ImageSize.SMALL
                                     )
                                 )
-                            ) + (it.commentsState.comments ?: emptyList()),
+                            ) + (it.commentsState.comments ?: listOf()),
                             comment = it.commentsState.comment.copy(
                                 text = it.commentsState.comment.text.copy(
                                     value = "",

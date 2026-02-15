@@ -10,4 +10,5 @@ sealed class VideoScreenEvent {
     data object Removed : VideoScreenEvent()
     data object DownloadRequested : VideoScreenEvent()
     data object SharingRequested : VideoScreenEvent()
+    data object ExitRequested : VideoScreenEvent()
 }

@@ -22,9 +22,9 @@ object RootAnimations {
 }
 
 object SubGraphAnimations {
-    val defaultSpec = spring<IntOffset>(
+    private val defaultSpec = spring<IntOffset>(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMedium
+        stiffness = Spring.StiffnessHigh
     )
     val enteringAnimation = slideInHorizontally(
         initialOffsetX = { it },
@@ -34,6 +34,13 @@ object SubGraphAnimations {
         animationSpec = defaultSpec
     )
     val leavingAnimation = slideInHorizontally(
+        initialOffsetX = { -it },
+        animationSpec = defaultSpec
+    ) togetherWith slideOutHorizontally(
+        targetOffsetX = { it },
+        animationSpec = defaultSpec
+    )
+    val predictiveBackAnimation = slideInHorizontally(
         initialOffsetX = { -it },
         animationSpec = defaultSpec
     ) togetherWith slideOutHorizontally(

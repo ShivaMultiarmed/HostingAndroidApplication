@@ -9,6 +9,7 @@ plugins {
     id ("dagger.hilt.android.plugin")
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
+    id("com.google.firebase.firebase-perf") version "2.0.2"
 }
 
 android {
@@ -135,6 +136,8 @@ dependencies {
 
     implementation(libs.androidx.media3.exoplayer)
     implementation (libs.androidx.media3.ui)
+    implementation (libs.androidx.media3.ui.compose)
+    implementation (libs.androidx.media3.ui.compose.material3)
 
     implementation(libs.coil)
     implementation(libs.coil.compose)
@@ -146,4 +149,7 @@ dependencies {
 
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
+
+    // Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-perf
+    implementation("com.google.firebase:firebase-perf:22.0.4")
 }

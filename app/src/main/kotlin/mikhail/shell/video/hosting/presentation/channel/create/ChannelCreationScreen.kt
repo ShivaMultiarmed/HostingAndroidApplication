@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
@@ -59,7 +58,6 @@ fun ChannelCreationScreen(
     onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
     Scaffold(
         modifier = Modifier
@@ -104,7 +102,7 @@ fun ChannelCreationScreen(
                             onAction(ScreenAction.ChangeTitle(""))
                         }
                     )
-                ) else emptyList()
+                ) else listOf()
             ) {
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
@@ -135,7 +133,7 @@ fun ChannelCreationScreen(
                     DeletingItem(
                         deleting = { onAction(ScreenAction.ChangeAlias("")) }
                     )
-                ) else emptyList()
+                ) else listOf()
             ) {
                 InputField(
                     modifier = Modifier.fillMaxWidth(),
@@ -165,7 +163,7 @@ fun ChannelCreationScreen(
                             onAction(ScreenAction.ChangeDescription(""))
                         }
                     )
-                ) else emptyList()
+                ) else listOf()
             ) {
                 InputField(
                     modifier = Modifier
@@ -205,7 +203,7 @@ fun ChannelCreationScreen(
                     DeletingItem(
                         deleting = { onAction(ScreenAction.ChangeLogo(null)) }
                     )
-                ) else emptyList()
+                ) else listOf()
             ) {
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),
@@ -254,7 +252,7 @@ fun ChannelCreationScreen(
                     DeletingItem(
                         deleting = { onAction(ScreenAction.ChangeHeader(null)) }
                     )
-                ) else emptyList()
+                ) else listOf()
             ) {
                 FileInputField(
                     modifier = Modifier.fillMaxWidth(),

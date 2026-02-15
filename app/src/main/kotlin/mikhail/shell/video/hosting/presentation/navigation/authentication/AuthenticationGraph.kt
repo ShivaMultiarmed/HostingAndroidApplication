@@ -7,7 +7,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.presentation.navigation.authentication.reset.resetGraph
 import mikhail.shell.video.hosting.presentation.navigation.authentication.signup.password.signingUpGraph
-import mikhail.shell.video.hosting.presentation.navigation.common.RootAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.SubGraphAnimations
 import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
@@ -24,7 +23,7 @@ fun EntryProviderScope<Route>.authenticationGraph(
             entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
-            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.predictiveBackAnimation },
             entryProvider = entryProvider {
                 signInRoute(
                     rootBackStack = rootBackStack,

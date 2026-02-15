@@ -135,7 +135,7 @@ class ChannelScreenViewModel @AssistedInject constructor(
                 it.copy(
                     videos = it.videos.copy(
                         videos = ((if (start) null else it.videos.videos)
-                            ?: emptyList()) + videos.map {
+                            ?: listOf()) + videos.map {
                             it.toUi(
                                 cover = getVideoCoverUrl(
                                     videoId = it.videoId,

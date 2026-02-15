@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -129,26 +128,36 @@ fun ProfileScreen(
                         Column(
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            ProfileScreenContent(
-                                owns = owns,
-                                state = state,
-                                onAction = onAction,
+                            UserDataSection(
+                                user = state.user,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
-                                }
+                                },
+                                owns = owns,
+                                hasChannels = (state.channelsState.channels?.size ?: 0) > 0,
+                                onAction = onAction
+                            )
+                            UserChannelsSection(
+                                channelsState = state.channelsState,
+                                onAction = onAction
                             )
                         }
                     } else {
                         Row(
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            ProfileScreenContent(
-                                owns = owns,
-                                state = state,
-                                onAction = onAction,
+                            UserDataSection(
+                                user = state.user,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
-                                }
+                                },
+                                owns = owns,
+                                hasChannels = (state.channelsState.channels?.size ?: 0) > 0,
+                                onAction = onAction
+                            )
+                            UserChannelsSection(
+                                channelsState = state.channelsState,
+                                onAction = onAction
                             )
                         }
                     }
@@ -178,16 +187,14 @@ fun ProfileScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-private fun ProfileScreenContent(
+private fun UserDataSection(
+    user: UserUi,
+    onShowAvatar: () -> Unit,
     owns: Boolean,
-    state: ProfileScreenState,
-    onAction: (ProfileScreenAction) -> Unit,
-    onShowAvatar: () -> Unit
+    hasChannels: Boolean,
+    onAction: (ProfileScreenAction) -> Unit
 ) {
-    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
-    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
     val orientation = LocalConfiguration.current.orientation
     Column(
         modifier = Modifier.then(
@@ -197,21 +204,31 @@ private fun ProfileScreenContent(
                 Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(0.5f)
-                    .verticalScroll(rememberScrollState())
             }
         )
     ) {
         UserDetailsSection(
-            user = state.user!!,
+            user = user,
             onShowAvatar = onShowAvatar
         )
         if (owns) {
             UserActions(
                 onEvent = onAction,
-                hasChannels = (state.channelState.channels?.size ?: 0) > 0
+                hasChannels = hasChannels
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+private fun UserChannelsSection(
+    channelsState: OwnedChannelsState,
+    onAction: (ProfileScreenAction) -> Unit
+) {
+    val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
+    val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
+    val orientation = LocalConfiguration.current.orientation
     Column(
         modifier = Modifier
             .then(
@@ -223,8 +240,8 @@ private fun ProfileScreenContent(
             )
             .padding(top = 10.dp)
     ) {
-        if (state.channelState.channels != null) {
-            if (state.channelState.channels.isNotEmpty()) {
+        if (channelsState.channels != null) {
+            if (channelsState.channels.isNotEmpty()) {
                 Title(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -233,10 +250,10 @@ private fun ProfileScreenContent(
                 )
             }
             val pageableBoxState = rememberPageableBoxState(
-                items = state.channelState.channels,
-                hasMore = state.channelState.hasMore,
-                error = state.channelState.error,
-                isLoading = state.channelState.isLoading,
+                items = channelsState.channels,
+                hasMore = channelsState.hasMore,
+                error = channelsState.error,
+                isLoading = channelsState.isLoading
             )
             PageableBox(
                 modifier = Modifier.fillMaxSize(),
@@ -269,11 +286,11 @@ private fun ProfileScreenContent(
                     onAction(ProfileScreenAction.LoadNextChannelsPart)
                 }
             )
-        } else if (state.channelState.isLoading) {
+        } else if (channelsState.isLoading) {
             StartingComponent(
                 modifier = Modifier.fillMaxSize()
             )
-        } else if (state.channelState.error != null) {
+        } else if (channelsState.error != null) {
             ErrorComponent(
                 modifier = Modifier.fillMaxSize(),
                 onRetry = {

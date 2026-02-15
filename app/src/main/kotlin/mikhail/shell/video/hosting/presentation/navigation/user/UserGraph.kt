@@ -27,7 +27,7 @@ fun EntryProviderScope<Route>.userGraph(
             entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
-            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.predictiveBackAnimation },
             entryProvider = entryProvider {
                 profileRoute(
                     rootBackStack = rootBackStack,

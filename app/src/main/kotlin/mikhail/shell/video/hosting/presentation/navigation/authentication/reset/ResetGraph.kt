@@ -23,7 +23,7 @@ fun EntryProviderScope<Route>.resetGraph(
             entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
-            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.predictiveBackAnimation },
             entryProvider = entryProvider {
                 resetRequestingRoute(
                     authBackStack = authBackStack,

@@ -45,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -99,10 +100,13 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 @Composable
 fun VideoUploadingScreen(
     state: ScreenState,
-    player: Player,
+    playerProvider: () -> Player,
     onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
+    val player = retain {
+        playerProvider()
+    }
     val activity = LocalActivity.current!!
     var playerState by LocalPlayerState.current
     val windowSize = calculateWindowSizeClass(activity)
@@ -228,8 +232,9 @@ fun VideoUploadingScreen(
                                         errorMsg = sourceErrMsg
                                     )
                                 }
-                                val recordedVideoDir =
+                                val recordedVideoDir = retain {
                                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                                }
                                 val cameraPermission =
                                     rememberPermissionState(Manifest.permission.CAMERA)
                                 ContextMenu(
@@ -325,7 +330,7 @@ fun VideoUploadingScreen(
                                                 }
                                             }
                                         ),
-                                    player = player,
+                                    playerProvider = playerProvider,
                                     onRatioObtained = {
                                         aspectRatio = it
                                     },
@@ -364,7 +369,7 @@ fun VideoUploadingScreen(
                                 else -> null
                             }
                             val titleActionItems =
-                                if (state.video.title.value.isEmpty()) emptyList() else listOf(
+                                if (state.video.title.value.isEmpty()) listOf() else listOf(
                                     ActionItem(
                                         icon = Icons.Rounded.Delete,
                                         action = {
@@ -399,7 +404,7 @@ fun VideoUploadingScreen(
                                 else -> null
                             }
                             val channelActionItems = when (state.video.channelId.value) {
-                                null -> emptyList()
+                                null -> listOf()
                                 else -> listOf(
                                     ActionItem(
                                         icon = Icons.Rounded.Delete,
@@ -434,7 +439,7 @@ fun VideoUploadingScreen(
                             val coverErrMsg = getFileErrorMessage(state.video.cover.error)
                             EditField(
                                 actionItems = when (state.video.cover.value) {
-                                    null -> emptyList()
+                                    null -> listOf()
                                     else -> listOf(
                                         ActionItem(
                                             icon = Icons.Rounded.Delete,

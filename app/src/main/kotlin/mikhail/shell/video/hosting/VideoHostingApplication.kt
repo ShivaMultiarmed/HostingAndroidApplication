@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltAndroidApp
-class HostingApplication: Application() {
+class VideoHostingApplication: Application() {
     @Inject
     lateinit var httpClient: OkHttpClient
     private val imageLoader: ImageLoader by lazy {

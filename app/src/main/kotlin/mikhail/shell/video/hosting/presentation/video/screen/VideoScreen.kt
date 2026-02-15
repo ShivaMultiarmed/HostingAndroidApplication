@@ -5,10 +5,13 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.view.WindowInsetsController
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,24 +68,31 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.retain.RetainedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.Player
@@ -99,7 +110,9 @@ import mikhail.shell.video.hosting.domain.models.Liking.NONE
 import mikhail.shell.video.hosting.domain.models.Subscription.NOT_SUBSCRIBED
 import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.comments.models.CommentUi
+import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
@@ -113,6 +126,7 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
+import mikhail.shell.video.hosting.presentation.utils.dpSaver
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
@@ -123,15 +137,16 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMotionApi::class)
 @Composable
 fun VideoScreen(
     state: VideoScreenState,
-    player: Player,
+    playerProvider: () -> Player,
     onAction: (VideoScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
     val activity = LocalActivity.current!!
+    val windowSize = LocalWindowInfo.current.containerDpSize
     val density = LocalDensity.current
     val playerState = LocalPlayerState.current
     val context = LocalContext.current
@@ -141,9 +156,8 @@ fun VideoScreen(
         mutableStateOf(0.dp)
     }
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Transparent,
         snackbarHost = {
             SnackbarHost(
                 modifier = Modifier.padding(bottom = bottomSheetHeight),
@@ -152,52 +166,112 @@ fun VideoScreen(
         }
     ) { padding ->
         if (state.video != null) {
-            var isFullScreen by rememberSaveable { mutableStateOf(false) }
-            var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-            val scrollState = rememberScrollState()
-            val orientation = LocalConfiguration.current.orientation
-            val isSmallWindow = rememberIsSmallWindow()
-            val targetOrientation = remember(isFullScreen, isSmallWindow) {
-                if (isSmallWindow) {
-                    if (isFullScreen && aspectRatio >= 1f) {
-                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    } else {
-                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    }
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                }
+            val exitThreshold = 0.4f * windowSize.height
+            var exitProgress by rememberSaveable {
+                mutableFloatStateOf(0f)
             }
-            val isFullScreenReached =
-                remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
-                    if (isSmallWindow) {
-                        isFullScreen && targetOrientation == when (orientation) {
-                            Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                            Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        }
-                    } else {
-                        isFullScreen
-                    }
+            val animatedExitProgress by animateFloatAsState(
+                targetValue = exitProgress
+            )
+            val updatedExitProgress by rememberUpdatedState(animatedExitProgress)
+            var playerY by rememberSaveable(saver = dpSaver) {
+                mutableStateOf(0.dp)
+            }
+            val updatedPlayerY by rememberUpdatedState(playerY)
+            BackHandler(true) {
+                // playerY = windowSize.height
+                onAction(VideoScreenAction.Exit) // TODO: restore playerY change
+            }
+            LaunchedEffect(playerY) {
+                exitProgress = playerY / exitThreshold
+            }
+            var miniPlayerPosition by LocalMiniPlayerPositionState.current
+            RetainedEffect(animatedExitProgress) {
+                if (animatedExitProgress == 1f) {
+                    miniPlayerPosition = MiniPlayerPosition()
+                    onAction(VideoScreenAction.Exit)
                 }
-
-            Column(
+                onRetire {}
+            }
+            ConstraintLayout(
                 modifier = Modifier
                     .fillMaxSize()
+                    .alpha(1 - exitProgress)
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(padding)
+                    .padding(padding),
             ) {
+                val (playerRef, detailsRef, commentsRef) = createRefs()
+                var isFullScreen by rememberSaveable { mutableStateOf(false) }
+                var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+                val scrollState = rememberScrollState()
+                val orientation = LocalConfiguration.current.orientation
+                val isSmallWindow = rememberIsSmallWindow()
+                val targetOrientation = remember(isFullScreen, isSmallWindow) {
+                    if (isSmallWindow) {
+                        if (isFullScreen && aspectRatio >= 1f) {
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        } else {
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        }
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    }
+                }
+                val isFullScreenReached =
+                    remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
+                        if (isSmallWindow) {
+                            isFullScreen && targetOrientation == when (orientation) {
+                                Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            }
+                        } else {
+                            isFullScreen
+                        }
+                    }
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .constrainAs(playerRef) {
+                            top.linkTo(parent.top, updatedPlayerY)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
                         .then(
-                            if (isFullScreenReached) {
-                                Modifier.fillMaxHeight()
-                            } else {
-                                Modifier
+                            when (isFullScreenReached) {
+                                true -> Modifier.fillMaxSize()
+                                false -> Modifier.width(250.dp + (1 - exitProgress) * (windowSize.width - 250.dp))
                             }
                         )
-                        .background(Color.Black),
+                        .clip(RoundedCornerShape(exitProgress * 10.dp))
+                        .background(Color.Black)
+                        .then(
+                            when (isFullScreenReached) {
+                                true -> Modifier
+                                false -> Modifier.pointerInput(Unit) {
+                                    detectDragGestures(
+//                                        onDragEnd = {
+//                                            exitProgress = when {
+//                                                updatedExitProgress < 1 -> 0f
+//                                                else -> 1f
+//                                            }
+//                                        },
+//                                        onDragCancel = {
+//                                            exitProgress = when {
+//                                                updatedExitProgress < 1 -> 0f
+//                                                else -> 1f
+//                                            }
+//                                        }
+                                    ) { change, _ ->
+                                        if (!(updatedPlayerY == 0.dp && change.positionChange().y.toDp() <= 0.dp)) {
+                                            playerY += with(density) {
+                                                change.positionChange().y.toDp()
+                                            }
+                                            playerY = playerY.coerceIn(0.dp .. windowSize.height)
+                                        }
+                                    }
+                                }
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     PlayerComponent(
@@ -218,7 +292,7 @@ fun VideoScreen(
                                     }
                                 }
                             ),
-                        player = player,
+                        playerProvider = playerProvider,
                         onRatioObtained = {
                             aspectRatio = it
                         },
@@ -228,7 +302,7 @@ fun VideoScreen(
                         }
                     )
                 }
-                RetainedEffect (isFullScreenReached) {
+                RetainedEffect(isFullScreenReached) {
                     playerState.value = playerState.value.copy(fullScreen = isFullScreenReached)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         val window = activity.window
@@ -245,12 +319,13 @@ fun VideoScreen(
                     }
                     onRetire {}
                 }
-                RetainedEffect (targetOrientation) {
+                RetainedEffect(targetOrientation) {
                     if (activity.requestedOrientation != targetOrientation) {
                         activity.requestedOrientation = targetOrientation
                     }
                     onRetire {
-                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        activity.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     }
                 }
                 if (!isFullScreenReached) {
@@ -272,11 +347,13 @@ fun VideoScreen(
                                 }
                             }
                             .padding(12.dp)
+                            .constrainAs(detailsRef) {
+                                top.linkTo(playerRef.bottom)
+                            }
                             .verticalScroll(scrollState)
                     ) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = state.video.videoTitle,
@@ -312,8 +389,16 @@ fun VideoScreen(
                                 lineHeight = 16.sp
                             )
                             if (state.userId == state.video.ownerId) {
-                                var isDeletingDialogOpen by rememberSaveable { mutableStateOf(false) }
-                                var isAdvancedDialogOpen by rememberSaveable { mutableStateOf(false) }
+                                var isDeletingDialogOpen by rememberSaveable {
+                                    mutableStateOf(
+                                        false
+                                    )
+                                }
+                                var isAdvancedDialogOpen by rememberSaveable {
+                                    mutableStateOf(
+                                        false
+                                    )
+                                }
                                 Box {
                                     EditButton(
                                         modifier = Modifier.size(22.dp),
@@ -523,24 +608,26 @@ fun VideoScreen(
                         }
                     }
                 }
-            }
-            if (sheetState.isVisible) {
-                val imeInset = with(LocalDensity.current) {
-                    WindowInsets.ime.getBottom(LocalDensity.current).toDp()
+
+                if (sheetState.isVisible) {
+                    val imeInset = with(LocalDensity.current) {
+                        WindowInsets.ime.getBottom(LocalDensity.current).toDp()
+                    }
+                    CommentsBottomSheet(
+                        modifier = Modifier.height(bottomSheetHeight + 10.dp - BottomSheetDefaults.SheetPeekHeight - imeInset),
+                        userId = state.userId,
+                        sheetState = sheetState,
+                        commentsState = state.commentsState,
+                        onAction = onAction
+                    )
                 }
-                CommentsBottomSheet(
-                    modifier = Modifier.height(bottomSheetHeight + 10.dp - BottomSheetDefaults.SheetPeekHeight - imeInset),
-                    userId = state.userId,
-                    sheetState = sheetState,
-                    commentsState = state.commentsState,
-                    onAction = onAction
-                )
-            }
-            LaunchedEffect(sheetState.isVisible) {
-                if (sheetState.isVisible && state.commentsState.hasMore) {
-                    onAction(VideoScreenAction.LoadNextCommentsPart)
+                LaunchedEffect(sheetState.isVisible) {
+                    if (sheetState.isVisible && state.commentsState.hasMore) {
+                        onAction(VideoScreenAction.LoadNextCommentsPart)
+                    }
                 }
             }
+
         } else if (state.isStarting) {
             StartingComponent(
                 modifier = Modifier
@@ -558,7 +645,6 @@ fun VideoScreen(
             )
         }
     }
-
 }
 
 

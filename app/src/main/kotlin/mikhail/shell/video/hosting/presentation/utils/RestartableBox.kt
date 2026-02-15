@@ -93,7 +93,7 @@ fun RestartableBox(
                 coroutineScope {
                     awaitPointerEventScope {
                         while (true) {
-                            val event = awaitPointerEvent(PointerEventPass.Main)
+                            val event = awaitPointerEvent(PointerEventPass.Final)
                             val change = event.changes.firstOrNull() ?: continue
                             when {
                                 !change.previousPressed && change.pressed -> { // Pointer down

@@ -22,6 +22,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
@@ -46,10 +47,13 @@ import mikhail.shell.video.hosting.presentation.navigation.common.Route
 import mikhail.shell.video.hosting.presentation.navigation.common.defaultNavDecorators
 import mikhail.shell.video.hosting.presentation.navigation.user.subscriptionsGraph
 import mikhail.shell.video.hosting.presentation.navigation.user.userGraph
+import mikhail.shell.video.hosting.presentation.navigation.video.PredictiveFadeOutSceneStrategy
 import mikhail.shell.video.hosting.presentation.navigation.video.recommendationsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
+import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
+import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
 import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
@@ -98,8 +102,12 @@ class MainActivity : ComponentActivity() {
                 val playerState = rememberSerializable {
                     mutableStateOf(PlayerState())
                 }
+                val miniPlayerPositionState = rememberSerializable {
+                    mutableStateOf(MiniPlayerPosition())
+                }
                 CompositionLocalProvider(
-                    LocalPlayerState provides playerState
+                    LocalPlayerState provides playerState,
+                    LocalMiniPlayerPositionState provides miniPlayerPositionState
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
@@ -233,6 +241,7 @@ class MainActivity : ComponentActivity() {
                                 transitionSpec = { RootAnimations.enteringAnimation },
                                 popTransitionSpec = { RootAnimations.leavingAnimation },
                                 predictivePopTransitionSpec = { RootAnimations.leavingAnimation },
+                                sceneStrategy = remember { PredictiveFadeOutSceneStrategy() },
                                 entryProvider = entryProvider {
                                     authenticationGraph(rootBackStack = rootBackStack)
                                     recommendationsGraph(
@@ -264,7 +273,7 @@ class MainActivity : ComponentActivity() {
                             if (!playerState.hidden && playerState.prepared) {
                                 MiniPlayer(
                                     modifier = Modifier,
-                                    player = player,
+                                    playerProvider = { player },
                                     onFullScreen = {
                                         rootBackStack.add(Route.Video(it))
                                     }

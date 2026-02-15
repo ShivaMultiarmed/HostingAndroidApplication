@@ -57,7 +57,7 @@ class SubscriptionsScreenViewModel @Inject constructor(
             ).onSuccess { channels ->
                 _state.update {
                     it.copy(
-                        channels = ((if (start) null else it.channels)?: emptyList()) + channels.map {
+                        channels = ((if (start) null else it.channels)?: listOf()) + channels.map {
                             it.toUi(
                                 logo = getChannelLogoUrl(
                                     channelId = it.channelId,

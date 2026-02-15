@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
+import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
+import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PipTopBar
@@ -19,12 +22,16 @@ import mikhail.shell.video.hosting.presentation.utils.PipTopBar
 @Composable
 fun MiniPlayer(
     modifier: Modifier = Modifier,
-    player: Player,
+    playerProvider: () -> Player,
     isFullScreen: Boolean = false,
     onFullScreen: (videoId: Long) -> Unit
 ) {
+    val player = retain {
+        playerProvider()
+    }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
     val maxDimension = 250.dp
+    var miniPlayerPosition by LocalMiniPlayerPositionState.current
     PipContainer(
         modifier = modifier
             .then(
@@ -34,11 +41,14 @@ fun MiniPlayer(
                     Modifier.width(maxDimension)
                 }
             )
-            .aspectRatio(aspectRatio)
+            .aspectRatio(aspectRatio),
+        onOffsetChanged = { x, y ->
+            miniPlayerPosition = MiniPlayerPosition(x.value.toInt(), y.value.toInt())
+        }
     ) {
         PlayerComponent(
             modifier = Modifier.matchParentSize(),
-            player = player,
+            playerProvider = playerProvider,
             isFullScreen = isFullScreen,
             onFullscreen = {
                 val videoId = player.currentMediaItem

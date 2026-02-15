@@ -20,7 +20,7 @@ class PlayerTests {
         val player = ExoPlayer.Builder(composeRule.activity).build()
         composeRule.setContent {
             PlayerComponent(
-                player = player,
+                playerProvider = { player },
                 onFullscreen = {
                     latch.countDown()
                 }

@@ -2,6 +2,11 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 
 import android.content.Intent
 import androidx.annotation.OptIn
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -12,6 +17,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
@@ -42,7 +48,7 @@ fun EntryProviderScope<Route>.videoRoute(
         val snackBarHostState = remember { SnackbarHostState() }
         VideoScreen(
             state = state,
-            player = player,
+            playerProvider = { player },
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState
         )
@@ -88,6 +94,7 @@ fun EntryProviderScope<Route>.videoRoute(
                         }
                     }
                 }
+                ScreenEvent.ExitRequested -> rootBackStack.removeLastOrNull()
             }
         }
     }

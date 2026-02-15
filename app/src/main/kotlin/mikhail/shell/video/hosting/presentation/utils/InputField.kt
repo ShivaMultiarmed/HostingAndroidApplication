@@ -144,12 +144,12 @@ fun InputField(
         shape = RoundedCornerShape(0.dp),
         colors = TextFieldDefaults.colors(
             errorIndicatorColor = MaterialTheme.colorScheme.error,
-            unfocusedIndicatorColor = Color.Transparent,
             errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
             errorLabelColor = MaterialTheme.colorScheme.error,
+            unfocusedIndicatorColor = Color.Transparent,
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            focusedContainerColor = MaterialTheme.colorScheme.secondary,
             unfocusedLabelColor = MaterialTheme.colorScheme.tertiary,
+            focusedContainerColor = MaterialTheme.colorScheme.secondary,
             focusedLabelColor = MaterialTheme.colorScheme.primary
         ),
         visualTransformation = when {
@@ -353,7 +353,9 @@ fun ErrorText(
 @Preview
 fun InputFieldPreview() {
     VideoHostingTheme {
-        var value by remember { mutableStateOf("") }
+        var value by remember {
+            mutableStateOf("")
+        }
         InputField(
             value = value,
             onValueChange = {
@@ -361,7 +363,7 @@ fun InputFieldPreview() {
             },
             label = "Имя",
             icon = Icons.Outlined.Person,
-            errorMsg = "Ошибка"
+            errorMsg = null
         )
     }
 }

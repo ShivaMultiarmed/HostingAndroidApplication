@@ -109,9 +109,9 @@ fun <I> rememberPageableBoxState(
     items: List<I>,
     hasMore: Boolean,
     error: Error?,
-    isLoading: Boolean
+    isLoading: Boolean,
+    gridState: LazyGridState = rememberLazyGridState()
 ): PageableBoxState<I> {
-    val gridState = rememberLazyGridState()
     return remember(items, hasMore, error, isLoading) {
         PageableBoxState(
             gridState = gridState,

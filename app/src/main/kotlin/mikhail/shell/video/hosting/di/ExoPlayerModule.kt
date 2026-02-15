@@ -11,7 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import mikhail.shell.video.hosting.data.player.DSWithTokenFactory
+import mikhail.shell.video.hosting.data.player.DataSourceWithTokenFactory
 import javax.inject.Singleton
 
 @Module
@@ -21,9 +21,9 @@ object ExoPlayerModule {
     @Provides
     @Singleton
     fun provideMediaSourceFactory(
-        dsWithTokenFactory: DSWithTokenFactory
+        dataSourceWithTokenFactory: DataSourceWithTokenFactory
     ): DefaultMediaSourceFactory {
-        return DefaultMediaSourceFactory(dsWithTokenFactory)
+        return DefaultMediaSourceFactory(dataSourceWithTokenFactory)
     }
     @Provides
     @Singleton

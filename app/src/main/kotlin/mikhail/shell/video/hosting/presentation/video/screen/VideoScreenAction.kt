@@ -20,4 +20,5 @@ sealed class VideoScreenAction {
     data class RemoveComment(val commentId: Long) : VideoScreenAction()
     data object RestartComments : VideoScreenAction()
     data object LoadNextCommentsPart : VideoScreenAction()
+    data object Exit: VideoScreenAction()
 }

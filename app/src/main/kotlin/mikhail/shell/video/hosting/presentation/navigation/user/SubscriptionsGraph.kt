@@ -20,7 +20,7 @@ fun EntryProviderScope<Route>.subscriptionsGraph(
             entryDecorators = defaultNavDecorators,
             transitionSpec = { SubGraphAnimations.enteringAnimation },
             popTransitionSpec = { SubGraphAnimations.leavingAnimation },
-            predictivePopTransitionSpec = { SubGraphAnimations.leavingAnimation },
+            predictivePopTransitionSpec = { SubGraphAnimations.predictiveBackAnimation },
             entryProvider = entryProvider {
                 subscriptionsRoute(
                     rootBackStack = rootBackStack,

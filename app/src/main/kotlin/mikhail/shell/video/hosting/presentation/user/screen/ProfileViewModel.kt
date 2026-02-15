@@ -112,23 +112,23 @@ class ProfileViewModel @AssistedInject constructor(
     }
 
     private suspend fun loadChannels(start: Boolean = false) {
-        if (_state.value.channelState.isLoading) {
+        if (_state.value.channelsState.isLoading) {
             return
         }
         _state.update {
             it.copy(
-                channelState = it.channelState.copy(isLoading = true)
+                channelsState = it.channelsState.copy(isLoading = true)
             )
         }
         getOwnedChannels(
             userId = userId,
-            partIndex = if (start) 0 else _state.value.channelState.nextPartIndex,
+            partIndex = if (start) 0 else _state.value.channelsState.nextPartIndex,
             partSize = PART_SIZE
         ).onSuccess { channels ->
             _state.update {
                 it.copy(
-                    channelState = it.channelState.copy(
-                        channels = ((if (start) null else _state.value.channelState.channels)?: emptyList()) + channels.map {
+                    channelsState = it.channelsState.copy(
+                        channels = ((if (start) null else _state.value.channelsState.channels)?: listOf()) + channels.map {
                             it.toUi(
                                 logo = getChannelLogoUrl(
                                     channelId = it.channelId,
@@ -138,7 +138,7 @@ class ProfileViewModel @AssistedInject constructor(
                         },
                         error = null,
                         isLoading = false,
-                        nextPartIndex = (if (start) 0 else _state.value.channelState.nextPartIndex) + 1,
+                        nextPartIndex = (if (start) 0 else _state.value.channelsState.nextPartIndex) + 1,
                         hasMore = channels.size == PART_SIZE
                     )
                 )
@@ -146,7 +146,7 @@ class ProfileViewModel @AssistedInject constructor(
         }.onFailure { error ->
             _state.update {
                 it.copy(
-                    channelState = it.channelState.copy(
+                    channelsState = it.channelsState.copy(
                         error = error,
                         isLoading = false
                     )

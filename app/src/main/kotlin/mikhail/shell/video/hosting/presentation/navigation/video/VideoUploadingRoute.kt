@@ -55,7 +55,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
         CompositionLocalProvider(LocalPlayerState provides playerState) {
             VideoUploadingScreen(
                 state = state,
-                player = viewModel.player,
+                playerProvider = { viewModel.player },
                 onAction = viewModel::onAction,
                 snackBarHostState = snackBarHostState
             )

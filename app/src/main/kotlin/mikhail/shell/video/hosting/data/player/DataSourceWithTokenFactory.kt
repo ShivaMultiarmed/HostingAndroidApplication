@@ -7,7 +7,7 @@ import mikhail.shell.video.hosting.domain.providers.UserDetailsProvider
 import javax.inject.Inject
 
 @UnstableApi
-class DSWithTokenFactory @Inject constructor(
+class DataSourceWithTokenFactory @Inject constructor(
     private val provider: UserDetailsProvider
 ) : HttpDataSource.Factory {
     override fun createDataSource(): HttpDataSource {

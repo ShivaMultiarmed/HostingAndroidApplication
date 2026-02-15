@@ -9,7 +9,7 @@ data class ProfileScreenState (
     val user: UserUi? = null,
     val isStarting: Boolean = false,
     val error: Error? = null,
-    val channelState: OwnedChannelsState = OwnedChannelsState(),
+    val channelsState: OwnedChannelsState = OwnedChannelsState(),
     val isSigningOut: Boolean = false
 )
 

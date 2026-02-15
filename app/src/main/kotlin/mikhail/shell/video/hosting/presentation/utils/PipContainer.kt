@@ -14,7 +14,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -23,43 +22,52 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 
 @Composable
 fun PipContainer(
     modifier: Modifier = Modifier,
+    onOffsetChanged: ((x: Dp, y: Dp) -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    var xOffset by remember { mutableIntStateOf(0) }
-    var yOffset by remember { mutableIntStateOf(0) }
-    var pipSize by remember { mutableStateOf(IntSize.Zero) }
-    var parentWidth by remember { mutableIntStateOf(0) }
-    var parentHeight by remember { mutableIntStateOf(0) }
+    var xOffset by remember { mutableStateOf(0.dp) }
+    var yOffset by remember { mutableStateOf(0.dp) }
+    var pipWidth by remember { mutableStateOf(0.dp) }
+    var pipHeight by remember { mutableStateOf(0.dp) }
+    var parentWidth by remember { mutableStateOf(0.dp) }
+    var parentHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
     Box(
         modifier = modifier
-            .offset{
-                IntOffset(xOffset, yOffset)
-            }.pointerInput(Unit) {
+            .offset(
+                x = xOffset,
+                y = yOffset
+            ).pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    xOffset += dragAmount.x.toInt()
-                    xOffset = xOffset.coerceIn(0, parentWidth - pipSize.width)
-                    yOffset += dragAmount.y.toInt()
-                    yOffset = yOffset.coerceIn(0, parentHeight - pipSize.height)
+                    xOffset += dragAmount.x.toDp()
+                    xOffset = xOffset.coerceIn(0.dp, parentWidth - pipWidth)
+                    yOffset += dragAmount.y.toDp()
+                    yOffset = yOffset.coerceIn(0.dp, parentHeight - pipHeight)
+                    onOffsetChanged?.invoke(xOffset, yOffset)
                 }
             }.onGloballyPositioned {
-                pipSize = it.size
-                it.parentLayoutCoordinates?.size?.width?.let {
-                    parentWidth = it
+                with (density) {
+                    pipWidth = it.size.width.toDp()
+                    pipHeight =  it.size.height.toDp()
+                    it.parentLayoutCoordinates?.size?.width?.let {
+                        parentWidth = it.toDp()
+                    }
+                    it.parentLayoutCoordinates?.size?.height?.let {
+                        parentHeight = it.toDp()
+                    }
                 }
-                it.parentLayoutCoordinates?.size?.height?.let {
-                    parentHeight = it
-                }
-            }.clip(RoundedCornerShape(10.dp)),
+            }
+            .clip(RoundedCornerShape(10.dp)),
         content = content
     )
 }
