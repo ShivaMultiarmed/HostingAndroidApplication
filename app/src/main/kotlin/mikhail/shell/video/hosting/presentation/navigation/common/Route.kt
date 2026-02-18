@@ -1,96 +1,97 @@
 package mikhail.shell.video.hosting.presentation.navigation.common
 
+import android.os.Parcelable
 import androidx.navigation3.runtime.NavKey
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Route: NavKey, java.io.Serializable {
+@Parcelize
+sealed interface Route: NavKey, Parcelable {
     @Serializable
+    @Parcelize
     data object Authentication: Route {
-        private fun readResolve(): Any = Authentication
         @Serializable
-        data object SignIn: Route {
-            private fun readResolve(): Any = SignIn
-        }
+        @Parcelize
+        data object SignIn: Route
         @Serializable
+        @Parcelize
         data object SignUp: Route {
-            private fun readResolve(): Any = SignUp
             @Serializable
-            data object Request: Route {
-                private fun readResolve(): Any = Request
-            }
+            @Parcelize
+            data object Request: Route
             @Serializable
+            @Parcelize
             data class Verification(val userName: String): Route
             @Serializable
+            @Parcelize
             data class Confirmation(val token: String): Route
         }
         @Serializable
+        @Parcelize
         data object Reset: Route {
-            private fun readResolve(): Any = Reset
             @Serializable
-            data object Request: Route {
-                private fun readResolve(): Any = Request
-            }
+            @Parcelize
+            data object Request: Route
             @Serializable
+            @Parcelize
             data class Verification(
                 val userId: Long,
                 val userName: String
             ): Route
             @Serializable
+            @Parcelize
             data class Confirmation(val token: String): Route
         }
     }
     @Serializable
+    @Parcelize
     data object Subscriptions: Route {
-        private fun readResolve(): Any = Subscriptions
         @Serializable
-        data object View: Route {
-            private fun readResolve(): Any = View
-        }
+        @Parcelize
+        data object View: Route
     }
     @Serializable
+    @Parcelize
     data class User(val userId: Long): Route {
         @Serializable
+        @Parcelize
         data class Profile(val userId: Long): Route
         @Serializable
-        data object Edit: Route {
-            private fun readResolve(): Any = Edit
-        }
+        @Parcelize
+        data object Edit: Route
         @Serializable
-        data object Settings: Route {
-            private fun readResolve(): Any = Settings
-        }
+        @Parcelize
+        data object Settings: Route
         @Serializable
-        data object ChannelCreation: Route {
-            private fun readResolve(): Any = ChannelCreation
-        }
+        @Parcelize
+        data object ChannelCreation: Route
         @Serializable
-        data object VideoUploading: Route {
-            private fun readResolve(): Any = VideoUploading
-        }
+        @Parcelize
+        data object VideoUploading: Route
     }
     @Serializable
+    @Parcelize
     data class Video(val videoId: Long): Route {
         @Serializable
+        @Parcelize
         data class View(val videoId: Long): Route
         @Serializable
         data class Edit(val videoId: Long): Route
     }
     @Serializable
+    @Parcelize
     data object Recommendations: Route {
-        private fun readResolve(): Any = Recommendations
         @Serializable
-        data object View: Route {
-            private fun readResolve(): Any = View
-        }
+        @Parcelize
+        data object View: Route
     }
     @Serializable
+    @Parcelize
     data object Search: Route {
-        private fun readResolve(): Any = Search
         @Serializable
-        data object View: Route {
-            private fun readResolve(): Any = View
-        }
+        @Parcelize
+        data object View: Route
     }
     @Serializable
     data class Channel(val channelId: Long): Route {

@@ -154,8 +154,8 @@ val LocalMiniPlayerPositionState = compositionLocalOf {
 fun PlayerComponent(
     modifier: Modifier = Modifier,
     playerProvider: () -> Player,
+    onFullscreen: (Boolean) -> Unit,
     isFullScreen: Boolean = false,
-    onFullscreen: ((Boolean) -> Unit)? = null,
     onRatioObtained: ((Float) -> Unit)? = null
 ) {
     val context = LocalContext.current
@@ -201,6 +201,7 @@ fun PlayerComponent(
     RetainedEffect(Unit) {
         val playerListener = object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
+
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained?.invoke(aspectRatio)
             }
@@ -302,7 +303,7 @@ internal fun PlayerControls(
     onSeekBack: () -> Unit,
     onSeekForward: () -> Unit,
     isFullScreen: Boolean = false,
-    onFullscreen: ((Boolean) -> Unit)? = null,
+    onFullscreen: (Boolean) -> Unit,
 ) {
     val windowSize = LocalWindowInfo.current.containerDpSize
     val windowSizeClass = remember {
@@ -370,7 +371,7 @@ internal fun PlayerControls(
                 }
             }
     ) {
-        val (seekBack, seekForward, playBtn, seekBar) = createRefs()
+        val (seekBack, seekForward, playBtn, toolBar) = createRefs()
 
         var seekBackAlpha by rememberSaveable { mutableFloatStateOf(0f) }
         val animatedSeekBackAlpha by animateFloatAsState(
@@ -445,7 +446,6 @@ internal fun PlayerControls(
                             baseColor = Color.White.copy(alpha = 0.15f),
                             accentColor = Color.White.copy(alpha = 0.3f)
                         )
-
                         else -> Modifier
                     }
                 )
@@ -516,7 +516,7 @@ internal fun PlayerControls(
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer(alpha = animatedControlsAlpha)
-                        .constrainAs(seekBar) {
+                        .constrainAs(toolBar) {
                             bottom.linkTo(parent.bottom)
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
@@ -546,32 +546,40 @@ internal fun PlayerControls(
                                 else -> 16.sp
                             }
                         )
-                        if (onFullscreen != null) {
-                            Button(
+                        Button(
+                            modifier = Modifier.size(
+                                when (windowSizeClass.widthSizeClass) {
+                                    WindowWidthSizeClass.Compact -> 28.dp
+                                    WindowWidthSizeClass.Medium -> 32.dp
+                                    else -> 36.dp
+                                }
+                            ),
+                            shape = CircleShape,
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            onClick = {
+                                onFullscreen?.invoke(!isFullScreen)
+                            }
+                        ) {
+                            Icon(
                                 modifier = Modifier.size(
                                     when (windowSizeClass.widthSizeClass) {
-                                        WindowWidthSizeClass.Compact -> 28.dp
-                                        WindowWidthSizeClass.Medium -> 32.dp
-                                        else -> 36.dp
+                                        WindowWidthSizeClass.Compact -> 24.dp
+                                        WindowWidthSizeClass.Medium -> 28.dp
+                                        else -> 32.dp
                                     }
                                 ),
-                                shape = CircleShape,
-                                contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(Color.Transparent),
-                                onClick = {
-                                    onFullscreen(!isFullScreen)
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = when (isFullScreen) {
-                                        true -> Icons.Rounded.FullscreenExit
-                                        false -> Icons.Rounded.Fullscreen
-                                    },
-                                    contentDescription = "",
-                                    tint = Color.White
-                                )
-                            }
+                                imageVector = when (isFullScreen) {
+                                    true -> Icons.Rounded.FullscreenExit
+                                    false -> Icons.Rounded.Fullscreen
+                                },
+                                contentDescription = "",
+                                tint = Color.White
+                            )
                         }
+
                     }
                     val barHeight = when (windowSizeClass.widthSizeClass) {
                         WindowWidthSizeClass.Compact -> 6.dp

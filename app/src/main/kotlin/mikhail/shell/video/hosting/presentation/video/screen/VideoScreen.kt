@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +26,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -126,7 +124,6 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
-import mikhail.shell.video.hosting.presentation.utils.dpSaver
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
@@ -145,8 +142,8 @@ fun VideoScreen(
     onAction: (VideoScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
-    val activity = LocalActivity.current!!
     val windowSize = LocalWindowInfo.current.containerDpSize
+    val activity = LocalActivity.current!!
     val density = LocalDensity.current
     val playerState = LocalPlayerState.current
     val context = LocalContext.current
@@ -166,7 +163,28 @@ fun VideoScreen(
         }
     ) { padding ->
         if (state.video != null) {
-            val exitThreshold = 0.4f * windowSize.height
+            var screenContentWidth by remember {
+                mutableStateOf(0.dp)
+            }
+            val updatedScreenContentWidth by rememberUpdatedState(screenContentWidth)
+            var screenContentHeight by remember {
+                mutableStateOf(0.dp)
+            }
+            val updatedScreenContentHeight by rememberUpdatedState(screenContentHeight)
+            var playerContainerWidth by remember {
+                mutableStateOf(0.dp)
+            }
+            var playerContainerHeight by remember {
+                mutableStateOf(0.dp)
+            }
+            val playerContainerUpdatedWidth by rememberUpdatedState(playerContainerWidth)
+            val playerContainerUpdatedHeight by rememberUpdatedState(playerContainerHeight)
+            var isExitConsidered by rememberSaveable {
+                mutableStateOf(true)
+            }
+            val exitThresholdHeight = remember(screenContentHeight) {
+                0.4f * screenContentHeight
+            }
             var exitProgress by rememberSaveable {
                 mutableFloatStateOf(0f)
             }
@@ -174,21 +192,31 @@ fun VideoScreen(
                 targetValue = exitProgress
             )
             val updatedExitProgress by rememberUpdatedState(animatedExitProgress)
-            var playerY by rememberSaveable(saver = dpSaver) {
+            var playerX by remember {
+                mutableStateOf(0.dp)
+            }
+            val updatedPlayerX by rememberUpdatedState(playerX)
+            var playerY by remember {
                 mutableStateOf(0.dp)
             }
             val updatedPlayerY by rememberUpdatedState(playerY)
             BackHandler(true) {
-                // playerY = windowSize.height
-                onAction(VideoScreenAction.Exit) // TODO: restore playerY change
+                playerY = screenContentHeight - playerContainerHeight
+                playerX = 0.dp
             }
             LaunchedEffect(playerY) {
-                exitProgress = playerY / exitThreshold
+                exitProgress = when {
+                    exitThresholdHeight > 0.dp -> (playerY / exitThresholdHeight).coerceIn(0f..1f)
+                    else -> 0f
+                }
             }
             var miniPlayerPosition by LocalMiniPlayerPositionState.current
-            RetainedEffect(animatedExitProgress) {
-                if (animatedExitProgress == 1f) {
-                    miniPlayerPosition = MiniPlayerPosition()
+            RetainedEffect(animatedExitProgress, isExitConsidered) {
+                if (animatedExitProgress == 1f && isExitConsidered) {
+                    miniPlayerPosition = MiniPlayerPosition(
+                        x = playerX.value.toInt(),
+                        y = playerY.value.toInt()
+                    )
                     onAction(VideoScreenAction.Exit)
                 }
                 onRetire {}
@@ -196,13 +224,21 @@ fun VideoScreen(
             ConstraintLayout(
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(1 - exitProgress)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(padding),
+                    .padding(padding)
+                    .onGloballyPositioned { coordinates ->
+                        with(density) {
+                            screenContentWidth = coordinates.size.width.toDp()
+                            screenContentHeight = coordinates.size.height.toDp()
+                        }
+                    },
             ) {
                 val (playerRef, detailsRef, commentsRef) = createRefs()
-                var isFullScreen by rememberSaveable { mutableStateOf(false) }
-                var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
+                var isFullScreen by rememberSaveable {
+                    mutableStateOf(false)
+                }
+                var aspectRatio by rememberSaveable {
+                    mutableFloatStateOf(16f / 9)
+                }
                 val scrollState = rememberScrollState()
                 val orientation = LocalConfiguration.current.orientation
                 val isSmallWindow = rememberIsSmallWindow()
@@ -233,65 +269,85 @@ fun VideoScreen(
                     modifier = Modifier
                         .constrainAs(playerRef) {
                             top.linkTo(parent.top, updatedPlayerY)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
+                            start.linkTo(parent.start, updatedPlayerX)
                         }
                         .then(
                             when (isFullScreenReached) {
                                 true -> Modifier.fillMaxSize()
-                                false -> Modifier.width(250.dp + (1 - exitProgress) * (windowSize.width - 250.dp))
+                                false -> when {
+                                    aspectRatio.isNaN() ->
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(16f / 9)
+                                    else -> {
+                                        val idleWidth =
+                                            if (screenContentWidth > 0.dp) screenContentWidth else windowSize.width
+                                        val idleHeight =
+                                            idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
+                                        val exitWidth =
+                                            if (aspectRatio >= 1f) 250.dp else aspectRatio * 250.dp
+                                        val exitHeight =
+                                            if (aspectRatio >= 1f) 250.dp / aspectRatio else 250.dp
+                                        val currentWidth =
+                                            exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
+                                        val currentHeight =
+                                            exitHeight + (1 - exitProgress) * (idleHeight - exitHeight)
+                                        Modifier.size(
+                                            width = currentWidth,
+                                            height = currentHeight
+                                        )
+                                    }
+                                }
                             }
                         )
                         .clip(RoundedCornerShape(exitProgress * 10.dp))
-                        .background(Color.Black)
+                        .background(Color.Black.copy(alpha = 1 - animatedExitProgress))
                         .then(
                             when (isFullScreenReached) {
                                 true -> Modifier
                                 false -> Modifier.pointerInput(Unit) {
+                                    val onInteractionEnd = {
+                                        isExitConsidered = true
+                                        playerX = when {
+                                            updatedPlayerY < exitThresholdHeight -> 0.dp
+                                            else -> updatedScreenContentWidth - playerContainerUpdatedWidth
+                                        }
+                                        playerY = when {
+                                            updatedPlayerY < exitThresholdHeight -> 0.dp
+                                            else -> updatedScreenContentHeight - playerContainerUpdatedHeight
+                                        }
+                                    }
                                     detectDragGestures(
-//                                        onDragEnd = {
-//                                            exitProgress = when {
-//                                                updatedExitProgress < 1 -> 0f
-//                                                else -> 1f
-//                                            }
-//                                        },
-//                                        onDragCancel = {
-//                                            exitProgress = when {
-//                                                updatedExitProgress < 1 -> 0f
-//                                                else -> 1f
-//                                            }
-//                                        }
+                                        onDragStart = {
+                                            isExitConsidered = false
+                                        },
+                                        onDragEnd = onInteractionEnd,
+                                        onDragCancel = onInteractionEnd
                                     ) { change, _ ->
                                         if (!(updatedPlayerY == 0.dp && change.positionChange().y.toDp() <= 0.dp)) {
-                                            playerY += with(density) {
-                                                change.positionChange().y.toDp()
-                                            }
-                                            playerY = playerY.coerceIn(0.dp .. windowSize.height)
+                                            playerX =
+                                                (updatedPlayerX + change.positionChange().x.toDp()).coerceIn(
+                                                    0.dp..(screenContentWidth - playerContainerUpdatedWidth)
+                                                )
+                                            playerY =
+                                                (updatedPlayerY + change.positionChange().y.toDp()).coerceIn(
+                                                    0.dp..(screenContentHeight - playerContainerUpdatedHeight)
+                                                )
                                         }
                                     }
                                 }
                             }
-                        ),
+                        )
+                        .onGloballyPositioned { coordinates ->
+                            with(density) {
+                                playerContainerWidth = coordinates.size.width.toDp()
+                                playerContainerHeight = coordinates.size.height.toDp()
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     PlayerComponent(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                if (isFullScreenReached) {
-                                    Modifier.fillMaxHeight()
-                                } else {
-                                    if (isSmallWindow) {
-                                        try {
-                                            Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                        } catch (_: IllegalArgumentException) {
-                                            Modifier.aspectRatio(16f / 9)
-                                        }
-                                    } else {
-                                        Modifier.fillMaxHeight(0.5f)
-                                    }
-                                }
-                            ),
+                        modifier = Modifier.matchParentSize(),
                         playerProvider = playerProvider,
                         onRatioObtained = {
                             aspectRatio = it
@@ -331,6 +387,7 @@ fun VideoScreen(
                 if (!isFullScreenReached) {
                     Column(
                         modifier = Modifier
+                            .alpha(1 - animatedExitProgress)
                             .fillMaxSize()
                             .background(Black)
                             .clip(
@@ -390,14 +447,10 @@ fun VideoScreen(
                             )
                             if (state.userId == state.video.ownerId) {
                                 var isDeletingDialogOpen by rememberSaveable {
-                                    mutableStateOf(
-                                        false
-                                    )
+                                    mutableStateOf(false)
                                 }
                                 var isAdvancedDialogOpen by rememberSaveable {
-                                    mutableStateOf(
-                                        false
-                                    )
+                                    mutableStateOf(false)
                                 }
                                 Box {
                                     EditButton(
