@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.PlayerView
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.ui.NavDisplay
 import mikhail.shell.video.hosting.R
@@ -24,6 +25,7 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.services.VideoDownloadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
+import mikhail.shell.video.hosting.presentation.player.LocalPlayerView
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreen
 import mikhail.shell.video.hosting.presentation.video.screen.VideoScreenViewModel
@@ -46,9 +48,10 @@ fun EntryProviderScope<Route>.videoRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
+        val playerView = LocalPlayerView.current
         VideoScreen(
             state = state,
-            playerProvider = { player },
+            playerViewProvider = { playerView },
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState
         )

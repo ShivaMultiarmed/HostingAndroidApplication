@@ -17,6 +17,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.ui.PlayerView
 import androidx.navigation3.runtime.EntryProviderScope
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
@@ -41,12 +42,20 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
         val playerState = rememberSerializable {
             mutableStateOf(PlayerState())
         }
+        val player: Player = remember {
+            val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(context)
+            ExoPlayer.Builder(context)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .build()
+        }
+        val playerView = remember {
+            PlayerView(context).apply {
+                useController = false
+                this.player = player
+            }
+        }
         val viewModel =
             hiltViewModel<VideoUploadingViewModel, VideoUploadingViewModel.Factory> { factory ->
-                val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(context)
-                val player: Player = ExoPlayer.Builder(context)
-                    .setMediaSourceFactory(mediaSourceFactory)
-                    .build()
                 factory.create(player)
             }
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -55,7 +64,7 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
         CompositionLocalProvider(LocalPlayerState provides playerState) {
             VideoUploadingScreen(
                 state = state,
-                playerProvider = { viewModel.player },
+                playerViewProvider = { playerView },
                 onAction = viewModel::onAction,
                 snackBarHostState = snackBarHostState
             )

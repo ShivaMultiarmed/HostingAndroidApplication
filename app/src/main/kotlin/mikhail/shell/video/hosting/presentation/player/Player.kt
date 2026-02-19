@@ -9,6 +9,8 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -22,6 +24,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,9 +85,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -135,8 +137,12 @@ val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
     }
 }
 
-val LocalPlayerState = compositionLocalOf {
-    mutableStateOf(PlayerState())
+val LocalPlayerView = compositionLocalOf<PlayerView> {
+    error("No PlayerView is provided")
+}
+
+val LocalPlayerState = compositionLocalOf<MutableState<PlayerState>> {
+    error("No PlayerState is provided")
 }
 
 @Serializable
@@ -145,22 +151,25 @@ data class MiniPlayerPosition(
     val y: Int = 0
 )
 
-val LocalMiniPlayerPositionState = compositionLocalOf {
-    mutableStateOf(MiniPlayerPosition())
+val LocalMiniPlayerPositionState = compositionLocalOf<MutableState<MiniPlayerPosition>> {
+    error("No MiniPlayerPosition is provided")
 }
 
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    playerProvider: () -> Player,
+    playerViewProvider: () -> PlayerView,
     onFullscreen: (Boolean) -> Unit,
     isFullScreen: Boolean = false,
     onRatioObtained: ((Float) -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val playerView = remember {
+        playerViewProvider()
+    }
     val player = retain {
-        playerProvider()
+        playerView.player!!
     }
     var playerState by rememberSaveable { mutableIntStateOf(player.playbackState) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
@@ -174,7 +183,7 @@ fun PlayerComponent(
     ) {
         VideoSurface(
             modifier = Modifier.matchParentSize(),
-            playerProvider = playerProvider
+            playerViewProvider = playerViewProvider
         )
         val seekRange = 5000L
         PlayerControls(
@@ -201,7 +210,6 @@ fun PlayerComponent(
     RetainedEffect(Unit) {
         val playerListener = object : Player.Listener {
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-
                 aspectRatio = videoSize.width.toFloat() / videoSize.height
                 onRatioObtained?.invoke(aspectRatio)
             }
@@ -218,7 +226,6 @@ fun PlayerComponent(
                     duration = player.duration
                 }
             }
-
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -227,9 +234,7 @@ fun PlayerComponent(
                 position = newPosition.positionMs
             }
         }
-
         player.addListener(playerListener)
-
         onRetire {
             player.removeListener(playerListener)
         }
@@ -271,24 +276,41 @@ fun PlayerComponent(
         }
     }
     BackHandler(enabled = isFullScreen) {
-        onFullscreen?.invoke(false)
+        onFullscreen(false)
     }
 }
 
 @Composable
 internal fun VideoSurface(
     modifier: Modifier = Modifier,
-    playerProvider: () -> Player
+    playerViewProvider: () -> PlayerView
 ) {
+    val context = LocalContext.current
+    val container = remember {
+        FrameLayout(context)
+    }
+    val playerView = remember {
+        playerViewProvider()
+    }
+    val player = retain {
+        playerView.player!!
+    }
     AndroidView(
         modifier = modifier,
         factory = {
-            PlayerView(it).apply {
-                useController = false
-                this.player = playerProvider()
-            }
+            container
         }
     )
+    DisposableEffect (Unit) {
+        (playerView.parent as? ViewGroup)?.removeView(playerView)
+        container.addView(playerView)
+        if (player.playbackState == Player.STATE_ENDED) {
+            player.seekTo(player.contentDuration - 1)
+        }
+        onDispose {
+            container.removeView(playerView)
+        }
+    }
 }
 
 @Composable
@@ -305,22 +327,18 @@ internal fun PlayerControls(
     isFullScreen: Boolean = false,
     onFullscreen: (Boolean) -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val windowSize = LocalWindowInfo.current.containerDpSize
     val windowSizeClass = remember {
         WindowSizeClass.calculateFromSize(
             DpSize(windowSize.width, windowSize.height)
         )
     }
-    val coroutineScope = rememberCoroutineScope()
-    var isInteracting by rememberSaveable {
+    var isSeeking by rememberSaveable {
         mutableStateOf(false)
     }
     val interactionSource = remember {
         MutableInteractionSource()
-    }
-    val controlsShowDuration = 3000
-    var notActiveTimer by rememberSaveable {
-        mutableIntStateOf(0)
     }
     var controlsAlpha by rememberSaveable {
         mutableFloatStateOf(0f)
@@ -329,47 +347,20 @@ internal fun PlayerControls(
         targetValue = controlsAlpha,
         animationSpec = tween(300)
     )
-    LaunchedEffect(notActiveTimer) {
-        when (notActiveTimer) {
-            controlsShowDuration -> controlsAlpha = 1f
-            0 -> controlsAlpha = 0f
-        }
-    }
-    LaunchedEffect(isInteracting) {
-        if (isInteracting) {
-            notActiveTimer = controlsShowDuration
-        } else if (notActiveTimer > 0) {
-            delay(controlsShowDuration.toLong())
-            notActiveTimer = 0
+    LaunchedEffect(controlsAlpha,isSeeking) {
+        if (controlsAlpha == 1f && !isSeeking) {
+            delay(3000)
+            controlsAlpha = 0f
         }
     }
     ConstraintLayout(
-        modifier = modifier
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {}
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Main)
-                        val change = event.changes.firstOrNull() ?: continue
-                        when {
-                            !change.previousPressed && change.pressed -> { // Pointer down
-                                isInteracting = true
-                            }
-
-                            change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
-                                isInteracting = true
-                            }
-
-                            change.previousPressed && !change.pressed -> { // Pointer up or Canceled
-                                isInteracting = false
-                            }
-                        }
-                    }
-                }
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = {
+                controlsAlpha = 1f
             }
+        )
     ) {
         val (seekBack, seekForward, playBtn, toolBar) = createRefs()
 
@@ -402,8 +393,7 @@ internal fun PlayerControls(
                 )
                 .combinedClickable(
                     onClick = {
-                        isInteracting = true
-                        isInteracting = false
+                        controlsAlpha = 1f
                     },
                     onDoubleClick = {
                         coroutineScope.launch {
@@ -446,13 +436,13 @@ internal fun PlayerControls(
                             baseColor = Color.White.copy(alpha = 0.15f),
                             accentColor = Color.White.copy(alpha = 0.3f)
                         )
+
                         else -> Modifier
                     }
                 )
                 .combinedClickable(
                     onClick = {
-                        isInteracting = true
-                        isInteracting = false
+                        controlsAlpha = 1f
                     },
                     onDoubleClick = {
                         coroutineScope.launch {
@@ -560,7 +550,7 @@ internal fun PlayerControls(
                                 containerColor = Color.Transparent
                             ),
                             onClick = {
-                                onFullscreen?.invoke(!isFullScreen)
+                                onFullscreen(!isFullScreen)
                             }
                         ) {
                             Icon(
@@ -587,6 +577,13 @@ internal fun PlayerControls(
                         else -> 9.dp
                     }
                     val thumbRadius = 1.1f * barHeight
+                    val onInputChange = retain {
+                        { x: Float, width: Float ->
+                            val newProgress = (x / width).coerceIn(0f..1f)
+                            val newPosition = (newProgress * duration).toLong()
+                            onSeek(newPosition)
+                        }
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -610,34 +607,31 @@ internal fun PlayerControls(
                                 }
                             )
                             .pointerInput(Unit) {
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        val event = awaitPointerEvent(PointerEventPass.Main)
-                                        val change = event.changes.firstOrNull() ?: continue
-                                        when {
-                                            !change.previousPressed && change.pressed -> { // Pointer down
-                                                isInteracting = true
-                                                val newProgress =
-                                                    (change.position.x / size.width).coerceIn(0f..1f)
-                                                val newPosition =
-                                                    (newProgress * duration).toLong()
-                                                onSeek(newPosition)
-                                            }
-
-                                            change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
-                                                isInteracting = true
-                                                val newProgress =
-                                                    (change.position.x / size.width).coerceIn(0f..1f)
-                                                val newPosition =
-                                                    (newProgress * duration).toLong()
-                                                onSeek(newPosition)
-                                            }
-
-                                            change.previousPressed && !change.pressed -> { // Pointer up or Canceled
-                                                isInteracting = false
-                                            }
-                                        }
+                                detectTapGestures(
+                                    onPress = { position ->
+                                        controlsAlpha = 1f
+                                        onInputChange(position.x, size.width.toFloat())
+                                    },
+                                    onTap = { position ->
+                                        controlsAlpha = 1f
+                                        onInputChange(position.x, size.width.toFloat())
                                     }
+                                )
+                            }
+                            .pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        isSeeking = true
+                                    },
+                                    onDragEnd = {
+                                        isSeeking = false
+                                    },
+                                    onDragCancel = {
+                                        isSeeking = false
+                                    }
+                                ) { change, _ ->
+                                    change.consume()
+                                    onInputChange(change.position.x, size.width.toFloat())
                                 }
                             },
                         contentAlignment = Alignment.Center

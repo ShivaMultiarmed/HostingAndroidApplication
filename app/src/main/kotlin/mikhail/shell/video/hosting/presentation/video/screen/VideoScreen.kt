@@ -93,7 +93,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.media3.common.Player
+import androidx.media3.ui.PlayerView
 import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -128,6 +128,7 @@ import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
+import mikhail.shell.video.hosting.presentation.video.miniPlayerMaxDimension
 import mikhail.shell.video.hosting.ui.theme.Black
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -138,7 +139,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun VideoScreen(
     state: VideoScreenState,
-    playerProvider: () -> Player,
+    playerViewProvider: () -> PlayerView,
     onAction: (VideoScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
@@ -285,9 +286,9 @@ fun VideoScreen(
                                         val idleHeight =
                                             idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
                                         val exitWidth =
-                                            if (aspectRatio >= 1f) 250.dp else aspectRatio * 250.dp
+                                            if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
                                         val exitHeight =
-                                            if (aspectRatio >= 1f) 250.dp / aspectRatio else 250.dp
+                                            if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
                                         val currentWidth =
                                             exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
                                         val currentHeight =
@@ -333,6 +334,7 @@ fun VideoScreen(
                                                 (updatedPlayerY + change.positionChange().y.toDp()).coerceIn(
                                                     0.dp..(screenContentHeight - playerContainerUpdatedHeight)
                                                 )
+                                            change.consume()
                                         }
                                     }
                                 }
@@ -348,7 +350,7 @@ fun VideoScreen(
                 ) {
                     PlayerComponent(
                         modifier = Modifier.matchParentSize(),
-                        playerProvider = playerProvider,
+                        playerViewProvider = playerViewProvider,
                         onRatioObtained = {
                             aspectRatio = it
                         },

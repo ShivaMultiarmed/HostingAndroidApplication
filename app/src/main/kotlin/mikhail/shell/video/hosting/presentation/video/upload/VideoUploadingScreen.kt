@@ -45,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -59,7 +60,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -100,12 +101,15 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 @Composable
 fun VideoUploadingScreen(
     state: ScreenState,
-    playerProvider: () -> Player,
+    playerViewProvider: () -> PlayerView,
     onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
-    val player = retain {
-        playerProvider()
+    val playerView = remember {
+        playerViewProvider()
+    }
+    val player = remember {
+        playerView.player!!
     }
     val activity = LocalActivity.current!!
     var playerState by LocalPlayerState.current
@@ -330,7 +334,7 @@ fun VideoUploadingScreen(
                                                 }
                                             }
                                         ),
-                                    playerProvider = playerProvider,
+                                    playerViewProvider = playerViewProvider,
                                     onRatioObtained = {
                                         aspectRatio = it
                                     },
