@@ -1,10 +1,12 @@
 package mikhail.shell.video.hosting.presentation.comments.models
 
+import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mikhail.shell.video.hosting.domain.models.CommentWithUser
 
+@Immutable
 data class CommentUi(
     val userId: Long,
     val commentId: Long,

@@ -1,8 +1,10 @@
 package mikhail.shell.video.hosting.presentation.user.models
 
+import androidx.compose.runtime.Immutable
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.User
 
+@Immutable
 data class UserUi(
     val userId: Long,
     val nick: String,

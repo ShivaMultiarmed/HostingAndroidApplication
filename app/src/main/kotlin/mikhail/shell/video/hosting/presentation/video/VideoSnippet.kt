@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoUi
-import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
+import mikhail.shell.video.hosting.presentation.utils.format
 
 @Composable
 fun VideoSnippet(
@@ -93,7 +93,7 @@ fun VideoSnippet(
                 Text(
                     fontSize = 12.sp,
                     lineHeight = 14.sp,
-                    text = video.dateTime.toPresentation(context),
+                    text = video.dateTime.format(context),
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

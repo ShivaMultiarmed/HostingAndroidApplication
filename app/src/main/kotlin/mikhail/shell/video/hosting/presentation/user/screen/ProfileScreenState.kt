@@ -1,9 +1,11 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
+import androidx.compose.runtime.Immutable
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 
+@Immutable
 data class ProfileScreenState (
     val signedInUserId: Long,
     val user: UserUi? = null,
@@ -13,6 +15,7 @@ data class ProfileScreenState (
     val isSigningOut: Boolean = false
 )
 
+@Immutable
 data class OwnedChannelsState(
     val channels: List<ChannelUi>? = null,
     val hasMore: Boolean = true,

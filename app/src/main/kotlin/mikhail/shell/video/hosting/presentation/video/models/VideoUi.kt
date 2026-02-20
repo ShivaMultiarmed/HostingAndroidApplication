@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.models
 
+import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -9,6 +10,7 @@ import mikhail.shell.video.hosting.domain.models.Video
 import mikhail.shell.video.hosting.domain.models.VideoWithChannel
 import mikhail.shell.video.hosting.domain.models.VideoWithChannelForUser
 
+@Immutable
 data class VideoUi(
     val videoId: Long,
     val cover: String,

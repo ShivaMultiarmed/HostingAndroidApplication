@@ -5,6 +5,7 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -38,21 +39,21 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mikhail.shell.video.hosting.ui.theme.disabled
 
 private const val duration = 400
 private val reloadIndicatorSize = 24.dp
-private val reloadThumbSize = 1.5 * reloadIndicatorSize
-private val shadowBaseDiameter = 1.2 * reloadThumbSize
+private val reloadThumbSize = 1.5f * reloadIndicatorSize
+private val shadowBaseDiameter = 1.2f * reloadThumbSize
 private val shadowWidth = 5.dp
-private val topPosition = -(shadowBaseDiameter + shadowWidth)
-private val bottomPosition = 0.7f * (shadowBaseDiameter + shadowWidth)
-private val activationZone = bottomPosition..(1.2f * (bottomPosition - topPosition))
+private val topPosition = -(shadowBaseDiameter + shadowWidth) * 1.5f
+private val bottomPosition = 1.0f * (shadowBaseDiameter + shadowWidth)
+private val activationZone = bottomPosition..(0.6f * (bottomPosition - topPosition))
 
 val dpSaver = object : Saver<MutableState<Dp>, Float> {
     override fun SaverScope.save(value: MutableState<Dp>): Float {
@@ -69,11 +70,13 @@ fun RestartableBox(
     isStarting: Boolean,
     canStart: Boolean = true,
     onStart: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable BoxScope.() -> Unit
 ) {
     val resistance = 0.15f
     val density = LocalDensity.current.density
-    var height by rememberSaveable(saver = dpSaver) { mutableStateOf(topPosition) }
+    var height by rememberSaveable(saver = dpSaver) {
+        mutableStateOf(topPosition)
+    }
     val animatedHeight = remember {
         Animatable(
             initialValue = height,
@@ -160,6 +163,7 @@ private fun RestartThumb(
     isActive: Boolean,
     isStarting: Boolean
 ) {
+    val density = LocalDensity.current
     var isStartingCurrent by rememberSaveable {
         mutableStateOf(isStarting)
     }
@@ -187,18 +191,17 @@ private fun RestartThumb(
             .clip(CircleShape)
             .background(Color.Transparent)
             .onGloballyPositioned {
-                val verticalOffset = it.positionInParent().y.dp
-                angle = (verticalOffset - topPosition) / (bottomPosition - topPosition) * 360
+                val verticalOffset = with(density) {
+                    it.positionInParent().y.toDp()
+                }
+                angle = (verticalOffset.coerceAtMost(activationZone.start) - topPosition) / (activationZone.start - topPosition) * 360
             },
         contentAlignment = Alignment.Center
     ) {
         if (isStartingCurrent) {
             CircularProgressIndicator(
                 modifier = Modifier.size(reloadIndicatorSize),
-                color = when (isActive) {
-                    true -> MaterialTheme.colorScheme.primary
-                    false -> MaterialTheme.colorScheme.disabled
-                }
+                color = MaterialTheme.colorScheme.primary
             )
         } else {
             CircularProgressIndicator(
@@ -206,7 +209,10 @@ private fun RestartThumb(
                     .size(reloadIndicatorSize)
                     .rotate(angle),
                 progress = { angle / 360 },
-                color = MaterialTheme.colorScheme.primary
+                color = when (isActive) {
+                    true -> MaterialTheme.colorScheme.primary
+                    false -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                }
             )
         }
     }

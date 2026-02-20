@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.channel.models
 
+import androidx.compose.runtime.Immutable
 import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
 import mikhail.shell.video.hosting.domain.models.ImageSize
@@ -21,6 +22,7 @@ fun Channel.toUi(logo: String = "") = ChannelUi(
     subscribers = subscribers
 )
 
+@Immutable
 data class ChannelForUserUi(
     val channelId: Long,
     val logo: Map<ImageSize, String>,

@@ -1,6 +1,5 @@
 package mikhail.shell.video.hosting.presentation.video.screen
 
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
@@ -55,10 +54,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,12 +89,8 @@ import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.ui.PlayerView
-import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.models.Liking.DISLIKED
@@ -124,16 +115,14 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
+import mikhail.shell.video.hosting.presentation.utils.format
+import mikhail.shell.video.hosting.presentation.utils.rememberIsSmallWindow
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toRoundString
 import mikhail.shell.video.hosting.presentation.utils.toSubscribers
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.miniPlayerMaxDimension
 import mikhail.shell.video.hosting.ui.theme.Black
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMotionApi::class)
 @Composable
@@ -158,7 +147,9 @@ fun VideoScreen(
         containerColor = Color.Transparent,
         snackbarHost = {
             SnackbarHost(
-                modifier = Modifier.padding(bottom = bottomSheetHeight),
+                modifier = Modifier.padding(
+                    bottom = (if (sheetState.isVisible) bottomSheetHeight else 0.dp) + 10.dp
+                ),
                 hostState = snackBarHostState
             )
         }
@@ -233,7 +224,7 @@ fun VideoScreen(
                         }
                     },
             ) {
-                val (playerRef, detailsRef, commentsRef) = createRefs()
+                val (playerRef, detailsRef) = createRefs()
                 var isFullScreen by rememberSaveable {
                     mutableStateOf(false)
                 }
@@ -389,8 +380,15 @@ fun VideoScreen(
                 if (!isFullScreenReached) {
                     Column(
                         modifier = Modifier
+                            .constrainAs(detailsRef) {
+                                top.linkTo(playerRef.bottom)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom)
+                                width = Dimension.fillToConstraints
+                                height = Dimension.fillToConstraints
+                            }
                             .alpha(1 - animatedExitProgress)
-                            .fillMaxSize()
                             .background(Black)
                             .clip(
                                 RoundedCornerShape(
@@ -399,15 +397,14 @@ fun VideoScreen(
                                 )
                             )
                             .background(MaterialTheme.colorScheme.background)
+                            .padding(12.dp)
                             .onGloballyPositioned { coordinates ->
-                                val newHeight = with(density) { coordinates.size.height.toDp() }
+                                val newHeight = with(density) {
+                                    coordinates.size.height.toDp()
+                                }
                                 if (bottomSheetHeight != newHeight) {
                                     bottomSheetHeight = newHeight
                                 }
-                            }
-                            .padding(12.dp)
-                            .constrainAs(detailsRef) {
-                                top.linkTo(playerRef.bottom)
                             }
                             .verticalScroll(scrollState)
                     ) {
@@ -442,7 +439,7 @@ fun VideoScreen(
                                 contentDescription = state.video.views.toViews()
                             )
                             Text(
-                                text = state.video.dateTime.toPresentation(context),
+                                text = state.video.dateTime.format(context),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 16.sp
@@ -663,13 +660,12 @@ fun VideoScreen(
                         }
                     }
                 }
-
                 if (sheetState.isVisible) {
                     val imeInset = with(LocalDensity.current) {
-                        WindowInsets.ime.getBottom(LocalDensity.current).toDp()
+                        WindowInsets.ime.getBottom(this).toDp()
                     }
                     CommentsBottomSheet(
-                        modifier = Modifier.height(bottomSheetHeight + 10.dp - BottomSheetDefaults.SheetPeekHeight - imeInset),
+                        modifier = Modifier.height(bottomSheetHeight - BottomSheetDefaults.SheetPeekHeight - imeInset),
                         userId = state.userId,
                         sheetState = sheetState,
                         commentsState = state.commentsState,
@@ -682,7 +678,6 @@ fun VideoScreen(
                     }
                 }
             }
-
         } else if (state.isStarting) {
             StartingComponent(
                 modifier = Modifier
@@ -714,8 +709,7 @@ private fun CommentsBottomSheet(
 ) {
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         sheetState = sheetState,
         onDismissRequest = {
             coroutineScope.launch {
@@ -853,7 +847,7 @@ private fun CommentBox(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = comment.nick + " - " + comment.dateTime.toPresentation(context),
+                        text = comment.nick + " - " + comment.dateTime.format(context),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (owns) {
@@ -929,96 +923,5 @@ private fun CommentForm(
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )
-    }
-}
-
-fun LocalDateTime.toPresentation(
-    context: Context,
-    timeZone: TimeZone = TimeZone.currentSystemDefault()
-): String {
-    val now = Clock.System.now()
-    val currentInstant = toInstant(timeZone)
-    val stringBuilder = StringBuilder()
-    if (now - 5.minutes < currentInstant) {
-        stringBuilder.append(context.getString(R.string.date_time_just_now_message))
-    } else if (now - 60.minutes < currentInstant) {
-        val diff = (now - currentInstant).inWholeMinutes.toInt()
-        stringBuilder.append(
-            context.resources.getQuantityString(
-                R.plurals.minutes_presentation,
-                diff,
-                diff
-            )
-        )
-    } else if (now - 24.hours < currentInstant) {
-        val diff = (now - currentInstant).inWholeHours.toInt()
-        stringBuilder.append(
-            context.resources.getQuantityString(
-                R.plurals.hours_presentation,
-                diff,
-                diff
-            )
-        )
-    } else if (now - 30.days < currentInstant) {
-        val diff = (now - currentInstant).inWholeDays.toInt()
-        stringBuilder.append(
-            context.resources.getQuantityString(
-                R.plurals.days_presentation,
-                diff,
-                diff
-            )
-        )
-    } else if (now - 30.days * 12 < currentInstant) {
-        val diff = ((now - currentInstant).inWholeDays / 30).toInt()
-        stringBuilder.append(
-            context.resources.getQuantityString(
-                R.plurals.months_presentation,
-                diff,
-                diff
-            )
-        )
-    } else {
-        val diff = ((now - currentInstant).inWholeDays / (30 * 12)).toInt()
-        stringBuilder.append(
-            context.resources.getQuantityString(
-                R.plurals.years_presentation,
-                diff,
-                diff
-            )
-        )
-    }
-    if (now - 5.minutes >= currentInstant) {
-        stringBuilder.append(" ").append(context.getString(R.string.date_time_ago_message))
-    }
-    return stringBuilder.toString()
-}
-
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Composable
-fun rememberIsSmallWindow(): Boolean {
-    val activity = LocalActivity.current!!
-    val windowSizeClass = calculateWindowSizeClass(activity)
-    val configuration = LocalConfiguration.current
-
-    return remember(windowSizeClass, configuration) {
-        // Check if either dimension is Compact (handles multi-window/split-screen)
-        val hasCompactDimension = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact ||
-                windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
-
-        // Check physical screen characteristics
-        val isPhysicallySmall = configuration.smallestScreenWidthDp < 600 ||
-                configuration.screenWidthDp < 600 ||
-                configuration.screenHeightDp < 600
-
-        // Special handling for foldables
-        val isFolded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val metrics = WindowMetricsCalculator.getOrCreate()
-                .computeCurrentWindowMetrics(activity)
-            val bounds = metrics.bounds
-            val density = activity.resources.displayMetrics.density
-            bounds.width() / density < 600 || bounds.height() / density < 600
-        } else true
-
-        hasCompactDimension && (isPhysicallySmall || isFolded)
     }
 }

@@ -58,6 +58,7 @@ import mikhail.shell.video.hosting.presentation.utils.ContextMenu
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
+import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.exists
 import mikhail.shell.video.hosting.presentation.utils.rememberAsyncImagePainter
 import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
@@ -68,39 +69,48 @@ import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenActi
 internal fun ChannelHeader(
     modifier: Modifier = Modifier,
     channel: ChannelForUserUi,
+    isStarting: Boolean,
     onAction: (ScreenAction) -> Unit,
-    owns: Boolean = false,
+    owns: Boolean,
     onShowLogo: () -> Unit
 ) {
     val context = LocalContext.current
     val windowSizeClass = calculateWindowSizeClass(context as Activity)
-    when {
-        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact -> {
-            ChannelHeaderCompact(
-                modifier = modifier,
-                channel = channel,
-                onAction = onAction,
-                owns = owns,
-                onShowLogo = onShowLogo
-            )
+    RestartableBox(
+        modifier = modifier.padding(10.dp),
+        isStarting = isStarting,
+        onStart = {
+            onAction(ScreenAction.RestartChannel)
         }
-        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact -> {
-            ChannelHeaderMedium(
-                modifier = modifier,
-                channel = channel,
-                onAction = onAction,
-                owns = owns,
-                onShowLogo = onShowLogo
-            )
-        }
-        else -> {
-            ChannelHeaderExpanded(
-                modifier = modifier,
-                channel = channel,
-                onAction = onAction,
-                owns = owns,
-                onShowLogo = onShowLogo
-            )
+    ) {
+        when {
+            windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact -> {
+                ChannelHeaderCompact(
+                    modifier = Modifier,
+                    channel = channel,
+                    onAction = onAction,
+                    owns = owns,
+                    onShowLogo = onShowLogo
+                )
+            }
+            windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact -> {
+                ChannelHeaderMedium(
+                    modifier = Modifier,
+                    channel = channel,
+                    onAction = onAction,
+                    owns = owns,
+                    onShowLogo = onShowLogo
+                )
+            }
+            else -> {
+                ChannelHeaderExpanded(
+                    modifier = Modifier,
+                    channel = channel,
+                    onAction = onAction,
+                    owns = owns,
+                    onShowLogo = onShowLogo
+                )
+            }
         }
     }
 }

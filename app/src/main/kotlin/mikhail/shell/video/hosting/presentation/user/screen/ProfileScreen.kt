@@ -1,7 +1,6 @@
 package mikhail.shell.video.hosting.presentation.user.screen
 
 import android.content.res.Configuration
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +34,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -46,16 +47,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.models.ImageSize
-import mikhail.shell.video.hosting.presentation.channel.models.ChannelUi
 import mikhail.shell.video.hosting.presentation.user.models.UserUi
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
+import mikhail.shell.video.hosting.presentation.utils.ChannelSnippet
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
@@ -66,7 +67,6 @@ import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.Title
 import mikhail.shell.video.hosting.presentation.utils.TopBar
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
-import mikhail.shell.video.hosting.presentation.utils.toFullSubscribers
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -76,6 +76,8 @@ fun ProfileScreen(
     onAction: (ProfileScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val windowSizeClass = WindowSizeClass.calculateFromSize(windowSize)
     val orientation = LocalConfiguration.current.orientation
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
     Box(
@@ -104,6 +106,7 @@ fun ProfileScreen(
                                 }
                             }
                         )
+
                         else -> null
                     }
                 )
@@ -115,21 +118,21 @@ fun ProfileScreen(
             }
         ) { padding ->
             if (state.user != null) {
-                RestartableBox(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    onStart = {
-                        onAction(ProfileScreenAction.RestartProfile)
-                    },
-                    isStarting = state.isStarting
+                        .padding(padding)
                 ) {
                     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                         Column(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             UserDataSection(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
                                 user = state.user,
+                                isStarting = state.isStarting,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 },
@@ -138,6 +141,9 @@ fun ProfileScreen(
                                 onAction = onAction
                             )
                             UserChannelsSection(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
                                 channelsState = state.channelsState,
                                 onAction = onAction
                             )
@@ -147,7 +153,11 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             UserDataSection(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .weight(1f),
                                 user = state.user,
+                                isStarting = state.isStarting,
                                 onShowAvatar = {
                                     shouldShowAvatar = true
                                 },
@@ -156,12 +166,16 @@ fun ProfileScreen(
                                 onAction = onAction
                             )
                             UserChannelsSection(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .weight(1f),
                                 channelsState = state.channelsState,
                                 onAction = onAction
                             )
                         }
                     }
                 }
+
             } else if (state.isStarting) {
                 StartingComponent(
                     modifier = Modifier.fillMaxSize()
@@ -189,33 +203,34 @@ fun ProfileScreen(
 
 @Composable
 private fun UserDataSection(
+    modifier: Modifier = Modifier,
     user: UserUi,
+    isStarting: Boolean,
     onShowAvatar: () -> Unit,
     owns: Boolean,
     hasChannels: Boolean,
     onAction: (ProfileScreenAction) -> Unit
 ) {
-    val orientation = LocalConfiguration.current.orientation
-    Column(
-        modifier = Modifier.then(
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                Modifier.fillMaxWidth()
-            } else {
-                Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.5f)
-            }
-        )
+    RestartableBox(
+        modifier = modifier,
+        onStart = {
+            onAction(ProfileScreenAction.RestartProfile)
+        },
+        isStarting = isStarting
     ) {
-        UserDetailsSection(
-            user = user,
-            onShowAvatar = onShowAvatar
-        )
-        if (owns) {
-            UserActions(
-                onEvent = onAction,
-                hasChannels = hasChannels
+        Column {
+            UserDetailsSection(
+                modifier = Modifier.fillMaxWidth(),
+                user = user,
+                onShowAvatar = onShowAvatar
             )
+            if (owns) {
+                UserActions(
+                    modifier = Modifier.fillMaxWidth(),
+                    onEvent = onAction,
+                    hasChannels = hasChannels
+                )
+            }
         }
     }
 }
@@ -223,80 +238,78 @@ private fun UserDataSection(
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 private fun UserChannelsSection(
+    modifier: Modifier = Modifier,
     channelsState: OwnedChannelsState,
     onAction: (ProfileScreenAction) -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isWidthCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    val orientation = LocalConfiguration.current.orientation
-    Column(
-        modifier = Modifier
-            .then(
-                if (orientation == ORIENTATION_LANDSCAPE) {
-                    Modifier
-                } else {
-                    Modifier.fillMaxSize()
-                }
-            )
-            .padding(top = 10.dp)
+    Box (
+        modifier = modifier
     ) {
-        if (channelsState.channels != null) {
-            if (channelsState.channels.isNotEmpty()) {
-                Title(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 5.dp),
-                    text = stringResource(R.string.user_channels_title)
+        Column(
+            modifier = Modifier
+                .matchParentSize()
+                .padding(top = 10.dp)
+        ) {
+            if (channelsState.channels != null) {
+                if (channelsState.channels.isNotEmpty()) {
+                    Title(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp),
+                        text = stringResource(R.string.user_channels_title)
+                    )
+                }
+                val pageableBoxState = rememberPageableBoxState(
+                    items = channelsState.channels,
+                    hasMore = channelsState.hasMore,
+                    error = channelsState.error,
+                    isLoading = channelsState.isLoading
+                )
+                PageableBox(
+                    modifier = Modifier.fillMaxSize(),
+                    state = pageableBoxState,
+                    itemComponent = {
+                        ChannelSnippet(
+                            modifier = Modifier.then(
+                                if (isWidthCompact) {
+                                    Modifier
+                                } else {
+                                    Modifier.clip(RoundedCornerShape(15.dp))
+                                }
+                            ),
+                            channel = it,
+                            onClick = {
+                                onAction(ProfileScreenAction.ChooseChannel(it))
+                            }
+                        )
+                    },
+                    emptyComponent = {
+                        EmptyComponent(
+                            modifier = Modifier.fillMaxSize(),
+                            message = stringResource(R.string.user_channels_empty_message)
+                        )
+                    },
+                    onReload = {
+                        onAction(ProfileScreenAction.LoadNextChannelsPart)
+                    },
+                    onReachedEnd = {
+                        onAction(ProfileScreenAction.LoadNextChannelsPart)
+                    }
+                )
+            } else if (channelsState.isLoading) {
+                StartingComponent(
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (channelsState.error != null) {
+                ErrorComponent(
+                    modifier = Modifier.fillMaxSize(),
+                    onRetry = {
+                        onAction(ProfileScreenAction.LoadNextChannelsPart)
+                    }
                 )
             }
-            val pageableBoxState = rememberPageableBoxState(
-                items = channelsState.channels,
-                hasMore = channelsState.hasMore,
-                error = channelsState.error,
-                isLoading = channelsState.isLoading
-            )
-            PageableBox(
-                modifier = Modifier.fillMaxSize(),
-                state = pageableBoxState,
-                itemComponent = {
-                    ChannelSnippet(
-                        modifier = Modifier.then(
-                            if (isWidthCompact) {
-                                Modifier
-                            } else {
-                                Modifier.clip(RoundedCornerShape(15.dp))
-                            }
-                        ),
-                        channel = it,
-                        onClick = {
-                            onAction(ProfileScreenAction.ChooseChannel(it))
-                        }
-                    )
-                },
-                emptyComponent = {
-                    EmptyComponent(
-                        modifier = Modifier.fillMaxSize(),
-                        message = stringResource(R.string.user_channels_empty_message)
-                    )
-                },
-                onReload = {
-                    onAction(ProfileScreenAction.LoadNextChannelsPart)
-                },
-                onReachedEnd = {
-                    onAction(ProfileScreenAction.LoadNextChannelsPart)
-                }
-            )
-        } else if (channelsState.isLoading) {
-            StartingComponent(
-                modifier = Modifier.fillMaxSize()
-            )
-        } else if (channelsState.error != null) {
-            ErrorComponent(
-                modifier = Modifier.fillMaxSize(),
-                onRetry = {
-                    onAction(ProfileScreenAction.LoadNextChannelsPart)
-                }
-            )
         }
     }
 }
@@ -304,17 +317,20 @@ private fun UserChannelsSection(
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 private fun UserDetailsSection(
+    modifier: Modifier = Modifier,
     user: UserUi,
     onShowAvatar: () -> Unit
 ) {
     val windowSize = calculateWindowSizeClass(LocalActivity.current!!)
     val isCompact = windowSize.widthSizeClass == WindowWidthSizeClass.Compact
-    var avatarExists by rememberSaveable { mutableStateOf(null as Boolean?) }
+    var avatarExists by rememberSaveable {
+        mutableStateOf(null as Boolean?)
+    }
     val avatar = @Composable {
         AsyncImage(
-            model = when(windowSize.widthSizeClass) {
-               WindowWidthSizeClass.Expanded -> user.avatar[ImageSize.LARGE]
-               else -> user.avatar[ImageSize.MEDIUM]
+            model = when (windowSize.widthSizeClass) {
+                WindowWidthSizeClass.Expanded -> user.avatar[ImageSize.LARGE]
+                else -> user.avatar[ImageSize.MEDIUM]
             },
             contentScale = ContentScale.Crop,
             contentDescription = stringResource(R.string.profile_avatar_hint),
@@ -343,7 +359,7 @@ private fun UserDetailsSection(
         )
     }
     Column(
-        modifier = Modifier.padding(10.dp),
+        modifier = modifier.padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isCompact) {
@@ -354,7 +370,7 @@ private fun UserDetailsSection(
             avatar()
         }
         UserTextDetails(
-            modifier = Modifier,
+            modifier = Modifier.fillMaxWidth(),
             user = user
         )
     }
@@ -384,9 +400,7 @@ private fun UserTextDetails(
         }
     }
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(10.dp),
+        modifier = modifier.padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -419,9 +433,15 @@ private fun UserTextDetails(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        UserDetail(contacts)
+                        UserDetail(
+                            modifier = Modifier,
+                            text = contacts
+                        )
                         user.bio?.let {
-                            UserDetail(it)
+                            UserDetail(
+                                modifier = Modifier,
+                                text = it
+                            )
                         }
                     }
                 }
@@ -432,9 +452,12 @@ private fun UserTextDetails(
 }
 
 @Composable
-private fun UserDetail(text: String) {
+private fun UserDetail(
+    modifier: Modifier = Modifier,
+    text: String
+) {
     Text(
-        modifier = Modifier.padding(top = 5.dp),
+        modifier = modifier.padding(top = 5.dp),
         text = text,
         fontSize = 12.sp
     )
@@ -448,7 +471,6 @@ private fun UserActions(
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
             .padding(10.dp)
             .padding(bottom = 10.dp)
             .horizontalScroll(rememberScrollState()),
@@ -492,62 +514,6 @@ private fun UserActions(
                 dialogTitle = stringResource(R.string.sign_out_warning_title),
                 dialogDescription = stringResource(R.string.sign_out_warning_message)
             )
-        }
-    }
-}
-
-@Composable
-fun ChannelSnippet(
-    modifier: Modifier = Modifier,
-    channel: ChannelUi,
-    onClick: (Long) -> Unit
-) {
-    val context = LocalContext.current
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable {
-                onClick(channel.channelId)
-            }
-            .padding(10.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = channel.logo,
-                contentDescription = channel.title,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
-            Column(
-                modifier = Modifier.padding(start = 10.dp)
-            ) {
-                Text(
-                    text = channel.title,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2
-                )
-                val alias = channel.alias ?: channel.channelId
-                Text(
-                    text = "@$alias",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-                Text(
-                    text = channel.subscribers.toFullSubscribers(context),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
         }
     }
 }

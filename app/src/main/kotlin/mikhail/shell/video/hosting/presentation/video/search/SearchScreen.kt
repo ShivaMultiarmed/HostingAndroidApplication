@@ -59,7 +59,7 @@ import mikhail.shell.video.hosting.presentation.utils.borderBottom
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
 import mikhail.shell.video.hosting.presentation.utils.toViews
 import mikhail.shell.video.hosting.presentation.video.models.VideoWithChannelUi
-import mikhail.shell.video.hosting.presentation.video.screen.toPresentation
+import mikhail.shell.video.hosting.presentation.utils.format
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -264,7 +264,7 @@ fun VideoWithChannelSnippet(
                         append(" ")
                         appendInlineContent(modId, "[view_icon]")
                         append(" - ")
-                        append(videoWithChannel.dateTime.toPresentation(context))
+                        append(videoWithChannel.dateTime.format(context))
                     }
                 }
                 val inlineContent = mapOf(
