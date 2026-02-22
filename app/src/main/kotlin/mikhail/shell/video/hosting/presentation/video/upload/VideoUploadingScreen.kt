@@ -403,7 +403,7 @@ fun VideoUploadingScreen(
                             }
 
                             val channelErrMsg = when (state.video.channelId.error) {
-                                NumericError.EMPTY -> stringResource(R.string.video_upload_channel_not_valid_error)
+                                NumericError.EMPTY -> stringResource(R.string.channel_empty)
                                 NumericError.NOT_EXISTS -> stringResource(R.string.channel_not_found)
                                 else -> null
                             }

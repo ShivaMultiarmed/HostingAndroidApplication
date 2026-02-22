@@ -1,8 +1,12 @@
 package mikhail.shell.video.hosting.presentation.player
 
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -17,10 +21,19 @@ class PlayerTests {
     @Test
     fun player_RegularOperations_RunSmoothly() {
         val latch = CountDownLatch(1)
-        val player = ExoPlayer.Builder(composeRule.activity).build()
         composeRule.setContent {
+            val context = LocalContext.current
+            val player = retain {
+                ExoPlayer.Builder(composeRule.activity).build()
+            }
+            val playerView = remember {
+                PlayerView(context).apply {
+                    this.player = player
+                    useController = false
+                }
+            }
             PlayerComponent(
-                playerProvider = { player },
+                playerViewProvider = { playerView },
                 onFullscreen = {
                     latch.countDown()
                 }

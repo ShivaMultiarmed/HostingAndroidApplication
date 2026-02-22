@@ -11,10 +11,6 @@ enum class TextError: Error {
     PATTERN
 }
 
-enum class OptionError: Error {
-    EMPTY
-}
-
 enum class FileError: Error {
     NOT_FOUND,
     EMPTY,
@@ -26,5 +22,6 @@ enum class NumericError: Error {
     EMPTY,
     LOW,
     HIGH,
-    NOT_EXISTS
+    NOT_EXISTS,
+    NOT_VALID
 }

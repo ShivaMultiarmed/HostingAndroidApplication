@@ -13,14 +13,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -48,21 +45,11 @@ import kotlinx.coroutines.launch
 
 private const val duration = 400
 private val reloadIndicatorSize = 24.dp
-private val reloadThumbSize = 1.5f * reloadIndicatorSize
-private val shadowBaseDiameter = 1.2f * reloadThumbSize
+private val reloadThumbSize = 36.dp
 private val shadowWidth = 5.dp
-private val topPosition = -(shadowBaseDiameter + shadowWidth) * 1.5f
-private val bottomPosition = 1.0f * (shadowBaseDiameter + shadowWidth)
-private val activationZone = bottomPosition..(0.6f * (bottomPosition - topPosition))
-
-val dpSaver = object : Saver<MutableState<Dp>, Float> {
-    override fun SaverScope.save(value: MutableState<Dp>): Float {
-        return value.value.value
-    }
-    override fun restore(value: Float): MutableState<Dp> {
-        return mutableStateOf(value.dp)
-    }
-}
+private val visibleDiameter = (reloadThumbSize + shadowWidth * 2)
+private val idlePosition = - 1.5f * visibleDiameter
+private val activationZoneSize = 46.dp
 
 @Composable
 fun RestartableBox(
@@ -72,18 +59,29 @@ fun RestartableBox(
     onStart: () -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val resistance = 0.15f
-    val density = LocalDensity.current.density
-    var height by rememberSaveable(saver = dpSaver) {
-        mutableStateOf(topPosition)
+    val density = LocalDensity.current
+    val resistance = 1.4f
+
+    var boxHeight by remember {
+        mutableStateOf(0.dp)
     }
-    val animatedHeight = remember {
+    val endActivationPosition = remember (boxHeight) {
+        (2 * visibleDiameter).coerceAtMost(boxHeight - visibleDiameter)
+    }
+    val activationZone = (endActivationPosition - activationZoneSize)..endActivationPosition
+
+
+    var offsetY by rememberSaveable(saver = dpSaver) {
+        mutableStateOf(idlePosition)
+    }
+
+    val animatedOffsetY = remember {
         Animatable(
-            initialValue = height,
+            initialValue = offsetY,
             typeConverter = Dp.VectorConverter
         )
     }
-    val updatedHeight by rememberUpdatedState(height)
+    val updatedOffsetY by rememberUpdatedState(offsetY)
     val canStartUpdated by rememberUpdatedState(canStart)
     var isStartingCurrent by rememberSaveable {
         mutableStateOf(isStarting)
@@ -92,6 +90,11 @@ fun RestartableBox(
     Box(
         modifier = modifier
             .clipToBounds()
+            .onGloballyPositioned { coordinates ->
+                boxHeight = with(density) {
+                    coordinates.size.height.toDp()
+                }
+            }
             .pointerInput(Unit) {
                 coroutineScope {
                     awaitPointerEventScope {
@@ -104,12 +107,12 @@ fun RestartableBox(
 
                                 change.pressed && change.positionChange() != Offset.Zero -> { // Dragging
                                     if (!isStartingUpdated && canStartUpdated) {
-                                        height =
-                                            (updatedHeight + (change.positionChange().y * density * resistance).dp).coerceIn(
-                                                topPosition,
+                                        offsetY =
+                                            (updatedOffsetY + (change.positionChange().y * resistance).toDp()).coerceIn(
+                                                idlePosition,
                                                 activationZone.endInclusive
                                             )
-                                        if (!(updatedHeight == topPosition && change.positionChange().y < 0)) {
+                                        if (!(updatedOffsetY == idlePosition && change.positionChange().y < 0)) {
                                             change.consume()
                                         }
                                     }
@@ -117,14 +120,14 @@ fun RestartableBox(
 
                                 change.previousPressed && !change.pressed -> { // Pointer up or Canceled
                                     launch {
-                                        animatedHeight.snapTo(updatedHeight)
-                                        if (updatedHeight in activationZone) {
+                                        animatedOffsetY.snapTo(updatedOffsetY)
+                                        if (updatedOffsetY in activationZone) {
                                             if (canStartUpdated) {
-                                                animatedHeight.animateTo(bottomPosition, tween(duration))
+                                                animatedOffsetY.animateTo(activationZone.start, tween(duration))
                                                 onStart()
                                             }
                                         } else {
-                                            animatedHeight.animateTo(topPosition, tween(duration))
+                                            animatedOffsetY.animateTo(idlePosition, tween(duration))
                                         }
                                     }
                                 }
@@ -137,22 +140,22 @@ fun RestartableBox(
     ) {
         content()
         RestartThumb(
-            modifier = Modifier.offset(y = height),
-            isActive = height in activationZone,
+            modifier = Modifier.offset(y = offsetY),
+            isActive = offsetY in activationZone,
             isStarting = isStarting
         )
     }
     LaunchedEffect(Unit) {
-        snapshotFlow { animatedHeight.value }.collect {
-            height = it
+        snapshotFlow { animatedOffsetY.value }.collect {
+            offsetY = it
         }
     }
     LaunchedEffect(isStarting) {
         if (!isStarting) {
             delay(duration.toLong())
             isStartingCurrent = isStarting
-            animatedHeight.snapTo(height)
-            animatedHeight.animateTo(topPosition, tween(duration))
+            animatedOffsetY.snapTo(offsetY)
+            animatedOffsetY.animateTo(idlePosition, tween(duration))
         }
     }
 }
@@ -163,6 +166,13 @@ private fun RestartThumb(
     isActive: Boolean,
     isStarting: Boolean
 ) {
+    var boxHeight by remember {
+        mutableStateOf(0.dp)
+    }
+    val endActivationPosition = remember (boxHeight) {
+        (2 * visibleDiameter).coerceAtMost(boxHeight - visibleDiameter)
+    }
+    val activationZone = (endActivationPosition - activationZoneSize)..endActivationPosition
     val density = LocalDensity.current
     var isStartingCurrent by rememberSaveable {
         mutableStateOf(isStarting)
@@ -176,26 +186,31 @@ private fun RestartThumb(
     var angle by rememberSaveable {
         mutableFloatStateOf(0f)
     }
+    val updatedAngle by rememberUpdatedState(angle)
     Box(
         modifier = modifier
-            .size(shadowBaseDiameter)
+            .size(visibleDiameter)
             .background(Color.Transparent)
             .shadow(
                 elevation = shadowWidth,
                 shape = CircleShape
             )
+            .onGloballyPositioned { coordinates ->
+                with(density) {
+                    val parentHeight = coordinates.parentLayoutCoordinates?.size?.height?.toDp()
+                    if (parentHeight != null) {
+                        boxHeight = parentHeight
+                    }
+                    val verticalOffset = coordinates.positionInParent().y.toDp()
+                    angle = ((verticalOffset - idlePosition) / (activationZone.start - idlePosition)).coerceAtMost(1f) * 360
+                }
+            }
             .size(reloadThumbSize)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .size(reloadIndicatorSize)
             .clip(CircleShape)
-            .background(Color.Transparent)
-            .onGloballyPositioned {
-                val verticalOffset = with(density) {
-                    it.positionInParent().y.toDp()
-                }
-                angle = (verticalOffset.coerceAtMost(activationZone.start) - topPosition) / (activationZone.start - topPosition) * 360
-            },
+            .background(Color.Transparent),
         contentAlignment = Alignment.Center
     ) {
         if (isStartingCurrent) {
@@ -208,7 +223,7 @@ private fun RestartThumb(
                 modifier = Modifier
                     .size(reloadIndicatorSize)
                     .rotate(angle),
-                progress = { angle / 360 },
+                progress = { updatedAngle / 360 },
                 color = when (isActive) {
                     true -> MaterialTheme.colorScheme.primary
                     false -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)

@@ -217,7 +217,7 @@
     <string name="video_upload_title">Выложить видео</string>
 
     <string name="video_upload_channel_label">Канал</string>
-    <string name="video_upload_channel_not_valid_error">Выберите канал</string>
+    <string name="channel_empty">Выберите канал</string>
 
     <string name="video_upload_create_source_label">Создать видео</string>
     <string name="video_upload_choose_source_label">Выбрать видео</string>

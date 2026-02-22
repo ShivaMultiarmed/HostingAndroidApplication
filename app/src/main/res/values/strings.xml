@@ -204,7 +204,7 @@
     <string name="video_upload_title">Upload a video</string>
 
     <string name="video_upload_channel_label">Channel</string>
-    <string name="video_upload_channel_not_valid_error">Choose a channel</string>
+    <string name="channel_empty">Choose a channel</string>
 
     <string name="video_upload_create_source_label">Record a video</string>
     <string name="video_upload_choose_source_label">Choose a video</string>

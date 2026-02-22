@@ -12,27 +12,27 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface AuthApi {
-    @POST("auth/signin/password")
+    @POST("auth/sign-in/password")
     @FormUrlEncoded
     suspend fun signInWithPassword(
         @Field("user_name") email: String,
         @Field("password") password: String
     ): AuthModel
-    @POST("auth/signup/password/request")
+    @POST("auth/sign-up/password/request")
     @FormUrlEncoded
     suspend fun requestSignUpWithPassword(@Field("user_name") userName: String)
-    @POST("auth/signup/password/verification")
+    @POST("auth/sign-up/password/verification")
     @FormUrlEncoded
     suspend fun verifySignUpWithPassword(
         @Field("user_name") userName: String,
         @Field("code") code: String
     ): String
-    @POST("auth/signup/password/confirm")
+    @POST("auth/sign-up/password/confirm")
     suspend fun confirmSignUpWithPassword(
         @Header("Authorization") token: String,
         @Body user: UserCreationRequest
     ): AuthModel
-    @POST("auth/signout")
+    @POST("auth/sign-out")
     suspend fun signOut()
     @POST("auth/reset/password/request")
     @FormUrlEncoded
