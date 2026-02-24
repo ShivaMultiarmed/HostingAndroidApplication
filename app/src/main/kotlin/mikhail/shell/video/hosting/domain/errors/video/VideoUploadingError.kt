@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.domain.errors.video
 
+import kotlinx.parcelize.Parcelize
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.NumericError

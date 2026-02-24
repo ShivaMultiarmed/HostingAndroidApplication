@@ -142,13 +142,19 @@ fun VideoScreen(
     var bottomSheetHeight by remember {
         mutableStateOf(0.dp)
     }
+    val imeInset = with(LocalDensity.current) {
+        WindowInsets.ime.getBottom(this).toDp()
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         snackbarHost = {
             SnackbarHost(
                 modifier = Modifier.padding(
-                    bottom = (if (sheetState.isVisible) bottomSheetHeight else 0.dp) + 10.dp
+                    bottom = when {
+                        sheetState.isVisible -> bottomSheetHeight
+                        else -> 0.dp
+                    }
                 ),
                 hostState = snackBarHostState
             )
@@ -661,9 +667,6 @@ fun VideoScreen(
                     }
                 }
                 if (sheetState.isVisible) {
-                    val imeInset = with(LocalDensity.current) {
-                        WindowInsets.ime.getBottom(this).toDp()
-                    }
                     CommentsBottomSheet(
                         modifier = Modifier.height(bottomSheetHeight - BottomSheetDefaults.SheetPeekHeight - imeInset),
                         userId = state.userId,

@@ -186,7 +186,7 @@ fun VideoUploadingScreen(
                                         )
                                     } else {
                                         VideoSourceInputState(
-                                            current = null
+                                            current = state.video.source.value.current
                                         )
                                     }
                                     onAction(ChangeSource(videoSourceInputState))
@@ -265,6 +265,7 @@ fun VideoUploadingScreen(
                                                     onAction(
                                                         ChangeSource(
                                                             VideoSourceInputState(
+                                                                current = state.video.source.value.current,
                                                                 pending = uri.toString()
                                                             )
                                                         )
@@ -325,13 +326,14 @@ fun VideoUploadingScreen(
                                         .fillMaxWidth()
                                         .then(
                                             if (isFullScreen) {
-                                                Modifier.fillMaxSize()
+                                                Modifier.fillMaxHeight()
                                             } else {
-                                                try {
-                                                    Modifier.aspectRatio(if (aspectRatio < 1f) 16f / 9 else aspectRatio)
-                                                } catch (_: IllegalArgumentException) {
-                                                    Modifier.aspectRatio(16f / 9)
-                                                }
+                                                Modifier.aspectRatio(
+                                                    when {
+                                                        !aspectRatio.isNaN() && aspectRatio > 0 -> aspectRatio
+                                                        else -> 16f / 9
+                                                    }
+                                                )
                                             }
                                         ),
                                     playerViewProvider = playerViewProvider,

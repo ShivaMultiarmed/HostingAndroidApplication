@@ -1,11 +1,11 @@
 package mikhail.shell.video.hosting.presentation.user.edit
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
@@ -17,7 +17,6 @@ import mikhail.shell.video.hosting.domain.models.ImageSize.MEDIUM
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import mikhail.shell.video.hosting.domain.models.UserEditingModel
 import mikhail.shell.video.hosting.domain.models.errorOrNull
-import mikhail.shell.video.hosting.domain.usecases.authentication.SignOut
 import mikhail.shell.video.hosting.domain.usecases.user.ConstructAvatarUrl
 import mikhail.shell.video.hosting.domain.usecases.user.EditUser
 import mikhail.shell.video.hosting.domain.usecases.user.GetUser
@@ -40,6 +39,7 @@ import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenState
 
 @HiltViewModel
 class UserEditingViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getUserDetails: GetUserDetails,
     private val removeUserDetails: RemoveUserDetails,
     private val player: Player,
@@ -53,11 +53,17 @@ class UserEditingViewModel @Inject constructor(
     private val constructAvatarUrl: ConstructAvatarUrl,
     private val editUser: EditUser,
     private val unsubscribeFromNotifications: UnsubscribeFromNotifications,
-    private val signOut: SignOut,
     private val removeUser: RemoveUser
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
-    val state = _state.onStart { start() }.stateIn(_state.value)
+    private val _state = savedStateHandle.getMutableStateFlow<ScreenState>(
+        key = "state",
+        initialValue = ScreenState.Idle
+    )
+    val state = _state.onStart {
+        if (_state.value !is ScreenState.Editing) {
+            start()
+        }
+    }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
@@ -299,9 +305,6 @@ class UserEditingViewModel @Inject constructor(
     }
 
     private fun start() {
-        if (_state.value is ScreenState.Starting) {
-            return
-        }
         _state.update {
             ScreenState.Starting
         }

@@ -1,5 +1,8 @@
 package mikhail.shell.video.hosting.presentation.user.edit
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
@@ -7,17 +10,24 @@ import mikhail.shell.video.hosting.presentation.utils.EditingState
 import mikhail.shell.video.hosting.presentation.utils.FieldState
 import mikhail.shell.video.hosting.presentation.user.edit.UserEditingScreenState as ScreenState
 
-sealed class UserEditingScreenState {
+@Parcelize
+sealed class UserEditingScreenState : Parcelable {
+    @Parcelize
     data object Idle: ScreenState()
+    @Parcelize
     data object Starting: ScreenState()
-    data class Failure(val error: Error): ScreenState()
+    @Parcelize
+    data class Failure(
+        val error: @RawValue Error
+    ): ScreenState()
+    @Parcelize
     data class Editing(
         val user: UserEditingInputState,
         val isLoading: Boolean = false,
         val isRemoving: Boolean = false
     ): ScreenState()
 }
-
+@Parcelize
 data class UserEditingInputState(
     val userId: Long,
     val nick: FieldState<String, Error>,
@@ -26,7 +36,7 @@ data class UserEditingInputState(
     val bio: FieldState<String, TextError>,
     val tel: FieldState<String, TextError>,
     val email: FieldState<String, TextError>
-) {
+): Parcelable {
     companion object {
         fun initialize(
             userId: Long,

@@ -3,11 +3,8 @@ package mikhail.shell.video.hosting.presentation.navigation.video
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -23,8 +20,6 @@ import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.services.VideoUploadingService
 import mikhail.shell.video.hosting.domain.validation.getStandardErrorMessage
 import mikhail.shell.video.hosting.presentation.navigation.common.Route
-import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScreen
 import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingViewModel
@@ -39,9 +34,6 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
 ) {
     entry<Route.User.VideoUploading> {
         val context = LocalContext.current
-        val playerState = rememberSerializable {
-            mutableStateOf(PlayerState())
-        }
         val player: Player = remember {
             val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(context)
             ExoPlayer.Builder(context)
@@ -61,14 +53,12 @@ fun EntryProviderScope<Route>.videoUploadingRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
-        CompositionLocalProvider(LocalPlayerState provides playerState) {
-            VideoUploadingScreen(
-                state = state,
-                playerViewProvider = { playerView },
-                onAction = viewModel::onAction,
-                snackBarHostState = snackBarHostState
-            )
-        }
+        VideoUploadingScreen(
+            state = state,
+            playerViewProvider = { playerView },
+            onAction = viewModel::onAction,
+            snackBarHostState = snackBarHostState
+        )
         events.observe { event ->
             when (event) {
                 ScreenEvent.Cancelled -> userBackStack.removeLastOrNull()

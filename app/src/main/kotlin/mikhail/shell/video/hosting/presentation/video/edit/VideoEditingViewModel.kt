@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.video.edit
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -7,7 +8,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
@@ -32,6 +32,7 @@ import mikhail.shell.video.hosting.presentation.video.edit.VideoEditingScreenSta
 @HiltViewModel(assistedFactory = VideoEditingViewModel.Factory::class)
 class VideoEditingViewModel @AssistedInject constructor(
     @Assisted("videoId") private val videoId: Long,
+    private val savedStateHandle: SavedStateHandle,
     private val getVideo: GetVideo,
     private val validateTitle: ValidateTitle,
     private val validateDescription: ValidateDescription,
@@ -39,8 +40,16 @@ class VideoEditingViewModel @AssistedInject constructor(
     private val validateImage: ValidateImage,
     private val editVideo: EditVideo
 ) : ViewModel() {
-    private val _state = MutableStateFlow<ScreenState>(ScreenState.Idle)
-    val state = _state.onStart { start() }.stateIn(_state.value)
+    private val _state = savedStateHandle.getMutableStateFlow<ScreenState>(
+        key = "state",
+        initialValue = ScreenState.Idle
+    )
+
+    val state = _state.onStart {
+        if (_state.value !is ScreenState.Editing) {
+            start()
+        }
+    }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
@@ -63,9 +72,6 @@ class VideoEditingViewModel @AssistedInject constructor(
     }
 
     private fun start() {
-        if (_state.value is ScreenState.Starting) {
-            return
-        }
         _state.update {
             ScreenState.Starting
         }

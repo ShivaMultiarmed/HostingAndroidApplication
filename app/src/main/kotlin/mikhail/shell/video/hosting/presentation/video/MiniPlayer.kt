@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.media3.ui.PlayerView
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
 import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
@@ -46,8 +47,13 @@ fun MiniPlayer(
                 } else {
                     Modifier.width(miniPlayerMaxDimension)
                 }
+            ).aspectRatio(
+                when {
+                    !aspectRatio.isNaN() && aspectRatio > 0 -> aspectRatio
+                    else -> 16f / 9
+                }
             )
-            .aspectRatio(aspectRatio),
+            .zIndex(1000f),
         initialOffset = DpOffset(miniPlayerPosition.x.dp, miniPlayerPosition.y.dp),
         onOffsetChanged = { x, y ->
             miniPlayerPosition = MiniPlayerPosition(x.value.toInt(), y.value.toInt())

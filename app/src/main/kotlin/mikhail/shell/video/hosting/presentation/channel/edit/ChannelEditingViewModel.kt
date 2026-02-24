@@ -1,5 +1,6 @@
 package mikhail.shell.video.hosting.presentation.channel.edit
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -7,7 +8,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
@@ -35,6 +35,7 @@ import mikhail.shell.video.hosting.presentation.channel.edit.ChannelEditingScree
 
 @HiltViewModel(assistedFactory = ChannelEditingViewModel.Factory::class)
 class ChannelEditingViewModel @AssistedInject constructor(
+    private val savedStateHandle: SavedStateHandle,
     @Assisted("channelId") private val channelId: Long,
     private val getChannel: GetChannel,
     private val getChannelLogoUrl: GetChannelLogoUrl,
@@ -45,9 +46,15 @@ class ChannelEditingViewModel @AssistedInject constructor(
     private val validateDescription: ValidateDescription,
     private val editChannel: EditChannel
 ) : ViewModel() {
-    private val _state =
-        MutableStateFlow<ScreenState>(ScreenState.Idle)
-    val state = _state.onStart { start() }.stateIn(_state.value)
+    private val _state = savedStateHandle.getMutableStateFlow<ScreenState>(
+        key = "state",
+        initialValue = ScreenState.Idle
+    )
+    val state = _state.onStart {
+        if (_state.value !is ScreenState.Editing) {
+            start()
+        }
+    }.stateIn(_state.value)
 
     private val _events = MutableSharedFlow<ScreenEvent>()
     val events = _events.asSharedFlow()
@@ -74,9 +81,6 @@ class ChannelEditingViewModel @AssistedInject constructor(
     }
 
     private fun start() {
-        if (_state.value is ScreenState.Starting) {
-            return
-        }
         _state.update {
             ScreenState.Starting
         }

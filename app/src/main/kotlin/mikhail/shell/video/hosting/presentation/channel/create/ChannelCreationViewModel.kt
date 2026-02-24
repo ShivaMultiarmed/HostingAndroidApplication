@@ -1,10 +1,10 @@
 package mikhail.shell.video.hosting.presentation.channel.create
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -27,6 +27,7 @@ import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationSc
 
 @HiltViewModel
 class ChannelCreationViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getUserDetails: GetUserDetails,
     private val validateChannelTitle: ValidateChannelTitle,
     private val validateChannelAlias: ValidateChannelAlias,
@@ -35,8 +36,9 @@ class ChannelCreationViewModel @Inject constructor(
     private val subscribeToNotifications: SubscribeToNotifications,
     private val createChannel: CreateChannel
 ) : ViewModel() {
-    private val _state = MutableStateFlow(
-        ScreenState(
+    private val _state = savedStateHandle.getMutableStateFlow(
+        key = "state",
+        initialValue = ScreenState(
             channel = ChannelCreationInputState(getUserDetails().userId)
         )
     )

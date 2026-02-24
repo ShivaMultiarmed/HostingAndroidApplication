@@ -1,15 +1,27 @@
 package mikhail.shell.video.hosting.presentation.utils
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 import mikhail.shell.video.hosting.domain.errors.Error
 
-data class FieldState<I, E: Error>(
-    val value: I,
-    val initial: I = value,
-    val error: E? = null
-)
+@Parcelize
+data class FieldState<I, E: Error> (
+    val value: @RawValue I,
+    val initial: @RawValue I = value,
+    val error: @RawValue E? = null
+) : Parcelable
 
-sealed class EditingState<out I> {
-    data class Keeping<out I>(val value: I) : EditingState<I>()
+@Parcelize
+sealed class EditingState<out I> : Parcelable {
+    @Parcelize
+    data class Keeping<out I>(
+        val value: @RawValue I
+    ) : EditingState<I>()
+    @Parcelize
     data object Removing : EditingState<Nothing>()
-    data class Editing<out I>(val value: I) : EditingState<I>()
+    @Parcelize
+    data class Editing<out I>(
+        val value: @RawValue I
+    ) : EditingState<I>()
 }

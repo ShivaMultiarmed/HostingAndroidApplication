@@ -1,6 +1,10 @@
 package mikhail.shell.video.hosting.domain.errors
 
-enum class TextError: Error {
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+enum class TextError: Error, Parcelable {
     EMPTY,
     SHORT,
     LONG,
@@ -11,14 +15,17 @@ enum class TextError: Error {
     PATTERN
 }
 
-enum class FileError: Error {
+@Parcelize
+enum class FileError: Error, Parcelable {
     NOT_FOUND,
     EMPTY,
     LARGE,
     NOT_SUPPORTED,
     NOT_VALID
 }
-enum class NumericError: Error {
+
+@Parcelize
+enum class NumericError: Error, Parcelable {
     EMPTY,
     LOW,
     HIGH,
