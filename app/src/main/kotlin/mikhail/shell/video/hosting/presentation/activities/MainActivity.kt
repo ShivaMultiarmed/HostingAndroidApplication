@@ -33,7 +33,6 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.PlayerView
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
@@ -54,7 +53,6 @@ import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.player.LocalPlayerView
 import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
 import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
@@ -102,13 +100,6 @@ class MainActivity : ComponentActivity() {
             VideoHostingTheme(
                 uiPreferences = uiPreferences
             ) {
-                val playerView = remember {
-                    PlayerView(this).apply {
-                        setKeepContentOnPlayerReset(true)
-                        useController = false
-                        player = this@MainActivity.player
-                    }
-                }
                 val playerState = rememberSerializable {
                     mutableStateOf(PlayerState())
                 }
@@ -116,7 +107,6 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(MiniPlayerPosition())
                 }
                 CompositionLocalProvider(
-                    LocalPlayerView provides playerView,
                     LocalPlayerState provides playerState,
                     LocalMiniPlayerPositionState provides miniPlayerPositionState
                 ) {
@@ -284,7 +274,7 @@ class MainActivity : ComponentActivity() {
                             if (!playerState.hidden && playerState.prepared) {
                                 MiniPlayer(
                                     modifier = Modifier,
-                                    playerViewProvider = { playerView },
+                                    playerProvider = { player },
                                     onFullScreen = {
                                         rootBackStack.add(Route.Video(it))
                                     }

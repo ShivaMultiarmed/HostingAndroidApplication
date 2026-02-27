@@ -60,19 +60,17 @@ import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
-import androidx.media3.ui.PlayerView
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.NumericError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TITLE_LENGTH
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_VIDEO_SIZE
-import mikhail.shell.video.hosting.domain.validation.mb
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionItem
@@ -101,15 +99,12 @@ import mikhail.shell.video.hosting.presentation.video.upload.VideoUploadingScree
 @Composable
 fun VideoUploadingScreen(
     state: ScreenState,
-    playerViewProvider: () -> PlayerView,
+    playerProvider: () -> Player,
     onAction: (ScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
-    val playerView = remember {
-        playerViewProvider()
-    }
     val player = remember {
-        playerView.player!!
+        playerProvider()
     }
     val activity = LocalActivity.current!!
     var playerState by LocalPlayerState.current
@@ -197,17 +192,7 @@ fun VideoUploadingScreen(
                                         onAction(ChangeSource(VideoSourceInputState(current = it.toString())))
                                     }
                                 }
-                            val sourceErrMsg = when (state.video.source.error) {
-                                FileError.EMPTY -> stringResource(R.string.video_upload_source_empty)
-                                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
-                                FileError.LARGE -> stringResource(
-                                    R.string.file_too_large_error,
-                                    "${MAX_VIDEO_SIZE.mb} MB"
-                                )
-
-                                else -> null
-                            }
+                            val sourceErrMsg = getFileErrorMessage (state.video.source.error, MAX_VIDEO_SIZE)
                             val sourceActionItems = when (state.video.source.value.current) {
                                 null -> listOf()
                                 else -> listOf(
@@ -300,8 +285,10 @@ fun VideoUploadingScreen(
                         LaunchedEffect(state.video.source.value.current) {
                             if (state.video.source.value.current != null) {
                                 val newMediaItem = MediaItem.fromUri(state.video.source.value.current)
-                                player.setMediaItem(newMediaItem)
-                                player.prepare()
+                                if (player.currentMediaItem != newMediaItem) {
+                                    player.setMediaItem(newMediaItem)
+                                    player.prepare()
+                                }
                             } else {
                                 player.stop()
                                 player.clearMediaItems()
@@ -336,7 +323,7 @@ fun VideoUploadingScreen(
                                                 )
                                             }
                                         ),
-                                    playerViewProvider = playerViewProvider,
+                                    playerProvider = playerProvider,
                                     onRatioObtained = {
                                         aspectRatio = it
                                     },

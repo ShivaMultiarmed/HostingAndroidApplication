@@ -13,8 +13,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.VideoApi
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.data.dto.VideoEditingErrorResponse
 import mikhail.shell.video.hosting.data.dto.VideoUploadingErrorResponse
 import mikhail.shell.video.hosting.data.dto.toDomain
@@ -29,7 +31,6 @@ import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.errors.video.VideoEditingError
 import mikhail.shell.video.hosting.domain.errors.video.VideoUploadingError
-import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Liking
@@ -203,7 +204,9 @@ class VideoRepositoryWithApi @Inject constructor(
             }
             Result.Failure(error)
         } finally {
-            sourceInputStream.close()
+            withContext(Dispatchers.IO) {
+                sourceInputStream.close()
+            }
             coroutineScope.cancel()
         }
     }
@@ -278,7 +281,7 @@ class VideoRepositoryWithApi @Inject constructor(
 
     override suspend fun downloadVideo(
         videoId: Long,
-        onPartitionLoaded: (String, Long, Array<Byte>) -> Unit
+        onPartitionLoaded: (String, Long, ByteArray) -> Unit
     ): Result<Unit, Error> {
         try {
             val range = 1024 * 1024 * 10
@@ -287,28 +290,18 @@ class VideoRepositoryWithApi @Inject constructor(
             var size: Long? = null
             var mime: String? = null
             do {
-                var response = videoApi.downloadVideo(
+                val response = videoApi.downloadVideo(
                     videoId = videoId,
                     byteRange = "bytes=$start-$end"
                 )
                 if (!response.isSuccessful) {
-                    if (response.code() == 401) {
-                        return Result.Failure(NetworkError.AUTHENTICATION)
-                    } else if (response.code() == 404) {
-                        return Result.Failure(NetworkError.NOT_FOUND)
-                    } else if (response.code() == 416) { // 416 status code: range not satisfiable - the end of the file is passed
-                        response = videoApi.downloadVideo(
-                            videoId = videoId,
-                            byteRange = "bytes=$start-"
-                        )
-                        if (response.body() == null) {
-                            return Result.Failure(UnexpectedError)
-                        }
-                    } else if (response.code() == 500) {
-                        return Result.Failure(NetworkError.SERVER_ERROR)
-                    } else {
-                        return Result.Failure(UnexpectedError)
+                    val error = when (response.code()) {
+                        401 -> NetworkError.AUTHENTICATION
+                        404 -> NetworkError.NOT_FOUND
+                        500 ->NetworkError.SERVER_ERROR
+                        else -> UnexpectedError
                     }
+                    return Result.Failure(error)
                 }
                 if (size == null) {
                     size = response.headers()[HttpHeaders.CONTENT_RANGE]!!.parseFileSize()
@@ -317,7 +310,7 @@ class VideoRepositoryWithApi @Inject constructor(
                     mime = response.headers()[HttpHeaders.CONTENT_TYPE]
                 }
                 val bytes = response.body()!!.bytes()
-                onPartitionLoaded(mime!!, size, bytes.toTypedArray())
+                onPartitionLoaded(mime!!, size, bytes)
                 start = end + 1
                 end = start + range - 1
             } while (start < size)
@@ -335,7 +328,7 @@ class VideoRepositoryWithApi @Inject constructor(
     }
 
     private companion object {
-        const val BUFFER_SIZE = 1024 * 1024
+        const val BUFFER_SIZE = 10 * 1024 * 1024
     }
 }
 

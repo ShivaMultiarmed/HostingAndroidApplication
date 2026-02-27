@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -15,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.media3.ui.PlayerView
+import androidx.media3.common.Player
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
 import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
@@ -27,15 +26,12 @@ val miniPlayerMaxDimension = 220.dp
 @Composable
 fun MiniPlayer(
     modifier: Modifier = Modifier,
-    playerViewProvider: () -> PlayerView,
+    playerProvider: () -> Player,
     isFullScreen: Boolean = false,
     onFullScreen: (videoId: Long) -> Unit
 ) {
-    val playerView = remember {
-        playerViewProvider()
-    }
     val player = retain {
-        playerView.player!!
+        playerProvider()
     }
     var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
     var miniPlayerPosition by LocalMiniPlayerPositionState.current
@@ -61,7 +57,7 @@ fun MiniPlayer(
     ) {
         PlayerComponent(
             modifier = Modifier.matchParentSize(),
-            playerViewProvider = playerViewProvider,
+            playerProvider = playerProvider,
             isFullScreen = isFullScreen,
             onFullscreen = {
                 val videoId = player.currentMediaItem

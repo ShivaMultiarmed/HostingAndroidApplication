@@ -15,20 +15,20 @@ import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.AuthApi
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.api.CommentApi
+import mikhail.shell.video.hosting.data.api.TokenInterceptor
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
 import mikhail.shell.video.hosting.data.converters.EnumConverter
 import mikhail.shell.video.hosting.data.converters.InstantConverter
-import mikhail.shell.video.hosting.data.api.TokenInterceptor
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 
@@ -45,12 +45,9 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideHttpClient(tokenInterceptor: TokenInterceptor) = OkHttpClient.Builder()
+        .readTimeout(60.seconds)
+        .writeTimeout(60.seconds)
         .addInterceptor(tokenInterceptor)
-        .addInterceptor(
-            HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            }
-        )
         .build()
 
     @Provides

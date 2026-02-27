@@ -35,19 +35,17 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.UnexpectedError
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
 import mikhail.shell.video.hosting.domain.validation.ValidationRules
-import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_IMAGE_SIZE
 import mikhail.shell.video.hosting.domain.validation.ValidationRules.MAX_TEXT_LENGTH
-import mikhail.shell.video.hosting.domain.validation.mb
 import mikhail.shell.video.hosting.presentation.utils.DeletingItem
 import mikhail.shell.video.hosting.presentation.utils.EditField
 import mikhail.shell.video.hosting.presentation.utils.FileInputField
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.TopBar
+import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenAction as ScreenAction
 import mikhail.shell.video.hosting.presentation.channel.create.ChannelCreationScreenState as ScreenState
 
@@ -191,13 +189,7 @@ fun ChannelCreationScreen(
                         onAction(ScreenAction.ChangeLogo(it.toString()))
                     }
                 }
-            val logoErrorMsg = when (state.channel.logo.error) {
-                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
-                FileError.EMPTY -> stringResource(R.string.file_empty)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
-                else -> null
-            }
+            val logoErrorMsg = getFileErrorMessage (state.channel.logo.error)
             EditField(
                 actionItems = if (state.channel.logo.value != null) listOf(
                     DeletingItem(
@@ -240,13 +232,7 @@ fun ChannelCreationScreen(
                         onAction(ScreenAction.ChangeHeader(it.toString()))
                     }
                 }
-            val headerErrorMsg = when (state.channel.header.error) {
-                FileError.NOT_FOUND -> stringResource(R.string.file_not_found_error)
-                FileError.NOT_SUPPORTED -> stringResource(R.string.type_not_supported)
-                FileError.EMPTY -> stringResource(R.string.file_empty)
-                FileError.LARGE -> stringResource(R.string.file_too_large_error,  "${MAX_IMAGE_SIZE.mb} MB")
-                else -> null
-            }
+            val headerErrorMsg = getFileErrorMessage(state.channel.header.error)
             EditField(
                 actionItems = if (state.channel.header.value != null) listOf(
                     DeletingItem(

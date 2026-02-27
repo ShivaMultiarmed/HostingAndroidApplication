@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ExoPlayerModule {
+object PlayerModule {
     @OptIn(UnstableApi::class)
     @Provides
     @Singleton

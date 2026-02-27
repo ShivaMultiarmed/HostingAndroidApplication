@@ -13,7 +13,7 @@ class DownloadVideo @Inject constructor(
         onPartitionLoaded: (
             mime: String,
             fileSize: Long,
-            bytes: Array<Byte>
+            bytes: ByteArray
         ) -> Unit
     ): Result<Unit, Error> = videoRepository.downloadVideo(
         videoId = videoId,

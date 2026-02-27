@@ -1,7 +1,7 @@
 package mikhail.shell.video.hosting.domain.repositories
 
-import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.errors.Error
+import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Liking
 import mikhail.shell.video.hosting.domain.models.PendingVideo
 import mikhail.shell.video.hosting.domain.models.Result
@@ -41,7 +41,11 @@ interface VideoRepository {
 
     suspend fun downloadVideo(
         videoId: Long,
-        onPartitionLoaded: (mime: String, fileSize: Long, bytes: Array<Byte>) -> Unit
+        onPartitionLoaded: (
+            mime: String,
+            fileSize: Long,
+            bytes: ByteArray
+                ) -> Unit
     ): Result<Unit, Error>
 
     suspend fun fetchVideoRecommendations(

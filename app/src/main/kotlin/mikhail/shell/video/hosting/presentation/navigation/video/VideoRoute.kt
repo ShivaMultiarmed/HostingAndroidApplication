@@ -48,10 +48,9 @@ fun EntryProviderScope<Route>.videoRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val events = viewModel.events
         val snackBarHostState = remember { SnackbarHostState() }
-        val playerView = LocalPlayerView.current
         VideoScreen(
             state = state,
-            playerViewProvider = { playerView },
+            playerProvider = { player },
             onAction = viewModel::onAction,
             snackBarHostState = snackBarHostState
         )

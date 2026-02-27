@@ -9,8 +9,7 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
-import android.view.ViewGroup
-import android.widget.FrameLayout
+import android.view.LayoutInflater
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -159,17 +158,14 @@ val LocalMiniPlayerPositionState = compositionLocalOf<MutableState<MiniPlayerPos
 @Composable
 fun PlayerComponent(
     modifier: Modifier = Modifier,
-    playerViewProvider: () -> PlayerView,
+    playerProvider: () -> Player,
     onFullscreen: (Boolean) -> Unit,
     isFullScreen: Boolean = false,
     onRatioObtained: ((Float) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val playerView = remember {
-        playerViewProvider()
-    }
     val player = retain {
-        playerView.player!!
+        playerProvider()
     }
     var playerState by rememberSaveable { mutableIntStateOf(player.playbackState) }
     var isPlaying by rememberSaveable { mutableStateOf(player.isPlaying) }
@@ -183,7 +179,7 @@ fun PlayerComponent(
     ) {
         VideoSurface(
             modifier = Modifier.matchParentSize(),
-            playerViewProvider = playerViewProvider
+            playerProvider = playerProvider
         )
         val seekRange = 5000L
         PlayerControls(
@@ -222,10 +218,11 @@ fun PlayerComponent(
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 playerState = playbackState
-                if (playbackState == Player.STATE_READY && duration < 0L) {
+                if (playbackState == Player.STATE_READY) {
                     duration = player.duration
                 }
             }
+
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
@@ -240,8 +237,8 @@ fun PlayerComponent(
         }
     }
     LaunchedEffect(isPlaying) {
-        val changePeriod = 250L
-        while (isActive && isPlaying) {
+        val changePeriod = if (isPlaying) 250L else 1000L
+        while (isActive) {
             position = player.currentPosition
             val delayDuration = changePeriod - (position % changePeriod)
             delay(delayDuration)
@@ -283,32 +280,27 @@ fun PlayerComponent(
 @Composable
 internal fun VideoSurface(
     modifier: Modifier = Modifier,
-    playerViewProvider: () -> PlayerView
+    playerProvider: () -> Player
 ) {
-    val context = LocalContext.current
-    val container = remember {
-        FrameLayout(context)
-    }
-    val playerView = remember {
-        playerViewProvider()
-    }
     val player = retain {
-        playerView.player!!
+        playerProvider()
     }
     AndroidView(
         modifier = modifier,
-        factory = {
-            container
+        factory = { context ->
+            val layout = LayoutInflater.from(context).inflate(R.layout.player, null)
+            val playerView = layout.findViewById<PlayerView>(R.id.player_view)
+            playerView.apply {
+                this.player = player
+            }
+        },
+        onRelease = { playerView ->
+            playerView.player = null
         }
     )
-    DisposableEffect (Unit) {
-        (playerView.parent as? ViewGroup)?.removeView(playerView)
-        container.addView(playerView)
+    LaunchedEffect(Unit) {
         if (player.playbackState == Player.STATE_ENDED) {
             player.seekTo(player.contentDuration - 1)
-        }
-        onDispose {
-            container.removeView(playerView)
         }
     }
 }

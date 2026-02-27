@@ -72,8 +72,8 @@ class VideoUploadingService : Service() {
                         uploadSource(
                             tmpId = tmpId,
                             source = bundle.getString("source")!!
-                        ) {
-                            updateProgressNotification((it * 100).toInt())
+                        ) { progress ->
+                            updateProgressNotification((progress * 100).toInt())
                         }.onFailure { err ->
                             displayFailureNotification(err)
                         }.onSuccess {

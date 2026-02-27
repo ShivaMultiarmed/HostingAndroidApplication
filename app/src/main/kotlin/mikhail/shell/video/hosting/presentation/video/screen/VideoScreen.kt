@@ -88,7 +88,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.media3.ui.PlayerView
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
@@ -128,7 +128,7 @@ import mikhail.shell.video.hosting.ui.theme.Black
 @Composable
 fun VideoScreen(
     state: VideoScreenState,
-    playerViewProvider: () -> PlayerView,
+    playerProvider: () -> Player,
     onAction: (VideoScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
@@ -212,14 +212,14 @@ fun VideoScreen(
             RetainedEffect(animatedExitProgress, isExitConsidered) {
                 if (animatedExitProgress == 1f && isExitConsidered) {
                     miniPlayerPosition = MiniPlayerPosition(
-                        x = playerX.value.toInt(),
-                        y = playerY.value.toInt()
+                        x = updatedPlayerX.value.toInt(),
+                        y = updatedPlayerY.value.toInt()
                     )
                     onAction(VideoScreenAction.Exit)
                 }
                 onRetire {}
             }
-            ConstraintLayout(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -230,7 +230,6 @@ fun VideoScreen(
                         }
                     },
             ) {
-                val (playerRef, detailsRef) = createRefs()
                 var isFullScreen by rememberSaveable {
                     mutableStateOf(false)
                 }
@@ -265,37 +264,40 @@ fun VideoScreen(
                     }
                 Box(
                     modifier = Modifier
-                        .constrainAs(playerRef) {
-                            top.linkTo(parent.top, updatedPlayerY)
-                            start.linkTo(parent.start, updatedPlayerX)
-                        }
                         .then(
                             when (isFullScreenReached) {
                                 true -> Modifier.fillMaxSize()
-                                false -> when {
-                                    aspectRatio.isNaN() ->
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .aspectRatio(16f / 9)
-                                    else -> {
-                                        val idleWidth =
-                                            if (screenContentWidth > 0.dp) screenContentWidth else windowSize.width
-                                        val idleHeight =
-                                            idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
-                                        val exitWidth =
-                                            if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
-                                        val exitHeight =
-                                            if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
-                                        val currentWidth =
-                                            exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
-                                        val currentHeight =
-                                            exitHeight + (1 - exitProgress) * (idleHeight - exitHeight)
-                                        Modifier.size(
-                                            width = currentWidth,
-                                            height = currentHeight
-                                        )
-                                    }
-                                }
+                                false -> Modifier
+                                    .padding(
+                                        top = playerY,
+                                        start = playerX
+                                    )
+                                    .then(
+                                        when {
+                                            aspectRatio.isNaN() ->
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(16f / 9)
+                                            else -> {
+                                                val idleWidth =
+                                                    if (screenContentWidth > 0.dp) screenContentWidth else windowSize.width
+                                                val idleHeight =
+                                                    idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
+                                                val exitWidth =
+                                                    if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
+                                                val exitHeight =
+                                                    if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
+                                                val currentWidth =
+                                                    exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
+                                                val currentHeight =
+                                                    exitHeight + (1 - exitProgress) * (idleHeight - exitHeight)
+                                                Modifier.size(
+                                                    width = currentWidth,
+                                                    height = currentHeight
+                                                )
+                                            }
+                                        }
+                                    )
                             }
                         )
                         .clip(RoundedCornerShape(exitProgress * 10.dp))
@@ -308,7 +310,16 @@ fun VideoScreen(
                                         isExitConsidered = true
                                         playerX = when {
                                             updatedPlayerY < exitThresholdHeight -> 0.dp
-                                            else -> updatedScreenContentWidth - playerContainerUpdatedWidth
+                                            else -> {
+                                                val screenCenter = updatedScreenContentWidth / 2
+                                                val leftPortion = screenCenter - updatedPlayerX
+                                                val rightPortion = playerContainerUpdatedWidth - leftPortion
+                                                when {
+                                                    leftPortion > rightPortion / 2 -> 0.dp
+                                                    else -> updatedScreenContentWidth - playerContainerUpdatedWidth
+                                                }
+                                            }
+
                                         }
                                         playerY = when {
                                             updatedPlayerY < exitThresholdHeight -> 0.dp
@@ -347,7 +358,7 @@ fun VideoScreen(
                 ) {
                     PlayerComponent(
                         modifier = Modifier.matchParentSize(),
-                        playerViewProvider = playerViewProvider,
+                        playerProvider = playerProvider,
                         onRatioObtained = {
                             aspectRatio = it
                         },
@@ -386,14 +397,8 @@ fun VideoScreen(
                 if (!isFullScreenReached) {
                     Column(
                         modifier = Modifier
-                            .constrainAs(detailsRef) {
-                                top.linkTo(playerRef.bottom)
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                bottom.linkTo(parent.bottom)
-                                width = Dimension.fillToConstraints
-                                height = Dimension.fillToConstraints
-                            }
+                            .fillMaxWidth()
+                            .weight(1f)
                             .alpha(1 - animatedExitProgress)
                             .background(Black)
                             .clip(

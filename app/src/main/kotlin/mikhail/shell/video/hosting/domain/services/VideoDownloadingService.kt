@@ -93,7 +93,7 @@ class VideoDownloadingService : Service() {
                             )
                             output = uri?.let { contentResolver.openOutputStream(it) }
                         }
-                        output?.write(bytePartition.toByteArray())
+                        output?.write(bytePartition)
                         progress += ((bytePartition.size.toFloat() / size) * 100).roundToInt()
                         val updatedNotification = createProcessNotification(progress)
                         notificationManager.notify(NOTIFICATION_COUNT, updatedNotification)
