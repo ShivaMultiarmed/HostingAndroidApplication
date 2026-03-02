@@ -6,17 +6,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.common.Player
-import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
-import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
+import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerDimensionsState
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.PipContainer
 import mikhail.shell.video.hosting.presentation.utils.PipTopBar
@@ -33,8 +30,8 @@ fun MiniPlayer(
     val player = retain {
         playerProvider()
     }
-    var aspectRatio by rememberSaveable { mutableFloatStateOf(16f / 9) }
-    var miniPlayerPosition by LocalMiniPlayerPositionState.current
+    var miniPlayerDimensions by LocalMiniPlayerDimensionsState.current
+    val aspectRatio = miniPlayerDimensions.aspectRatio
     PipContainer(
         modifier = modifier
             .then(
@@ -50,9 +47,12 @@ fun MiniPlayer(
                 }
             )
             .zIndex(1000f),
-        initialOffset = DpOffset(miniPlayerPosition.x.dp, miniPlayerPosition.y.dp),
+        initialOffset = DpOffset(miniPlayerDimensions.x.dp, miniPlayerDimensions.y.dp),
         onOffsetChanged = { x, y ->
-            miniPlayerPosition = MiniPlayerPosition(x.value.toInt(), y.value.toInt())
+            miniPlayerDimensions = miniPlayerDimensions.copy(
+                x = x.value.toInt(),
+                y = y.value.toInt()
+            )
         }
     ) {
         PlayerComponent(
@@ -65,8 +65,8 @@ fun MiniPlayer(
                     .split("/").dropLast(1).last().toLong()
                 onFullScreen(videoId)
             },
-            onRatioObtained = {
-                aspectRatio = it
+            onRatioObtained = { ratio ->
+                miniPlayerDimensions = miniPlayerDimensions.copy(aspectRatio = ratio)
             }
         )
         PipTopBar(

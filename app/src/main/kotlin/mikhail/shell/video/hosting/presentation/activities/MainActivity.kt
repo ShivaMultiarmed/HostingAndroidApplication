@@ -9,6 +9,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -51,9 +54,9 @@ import mikhail.shell.video.hosting.presentation.navigation.video.PredictiveFadeO
 import mikhail.shell.video.hosting.presentation.navigation.video.recommendationsGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.searchGraph
 import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
-import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerPositionState
+import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerDimensionsState
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
-import mikhail.shell.video.hosting.presentation.player.MiniPlayerPosition
+import mikhail.shell.video.hosting.presentation.player.MiniPlayerDimensions
 import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
@@ -103,12 +106,12 @@ class MainActivity : ComponentActivity() {
                 val playerState = rememberSerializable {
                     mutableStateOf(PlayerState())
                 }
-                val miniPlayerPositionState = rememberSerializable {
-                    mutableStateOf(MiniPlayerPosition())
+                val miniPlayerDimensionsState = rememberSerializable {
+                    mutableStateOf(MiniPlayerDimensions())
                 }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState,
-                    LocalMiniPlayerPositionState provides miniPlayerPositionState
+                    LocalMiniPlayerDimensionsState provides miniPlayerDimensionsState
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
@@ -187,14 +190,16 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
-                            if (
-                                currentRootRoute != null
+                            AnimatedVisibility (
+                                visible = currentRootRoute != null
                                 && currentRootRoute != Route.Authentication
                                 && currentRootRoute !is Route.Video
-                                && !playerState.fullScreen
+                                && !playerState.fullScreen,
+                                enter = slideInVertically { it },
+                                exit = slideOutVertically { it }
                             ) {
                                 BottomNavBar(
-                                    selectedTabRoute = currentRootRoute,
+                                    selectedTabRoute = currentRootRoute!!,
                                     onClick = { navRoute ->
                                         if (!rootBackStack.contains(navRoute)) {
                                             rootBackStack.add(navRoute)

@@ -68,8 +68,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.retain.RetainedEffect
 import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -104,7 +102,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import mikhail.shell.video.hosting.R
 import kotlin.math.PI
 import kotlin.math.acos
@@ -118,39 +115,18 @@ data class PlayerState(
     val fullScreen: Boolean = false
 )
 
-val PlayerStateSaver = object : Saver<MutableState<PlayerState>, String> {
-    override fun restore(value: String): MutableState<PlayerState> {
-        return mutableStateOf(
-            Json.decodeFromString(
-                deserializer = PlayerState.serializer(),
-                string = value
-            )
-        )
-    }
-
-    override fun SaverScope.save(value: MutableState<PlayerState>): String {
-        return Json.encodeToString(
-            serializer = PlayerState.serializer(),
-            value = value.value
-        )
-    }
-}
-
-val LocalPlayerView = compositionLocalOf<PlayerView> {
-    error("No PlayerView is provided")
-}
-
 val LocalPlayerState = compositionLocalOf<MutableState<PlayerState>> {
     error("No PlayerState is provided")
 }
 
 @Serializable
-data class MiniPlayerPosition(
+data class MiniPlayerDimensions(
     val x: Int = 0,
-    val y: Int = 0
+    val y: Int = 0,
+    val aspectRatio: Float = 16f / 9
 )
 
-val LocalMiniPlayerPositionState = compositionLocalOf<MutableState<MiniPlayerPosition>> {
+val LocalMiniPlayerDimensionsState = compositionLocalOf<MutableState<MiniPlayerDimensions>> {
     error("No MiniPlayerPosition is provided")
 }
 
