@@ -9,6 +9,7 @@ import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
 import android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
 import android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+import android.os.Parcelable
 import android.view.LayoutInflater
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
@@ -52,8 +53,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -85,9 +84,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
@@ -101,32 +99,36 @@ import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import mikhail.shell.video.hosting.R
+import mikhail.shell.video.hosting.presentation.utils.dpSaver
 import kotlin.math.PI
 import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.pow
 
 @Serializable
+@Parcelize
 data class PlayerState(
     val prepared: Boolean = false,
     val hidden: Boolean = true,
     val fullScreen: Boolean = false
-)
+): Parcelable
 
 val LocalPlayerState = compositionLocalOf<MutableState<PlayerState>> {
     error("No PlayerState is provided")
 }
 
 @Serializable
+@Parcelize
 data class MiniPlayerDimensions(
     val x: Int = 0,
     val y: Int = 0,
     val aspectRatio: Float = 16f / 9
-)
+) : Parcelable
 
-val LocalMiniPlayerDimensionsState = compositionLocalOf<MutableState<MiniPlayerDimensions>> {
+val LocalMiniPlayerDimensionsState = compositionLocalOf<MutableState<MiniPlayerDimensions?>> {
     error("No MiniPlayerPosition is provided")
 }
 
@@ -258,14 +260,17 @@ internal fun VideoSurface(
     modifier: Modifier = Modifier,
     playerProvider: () -> Player
 ) {
+    val context = LocalContext.current
     val player = retain {
         playerProvider()
     }
+    val playerView = remember {
+        val layout = LayoutInflater.from(context).inflate(R.layout.player, null)
+        layout.findViewById<PlayerView>(R.id.player_view)
+    }
     AndroidView(
         modifier = modifier,
-        factory = { context ->
-            val layout = LayoutInflater.from(context).inflate(R.layout.player, null)
-            val playerView = layout.findViewById<PlayerView>(R.id.player_view)
+        factory = {
             playerView.apply {
                 this.player = player
             }
@@ -274,6 +279,21 @@ internal fun VideoSurface(
             playerView.player = null
         }
     )
+    RetainedEffect (Unit) {
+        val listener = object : Player.Listener {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                if (mediaItem == null) {
+                    playerView.player = null
+                } else {
+                    playerView.player = player
+                }
+            }
+        }
+        player.addListener(listener)
+        onRetire {
+            player.removeListener(listener)
+        }
+    }
     LaunchedEffect(Unit) {
         if (player.playbackState == Player.STATE_ENDED) {
             player.seekTo(player.contentDuration - 1)
@@ -295,12 +315,12 @@ internal fun PlayerControls(
     isFullScreen: Boolean = false,
     onFullscreen: (Boolean) -> Unit,
 ) {
+    val density = LocalDensity.current
+    val smallDimensions = remember { 0.dp..300.dp }
+    val mediumDimensions = remember { 300.dp..900.dp }
     val coroutineScope = rememberCoroutineScope()
-    val windowSize = LocalWindowInfo.current.containerDpSize
-    val windowSizeClass = remember {
-        WindowSizeClass.calculateFromSize(
-            DpSize(windowSize.width, windowSize.height)
-        )
+    var width by rememberSaveable(saver = dpSaver) {
+        mutableStateOf(0.dp)
     }
     var isSeeking by rememberSaveable {
         mutableStateOf(false)
@@ -315,20 +335,26 @@ internal fun PlayerControls(
         targetValue = controlsAlpha,
         animationSpec = tween(300)
     )
-    LaunchedEffect(controlsAlpha,isSeeking) {
+    LaunchedEffect(controlsAlpha, isSeeking) {
         if (controlsAlpha == 1f && !isSeeking) {
             delay(3000)
             controlsAlpha = 0f
         }
     }
     ConstraintLayout(
-        modifier = modifier.clickable(
-            interactionSource = interactionSource,
-            indication = null,
-            onClick = {
-                controlsAlpha = 1f
+        modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                with(density) {
+                    width = coordinates.size.width.toDp()
+                }
             }
-        )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    controlsAlpha = 1f
+                }
+            )
     ) {
         val (seekBack, seekForward, playBtn, toolBar) = createRefs()
 
@@ -434,9 +460,9 @@ internal fun PlayerControls(
             Button(
                 modifier = Modifier
                     .size(
-                        when (windowSizeClass.widthSizeClass) {
-                            WindowWidthSizeClass.Compact -> 40.dp
-                            WindowWidthSizeClass.Medium -> 50.dp
+                        when (width) {
+                            in smallDimensions -> 40.dp
+                            in mediumDimensions -> 50.dp
                             else -> 60.dp
                         }
                     )
@@ -484,9 +510,9 @@ internal fun PlayerControls(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Compact -> 15.dp
-                                    WindowWidthSizeClass.Medium -> 17.dp
+                                horizontal = when (width) {
+                                    in smallDimensions -> 15.dp
+                                    in mediumDimensions -> 17.dp
                                     else -> 20.dp
                                 }
                             ),
@@ -498,17 +524,17 @@ internal fun PlayerControls(
                         Text(
                             text = "$positionString / $durationString",
                             color = Color.White,
-                            fontSize = when (windowSizeClass.widthSizeClass) {
-                                WindowWidthSizeClass.Compact -> 11.sp
-                                WindowWidthSizeClass.Medium -> 14.sp
+                            fontSize = when (width) {
+                                in smallDimensions -> 11.sp
+                                in mediumDimensions -> 12.sp
                                 else -> 16.sp
                             }
                         )
                         Button(
                             modifier = Modifier.size(
-                                when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Compact -> 28.dp
-                                    WindowWidthSizeClass.Medium -> 32.dp
+                                when (width) {
+                                    in smallDimensions -> 28.dp
+                                    in mediumDimensions -> 32.dp
                                     else -> 36.dp
                                 }
                             ),
@@ -523,9 +549,9 @@ internal fun PlayerControls(
                         ) {
                             Icon(
                                 modifier = Modifier.size(
-                                    when (windowSizeClass.widthSizeClass) {
-                                        WindowWidthSizeClass.Compact -> 24.dp
-                                        WindowWidthSizeClass.Medium -> 28.dp
+                                    when (width) {
+                                        in smallDimensions -> 24.dp
+                                        in mediumDimensions -> 28.dp
                                         else -> 32.dp
                                     }
                                 ),
@@ -539,10 +565,10 @@ internal fun PlayerControls(
                         }
 
                     }
-                    val barHeight = when (windowSizeClass.widthSizeClass) {
-                        WindowWidthSizeClass.Compact -> 6.dp
-                        WindowWidthSizeClass.Medium -> 8.dp
-                        else -> 9.dp
+                    val barHeight = when (width) {
+                        in smallDimensions -> 6.dp
+                        in mediumDimensions -> 7.dp
+                        else -> 8.dp
                     }
                     val thumbRadius = 1.1f * barHeight
                     val onInputChange = retain {
@@ -556,21 +582,21 @@ internal fun PlayerControls(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Compact -> 15.dp
-                                    WindowWidthSizeClass.Medium -> 17.dp
+                                horizontal = when (width) {
+                                    in smallDimensions -> 15.dp
+                                    in mediumDimensions -> 17.dp
                                     else -> 20.dp
                                 }
                             )
                             .padding(
-                                top = when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Compact -> 6.dp
-                                    WindowWidthSizeClass.Medium -> 7.dp
+                                top = when (width) {
+                                    in smallDimensions -> 6.dp
+                                    in mediumDimensions -> 7.dp
                                     else -> 8.dp
                                 },
-                                bottom = when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Compact -> 15.dp
-                                    WindowWidthSizeClass.Medium -> 17.dp
+                                bottom = when (width) {
+                                    in smallDimensions -> 15.dp
+                                    in mediumDimensions -> 17.dp
                                     else -> 20.dp
                                 }
                             )

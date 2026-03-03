@@ -103,11 +103,11 @@ class MainActivity : ComponentActivity() {
             VideoHostingTheme(
                 uiPreferences = uiPreferences
             ) {
-                val playerState = rememberSerializable {
+                val playerState = rememberSaveable {
                     mutableStateOf(PlayerState())
                 }
-                val miniPlayerDimensionsState = rememberSerializable {
-                    mutableStateOf(MiniPlayerDimensions())
+                val miniPlayerDimensionsState = rememberSaveable {
+                    mutableStateOf(MiniPlayerDimensions() as MiniPlayerDimensions?)
                 }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState,

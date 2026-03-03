@@ -13,6 +13,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -130,20 +131,22 @@ fun VideoHostingTheme(
     val activity = LocalActivity.current!!
     val context = LocalContext.current
     val view = LocalView.current
-    val colorScheme = when (uiPreferences.theme) {
-        SYSTEM -> when {
-            isSystemInDarkTheme() -> DarkColorScheme
-            else -> LightColorScheme
+    val isSystemDark = isSystemInDarkTheme()
+    val colorScheme = remember(uiPreferences.theme, isSystemDark) {
+        when (uiPreferences.theme) {
+            SYSTEM -> when {
+                isSystemDark -> DarkColorScheme
+                else -> LightColorScheme
+            }
+            DARK -> DarkColorScheme
+            LIGHT -> LightColorScheme
         }
-        DARK -> DarkColorScheme
-        LIGHT -> LightColorScheme
     }
     LaunchedEffect(uiPreferences.theme) {
         val statusBarIconsColor = colorScheme.onSurface
         WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars =
             (statusBarIconsColor != DarkColorScheme.onSurface)
     }
-
     LaunchedEffect(uiPreferences.locale) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getSystemService(LocaleManager::class.java).applicationLocales =

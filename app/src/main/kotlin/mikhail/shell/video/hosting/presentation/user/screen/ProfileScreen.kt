@@ -90,24 +90,20 @@ fun ProfileScreen(
             topBar = {
                 TopBar(
                     title = stringResource(R.string.profile_title),
-                    actions = when {
-                        owns -> listOf(
-                            {
-                                IconButton(
-                                    onClick = {
-                                        onAction(ProfileScreenAction.OpenSettings)
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Settings,
-                                        tint = MaterialTheme.colorScheme.onBackground,
-                                        contentDescription = stringResource(R.string.open_settings_button)
-                                    )
+                    actions = {
+                        if (owns) {
+                            IconButton(
+                                onClick = {
+                                    onAction(ProfileScreenAction.OpenSettings)
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Settings,
+                                    tint = MaterialTheme.colorScheme.onBackground,
+                                    contentDescription = stringResource(R.string.open_settings_button)
+                                )
                             }
-                        )
-
-                        else -> null
+                        }
                     }
                 )
             },

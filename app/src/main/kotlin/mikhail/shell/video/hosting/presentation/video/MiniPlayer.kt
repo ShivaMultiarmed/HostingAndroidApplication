@@ -31,7 +31,7 @@ fun MiniPlayer(
         playerProvider()
     }
     var miniPlayerDimensions by LocalMiniPlayerDimensionsState.current
-    val aspectRatio = miniPlayerDimensions.aspectRatio
+    val aspectRatio = miniPlayerDimensions?.aspectRatio?: (16f / 9)
     PipContainer(
         modifier = modifier
             .then(
@@ -42,14 +42,14 @@ fun MiniPlayer(
                 }
             ).aspectRatio(
                 when {
-                    !aspectRatio.isNaN() && aspectRatio > 0 -> aspectRatio
-                    else -> 16f / 9
+                    aspectRatio.isNaN() || aspectRatio < 0 -> 16f / 9
+                    else -> aspectRatio
                 }
             )
             .zIndex(1000f),
-        initialOffset = DpOffset(miniPlayerDimensions.x.dp, miniPlayerDimensions.y.dp),
+        initialOffset = DpOffset(miniPlayerDimensions?.x?.dp?: 0.dp, miniPlayerDimensions?.y?.dp?: 0.dp),
         onOffsetChanged = { x, y ->
-            miniPlayerDimensions = miniPlayerDimensions.copy(
+            miniPlayerDimensions = miniPlayerDimensions?.copy(
                 x = x.value.toInt(),
                 y = y.value.toInt()
             )
@@ -66,7 +66,7 @@ fun MiniPlayer(
                 onFullScreen(videoId)
             },
             onRatioObtained = { ratio ->
-                miniPlayerDimensions = miniPlayerDimensions.copy(aspectRatio = ratio)
+                miniPlayerDimensions = miniPlayerDimensions?.copy(aspectRatio = ratio)
             }
         )
         PipTopBar(
@@ -74,6 +74,7 @@ fun MiniPlayer(
                 .width(if (aspectRatio >= 1f) miniPlayerMaxDimension else miniPlayerMaxDimension * aspectRatio)
                 .padding(7.dp),
             onClose = {
+                miniPlayerDimensions = null
                 player.stop()
                 player.clearMediaItems()
             }

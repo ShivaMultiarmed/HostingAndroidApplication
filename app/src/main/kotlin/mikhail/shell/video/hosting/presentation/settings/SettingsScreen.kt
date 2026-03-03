@@ -47,21 +47,19 @@ fun SettingsScreen(
                 onPopup = {
                     onAction(SettingsScreenAction.Cancel)
                 },
-                actions = listOf(
-                    {
-                        IconButton(
-                            onClick = {
-                                onAction(SettingsScreenAction.EditProfile)
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.BorderColor,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = stringResource(R.string.go_back_button)
-                            )
+                actions = {
+                    IconButton(
+                        onClick = {
+                            onAction(SettingsScreenAction.EditProfile)
                         }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.BorderColor,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = stringResource(R.string.go_back_button)
+                        )
                     }
-                )
+                }
             )
         }
     ) { padding ->
@@ -127,7 +125,8 @@ enum class Locale(
 
     companion object {
         fun ofTag(tag: String): Locale {
-            return entries.firstOrNull { it.tag == tag } ?: throw IllegalArgumentException("Invalid locale tag")
+            return entries.firstOrNull { it.tag == tag }
+                ?: throw IllegalArgumentException("Invalid locale tag")
         }
     }
 }

@@ -78,12 +78,10 @@ class VideoScreenViewModel @AssistedInject constructor(
                     loadComments(null)
                 }
             }
-
             VideoScreenAction.LoadNextCommentsPart -> {
                 val before = _state.value.commentsState.comments?.lastOrNull()?.dateTime
                 loadComments(before)
             }
-
             VideoScreenAction.Restart -> start()
             VideoScreenAction.Remove -> remove()
             is VideoScreenAction.SubmitComment -> submitComment()
@@ -95,23 +93,18 @@ class VideoScreenViewModel @AssistedInject constructor(
             VideoScreenAction.DownLoad -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.DownloadRequested)
             }
-
             VideoScreenAction.Edit -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.EditRequested)
             }
-
             VideoScreenAction.OpenChannel -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.ChannelRequested)
             }
-
             is VideoScreenAction.OpenProfile -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.ProfileRequested(action.userId))
             }
-
             VideoScreenAction.Share -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.SharingRequested)
             }
-
             else -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.ExitRequested)
             }
@@ -148,8 +141,8 @@ class VideoScreenViewModel @AssistedInject constructor(
                     player.setMediaItem(mediaItem)
                     player.prepare()
                     player.play()
-                    incrementViews()
                 }
+                incrementViews()
             }.onFailure { error ->
                 _state.update {
                     it.copy(
@@ -159,6 +152,11 @@ class VideoScreenViewModel @AssistedInject constructor(
                 }
                 viewModelScope.launch {
                     _events.emit(VideoScreenEvent.Failure(error))
+                }
+                val url = getVideoSourceUrl(videoId)
+                val previousUri = player.currentMediaItem?.localConfiguration?.uri?.toString()
+                if (url != previousUri) {
+                    player.clearMediaItems()
                 }
             }
         }
