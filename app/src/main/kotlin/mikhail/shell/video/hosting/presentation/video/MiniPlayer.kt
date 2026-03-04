@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
@@ -31,7 +33,10 @@ fun MiniPlayer(
         playerProvider()
     }
     var miniPlayerDimensions by LocalMiniPlayerDimensionsState.current
-    val aspectRatio = miniPlayerDimensions?.aspectRatio?: (16f / 9)
+    var aspectRatio by rememberSaveable {
+        mutableFloatStateOf(miniPlayerDimensions?.aspectRatio ?: (16f / 9))
+    }
+
     PipContainer(
         modifier = modifier
             .then(
@@ -40,14 +45,18 @@ fun MiniPlayer(
                 } else {
                     Modifier.width(miniPlayerMaxDimension)
                 }
-            ).aspectRatio(
+            )
+            .aspectRatio(
                 when {
                     aspectRatio.isNaN() || aspectRatio < 0 -> 16f / 9
                     else -> aspectRatio
                 }
             )
             .zIndex(1000f),
-        initialOffset = DpOffset(miniPlayerDimensions?.x?.dp?: 0.dp, miniPlayerDimensions?.y?.dp?: 0.dp),
+        initialOffset = DpOffset(
+            miniPlayerDimensions?.x?.dp ?: 0.dp,
+            miniPlayerDimensions?.y?.dp ?: 0.dp
+        ),
         onOffsetChanged = { x, y ->
             miniPlayerDimensions = miniPlayerDimensions?.copy(
                 x = x.value.toInt(),
@@ -66,7 +75,12 @@ fun MiniPlayer(
                 onFullScreen(videoId)
             },
             onRatioObtained = { ratio ->
-                miniPlayerDimensions = miniPlayerDimensions?.copy(aspectRatio = ratio)
+                if (!ratio.isNaN()) {
+                    if (player.currentMediaItem != null) {
+                        aspectRatio = ratio
+                    }
+                    miniPlayerDimensions = miniPlayerDimensions?.copy(aspectRatio = ratio)
+                }
             }
         )
         PipTopBar(

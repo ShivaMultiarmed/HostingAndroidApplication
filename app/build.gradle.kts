@@ -2,14 +2,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application.gradle)
-    // alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("kotlin-parcelize")
     id ("com.google.devtools.ksp")
     id ("dagger.hilt.android.plugin")
     alias(libs.plugins.compose.compiler)
     id("com.google.gms.google-services")
-    id("com.google.firebase.firebase-perf") version "2.0.2"
+    alias(libs.plugins.firebase.performance)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -152,4 +152,6 @@ dependencies {
 
     // Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-perf
     implementation("com.google.firebase:firebase-perf:22.0.4")
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 }

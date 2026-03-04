@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(PlayerState())
                 }
                 val miniPlayerDimensionsState = rememberSaveable {
-                    mutableStateOf(MiniPlayerDimensions() as MiniPlayerDimensions?)
+                    mutableStateOf(null as MiniPlayerDimensions?)
                 }
                 CompositionLocalProvider(
                     LocalPlayerState provides playerState,

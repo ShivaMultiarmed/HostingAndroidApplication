@@ -122,6 +122,7 @@ import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
 import mikhail.shell.video.hosting.presentation.utils.dpSaver
+import mikhail.shell.video.hosting.presentation.utils.dpStateSaver
 import mikhail.shell.video.hosting.presentation.utils.format
 import mikhail.shell.video.hosting.presentation.utils.rememberIsSmallWindow
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
@@ -174,12 +175,21 @@ fun VideoScreen(
         var aspectRatio by rememberSaveable {
             mutableFloatStateOf(16f / 9)
         }
+        val updatedAspectRatio by rememberUpdatedState(aspectRatio)
+        val exitWidth = rememberSaveable(aspectRatio, saver = dpSaver) {
+            if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
+        }
+        val updatedExitWidth by rememberUpdatedState(exitWidth)
+        val exitHeight = rememberSaveable(aspectRatio, saver = dpSaver) {
+            if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
+        }
+        val updatedExitHeight by rememberUpdatedState(exitHeight)
         var screenContentWidth by remember {
-            mutableStateOf(0.dp)
+            mutableStateOf(windowSize.width)
         }
         val updatedScreenContentWidth by rememberUpdatedState(screenContentWidth)
         var screenContentHeight by remember {
-            mutableStateOf(0.dp)
+            mutableStateOf(windowSize.height)
         }
         val updatedScreenContentHeight by rememberUpdatedState(screenContentHeight)
         var playerContainerWidth by remember {
@@ -199,13 +209,7 @@ fun VideoScreen(
         val exitThresholdHeight = remember(screenContentHeight) {
             0.4f * screenContentHeight
         }
-        var exitProgress by remember {
-            mutableFloatStateOf(if(miniPlayerPosition != null) 1f else 0f)
-        }
-        val animatedExitProgress by animateFloatAsState(
-            targetValue = exitProgress
-        )
-        var playerX by rememberSaveable (saver = dpSaver) {
+        var playerX by rememberSaveable (saver = dpStateSaver) {
             mutableStateOf(miniPlayerPosition?.x?.dp?: 0.dp)
         }
         val playerXAnimated by animateDpAsState(
@@ -213,7 +217,7 @@ fun VideoScreen(
             animationSpec = if (isExitConsidered) spring() else snap()
         )
         val playerXUpdated by rememberUpdatedState(playerX)
-        var playerY by rememberSaveable (saver = dpSaver) {
+        var playerY by rememberSaveable (saver = dpStateSaver) {
             mutableStateOf(miniPlayerPosition?.y?.dp?: 0.dp)
         }
         val playerYAnimated by animateDpAsState(
@@ -221,6 +225,18 @@ fun VideoScreen(
             animationSpec = if (isExitConsidered) spring() else snap()
         )
         val playerYUpdated by rememberUpdatedState(playerY)
+        var exitProgress by remember {
+            mutableFloatStateOf(
+                when {
+                    miniPlayerPosition == null -> 0f
+                    exitThresholdHeight == 0.dp -> 0f
+                    else -> (playerY / exitThresholdHeight).coerceIn(0f..1f)
+                }
+            )
+        }
+        val animatedExitProgress by animateFloatAsState(
+            targetValue = exitProgress
+        )
         RetainedEffect(isEntering) {
             if (isEntering) {
                 playerX = 0.dp
@@ -230,12 +246,8 @@ fun VideoScreen(
             onRetire {  }
         }
         BackHandler(true) {
-            val exitWidth =
-                if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
-            val exitHeight =
-                if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
-            playerX = updatedScreenContentWidth - exitWidth
-            playerY = updatedScreenContentHeight - exitHeight
+            playerX = updatedScreenContentWidth - updatedExitWidth
+            playerY = updatedScreenContentHeight - updatedExitHeight
         }
         LaunchedEffect(playerY, exitThresholdHeight) {
             exitProgress = when {
@@ -243,12 +255,12 @@ fun VideoScreen(
                 else -> 0f
             }
         }
-        LaunchedEffect(isEntering, exitProgress, isExitConsidered) {
+        LaunchedEffect(isEntering, exitProgress, isExitConsidered, aspectRatio, exitWidth, exitHeight) {
+            val error = 5.dp // погрешность
             if (!isEntering && exitProgress == 1f && isExitConsidered) {
                 snapshotFlow { playerXAnimated to playerYAnimated }.collect { (x, y) ->
-                    if ((x >= updatedScreenContentWidth - playerContainerUpdatedWidth || x == 0.dp)
-                        && y >= updatedScreenContentHeight - playerContainerUpdatedHeight
-                    ) {
+                    if ((x >= updatedScreenContentWidth - exitWidth - error || x == 0.dp)
+                        && y >= updatedScreenContentHeight - exitHeight - error) {
                         miniPlayerPosition = MiniPlayerDimensions(
                             x = playerX.value.toInt(),
                             y = playerY.value.toInt(),
@@ -262,6 +274,7 @@ fun VideoScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
                 .padding(padding)
                 .onGloballyPositioned { coordinates ->
                     with(density) {
@@ -306,7 +319,7 @@ fun VideoScreen(
                                     top = playerYAnimated,
                                     start = playerXAnimated
                                 )
-                                .background(Color.Black.copy(alpha = 1 - (if (animatedExitProgress < 0.4f) 0f else animatedExitProgress)))
+                                .background(Color.Black.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
                                 .then(
                                     when {
                                         aspectRatio.isNaN() ->
@@ -318,14 +331,10 @@ fun VideoScreen(
                                                 if (updatedScreenContentWidth > 0.dp) updatedScreenContentWidth else windowSize.width
                                             val idleHeight =
                                                 idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
-                                            val exitWidth =
-                                                if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
-                                            val exitHeight =
-                                                if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
                                             val currentWidth =
-                                                exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
+                                                exitWidth + (1 - exitProgress) * (idleWidth - updatedExitWidth)
                                             val currentHeight =
-                                                exitHeight + (1 - exitProgress) * (idleHeight - exitHeight)
+                                                exitHeight + (1 - exitProgress) * (idleHeight - updatedExitHeight)
                                             Modifier.size(
                                                 width = currentWidth,
                                                 height = currentHeight
@@ -336,7 +345,7 @@ fun VideoScreen(
                         }
                     )
                     .clip(RoundedCornerShape(exitProgress * 10.dp))
-                    .background(Color.Black.copy(alpha = 1 - (if (animatedExitProgress < 0.4f) 0f else animatedExitProgress)))
+                    .background(Color.Black.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
                     .then(
                         when (isFullScreenReached) {
                             true -> Modifier
@@ -446,7 +455,7 @@ fun VideoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .alpha(1 - (if (animatedExitProgress < 0.4f) 0f else animatedExitProgress))
+                            .alpha(1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f))
                             .background(Black)
                             .clip(
                                 RoundedCornerShape(
@@ -980,5 +989,20 @@ private fun CommentForm(
             },
             icon = Icons.AutoMirrored.Rounded.Send
         )
+    }
+}
+
+private fun Float.coerceWithBreakPoint(
+    range: ClosedRange<Float>,
+    breakPoint: Float
+): Float {
+    require(breakPoint in range) {
+        "Breakpoint $breakPoint is out of range $range"
+    }
+    val coerced = coerceIn(range)
+    return when {
+        coerced < breakPoint -> 0f
+        breakPoint == range.endInclusive -> 1f
+        else -> (coerced - breakPoint) / (range.endInclusive - breakPoint)
     }
 }

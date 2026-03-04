@@ -105,7 +105,7 @@ class VideoScreenViewModel @AssistedInject constructor(
             VideoScreenAction.Share -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.SharingRequested)
             }
-            else -> viewModelScope.launch {
+            VideoScreenAction.Exit -> viewModelScope.launch {
                 _events.emit(VideoScreenEvent.ExitRequested)
             }
         }

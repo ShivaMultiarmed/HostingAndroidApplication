@@ -21,11 +21,20 @@ fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
     return lastVisibleItemIndex >= lastItemIndexInBuffer
 }
 
-val dpSaver = object : Saver<MutableState<Dp>, Float> {
+val dpStateSaver = object : Saver<MutableState<Dp>, Float> {
     override fun SaverScope.save(value: MutableState<Dp>): Float {
         return value.value.value
     }
     override fun restore(value: Float): MutableState<Dp> {
         return mutableStateOf(value.dp)
+    }
+}
+
+val dpSaver = object : Saver<Dp, Float> {
+    override fun SaverScope.save(value: Dp): Float {
+        return value.value
+    }
+    override fun restore(value: Float): Dp {
+        return value.dp
     }
 }

@@ -54,7 +54,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.compositionLocalOf
@@ -102,7 +101,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import mikhail.shell.video.hosting.R
-import mikhail.shell.video.hosting.presentation.utils.dpSaver
+import mikhail.shell.video.hosting.presentation.utils.dpStateSaver
 import kotlin.math.PI
 import kotlin.math.acos
 import kotlin.math.max
@@ -313,13 +312,13 @@ internal fun PlayerControls(
     onSeekBack: () -> Unit,
     onSeekForward: () -> Unit,
     isFullScreen: Boolean = false,
-    onFullscreen: (Boolean) -> Unit,
+    onFullscreen: (Boolean) -> Unit
 ) {
     val density = LocalDensity.current
     val smallDimensions = remember { 0.dp..300.dp }
     val mediumDimensions = remember { 300.dp..900.dp }
     val coroutineScope = rememberCoroutineScope()
-    var width by rememberSaveable(saver = dpSaver) {
+    var width by rememberSaveable(saver = dpStateSaver) {
         mutableStateOf(0.dp)
     }
     var isSeeking by rememberSaveable {
@@ -741,7 +740,7 @@ internal fun Player.isPrepared(): Boolean {
     var isPrepared by rememberSaveable {
         mutableStateOf(currentMediaItem != null)
     }
-    DisposableEffect(Unit) {
+    RetainedEffect(Unit) {
         val playerListener = object : Player.Listener {
             override fun onMediaItemTransition(
                 mediaItem: MediaItem?,
@@ -752,7 +751,7 @@ internal fun Player.isPrepared(): Boolean {
             }
         }
         addListener(playerListener)
-        onDispose {
+        onRetire {
             isPrepared = currentMediaItem != null
             removeListener(playerListener)
         }

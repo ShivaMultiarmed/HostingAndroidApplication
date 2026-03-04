@@ -38,10 +38,10 @@ fun PipContainer(
     onOffsetChanged: (x: Dp, y: Dp) -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
-    var xOffset by rememberSaveable (saver = dpSaver) { mutableStateOf(initialOffset.x) }
-    var yOffset by rememberSaveable (saver = dpSaver) { mutableStateOf(initialOffset.y) }
-    var pipWidth by rememberSaveable (saver = dpSaver) { mutableStateOf(0.dp) }
-    var pipHeight by rememberSaveable (saver = dpSaver) { mutableStateOf(0.dp) }
+    var xOffset by rememberSaveable (saver = dpStateSaver) { mutableStateOf(initialOffset.x) }
+    var yOffset by rememberSaveable (saver = dpStateSaver) { mutableStateOf(initialOffset.y) }
+    var pipWidth by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
+    var pipHeight by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
     var parentWidth by remember { mutableStateOf(0.dp) }
     var parentHeight by remember { mutableStateOf(0.dp) }
     LaunchedEffect (parentWidth, parentHeight, pipWidth, pipHeight) {

@@ -60,8 +60,7 @@ fun RestartableBox(
     content: @Composable BoxScope.() -> Unit
 ) {
     val density = LocalDensity.current
-    val resistance = 1.4f
-
+    val resistance = 0.8f
     var boxHeight by remember {
         mutableStateOf(0.dp)
     }
@@ -69,12 +68,9 @@ fun RestartableBox(
         (2 * visibleDiameter).coerceAtMost(boxHeight - visibleDiameter)
     }
     val activationZone = (endActivationPosition - activationZoneSize)..endActivationPosition
-
-
-    var offsetY by rememberSaveable(saver = dpSaver) {
+    var offsetY by rememberSaveable(saver = dpStateSaver) {
         mutableStateOf(idlePosition)
     }
-
     val animatedOffsetY = remember {
         Animatable(
             initialValue = offsetY,
