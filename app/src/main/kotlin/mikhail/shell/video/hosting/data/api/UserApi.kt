@@ -2,6 +2,7 @@ package mikhail.shell.video.hosting.data.api
 
 import mikhail.shell.video.hosting.data.dto.UserDto
 import mikhail.shell.video.hosting.data.repositories.UserEditingRequest
+import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -26,7 +27,7 @@ interface UserApi {
     suspend fun remove()
     @GET("users/existence")
     suspend fun existsByNick(
-        @Query("purpose") purpose: String,
+        @Query("purpose") purpose: NickCheckPurpose,
         @Query("nick") nick: String
     )
     @POST("users/notifications/subscription")

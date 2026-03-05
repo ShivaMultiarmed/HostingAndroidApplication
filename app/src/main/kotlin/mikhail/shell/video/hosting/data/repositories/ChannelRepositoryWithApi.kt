@@ -9,6 +9,7 @@ import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.ChannelApi
 import mikhail.shell.video.hosting.data.dto.ChannelCreationErrorResponse
 import mikhail.shell.video.hosting.data.dto.ChannelEditingErrorResponse
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.invalidateCache
@@ -22,7 +23,6 @@ import mikhail.shell.video.hosting.domain.models.Channel
 import mikhail.shell.video.hosting.domain.models.ChannelCreationModel
 import mikhail.shell.video.hosting.domain.models.ChannelEditingModel
 import mikhail.shell.video.hosting.domain.models.ChannelForUser
-import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.Result
@@ -135,7 +135,7 @@ class ChannelRepositoryWithApi @Inject constructor(
     ): Result<ChannelForUser, Error> = request {
         channelApi.subscribe(
             channelId = channelId,
-            subscription = subscription.name.lowercase(),
+            subscription = subscription,
             messagingToken = fcm.token.await()
         ).toDomain()
     }

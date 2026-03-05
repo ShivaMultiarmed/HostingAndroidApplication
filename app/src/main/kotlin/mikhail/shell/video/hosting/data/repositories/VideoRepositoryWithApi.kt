@@ -85,7 +85,10 @@ class VideoRepositoryWithApi @Inject constructor(
         videoId: Long,
         liking: Liking
     ): Result<VideoForUser, Error> = request {
-        videoApi.rateVideo(videoId, liking.name.lowercase()).toDomain()
+        videoApi.rateVideo(
+            videoId = videoId,
+            liking = liking
+        ).toDomain()
     }
 
     override suspend fun fetchChannelVideoList(

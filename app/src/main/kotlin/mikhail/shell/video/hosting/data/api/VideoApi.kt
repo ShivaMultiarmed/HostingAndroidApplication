@@ -8,12 +8,15 @@ import mikhail.shell.video.hosting.data.dto.VideoWithUserDto
 import mikhail.shell.video.hosting.data.repositories.VideoEditingRequest
 import mikhail.shell.video.hosting.data.repositories.VideoMetaData
 import mikhail.shell.video.hosting.data.repositories.VideoUploadingRequest
+import mikhail.shell.video.hosting.domain.models.Liking
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
@@ -32,9 +35,10 @@ interface VideoApi {
     @GET("videos/{video_id}/details")
     suspend fun fetchVideoDetails(@Path("video_id") videoId: Long) : VideoDetailsDto
     @PATCH("videos/{video_id}/rate")
+    @FormUrlEncoded
     suspend fun rateVideo(
         @Path("video_id") videoId: Long,
-        @Query("liking") liking: String
+        @Field("liking") liking: Liking
     ): VideoWithUserDto
     @GET("videos/channel/{channel_id}")
     suspend fun fetchVideoList(

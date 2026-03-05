@@ -9,7 +9,7 @@ import com.google.gson.JsonSerializer
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-class EnumConverter : JsonSerializer<Enum<*>>, JsonDeserializer<Enum<*>> {
+class EnumJsonConverter : JsonSerializer<Enum<*>>, JsonDeserializer<Enum<*>> {
     override fun serialize(
         src: Enum<*>?,
         typeOfSrc: Type?,

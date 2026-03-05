@@ -197,6 +197,8 @@ fun PlayerComponent(
                 playerState = playbackState
                 if (playbackState == Player.STATE_READY) {
                     duration = player.duration
+                } else if (playbackState == Player.STATE_ENDED) {
+                    position = player.contentDuration - 1
                 }
             }
 
@@ -214,8 +216,8 @@ fun PlayerComponent(
         }
     }
     LaunchedEffect(isPlaying) {
-        val changePeriod = if (isPlaying) 250L else 1000L
-        while (isActive) {
+        val changePeriod = 100L
+        while (isActive && isPlaying) {
             position = player.currentPosition
             val delayDuration = changePeriod - (position % changePeriod)
             delay(delayDuration)
@@ -291,11 +293,6 @@ internal fun VideoSurface(
         player.addListener(listener)
         onRetire {
             player.removeListener(listener)
-        }
-    }
-    LaunchedEffect(Unit) {
-        if (player.playbackState == Player.STATE_ENDED) {
-            player.seekTo(player.contentDuration - 1)
         }
     }
 }

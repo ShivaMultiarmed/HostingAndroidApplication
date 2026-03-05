@@ -18,8 +18,9 @@ import mikhail.shell.video.hosting.data.api.CommentApi
 import mikhail.shell.video.hosting.data.api.TokenInterceptor
 import mikhail.shell.video.hosting.data.api.UserApi
 import mikhail.shell.video.hosting.data.api.VideoApi
-import mikhail.shell.video.hosting.data.converters.EnumConverter
+import mikhail.shell.video.hosting.data.converters.EnumJsonConverter
 import mikhail.shell.video.hosting.data.converters.InstantConverter
+import mikhail.shell.video.hosting.data.converters.PlainEnumConverterFactory
 import mikhail.shell.video.hosting.data.providers.AndroidFileProvider
 import mikhail.shell.video.hosting.domain.providers.FileProvider
 import okhttp3.OkHttpClient
@@ -56,16 +57,16 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideEnumConverter() = EnumConverter()
+    fun provideEnumConverter() = EnumJsonConverter()
 
     @Provides
     @Singleton
     fun provideGson(
         instantConverter: InstantConverter,
-        enumConverter: EnumConverter
+        enumJsonConverter: EnumJsonConverter
     ) = GsonBuilder()
         .registerTypeAdapter(Instant::class.java, instantConverter)
-        .registerTypeHierarchyAdapter(Enum::class.java, enumConverter)
+        .registerTypeHierarchyAdapter(Enum::class.java, enumJsonConverter)
         .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
@@ -79,14 +80,20 @@ object ApiModule {
 
     @Provides
     @Singleton
+    fun providePlainEnumConverterFactory() = PlainEnumConverterFactory()
+
+    @Provides
+    @Singleton
     fun provideRetrofit(
         httpClient: OkHttpClient,
         scalarsConverterFactory: ScalarsConverterFactory,
+        plainEnumConverterFactory: PlainEnumConverterFactory,
         gsonConverterFactory: GsonConverterFactory
     ) = Retrofit.Builder()
         .client(httpClient)
         .baseUrl("$API_BASE_URL/")
         .addConverterFactory(scalarsConverterFactory)
+        .addConverterFactory(plainEnumConverterFactory)
         .addConverterFactory(gsonConverterFactory)
         .build()
 

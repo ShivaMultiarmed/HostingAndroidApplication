@@ -7,6 +7,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.UserApi
+import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.data.dto.toDomain
 import mikhail.shell.video.hosting.data.utils.httpExceptionHandler
 import mikhail.shell.video.hosting.data.utils.invalidateCache
@@ -16,7 +17,6 @@ import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
 import mikhail.shell.video.hosting.domain.errors.TextError
 import mikhail.shell.video.hosting.domain.errors.user.UserEditingError
-import mikhail.shell.video.hosting.data.dto.EditingActionDto
 import mikhail.shell.video.hosting.domain.models.EditingAction
 import mikhail.shell.video.hosting.domain.models.ImageSize
 import mikhail.shell.video.hosting.domain.models.NickCheckPurpose
@@ -90,7 +90,7 @@ class UserRepositoryWithApi @Inject constructor(
         }
     ) {
         userApi.existsByNick(
-            purpose = purpose.name.lowercase(),
+            purpose = purpose,
             nick = nick
         )
     }

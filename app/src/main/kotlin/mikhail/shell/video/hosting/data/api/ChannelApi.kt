@@ -4,6 +4,7 @@ import mikhail.shell.video.hosting.data.dto.ChannelDto
 import mikhail.shell.video.hosting.data.dto.ChannelWithUserDto
 import mikhail.shell.video.hosting.data.repositories.ChannelCreationRequest
 import mikhail.shell.video.hosting.data.repositories.ChannelEditingRequest
+import mikhail.shell.video.hosting.domain.models.Subscription
 import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.Field
@@ -50,7 +51,7 @@ interface ChannelApi {
     @FormUrlEncoded
     suspend fun subscribe(
         @Path("channel_id") channelId: Long,
-        @Field("subscription") subscription: String,
+        @Field("subscription") subscription: Subscription,
         @Header("Messaging-Token") messagingToken: String
     ): ChannelWithUserDto
     @GET("channels/{channel_id}")
