@@ -14,12 +14,12 @@ object ValidationRules {
     const val MAX_TEL_LENGTH = 15
     const val MIN_TEL_LENGTH = 8
     const val MAX_IMAGE_SIZE = 5 * 1024 * 1024
-    const val MAX_VIDEO_SIZE = 128 * 1024 * 1024
+    const val MAX_VIDEO_SIZE = 1024 * 1024 * 1024
     const val CODE_LENGTH = 4
     val PASSWORD_REGEX = Regex("^(?=.*[0-9])(?=.*[^a-zA-Z0-9])\\S{$MIN_PASSWORD_LENGTH,$MAX_PASSWORD_LENGTH}$")
     val EMAIL_REGEX = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$")
     val TEL_REGEX = Regex("^\\d{$MIN_TEL_LENGTH,$MAX_TEL_LENGTH}\$")
 }
 
-val Int.mb
-    get() = floor(this.toDouble() / 1024 / 1024).toInt()
+inline val Int.mb
+    get() = floor(toDouble() / 1024 / 1024).toInt()
