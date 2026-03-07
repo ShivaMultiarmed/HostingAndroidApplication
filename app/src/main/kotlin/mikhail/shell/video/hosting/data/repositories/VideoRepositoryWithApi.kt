@@ -13,6 +13,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import mikhail.shell.video.hosting.BuildConfig.API_BASE_URL
 import mikhail.shell.video.hosting.data.api.VideoApi
@@ -157,16 +158,19 @@ class VideoRepositoryWithApi @Inject constructor(
         source: String,
         onProgress: (Float) -> Unit
     ): Result<Unit, Error> {
-        val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(4) + SupervisorJob())
+        val jobCount = 4
+        val coroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(jobCount) + SupervisorJob())
         val sourceInputStream = fileProvider.getAsInputStream(source)!!
         return try {
             val sourceSize = fileProvider.get(source)!!.size
             val bytesTransferred = AtomicLong(0)
+            val semaphore = Semaphore(jobCount)
             coroutineScope.async {
                 val uploadJobs = mutableListOf<Job>()
                 val buffer = ByteArray(BUFFER_SIZE)
                 var cursor = 0L
                 do {
+                    semaphore.acquire()
                     val bytesRead = sourceInputStream.read(buffer)
                     if (bytesRead <= 0) {
                         break
@@ -175,14 +179,18 @@ class VideoRepositoryWithApi @Inject constructor(
                     val end = start + bytesRead - 1
                     val bytesToSend = buffer.copyOf(bytesRead)
                     uploadJobs += launch {
-                        bytesTransferred += bytesRead.toLong()
-                        videoApi.uploadVideoSource(
-                            tmpId = tmpId,
-                            contentRange = "bytes $start-$end/$sourceSize",
-                            source = bytesToSend.toRequestBody(bytesNumber = bytesRead)
-                        )
-                        val progress = bytesTransferred.load().toFloat() / sourceSize
-                        onProgress(progress)
+                        try {
+                            bytesTransferred += bytesRead.toLong()
+                            videoApi.uploadVideoSource(
+                                tmpId = tmpId,
+                                contentRange = "bytes $start-$end/$sourceSize",
+                                source = bytesToSend.toRequestBody(bytesNumber = bytesRead)
+                            )
+                            val progress = bytesTransferred.load().toFloat() / sourceSize
+                            onProgress(progress)
+                        } finally {
+                            semaphore.release()
+                        }
                     }
                     cursor = end + 1
                 } while (true)

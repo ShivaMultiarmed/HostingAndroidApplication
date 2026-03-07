@@ -66,7 +66,7 @@ class NotificationService: FirebaseMessagingService() {
             if (data.contains("source_error")) {
                 val sourceError =
                     try {
-                        FileError.valueOf(data["source_error"]!!)
+                        FileError.valueOf(data["source_error"]!!.uppercase())
                     } catch (_: Exception) {
                         UnexpectedError
                     }
