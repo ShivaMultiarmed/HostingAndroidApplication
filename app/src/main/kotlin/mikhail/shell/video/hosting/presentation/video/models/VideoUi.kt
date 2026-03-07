@@ -52,11 +52,13 @@ fun VideoWithChannel.toUi(
     channelTitle = channel.title
 )
 
+@Immutable
 data class VideoDetailsUi(
     val videoId: Long,
     val channelId: Long,
     val ownerId: Long,
     val videoTitle: String,
+    val videoDescription: String?,
     val channelTitle: String,
     val dateTime: LocalDateTime,
     val views: Long,
@@ -75,6 +77,7 @@ fun VideoWithChannelForUser.toUi(
     channelId = channel.channelId,
     ownerId = channel.ownerId,
     videoTitle = video.title,
+    videoDescription = video.description,
     channelTitle = channel.title,
     dateTime = video.dateTime.toLocalDateTime(TimeZone.currentSystemDefault()),
     views = video.views,

@@ -111,12 +111,14 @@ import mikhail.shell.video.hosting.presentation.player.MiniPlayerDimensions
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.ActionButton
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
+import mikhail.shell.video.hosting.presentation.utils.Description
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.EditButton
 import mikhail.shell.video.hosting.presentation.utils.EmptyComponent
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.InputField
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
+import mikhail.shell.video.hosting.presentation.utils.MoreButton
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
@@ -209,16 +211,16 @@ fun VideoScreen(
         val exitThresholdHeight = remember(screenContentHeight) {
             0.4f * screenContentHeight
         }
-        var playerX by rememberSaveable (saver = dpStateSaver) {
-            mutableStateOf(miniPlayerPosition?.x?.dp?: 0.dp)
+        var playerX by rememberSaveable(saver = dpStateSaver) {
+            mutableStateOf(miniPlayerPosition?.x?.dp ?: 0.dp)
         }
         val playerXAnimated by animateDpAsState(
             targetValue = playerX,
             animationSpec = if (isExitConsidered) spring() else snap()
         )
         val playerXUpdated by rememberUpdatedState(playerX)
-        var playerY by rememberSaveable (saver = dpStateSaver) {
-            mutableStateOf(miniPlayerPosition?.y?.dp?: 0.dp)
+        var playerY by rememberSaveable(saver = dpStateSaver) {
+            mutableStateOf(miniPlayerPosition?.y?.dp ?: 0.dp)
         }
         val playerYAnimated by animateDpAsState(
             targetValue = playerY,
@@ -243,7 +245,7 @@ fun VideoScreen(
                 playerY = 0.dp
                 isEntering = false
             }
-            onRetire {  }
+            onRetire { }
         }
         BackHandler(true) {
             playerX = updatedScreenContentWidth - updatedExitWidth
@@ -255,12 +257,20 @@ fun VideoScreen(
                 else -> 0f
             }
         }
-        LaunchedEffect(isEntering, exitProgress, isExitConsidered, aspectRatio, exitWidth, exitHeight) {
+        LaunchedEffect(
+            isEntering,
+            exitProgress,
+            isExitConsidered,
+            aspectRatio,
+            exitWidth,
+            exitHeight
+        ) {
             val error = 5.dp // погрешность
             if (!isEntering && exitProgress == 1f && isExitConsidered) {
                 snapshotFlow { playerXAnimated to playerYAnimated }.collect { (x, y) ->
                     if ((x >= updatedScreenContentWidth - exitWidth - error || x == 0.dp)
-                        && y >= updatedScreenContentHeight - exitHeight - error) {
+                        && y >= updatedScreenContentHeight - exitHeight - error
+                    ) {
                         miniPlayerPosition = MiniPlayerDimensions(
                             x = playerX.value.toInt(),
                             y = playerY.value.toInt(),
@@ -274,7 +284,14 @@ fun VideoScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(
+                        alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
+                            0f..1f,
+                            0.4f
+                        )
+                    )
+                )
                 .padding(padding)
                 .onGloballyPositioned { coordinates ->
                     with(density) {
@@ -319,13 +336,21 @@ fun VideoScreen(
                                     top = playerYAnimated,
                                     start = playerXAnimated
                                 )
-                                .background(Color.Black.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
+                                .background(
+                                    Color.Black.copy(
+                                        alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
+                                            0f..1f,
+                                            0.4f
+                                        )
+                                    )
+                                )
                                 .then(
                                     when {
                                         aspectRatio.isNaN() ->
                                             Modifier
                                                 .fillMaxWidth()
                                                 .aspectRatio(16f / 9)
+
                                         else -> {
                                             val idleWidth =
                                                 if (updatedScreenContentWidth > 0.dp) updatedScreenContentWidth else windowSize.width
@@ -345,7 +370,14 @@ fun VideoScreen(
                         }
                     )
                     .clip(RoundedCornerShape(exitProgress * 10.dp))
-                    .background(Color.Black.copy(alpha = 1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f)))
+                    .background(
+                        Color.Black.copy(
+                            alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
+                                0f..1f,
+                                0.4f
+                            )
+                        )
+                    )
                     .then(
                         when (isFullScreenReached) {
                             true -> Modifier
@@ -486,84 +518,112 @@ fun VideoScreen(
                                 lineHeight = 22.sp
                             )
                         }
+                        var isDescriptionVisible by rememberSaveable {
+                            mutableStateOf(false)
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(MaterialTheme.colorScheme.background)
                                 .padding(vertical = 7.dp),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = state.video.views.toViews(),
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Icon(
-                                modifier = Modifier.size(12.dp),
-                                imageVector = Icons.Rounded.Visibility,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                contentDescription = state.video.views.toViews()
-                            )
-                            Text(
-                                text = state.video.dateTime.format(context),
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 16.sp
-                            )
-                            if (state.userId == state.video.ownerId) {
-                                var isDeletingDialogOpen by rememberSaveable {
-                                    mutableStateOf(false)
-                                }
-                                var isAdvancedDialogOpen by rememberSaveable {
-                                    mutableStateOf(false)
-                                }
-                                Box {
-                                    EditButton(
-                                        modifier = Modifier.size(22.dp),
-                                        imageVector = Icons.Rounded.MoreVert,
-                                        onClick = {
-                                            isAdvancedDialogOpen = true
-                                        }
-                                    )
-                                    if (isAdvancedDialogOpen) {
-                                        ContextMenu(
-                                            modifier = Modifier,
-                                            isExpanded = true,
-                                            menuItems = listOf(
-                                                MenuItem(
-                                                    title = stringResource(R.string.video_edit_button),
-                                                    onClick = {
-                                                        onAction(VideoScreenAction.Edit)
-                                                    }
-                                                ),
-                                                MenuItem(
-                                                    title = stringResource(R.string.video_delete_button),
-                                                    onClick = {
-                                                        isDeletingDialogOpen = true
-                                                    }
-                                                )
-                                            ),
-                                            onDismiss = {
-                                                isAdvancedDialogOpen = false
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = state.video.views.toViews(),
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    modifier = Modifier.size(12.dp),
+                                    imageVector = Icons.Rounded.Visibility,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    contentDescription = state.video.views.toViews()
+                                )
+                                Text(
+                                    text = state.video.dateTime.format(context),
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.End),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (state.userId == state.video.ownerId) {
+                                    var isDeletingDialogOpen by rememberSaveable {
+                                        mutableStateOf(false)
+                                    }
+                                    var isAdvancedDialogOpen by rememberSaveable {
+                                        mutableStateOf(false)
+                                    }
+                                    Box {
+                                        EditButton(
+                                            modifier = Modifier.size(22.dp),
+                                            imageVector = Icons.Rounded.MoreVert,
+                                            onClick = {
+                                                isAdvancedDialogOpen = true
                                             }
+                                        )
+                                        if (isAdvancedDialogOpen) {
+                                            ContextMenu(
+                                                modifier = Modifier,
+                                                isExpanded = true,
+                                                menuItems = listOf(
+                                                    MenuItem(
+                                                        title = stringResource(R.string.video_edit_button),
+                                                        onClick = {
+                                                            onAction(VideoScreenAction.Edit)
+                                                        }
+                                                    ),
+                                                    MenuItem(
+                                                        title = stringResource(R.string.video_delete_button),
+                                                        onClick = {
+                                                            isDeletingDialogOpen = true
+                                                        }
+                                                    )
+                                                ),
+                                                onDismiss = {
+                                                    isAdvancedDialogOpen = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                    if (isDeletingDialogOpen) {
+                                        Dialog(
+                                            onSubmit = {
+                                                onAction(VideoScreenAction.Remove)
+                                            },
+                                            isLoading = state.isRemoving,
+                                            onDismiss = {
+                                                isDeletingDialogOpen = false
+                                            },
+                                            dialogTitle = stringResource(R.string.video_delete_warning_title),
+                                            dialogDescription = stringResource(R.string.video_delete_warning_message)
                                         )
                                     }
                                 }
-                                if (isDeletingDialogOpen) {
-                                    Dialog(
-                                        onSubmit = {
-                                            onAction(VideoScreenAction.Remove)
-                                        },
-                                        isLoading = state.isRemoving,
-                                        onDismiss = {
-                                            isDeletingDialogOpen = false
-                                        },
-                                        dialogTitle = stringResource(R.string.video_delete_warning_title),
-                                        dialogDescription = stringResource(R.string.video_delete_warning_message)
+                                if (state.video.videoDescription != null) {
+                                    MoreButton(
+                                        isVisible = isDescriptionVisible,
+                                        onClick = {
+                                            isDescriptionVisible = !isDescriptionVisible
+                                        }
                                     )
                                 }
                             }
+                        }
+                        if (state.video.videoDescription != null) {
+                            Description(
+                                modifier = Modifier.fillMaxWidth(),
+                                isVisible = isDescriptionVisible,
+                                description = state.video.videoDescription
+                            )
                         }
                         Row(
                             modifier = Modifier

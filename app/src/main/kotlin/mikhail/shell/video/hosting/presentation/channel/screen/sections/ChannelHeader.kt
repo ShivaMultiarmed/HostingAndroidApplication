@@ -1,10 +1,6 @@
 package mikhail.shell.video.hosting.presentation.channel.screen.sections
 
 import android.app.Activity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,11 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,8 +50,10 @@ import mikhail.shell.video.hosting.domain.models.Subscription.SUBSCRIBED
 import mikhail.shell.video.hosting.presentation.channel.models.ChannelForUserUi
 import mikhail.shell.video.hosting.presentation.channel.screen.ChannelScreenAction
 import mikhail.shell.video.hosting.presentation.utils.ContextMenu
+import mikhail.shell.video.hosting.presentation.utils.Description
 import mikhail.shell.video.hosting.presentation.utils.Dialog
 import mikhail.shell.video.hosting.presentation.utils.MenuItem
+import mikhail.shell.video.hosting.presentation.utils.MoreButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.RestartableBox
 import mikhail.shell.video.hosting.presentation.utils.exists
@@ -93,6 +90,7 @@ internal fun ChannelHeader(
                     onShowLogo = onShowLogo
                 )
             }
+
             windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact -> {
                 ChannelHeaderMedium(
                     modifier = Modifier,
@@ -102,6 +100,7 @@ internal fun ChannelHeader(
                     onShowLogo = onShowLogo
                 )
             }
+
             else -> {
                 ChannelHeaderExpanded(
                     modifier = Modifier,
@@ -137,6 +136,9 @@ private fun ChannelHeaderCompact(
                 header = header
             )
         }
+        var isDescriptionVisible by rememberSaveable {
+            mutableStateOf(false)
+        }
         Row(
             Modifier
                 .fillMaxWidth()
@@ -150,6 +152,7 @@ private fun ChannelHeaderCompact(
                 logo = logo,
                 onShowLogo = onShowLogo
             )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -164,21 +167,37 @@ private fun ChannelHeaderCompact(
                     }
                     SubscriberNumberText(subscribers = channel.subscribers)
                 }
-                if (owns) {
-                    ChannelActionsButton(
-                        channelId = channel.channelId,
-                        onEdit = {
-                            onAction(ChannelScreenAction.Edit)
-                        },
-                        onRemove = {
-                            onAction(ChannelScreenAction.Remove)
-                        }
-                    )
+                Row (
+                    modifier = Modifier.wrapContentSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    if (owns) {
+                        ChannelActionsButton(
+                            channelId = channel.channelId,
+                            onEdit = {
+                                onAction(ChannelScreenAction.Edit)
+                            },
+                            onRemove = {
+                                onAction(ChannelScreenAction.Remove)
+                            }
+                        )
+                    }
+                    if (channel.description != null) {
+                        MoreButton(
+                            isVisible = isDescriptionVisible,
+                            onClick = {
+                                isDescriptionVisible = !isDescriptionVisible
+                            }
+                        )
+                    }
                 }
             }
         }
         if (channel.description != null) {
-            ChannelDescriptionSection(
+            Description(
+                modifier = Modifier.fillMaxWidth(),
+                isVisible = isDescriptionVisible,
                 description = channel.description
             )
         }
@@ -217,6 +236,9 @@ private fun ChannelHeaderMedium(
                 .fillMaxWidth()
                 .height(10.dp)
         )
+        var isDescriptionVisible by rememberSaveable {
+            mutableStateOf(false)
+        }
         ConstraintLayout(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -252,11 +274,16 @@ private fun ChannelHeaderMedium(
                 }
             }
             val subButton = createRef()
+            val moreButton = createRef()
             if (owns) {
                 val actionsButton = createRef()
                 ChannelActionsButton(
                     modifier = Modifier.constrainAs(actionsButton) {
-                        end.linkTo(subButton.start, margin = 16.dp)
+                        if (channel.description != null) {
+                            end.linkTo(moreButton.start, margin = 16.dp)
+                        } else {
+                            end.linkTo(subButton.start, margin = 16.dp)
+                        }
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     },
@@ -266,6 +293,19 @@ private fun ChannelHeaderMedium(
                     },
                     onRemove = {
                         onAction(ChannelScreenAction.Remove)
+                    }
+                )
+            }
+            if (channel.description != null) {
+                MoreButton(
+                    modifier = Modifier.constrainAs(moreButton) {
+                        end.linkTo(subButton.start, margin = 16.dp)
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                    },
+                    isVisible = isDescriptionVisible,
+                    onClick = {
+                        isDescriptionVisible = !isDescriptionVisible
                     }
                 )
             }
@@ -279,6 +319,13 @@ private fun ChannelHeaderMedium(
                 onSubscription = {
                     onAction(ChannelScreenAction.Subscribe(it))
                 }
+            )
+        }
+        if (channel.description != null) {
+            Description(
+                modifier = Modifier.fillMaxWidth(),
+                isVisible = isDescriptionVisible,
+                description = channel.description
             )
         }
     }
@@ -340,6 +387,9 @@ private fun ChannelHeaderExpanded(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ChannelTitle(title = channel.title)
+            var isDescriptionVisible by rememberSaveable {
+                mutableStateOf(false)
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -365,9 +415,19 @@ private fun ChannelHeaderExpanded(
                         }
                     )
                 }
+                if (channel.description != null) {
+                    MoreButton(
+                        isVisible = isDescriptionVisible,
+                        onClick = {
+                            isDescriptionVisible = !isDescriptionVisible
+                        }
+                    )
+                }
             }
             if (channel.description != null) {
-                ChannelDescriptionSection(
+                Description(
+                    modifier = Modifier.fillMaxWidth(),
+                    isVisible = isDescriptionVisible,
                     description = channel.description
                 )
             }
@@ -412,20 +472,6 @@ private fun ChannelLogo(
         painter = logo,
         contentDescription = stringResource(R.string.channel_logo_description),
         contentScale = ContentScale.Crop
-    )
-}
-
-
-@Composable
-private fun ChannelDescription(
-    modifier: Modifier = Modifier,
-    description: String
-) {
-    Text(
-        modifier = modifier.fillMaxWidth(),
-        text = description,
-        fontSize = 13.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
@@ -485,48 +531,6 @@ private fun ChannelAlias(
         modifier = modifier.padding(top = 10.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-
-@Composable
-private fun ChannelDescriptionSection(
-    description: String
-) {
-    if (description.isNotEmpty()) {
-        var shouldShowDescription by rememberSaveable { mutableStateOf(false) }
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            IconButton(
-                modifier = Modifier.size(18.dp),
-                onClick = {
-                    shouldShowDescription = !shouldShowDescription
-                }
-            ) {
-                Icon(
-                    imageVector = when (shouldShowDescription) {
-                        true -> Icons.Rounded.KeyboardArrowUp
-                        false -> Icons.Rounded.KeyboardArrowDown
-                    },
-                    contentDescription = stringResource(R.string.more_button)
-                )
-            }
-        }
-        AnimatedVisibility(
-            visible = shouldShowDescription,
-            enter = expandVertically(
-                tween(durationMillis = 300)
-            ),
-            exit = shrinkVertically(
-                tween(durationMillis = 300)
-            )
-        ) {
-            ChannelDescription(
-                modifier = Modifier.padding(bottom = 7.dp),
-                description = description
-            )
-        }
-    }
 }
 
 @Composable
