@@ -76,6 +76,17 @@ fun getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): Strin
     }
 }
 
+fun Context.getFileErrorMessage(error: FileError?, maxSize: Int = MAX_IMAGE_SIZE): String? {
+    return when (error) {
+        FileError.NOT_FOUND -> getString(R.string.file_not_found_error)
+        FileError.EMPTY -> getString(R.string.file_empty)
+        FileError.LARGE -> getString(R.string.file_too_large_error, "${maxSize.mb} MB")
+        FileError.NOT_SUPPORTED -> getString(R.string.type_not_supported)
+        FileError.NOT_VALID -> getString(R.string.file_not_valid)
+        null -> null
+    }
+}
+
 fun LocalDateTime.format(
     context: Context,
     timeZone: TimeZone = TimeZone.currentSystemDefault()

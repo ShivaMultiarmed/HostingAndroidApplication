@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -321,16 +322,19 @@ fun EditFileFieldPreview() {
     }
 }
 
+@Immutable
 open class ActionItem(
     val icon: ImageVector,
     val action: () -> Unit
 )
 
+@Immutable
 data class DeletingItem(val deleting: () -> Unit) : ActionItem(
     icon = Icons.Rounded.Delete,
     action = deleting
 )
 
+@Immutable
 data class RevertingItem(val reverting: () -> Unit) : ActionItem(
     icon = Icons.Rounded.Refresh,
     action = reverting

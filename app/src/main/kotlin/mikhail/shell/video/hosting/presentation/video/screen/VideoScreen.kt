@@ -564,7 +564,7 @@ fun VideoScreen(
                                     }
                                     Box {
                                         EditButton(
-                                            modifier = Modifier.size(22.dp),
+                                            modifier = Modifier.size(24.dp),
                                             imageVector = Icons.Rounded.MoreVert,
                                             onClick = {
                                                 isAdvancedDialogOpen = true

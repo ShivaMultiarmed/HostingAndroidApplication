@@ -134,7 +134,7 @@ internal fun SignUpConfirmationScreen(
                 onFocus = {
                     onAction(ScreenAction.NickFocused)
                 },
-                onTypingEnded = {
+                onBlur = {
                     onAction(ScreenAction.NickBlurred)
                 }
             )

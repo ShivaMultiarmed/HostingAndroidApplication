@@ -34,7 +34,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -47,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,8 +74,6 @@ fun ProfileScreen(
     onAction: (ProfileScreenAction) -> Unit,
     snackBarHostState: SnackbarHostState
 ) {
-    val windowSize = LocalWindowInfo.current.containerDpSize
-    val windowSizeClass = WindowSizeClass.calculateFromSize(windowSize)
     val orientation = LocalConfiguration.current.orientation
     var shouldShowAvatar by rememberSaveable { mutableStateOf(false) }
     Box(
@@ -378,72 +374,70 @@ private fun UserTextDetails(
     modifier: Modifier = Modifier,
     user: UserUi,
 ) {
-    var showMore by rememberSaveable { mutableStateOf(false) }
-    val showMoreButton: @Composable () -> Unit = {
-        IconButton(
-            onClick = {
-                showMore = !showMore
-            },
-            modifier = Modifier.size(18.dp)
-        ) {
-            Icon(
-                modifier = Modifier.size(18.dp), imageVector = when (showMore) {
-                    false -> Icons.Rounded.KeyboardArrowDown
-                    true -> Icons.Rounded.KeyboardArrowUp
-                },
-                contentDescription = stringResource(R.string.more_button)
-            )
+    if (user.name != null || user.email != null || user.tel != null || user.bio != null) {
+        var showMore by rememberSaveable {
+            mutableStateOf(false)
         }
-    }
-    Column(
-        modifier = modifier.padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            Row(
                 modifier = Modifier,
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                user.name?.let {
-                    UserDetail(
-                        text = it
-                    )
-                }
-                val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
-                AnimatedVisibility(
-                    visible = showMore,
-                    enter = expandVertically(
-                        tween(
-                            durationMillis = 300
-                        )
-                    ),
-                    exit = shrinkVertically(
-                        tween(
-                            durationMillis = 300
-                        )
-                    )
+                Column(
+                    modifier = Modifier,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    user.name?.let {
                         UserDetail(
-                            modifier = Modifier,
-                            text = contacts
+                            text = it
                         )
-                        user.bio?.let {
+                    }
+                    val contacts = arrayOf(user.email, user.tel).filterNotNull().joinToString(" ")
+                    AnimatedVisibility(
+                        visible = showMore,
+                        enter = expandVertically(
+                            tween(300)
+                        ),
+                        exit = shrinkVertically(
+                            tween(300)
+                        )
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             UserDetail(
                                 modifier = Modifier,
-                                text = it
+                                text = contacts
                             )
+                            user.bio?.let {
+                                UserDetail(
+                                    modifier = Modifier,
+                                    text = it
+                                )
+                            }
                         }
                     }
                 }
             }
+            IconButton(
+                onClick = {
+                    showMore = !showMore
+                },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = when (showMore) {
+                        false -> Icons.Rounded.KeyboardArrowDown
+                        true -> Icons.Rounded.KeyboardArrowUp
+                    },
+                    contentDescription = stringResource(R.string.more_button)
+                )
+            }
         }
-        showMoreButton()
     }
 }
 

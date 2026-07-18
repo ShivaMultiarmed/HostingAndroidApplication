@@ -90,7 +90,6 @@ internal fun ChannelHeader(
                     onShowLogo = onShowLogo
                 )
             }
-
             windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact -> {
                 ChannelHeaderMedium(
                     modifier = Modifier,
@@ -100,7 +99,6 @@ internal fun ChannelHeader(
                     onShowLogo = onShowLogo
                 )
             }
-
             else -> {
                 ChannelHeaderExpanded(
                     modifier = Modifier,
@@ -152,7 +150,6 @@ private fun ChannelHeaderCompact(
                 logo = logo,
                 onShowLogo = onShowLogo
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -540,12 +537,17 @@ private fun ChannelActionsButton(
     onEdit: (channelId: Long) -> Unit,
     onRemove: (channelId: Long) -> Unit
 ) {
-    var actionDialogVisible by rememberSaveable { mutableStateOf(false) }
-    var removeDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var actionDialogVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var removeDialogVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
     Box(
         modifier = modifier
     ) {
         IconButton(
+            modifier = Modifier.size(21.dp),
             onClick = {
                 actionDialogVisible = true
             }

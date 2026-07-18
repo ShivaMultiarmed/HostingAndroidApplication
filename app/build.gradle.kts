@@ -20,7 +20,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 16
-        versionName = "3.0.0"
+        versionName = "3.0.1"
         testInstrumentationRunner = "mikhail.shell.video.hosting.VideoHostingTestsRunner"
     }
     signingConfigs {
@@ -62,8 +62,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
     buildFeatures {
         compose = true
@@ -73,10 +73,11 @@ android {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
-        freeCompilerArgs.add("-XXLanguage:+WhenGuards")
-        freeCompilerArgs.add("-Xcontext-parameters")
-        jvmTarget.set(JvmTarget.JVM_11)
+        freeCompilerArgs.addAll(
+            "-XXLanguage:+WhenGuards",
+            "-Xcontext-parameters"
+        )
+        jvmTarget.set(JvmTarget.JVM_25)
     }
 }
 
@@ -88,6 +89,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.graphics.shapes)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.monitor)
@@ -150,8 +152,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
 
-    // Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-perf
-    implementation("com.google.firebase:firebase-perf:22.0.4")
+    implementation(libs.firebase.perf)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 }

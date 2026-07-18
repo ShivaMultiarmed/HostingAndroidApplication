@@ -24,22 +24,24 @@ object CryptoUtils {
         .apply {
             load(null)
         }
-    private fun generateKey(): SecretKey = KeyGenerator
-        .getInstance(ALGORITHM, PROVIDER)
-        .apply {
-            init(
-                KeyGenParameterSpec.Builder(
-                    KEY_ALIAS,
-                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+    private fun generateKey(): SecretKey {
+        return KeyGenerator
+            .getInstance(ALGORITHM, PROVIDER)
+            .apply {
+                init(
+                    KeyGenParameterSpec.Builder(
+                        KEY_ALIAS,
+                        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+                    )
+                        .setBlockModes(BLOCK_MODE)
+                        .setEncryptionPaddings(PADDING)
+                        .setRandomizedEncryptionRequired(true)
+                        .setUserAuthenticationRequired(false)
+                        .build()
                 )
-                    .setBlockModes(BLOCK_MODE)
-                    .setEncryptionPaddings(PADDING)
-                    .setRandomizedEncryptionRequired(true)
-                    .setUserAuthenticationRequired(false)
-                    .build()
-            )
-        }
-        .generateKey()
+            }
+            .generateKey()
+    }
     private fun getKey(): SecretKey {
         val existingKeyEntry = keystore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
         return existingKeyEntry?.secretKey?: generateKey()
