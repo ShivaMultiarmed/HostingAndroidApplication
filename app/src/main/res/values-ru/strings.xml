@@ -310,4 +310,5 @@
     <string name="code_expired">Код просрочен. Запросите новый</string>
     <string name="file_not_valid">Файл не корректен</string>
     <string name="conflict_error">Произошёл конфликт</string>
+    <string name="exit">Закрыть плеер</string>
 </resources>

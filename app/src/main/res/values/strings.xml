@@ -296,5 +296,6 @@
     <string name="request_code">Request a code</string>
     <string name="code_expired">The code is expired. Request another one</string>
     <string name="file_not_valid">File is invalid</string>
-    <string name="conflict_error">Conflict occured</string>
+    <string name="conflict_error">Conflict occurred</string>
+    <string name="exit">Close player</string>
 </resources>
