@@ -16,12 +16,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.di.VideoUploadingEntryPoint
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.managers.NotificationOrchestrator
 import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
@@ -32,21 +32,21 @@ import kotlin.uuid.Uuid
 @AndroidEntryPoint
 class VideoUploadingService : Service() {
     private lateinit var videoUploadingEntryPoint: VideoUploadingEntryPoint
+    private lateinit var notificationOrchestrator: NotificationOrchestrator
     private lateinit var uploadSource: UploadSource
     private lateinit var confirmUpload: ConfirmVideoUpload
     private lateinit var removeVideo: DeleteVideo
-    private var NOTIFICATION_COUNT = 0
+    private var UPLOAD_NOTIFICATION_ID: Int? = null
     private lateinit var notificationManager: NotificationManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private var uploadJob: Job? = null
-
-    private val videoIdState = MutableStateFlow<Long?>(null)
     private var sourceUri: Uri? = null
 
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
         videoUploadingEntryPoint =
             EntryPointAccessors.fromApplication(this, VideoUploadingEntryPoint::class.java)
+        notificationOrchestrator = videoUploadingEntryPoint.getNotificationOrchestrator()
         confirmUpload = videoUploadingEntryPoint.getConfirmVideoUpload()
         uploadSource = videoUploadingEntryPoint.getUploadVideoSource()
         removeVideo = videoUploadingEntryPoint.getRemoveVideo()
@@ -56,15 +56,16 @@ class VideoUploadingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let { notNullIntent ->
             if (notNullIntent.action == ACTION_LAUNCH_UPLOADING) {
+                UPLOAD_NOTIFICATION_ID = notificationOrchestrator.incrementId()
                 notNullIntent.extras?.let { bundle ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         startForeground(
-                            ++NOTIFICATION_COUNT,
+                            UPLOAD_NOTIFICATION_ID!!,
                             createProgressNotification(),
                             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                         )
                     } else {
-                        startForeground(++NOTIFICATION_COUNT, createProgressNotification())
+                        startForeground(UPLOAD_NOTIFICATION_ID!!, createProgressNotification())
                     }
                     val tmpId = Uuid.parse(bundle.getString("tmp_id")!!)
                     sourceUri = bundle.getString("source")!!.toUri()
@@ -104,7 +105,7 @@ class VideoUploadingService : Service() {
             .setContentText(getString(R.string.wait_for_video_hint))
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(++NOTIFICATION_COUNT, notification)
+        notificationManager.notify(UPLOAD_NOTIFICATION_ID!!, notification)
     }
 
     private fun displayFailureNotification(error: Error) {
@@ -116,12 +117,12 @@ class VideoUploadingService : Service() {
             .setContentText(errorMessage)
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(++NOTIFICATION_COUNT, notification)
+        notificationManager.notify(UPLOAD_NOTIFICATION_ID!!, notification)
     }
 
     private fun updateProgressNotification(progress: Int = 0) {
         val notification = createProgressNotification(progress)
-        notificationManager.notify(NOTIFICATION_COUNT, notification)
+        notificationManager.notify(UPLOAD_NOTIFICATION_ID!!, notification)
     }
 
     private fun createProgressNotification(progress: Int = 0): Notification {

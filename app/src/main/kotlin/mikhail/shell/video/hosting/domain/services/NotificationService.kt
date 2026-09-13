@@ -23,19 +23,17 @@ import mikhail.shell.video.hosting.di.NotificationEntryPoint
 import mikhail.shell.video.hosting.di.PresentationModule.HOST
 import mikhail.shell.video.hosting.domain.errors.Error
 import mikhail.shell.video.hosting.domain.errors.FileError
-import mikhail.shell.video.hosting.domain.errors.UnexpectedError
-import mikhail.shell.video.hosting.domain.errors.network.NetworkError
+import mikhail.shell.video.hosting.domain.managers.NotificationOrchestrator
 import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
 import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
-import mikhail.shell.video.hosting.domain.validation.getNetworkErrorMessage
 import mikhail.shell.video.hosting.presentation.activities.MainActivity
+import mikhail.shell.video.hosting.presentation.utils.getFileErrorMessage
 
 @AndroidEntryPoint
 class NotificationService: FirebaseMessagingService() {
-
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var NOTIFICATIONS_COUNT = 0
     lateinit var entryPoint: NotificationEntryPoint
+    private lateinit var notificationOrchestrator: NotificationOrchestrator
     private lateinit var observeUserDetails: ObserveUserDetails
     private lateinit var subscribeToNotifications: SubscribeToNotifications
     private lateinit var notificationManager: NotificationManager
@@ -45,6 +43,7 @@ class NotificationService: FirebaseMessagingService() {
     override fun onCreate() {
         notificationManager = getSystemService(NotificationManager::class.java)
         entryPoint = EntryPointAccessors.fromApplication(this, NotificationEntryPoint::class.java)
+        notificationOrchestrator = entryPoint.getNotificationOrchestrator()
         observeUserDetails = entryPoint.observeUserDetails()
         subscribeToNotifications = entryPoint.getResubscribe()
         fcm = entryPoint.getFirebaseMessaging()
@@ -64,12 +63,7 @@ class NotificationService: FirebaseMessagingService() {
             postNewVideoNotification(videoId, channelTitle, videoTitle)
         } else if (topic.contains(Regex("channels\\.[0-9]{1,18}\\.uploads"))) {
             if (data.contains("source_error")) {
-                val sourceError =
-                    try {
-                        FileError.valueOf(data["source_error"]!!.uppercase())
-                    } catch (_: Exception) {
-                        UnexpectedError
-                    }
+                val sourceError = FileError.valueOf(data["source_error"]!!.uppercase())
                 postVideoUploadFailureNotification(sourceError)
             } else {
                 val videoId = data["video_id"]!!.toLong()
@@ -97,7 +91,7 @@ class NotificationService: FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
+        notificationManager.notify(notificationOrchestrator.incrementId(), notification)
     }
 
     @OptIn(UnstableApi::class)
@@ -116,12 +110,12 @@ class NotificationService: FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
+        notificationManager.notify(notificationOrchestrator.incrementId(), notification)
     }
 
-    private fun postVideoUploadFailureNotification(error: Error) {
-        val errorText = when (error) {
-            is NetworkError -> getNetworkErrorMessage(error)
+    private fun postVideoUploadFailureNotification(videoError: Error) {
+        val errorText = when (videoError) {
+            is FileError -> getFileErrorMessage(videoError)
             else -> getString(R.string.unexpected_error)
         }
         val notification = NotificationCompat.Builder(this, "video_uploading")
@@ -130,7 +124,7 @@ class NotificationService: FirebaseMessagingService() {
             .setContentText(errorText)
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(++NOTIFICATIONS_COUNT, notification)
+        notificationManager.notify(notificationOrchestrator.incrementId(), notification)
     }
 
     override fun onNewToken(token: String) {

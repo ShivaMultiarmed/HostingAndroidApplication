@@ -6,16 +6,23 @@ import com.google.gson.Gson
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import mikhail.shell.video.hosting.domain.repositories.CommentRepository
-import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
+import mikhail.shell.video.hosting.domain.managers.NotificationOrchestrator
 import mikhail.shell.video.hosting.domain.usecases.user.ObserveUserDetails
+import mikhail.shell.video.hosting.domain.usecases.user.SubscribeToNotifications
 import mikhail.shell.video.hosting.domain.usecases.videos.ConfirmVideoUpload
 import mikhail.shell.video.hosting.domain.usecases.videos.DeleteVideo
 import mikhail.shell.video.hosting.domain.usecases.videos.UploadSource
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
+interface VideoDownloadingEntryPoint {
+    fun getNotificationOrchestrator(): NotificationOrchestrator
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
 interface VideoUploadingEntryPoint {
+    fun getNotificationOrchestrator(): NotificationOrchestrator
     fun getUploadVideoSource(): UploadSource
     fun getConfirmVideoUpload(): ConfirmVideoUpload
     fun getRemoveVideo(): DeleteVideo
@@ -24,10 +31,10 @@ interface VideoUploadingEntryPoint {
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface NotificationEntryPoint {
+    fun getNotificationOrchestrator(): NotificationOrchestrator
     fun getFirebaseMessaging(): FirebaseMessaging
     fun getResubscribe(): SubscribeToNotifications
     fun observeUserDetails(): ObserveUserDetails
-    fun getCommentRepository(): CommentRepository
     fun getGson(): Gson
 }
 
