@@ -37,13 +37,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.receivers.PipPlayerReceiver
 import mikhail.shell.video.hosting.domain.usecases.ui.ObserveUiPreferences
@@ -66,6 +70,7 @@ import mikhail.shell.video.hosting.presentation.player.PipPlayerUtils
 import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.player.VideoSurface
 import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
+import mikhail.shell.video.hosting.presentation.utils.observe
 import mikhail.shell.video.hosting.presentation.video.MiniPlayer
 import mikhail.shell.video.hosting.receivers.MediaBroadcastReceiver
 import mikhail.shell.video.hosting.receivers.MediaHandler
@@ -101,14 +106,21 @@ class MainActivity : ComponentActivity() {
     private val isInPipModeStateFlow = MutableStateFlow(false)
     private lateinit var pipPlayerListener: Player.Listener
 
+    private val pendingIntents = Channel<Intent>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setPrimaryContent()
+        setContent()
         setMediaHandlers()
         setDataFlows()
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                pendingIntents.send(intent)
+            }
+        }
     }
 
-    private fun setPrimaryContent() {
+    private fun setContent() {
         setContent {
             val userData by userDetails.collectAsStateWithLifecycle()
             val uiPreferences by uiPreferences.collectAsStateWithLifecycle()
@@ -309,6 +321,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+                pendingIntents.receiveAsFlow().observe(::handleDeepLink)
             }
         }
     }
@@ -321,7 +334,13 @@ class MainActivity : ComponentActivity() {
         val uri = intent.data.toString()
         Regex("^($BASE_URL/videos/)(\\d{1,8})$").find(uri)?.let {
             val videoId = it.groups[2]?.value?.toLongOrNull() ?: return@let
-            rootBackStack.add(Route.Video(videoId))
+            val currentRootRoute = rootBackStack.last()
+            if (currentRootRoute is Route.Video && currentRootRoute.videoId != videoId) {
+                rootBackStack.removeLastOrNull()
+            }
+            if (currentRootRoute !is Route.Video || currentRootRoute.videoId != videoId) {
+                rootBackStack.add(Route.Video(videoId))
+            }
             return
         }
     }
@@ -372,7 +391,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
         super.onNewIntent(intent, caller)
-        handleDeepLink(intent)
+        lifecycleScope.launch {
+            pendingIntents.send(intent)
+        }
     }
 
     override fun onDestroy() {
