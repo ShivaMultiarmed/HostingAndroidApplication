@@ -1,18 +1,13 @@
 package mikhail.shell.video.hosting.presentation.activities
 
 import android.app.ComponentCaller
-import android.app.PendingIntent
-import android.app.PictureInPictureParams
-import android.app.RemoteAction
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.graphics.drawable.Icon
 import android.media.AudioManager
 import android.media.session.MediaSession
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
@@ -21,10 +16,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,21 +35,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.compose.material3.R.string.playpause_button_pause
-import androidx.media3.ui.compose.material3.R.string.playpause_button_play
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.domain.providers.UserDetails
 import mikhail.shell.video.hosting.domain.receivers.PipPlayerReceiver
 import mikhail.shell.video.hosting.domain.usecases.ui.ObserveUiPreferences
@@ -74,6 +62,7 @@ import mikhail.shell.video.hosting.presentation.navigation.video.videoGraph
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerDimensionsState
 import mikhail.shell.video.hosting.presentation.player.LocalPlayerState
 import mikhail.shell.video.hosting.presentation.player.MiniPlayerDimensions
+import mikhail.shell.video.hosting.presentation.player.PipPlayerUtils
 import mikhail.shell.video.hosting.presentation.player.PlayerState
 import mikhail.shell.video.hosting.presentation.player.VideoSurface
 import mikhail.shell.video.hosting.presentation.player.rememberPlayerState
@@ -85,7 +74,6 @@ import mikhail.shell.video.hosting.ui.theme.UiPreferences
 import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import javax.inject.Inject
 
-@UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
@@ -98,6 +86,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var player: Player
+    private val playbackStateFlow = MutableStateFlow(Player.STATE_IDLE)
     lateinit var mediaReceiver: MediaBroadcastReceiver
 
     @Inject
@@ -108,7 +97,8 @@ class MainActivity : ComponentActivity() {
     lateinit var currentTabBackStack: MutableState<MutableList<Route>>
 
     private lateinit var pipPlayerReceiver: PipPlayerReceiver
-    private val isInPipModeStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private lateinit var pipPlayerUtils: PipPlayerUtils
+    private val isInPipModeStateFlow = MutableStateFlow(false)
     private lateinit var pipPlayerListener: Player.Listener
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,92 +116,92 @@ class MainActivity : ComponentActivity() {
                 uiPreferences = uiPreferences
             ) {
                 val isInPipMode by isInPipModeStateFlow.collectAsStateWithLifecycle()
-                if (!isInPipMode) {
-                    val playerState = rememberSaveable {
-                        mutableStateOf(PlayerState())
-                    }
-                    val miniPlayerDimensionsState = rememberSaveable {
-                        mutableStateOf(null as MiniPlayerDimensions?)
-                    }
-                    CompositionLocalProvider(
-                        LocalPlayerState provides playerState,
-                        LocalMiniPlayerDimensionsState provides miniPlayerDimensionsState
-                    ) {
-                        val activity = LocalActivity.current!!
-                        val view = LocalView.current
-                        rootBackStack = rememberSaveable {
-                            mutableStateListOf(
-                                when {
-                                    userData.userId == 0L -> Route.Authentication
-                                    else -> Route.Recommendations
-                                }
-                            )
-                        }
-                        val currentRootRoute = rootBackStack.lastOrNull()
-                        val recommendationsBackStack = rememberSaveable {
-                            mutableStateListOf<Route>(Route.Recommendations.View)
-                        }
-                        val subscriptionsBackStack = rememberSaveable {
-                            mutableStateListOf<Route>(Route.Subscriptions.View)
-                        }
-                        val searchBackStack = rememberSaveable {
-                            mutableStateListOf<Route>(Route.Search.View)
-                        }
-                        val userBackStack = rememberSaveable(userData.userId) {
-                            mutableStateListOf<Route>(Route.User.Profile(userData.userId))
-                        }
-                        var currentTabRoute by rememberSerializable {
-                            mutableStateOf<Route>(Route.Recommendations)
-                        }
-                        currentTabBackStack = rememberSaveable {
-                            mutableStateOf(recommendationsBackStack)
-                        }
-                        val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
-                        LaunchedEffect(currentRootRoute is Route.Video) {
-                            WindowCompat.getInsetsController(
-                                activity.window,
-                                view
-                            ).isAppearanceLightStatusBars = when {
-                                currentRootRoute is Route.Video -> false
-                                else -> statusBarIconsColor != DarkColorScheme.onSurface
+                val playerState = rememberSaveable {
+                    mutableStateOf(PlayerState())
+                }
+                val miniPlayerDimensionsState = rememberSaveable {
+                    mutableStateOf(null as MiniPlayerDimensions?)
+                }
+                CompositionLocalProvider(
+                    LocalPlayerState provides playerState,
+                    LocalMiniPlayerDimensionsState provides miniPlayerDimensionsState
+                ) {
+                    val activity = LocalActivity.current!!
+                    val view = LocalView.current
+                    rootBackStack = rememberSaveable {
+                        mutableStateListOf(
+                            when {
+                                userData.userId == 0L -> Route.Authentication
+                                else -> Route.Recommendations
                             }
+                        )
+                    }
+                    val currentRootRoute = rootBackStack.lastOrNull()
+                    val recommendationsBackStack = rememberSaveable {
+                        mutableStateListOf<Route>(Route.Recommendations.View)
+                    }
+                    val subscriptionsBackStack = rememberSaveable {
+                        mutableStateListOf<Route>(Route.Subscriptions.View)
+                    }
+                    val searchBackStack = rememberSaveable {
+                        mutableStateListOf<Route>(Route.Search.View)
+                    }
+                    val userBackStack = rememberSaveable(userData.userId) {
+                        mutableStateListOf<Route>(Route.User.Profile(userData.userId))
+                    }
+                    var currentTabRoute by rememberSerializable {
+                        mutableStateOf<Route>(Route.Recommendations)
+                    }
+                    currentTabBackStack = rememberSaveable {
+                        mutableStateOf(recommendationsBackStack)
+                    }
+                    val statusBarIconsColor = MaterialTheme.colorScheme.onSurface
+                    LaunchedEffect(currentRootRoute is Route.Video) {
+                        WindowCompat.getInsetsController(
+                            activity.window,
+                            view
+                        ).isAppearanceLightStatusBars = when {
+                            currentRootRoute is Route.Video -> false
+                            else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
-                        var playerState by player.rememberPlayerState()
-                        LaunchedEffect(currentRootRoute) {
+                    }
+                    var playerState by player.rememberPlayerState()
+                    LaunchedEffect(currentRootRoute) {
+                        playerState = playerState.copy(
+                            hidden = currentRootRoute == Route.Authentication || currentRootRoute is Route.Video
+                        )
+                        if (currentRootRoute == Route.Authentication && player.isPlaying) {
+                            player.pause()
+                        }
+                        val isTabRoute = currentRootRoute in setOf(
+                            Route.Recommendations,
+                            Route.Subscriptions,
+                            Route.Search
+                        ) || currentRootRoute is Route.User
+                        if (isTabRoute && currentRootRoute != null) {
+                            currentTabRoute = currentRootRoute
+                        }
+                    }
+                    LaunchedEffect(currentTabRoute) {
+                        currentTabBackStack.value = when (currentTabRoute) {
+                            Route.Recommendations -> recommendationsBackStack
+                            Route.Subscriptions -> subscriptionsBackStack
+                            Route.Search -> searchBackStack
+                            is Route.User -> userBackStack
+                            else -> return@LaunchedEffect
+                        }
+                    }
+                    LaunchedEffect(currentRootRoute) {
+                        if (currentRootRoute != null
+                            && currentRootRoute != Route.Authentication
+                            && currentRootRoute !is Route.Video
+                        ) {
                             playerState = playerState.copy(
-                                hidden = currentRootRoute == Route.Authentication || currentRootRoute is Route.Video
+                                hidden = false
                             )
-                            if (currentRootRoute == Route.Authentication && player.isPlaying) {
-                                player.pause()
-                            }
-                            val isTabRoute = currentRootRoute in setOf(
-                                Route.Recommendations,
-                                Route.Subscriptions,
-                                Route.Search
-                            ) || currentRootRoute is Route.User
-                            if (isTabRoute && currentRootRoute != null) {
-                                currentTabRoute = currentRootRoute
-                            }
                         }
-                        LaunchedEffect(currentTabRoute) {
-                            currentTabBackStack.value = when (currentTabRoute) {
-                                Route.Recommendations -> recommendationsBackStack
-                                Route.Subscriptions -> subscriptionsBackStack
-                                Route.Search -> searchBackStack
-                                is Route.User -> userBackStack
-                                else -> return@LaunchedEffect
-                            }
-                        }
-                        LaunchedEffect(currentRootRoute) {
-                            if (currentRootRoute != null
-                                && currentRootRoute != Route.Authentication
-                                && currentRootRoute !is Route.Video
-                            ) {
-                                playerState = playerState.copy(
-                                    hidden = false
-                                )
-                            }
-                        }
+                    }
+                    if (!isInPipMode) {
                         Scaffold(
                             modifier = Modifier.fillMaxSize(),
                             bottomBar = {
@@ -304,7 +294,6 @@ class MainActivity : ComponentActivity() {
                                 )
                                 if (!playerState.hidden && playerState.prepared) {
                                     MiniPlayer(
-                                        modifier = Modifier,
                                         playerProvider = { player },
                                         onFullScreen = {
                                             rootBackStack.add(Route.Video(it))
@@ -313,14 +302,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                    } else {
+                        VideoSurface(
+                            modifier = Modifier.fillMaxWidth(),
+                            playerProvider = { player }
+                        )
                     }
-                } else {
-                    VideoSurface(
-                        modifier = Modifier
-                            .height(100.dp)
-                            .aspectRatio(16f / 9),
-                        playerProvider = { player }
-                    )
                 }
             }
         }
@@ -359,11 +346,18 @@ class MainActivity : ComponentActivity() {
         }
         registerReceiver(pipPlayerReceiver, pipPlayerReceiverIntentFilter, flags)
 
+        pipPlayerUtils = PipPlayerUtils(this, player)
         pipPlayerListener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                super.onIsPlayingChanged(isPlaying) // TODO investigate the issue with "isPlaying" flickering
-                val pipParams = updatePipParams()
-                setPictureInPictureParams(pipParams)
+                super.onIsPlayingChanged(isPlaying)
+                if (playbackStateFlow.value != Player.STATE_BUFFERING) {
+                    val pipParams = pipPlayerUtils.createPipParams()
+                    setPictureInPictureParams(pipParams)
+                }
+            }
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                super.onPlaybackStateChanged(playbackState)
+                playbackStateFlow.value = playbackState
             }
         }
         player.addListener(pipPlayerListener)
@@ -391,93 +385,10 @@ class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (player.currentMediaItem != null) {
-            val pipParams = updatePipParams()
+            val pipParams = pipPlayerUtils.createPipParams()
             setPictureInPictureParams(pipParams)
             enterPictureInPictureMode(pipParams)
         }
-    }
-
-    private fun updatePipParams(): PictureInPictureParams {
-        val actions = listOf(
-            createBackwardAction(),
-            createPlayPauseAction(),
-            createForwardAction()
-        )
-        return PictureInPictureParams.Builder()
-            .setActions(actions)
-            .build()
-    }
-
-    private fun createPlayPauseAction(): RemoteAction {
-        val playPauseIntent = Intent(
-            when {
-                player.isPlaying -> PipPlayerReceiver.ACTION_PAUSE
-                else -> PipPlayerReceiver.ACTION_PLAY
-            }
-        )
-
-        val playPauseRequestCode = when {
-            player.isPlaying -> PipPlayerReceiver.PAUSE_CODE
-            else -> PipPlayerReceiver.PLAY_CODE
-        }
-        val playPausePendingIntent = PendingIntent.getBroadcast(
-            this, playPauseRequestCode, playPauseIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val playPauseAction = RemoteAction(
-            Icon.createWithResource(
-                this,
-                when (player.isPlaying) {
-                    true -> R.drawable.baseline_pause_24
-                    false -> R.drawable.baseline_play_arrow_24
-                }
-            ),
-            getString(
-                when (player.isPlaying) {
-                    true -> playpause_button_pause
-                    false -> playpause_button_play
-                }
-            ),
-            "",
-            playPausePendingIntent
-        )
-        return playPauseAction
-    }
-
-    private fun createBackwardAction(): RemoteAction {
-        val intent = Intent(PipPlayerReceiver.ACTION_BACKWARD)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, PipPlayerReceiver.BACKWARD_CODE, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val action = RemoteAction(
-            Icon.createWithResource(
-                this,
-                R.drawable.backward_media_24
-            ),
-            getString(R.string.player_seek_backward_hint),
-            "",
-            pendingIntent
-        )
-        return action
-    }
-
-    private fun createForwardAction(): RemoteAction {
-        val intent = Intent(PipPlayerReceiver.ACTION_FORWARD)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this, PipPlayerReceiver.FORWARD_CODE, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val action = RemoteAction(
-            Icon.createWithResource(
-                this,
-                R.drawable.forward_media_24
-            ),
-            getString(R.string.player_seek_forward_hint),
-            "",
-            pendingIntent
-        )
-        return action
     }
 
     override fun onPictureInPictureModeChanged(
@@ -485,17 +396,17 @@ class MainActivity : ComponentActivity() {
         newConfig: Configuration
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-
         isInPipModeStateFlow.update { isInPictureInPictureMode }
         if (isInPictureInPictureMode) {
-            val pipParams = updatePipParams()
+            val pipParams = pipPlayerUtils.createPipParams()
             setPictureInPictureParams(pipParams)
-        } else {
-            val TAG = "MainActivity"
-            Log.d(TAG, "isFinishing = $isFinishing")
-            val isResumed = lifecycle.currentState < Lifecycle.State.RESUMED
-            Log.d(TAG, "isFinishing = $isResumed")
-            // player.pause()
         }
+    }
+
+    override fun onStop() {
+        if (!isChangingConfigurations) {
+            player.pause()
+        }
+        super.onStop()
     }
 }

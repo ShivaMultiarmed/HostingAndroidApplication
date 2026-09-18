@@ -1,5 +1,9 @@
+@file:OptIn(ExperimentalPermissionsApi::class)
+
 package mikhail.shell.video.hosting.presentation.video.recommendations
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +15,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,6 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import mikhail.shell.video.hosting.R
 import mikhail.shell.video.hosting.presentation.utils.ErrorComponent
 import mikhail.shell.video.hosting.presentation.utils.PageableBox
@@ -107,6 +116,14 @@ fun RecommendationsScreen(
                         onAction(ScreenAction.LoadNextPart)
                     }
                 )
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+                LaunchedEffect(Unit) {
+                    if (!notificationPermission.status.isGranted && !notificationPermission.status.shouldShowRationale) {
+                        notificationPermission.launchPermissionRequest()
+                    }
+                }
             }
         } else if (state.isStarting) {
             StartingComponent(

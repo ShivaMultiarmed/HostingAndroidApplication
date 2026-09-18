@@ -110,14 +110,6 @@ fun VideoUploadingScreen(
     var playerState by LocalPlayerState.current
     val windowSize = calculateWindowSizeClass(activity)
     val context = activity as Context
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-        LaunchedEffect(Unit) {
-            if (!notificationPermission.status.isGranted && !notificationPermission.status.shouldShowRationale) {
-                notificationPermission.launchPermissionRequest()
-            }
-        }
-    }
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         topBar = {
