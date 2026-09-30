@@ -106,13 +106,16 @@ import kotlin.math.PI
 import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 @Parcelize
 data class PlayerState(
     val prepared: Boolean = false,
     val hidden: Boolean = true,
-    val fullScreen: Boolean = false
+    val fullScreen: Boolean = false,
+    val inPipMode: Boolean = false
 ): Parcelable
 
 val LocalPlayerState = compositionLocalOf<MutableState<PlayerState>> {
@@ -136,6 +139,7 @@ val LocalMiniPlayerDimensionsState = compositionLocalOf<MutableState<MiniPlayerD
 fun PlayerComponent(
     modifier: Modifier = Modifier,
     playerProvider: () -> Player,
+    controlsImage: Boolean = true,
     onFullscreen: (Boolean) -> Unit,
     isFullScreen: Boolean = false,
     onRatioObtained: ((Float) -> Unit)? = null
@@ -156,7 +160,8 @@ fun PlayerComponent(
     ) {
         VideoSurface(
             modifier = Modifier.matchParentSize(),
-            playerProvider = playerProvider
+            playerProvider = playerProvider,
+            controlsImage = controlsImage
         )
         val seekRange = 5000L
         PlayerControls(
@@ -220,7 +225,7 @@ fun PlayerComponent(
         while (isActive && isPlaying) {
             position = player.currentPosition
             val delayDuration = changePeriod - (position % changePeriod)
-            delay(delayDuration)
+            delay(delayDuration.milliseconds)
         }
     }
     RetainedEffect(Unit) {
@@ -259,7 +264,8 @@ fun PlayerComponent(
 @Composable
 internal fun VideoSurface(
     modifier: Modifier = Modifier,
-    playerProvider: () -> Player
+    playerProvider: () -> Player,
+    controlsImage: Boolean = true
 ) {
     val context = LocalContext.current
     val player = retain {
@@ -272,12 +278,19 @@ internal fun VideoSurface(
     AndroidView(
         modifier = modifier,
         factory = {
-            playerView.apply {
-                this.player = player
+            playerView
+        },
+        update = {
+            if (controlsImage) {
+                if (it.player !== player) {
+                    it.player = player
+                }
+            } else {
+                it.player = null
             }
         },
-        onRelease = { playerView ->
-            playerView.player = null
+        onRelease = {
+            it.player = null
         }
     )
     RetainedEffect (Unit) {
@@ -285,7 +298,7 @@ internal fun VideoSurface(
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 if (mediaItem == null) {
                     playerView.player = null
-                } else {
+                } else if (controlsImage) {
                     playerView.player = player
                 }
             }
@@ -333,7 +346,7 @@ internal fun PlayerControls(
     )
     LaunchedEffect(controlsAlpha, isSeeking) {
         if (controlsAlpha == 1f && !isSeeking) {
-            delay(3000)
+            delay(3.seconds)
             controlsAlpha = 0f
         }
     }
@@ -389,7 +402,7 @@ internal fun PlayerControls(
                         coroutineScope.launch {
                             seekBackAlpha = 1f
                             onSeekBack()
-                            delay(300)
+                            delay(300.milliseconds)
                             seekBackAlpha = 0f
                         }
                     }
@@ -438,7 +451,7 @@ internal fun PlayerControls(
                         coroutineScope.launch {
                             seekForwardAlpha = 1f
                             onSeekForward()
-                            delay(300)
+                            delay(300.milliseconds)
                             seekForwardAlpha = 0f
                         }
                     }
@@ -712,7 +725,7 @@ private fun createStadiumShape(
     }
 }
 
-fun Long.formatDuration(): String {
+private fun Long.formatDuration(): String {
     val totalSecs = (this + 500) / 1000
     val stringBuilder = StringBuilder()
     val secs = totalSecs % 60
@@ -733,7 +746,7 @@ fun Long.formatDuration(): String {
 }
 
 @Composable
-internal fun Player.isPrepared(): Boolean {
+private fun Player.isPrepared(): Boolean {
     var isPrepared by rememberSaveable {
         mutableStateOf(currentMediaItem != null)
     }

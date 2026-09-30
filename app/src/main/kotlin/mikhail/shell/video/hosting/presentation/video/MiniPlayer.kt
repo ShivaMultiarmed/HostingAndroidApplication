@@ -17,8 +17,8 @@ import androidx.compose.ui.zIndex
 import androidx.media3.common.Player
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerDimensionsState
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
-import mikhail.shell.video.hosting.presentation.utils.PipContainer
-import mikhail.shell.video.hosting.presentation.utils.PipTopBar
+import mikhail.shell.video.hosting.presentation.utils.FloatingContainer
+import mikhail.shell.video.hosting.presentation.utils.FloatingContainerTopBar
 
 val miniPlayerMaxDimension = 220.dp
 
@@ -27,7 +27,8 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
     playerProvider: () -> Player,
     isFullScreen: Boolean = false,
-    onFullScreen: (videoId: Long) -> Unit
+    onFullScreen: (videoId: Long) -> Unit,
+    controlsImage: Boolean = true
 ) {
     val player = retain {
         playerProvider()
@@ -36,8 +37,7 @@ fun MiniPlayer(
     var aspectRatio by rememberSaveable {
         mutableFloatStateOf(miniPlayerDimensions?.aspectRatio ?: (16f / 9))
     }
-
-    PipContainer(
+    FloatingContainer(
         modifier = modifier
             .then(
                 if (aspectRatio < 1f) {
@@ -81,9 +81,10 @@ fun MiniPlayer(
                     }
                     miniPlayerDimensions = miniPlayerDimensions?.copy(aspectRatio = ratio)
                 }
-            }
+            },
+            controlsImage = controlsImage
         )
-        PipTopBar(
+        FloatingContainerTopBar(
             modifier = Modifier
                 .width(if (aspectRatio >= 1f) miniPlayerMaxDimension else miniPlayerMaxDimension * aspectRatio)
                 .padding(7.dp),

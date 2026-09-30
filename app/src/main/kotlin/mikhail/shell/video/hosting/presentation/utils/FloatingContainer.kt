@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import mikhail.shell.video.hosting.R
 
 @Composable
-fun PipContainer(
+fun FloatingContainer(
     modifier: Modifier = Modifier,
     initialOffset: DpOffset = DpOffset.Zero,
     onOffsetChanged: (x: Dp, y: Dp) -> Unit,
@@ -60,10 +60,10 @@ fun PipContainer(
             ).pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    xOffset += dragAmount.x.toDp()
-                    xOffset = xOffset.coerceIn(0.dp, parentWidth - pipWidth)
-                    yOffset += dragAmount.y.toDp()
-                    yOffset = yOffset.coerceIn(0.dp, parentHeight - pipHeight)
+                    val dxOffset = dragAmount.x.toDp()
+                    xOffset = (xOffset + dxOffset).coerceIn(0.dp, parentWidth - pipWidth)
+                    val dyOffset = dragAmount.y.toDp()
+                    yOffset = (yOffset + dyOffset).coerceIn(0.dp, parentHeight - pipHeight)
                     onOffsetChanged(xOffset, yOffset)
                 }
             }.onGloballyPositioned {
@@ -84,7 +84,7 @@ fun PipContainer(
 }
 
 @Composable
-fun PipTopBar(
+fun FloatingContainerTopBar(
     modifier: Modifier = Modifier,
     onClose: () -> Unit
 ) {

@@ -6,6 +6,7 @@ import android.app.RemoteAction
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.util.Rational
 import androidx.media3.common.Player
 import mikhail.shell.video.hosting.R
@@ -28,6 +29,11 @@ class PipPlayerUtils(
         return PictureInPictureParams.Builder()
             .setActions(actions)
             .setAspectRatio(Rational(player.videoSize.width, player.videoSize.height))
+            .apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    setSeamlessResizeEnabled(false)
+                }
+            }
             .build()
     }
     private fun createPlayAction(): RemoteAction {

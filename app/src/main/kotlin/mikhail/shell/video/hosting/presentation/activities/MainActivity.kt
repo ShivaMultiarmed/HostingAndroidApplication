@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -128,18 +129,19 @@ class MainActivity : ComponentActivity() {
                 uiPreferences = uiPreferences
             ) {
                 val isInPipMode by isInPipModeStateFlow.collectAsStateWithLifecycle()
-                val playerState = rememberSaveable {
+                val providedPlayerState = rememberSaveable {
                     mutableStateOf(PlayerState())
                 }
-                val miniPlayerDimensionsState = rememberSaveable {
+                val providedMiniPlayerDimensionsState = rememberSaveable {
                     mutableStateOf(null as MiniPlayerDimensions?)
                 }
                 CompositionLocalProvider(
-                    LocalPlayerState provides playerState,
-                    LocalMiniPlayerDimensionsState provides miniPlayerDimensionsState
+                    LocalPlayerState provides providedPlayerState,
+                    LocalMiniPlayerDimensionsState provides providedMiniPlayerDimensionsState
                 ) {
                     val activity = LocalActivity.current!!
                     val view = LocalView.current
+                    var playerState by player.rememberPlayerState()
                     rootBackStack = rememberSaveable {
                         mutableStateListOf(
                             when {
@@ -177,7 +179,6 @@ class MainActivity : ComponentActivity() {
                             else -> statusBarIconsColor != DarkColorScheme.onSurface
                         }
                     }
-                    var playerState by player.rememberPlayerState()
                     LaunchedEffect(currentRootRoute) {
                         playerState = playerState.copy(
                             hidden = currentRootRoute == Route.Authentication || currentRootRoute is Route.Video
@@ -213,7 +214,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    if (!isInPipMode) {
+                    Box {
                         Scaffold(
                             modifier = Modifier.fillMaxSize(),
                             bottomBar = {
@@ -268,7 +269,6 @@ class MainActivity : ComponentActivity() {
                                             rootBackStack.lastIndex,
                                             rootBackStack.size
                                         )
-
                                         else -> rootBackStack
                                     },
                                     entryDecorators = defaultNavDecorators,
@@ -304,7 +304,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 )
-                                if (!playerState.hidden && playerState.prepared) {
+                                if (!playerState.hidden && playerState.prepared && !isInPipMode) {
                                     MiniPlayer(
                                         playerProvider = { player },
                                         onFullScreen = {
@@ -314,11 +314,17 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                    } else {
-                        VideoSurface(
-                            modifier = Modifier.fillMaxWidth(),
-                            playerProvider = { player }
-                        )
+                        if (isInPipMode) {
+                            VideoSurface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .zIndex(1f),
+                                playerProvider = { player }
+                            )
+                        }
+                    }
+                    LaunchedEffect(isInPipMode) {
+                        playerState = playerState.copy(inPipMode = isInPipMode)
                     }
                 }
                 pendingIntents.receiveAsFlow().observe(::handleDeepLink)

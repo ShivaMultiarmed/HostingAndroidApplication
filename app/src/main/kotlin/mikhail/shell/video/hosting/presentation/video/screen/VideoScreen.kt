@@ -456,7 +456,8 @@ fun VideoScreen(
                     isFullScreen = isFullScreen,
                     onFullscreen = {
                         isFullScreen = it
-                    }
+                    },
+                    controlsImage = !playerState.inPipMode
                 )
             }
             RetainedEffect(isFullScreenReached) {
