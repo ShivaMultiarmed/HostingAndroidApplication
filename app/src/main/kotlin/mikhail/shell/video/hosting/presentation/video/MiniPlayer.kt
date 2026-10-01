@@ -7,20 +7,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.zIndex
 import androidx.media3.common.Player
 import mikhail.shell.video.hosting.presentation.player.LocalMiniPlayerDimensionsState
 import mikhail.shell.video.hosting.presentation.player.PlayerComponent
 import mikhail.shell.video.hosting.presentation.utils.FloatingContainer
 import mikhail.shell.video.hosting.presentation.utils.FloatingContainerTopBar
-
-val miniPlayerMaxDimension = 220.dp
 
 @Composable
 fun MiniPlayer(
@@ -37,8 +40,26 @@ fun MiniPlayer(
     var aspectRatio by rememberSaveable {
         mutableFloatStateOf(miniPlayerDimensions?.aspectRatio ?: (16f / 9))
     }
+    var parentWidth by remember {
+        mutableStateOf(0.dp)
+    }
+    var parentHeight by remember {
+        mutableStateOf(0.dp)
+    }
+    var miniPlayerMaxDimension by remember {
+        mutableStateOf(0.dp)
+    }
+    val density = LocalDensity.current
     FloatingContainer(
         modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                val parentSize = coordinates.parentLayoutCoordinates?.size
+                with(density) {
+                    parentWidth = parentSize?.width?.toDp()?: 0.dp
+                    parentHeight = parentSize?.height?.toDp()?: 0.dp
+                }
+                miniPlayerMaxDimension = min(parentWidth, parentHeight) * 0.5f
+            }
             .then(
                 if (aspectRatio < 1f) {
                     Modifier.height(miniPlayerMaxDimension)
@@ -52,7 +73,7 @@ fun MiniPlayer(
                     else -> aspectRatio
                 }
             )
-            .zIndex(1000f),
+            .zIndex(1f),
         initialOffset = DpOffset(
             miniPlayerDimensions?.x?.dp ?: 0.dp,
             miniPlayerDimensions?.y?.dp ?: 0.dp

@@ -40,14 +40,14 @@ fun FloatingContainer(
 ) {
     var xOffset by rememberSaveable (saver = dpStateSaver) { mutableStateOf(initialOffset.x) }
     var yOffset by rememberSaveable (saver = dpStateSaver) { mutableStateOf(initialOffset.y) }
-    var pipWidth by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
-    var pipHeight by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
+    var containerWidth by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
+    var containerHeight by rememberSaveable (saver = dpStateSaver) { mutableStateOf(0.dp) }
     var parentWidth by remember { mutableStateOf(0.dp) }
     var parentHeight by remember { mutableStateOf(0.dp) }
-    LaunchedEffect (parentWidth, parentHeight, pipWidth, pipHeight) {
-        if (parentWidth > 0.dp && parentHeight > 0.dp && pipWidth > 0.dp && pipHeight > 0.dp) {
-            xOffset = xOffset.coerceIn(0.dp, parentWidth - pipWidth)
-            yOffset = yOffset.coerceIn(0.dp, parentHeight - pipHeight)
+    LaunchedEffect (parentWidth, parentHeight, containerWidth, containerHeight) {
+        if (parentWidth > 0.dp && parentHeight > 0.dp && containerWidth > 0.dp && containerHeight > 0.dp) {
+            xOffset = xOffset.coerceInBounds(size = containerWidth, availableSize = parentWidth)
+            yOffset = yOffset.coerceInBounds(size = containerHeight, availableSize = parentHeight)
             onOffsetChanged(xOffset, yOffset)
         }
     }
@@ -61,15 +61,15 @@ fun FloatingContainer(
                 detectDragGestures { change, dragAmount ->
                     change.consume()
                     val dxOffset = dragAmount.x.toDp()
-                    xOffset = (xOffset + dxOffset).coerceIn(0.dp, parentWidth - pipWidth)
+                    xOffset = (xOffset + dxOffset).coerceInBounds(size = containerWidth, availableSize = parentWidth)
                     val dyOffset = dragAmount.y.toDp()
-                    yOffset = (yOffset + dyOffset).coerceIn(0.dp, parentHeight - pipHeight)
+                    yOffset = (yOffset + dyOffset).coerceInBounds(size = containerHeight, availableSize = parentHeight)
                     onOffsetChanged(xOffset, yOffset)
                 }
             }.onGloballyPositioned {
                 with (density) {
-                    pipWidth = it.size.width.toDp()
-                    pipHeight =  it.size.height.toDp()
+                    containerWidth = it.size.width.toDp()
+                    containerHeight =  it.size.height.toDp()
                     it.parentLayoutCoordinates?.size?.width?.let {
                         parentWidth = it.toDp()
                     }
@@ -102,3 +102,9 @@ fun FloatingContainerTopBar(
         )
     }
 }
+
+fun Dp.coerceInBounds(
+    size: Dp,
+    availableSize: Dp,
+    min: Dp = 0.dp
+) = coerceIn(min..(availableSize - size).coerceAtLeast(0.dp))

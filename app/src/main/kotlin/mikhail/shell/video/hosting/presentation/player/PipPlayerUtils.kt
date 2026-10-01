@@ -26,9 +26,10 @@ class PipPlayerUtils(
             if (player.isPlaying) pauseAction else playAction,
             forwardAction
         )
+        val aspectRatio = Rational(player.videoSize.width, player.videoSize.height).coerceSafely()
         return PictureInPictureParams.Builder()
             .setActions(actions)
-            .setAspectRatio(Rational(player.videoSize.width, player.videoSize.height))
+            .setAspectRatio(aspectRatio)
             .apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     setSeamlessResizeEnabled(false)
@@ -100,5 +101,16 @@ class PipPlayerUtils(
             pendingIntent
         )
         return action
+    }
+
+    private companion object {
+        fun Rational.coerceSafely(): Rational {
+            val ratio = numerator.toFloat() / denominator
+            return if (ratio < 0.41841f) {
+                Rational(41841, 100000)
+            } else if (ratio > 2.39f) {
+                Rational(239, 100)
+            } else this
+        }
     }
 }
