@@ -674,7 +674,7 @@ internal fun PlayerControls(
     }
 }
 
-private enum class Direction {
+internal enum class Direction {
     Rtl, Ltr
 }
 
@@ -683,7 +683,7 @@ const val degPerRad = 360 / (2 * PI.toFloat())
 val Float.deg get() = times(degPerRad)
 val Float.rad get() = div(degPerRad)
 
-private fun createStadiumShape(
+internal fun createStadiumShape(
     direction: Direction,
     radiusCoefficient: Float = 1.2f
 ): Shape {
@@ -779,7 +779,7 @@ fun Player.rememberPlayerState(): MutableState<PlayerState> {
     return state
 }
 
-private fun Modifier.shimmer(
+internal fun Modifier.shimmer(
     direction: Direction,
     baseColor: Color = Color(0xFF7F7E7E),
     accentColor: Color = Color(
