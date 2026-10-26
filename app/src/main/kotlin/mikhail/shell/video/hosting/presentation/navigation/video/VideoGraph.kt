@@ -52,7 +52,7 @@ class PredictiveFadeOutScene (
 ) : Scene<Route> {
     override val key: Any = backStack.last().contentKey
     override val entries: List<NavEntry<Route>> = backStack.takeLast(2)
-    override val previousEntries: List<NavEntry<Route>> = backStack.dropLast(2)
+    override val previousEntries: List<NavEntry<Route>> = backStack.dropLast(1)
     override val content: @Composable (() -> Unit) = {
         Box(
             modifier = Modifier.fillMaxSize()

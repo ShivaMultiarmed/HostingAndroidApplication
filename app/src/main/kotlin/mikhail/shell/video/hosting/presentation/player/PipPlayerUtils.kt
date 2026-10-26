@@ -106,10 +106,10 @@ class PipPlayerUtils(
     private companion object {
         fun Rational.coerceSafely(): Rational {
             val ratio = numerator.toFloat() / denominator
-            return if (ratio < 0.41841f) {
-                Rational(41841, 100000)
-            } else if (ratio > 2.39f) {
-                Rational(239, 100)
+            return if (ratio < 0.42f) {
+                Rational(42, 100)
+            } else if (ratio > 2.38f) {
+                Rational(238, 100)
             } else this
         }
     }

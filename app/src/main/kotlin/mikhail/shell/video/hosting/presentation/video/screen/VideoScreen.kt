@@ -3,14 +3,11 @@ package mikhail.shell.video.hosting.presentation.video.screen
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
-import android.util.Log
 import android.view.WindowInsetsController
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +15,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -60,36 +58,34 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.retain.RetainedEffect
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.coerceAtMost
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
@@ -127,8 +123,6 @@ import mikhail.shell.video.hosting.presentation.utils.PageableBox
 import mikhail.shell.video.hosting.presentation.utils.PrimaryProgressButton
 import mikhail.shell.video.hosting.presentation.utils.PrimaryToggleButton
 import mikhail.shell.video.hosting.presentation.utils.StartingComponent
-import mikhail.shell.video.hosting.presentation.utils.dpSaver
-import mikhail.shell.video.hosting.presentation.utils.dpStateSaver
 import mikhail.shell.video.hosting.presentation.utils.format
 import mikhail.shell.video.hosting.presentation.utils.rememberIsSmallWindow
 import mikhail.shell.video.hosting.presentation.utils.rememberPageableBoxState
@@ -173,652 +167,611 @@ fun VideoScreen(
             )
         }
     ) { padding ->
-        var miniPlayerPosition by LocalMiniPlayerDimensionsState.current
+        var miniPlayerDimensions by LocalMiniPlayerDimensionsState.current
         var isFullScreen by retain {
             mutableStateOf(false)
         }
-        var aspectRatio by rememberSaveable {
+        var ratio by rememberSaveable {
             mutableFloatStateOf(16f / 9)
         }
-        val updatedAspectRatio by rememberUpdatedState(aspectRatio)
-
-        var screenContentWidth = windowSize.width
-        val updatedScreenContentWidth by rememberUpdatedState(screenContentWidth)
-        var screenContentHeight by remember {
-            mutableStateOf(windowSize.height)
-        }
-        val updatedScreenContentHeight by rememberUpdatedState(screenContentHeight)
-
-        var playerContainerWidth by remember {
-            mutableStateOf(0.dp)
-        }
-        var playerContainerHeight by remember {
-            mutableStateOf(0.dp)
-        }
-        val playerContainerUpdatedWidth by rememberUpdatedState(playerContainerWidth)
-        val playerContainerUpdatedHeight by rememberUpdatedState(playerContainerHeight)
-        val miniPlayerMaxDimension = rememberSaveable (screenContentWidth, screenContentHeight, saver = dpSaver) {
-            min(screenContentWidth, screenContentHeight) * 0.5f
-        }
-
-        val exitWidth = retain(miniPlayerMaxDimension, aspectRatio) {
-            if (aspectRatio >= 1f) miniPlayerMaxDimension else aspectRatio * miniPlayerMaxDimension
-        }
-        val updatedExitWidth by rememberUpdatedState(exitWidth)
-        val exitHeight = retain(miniPlayerMaxDimension, aspectRatio) {
-            if (aspectRatio >= 1f) miniPlayerMaxDimension / aspectRatio else miniPlayerMaxDimension
-        }
-        val updatedExitHeight by rememberUpdatedState(exitHeight)
-
-        var isEntering by retain {
-            mutableStateOf(true)
-        }
-        var isExitConsidered by retain {
-            mutableStateOf(true)
-        }
-        val exitThresholdHeight = remember(screenContentHeight) {
-            0.4f * screenContentHeight
-        }
-
-        var playerX by retain {
-            mutableStateOf(miniPlayerPosition?.x?.dp ?: 0.dp)
-        }
-        val playerXAnimated by animateDpAsState(
-            targetValue = playerX,
-            animationSpec = if (isExitConsidered) spring() else snap()
-        )
-        val playerXUpdated by rememberUpdatedState(playerX)
-        var playerY by retain {
-            mutableStateOf(miniPlayerPosition?.y?.dp ?: 0.dp)
-        }
-        val playerYAnimated by animateDpAsState(
-            targetValue = playerY,
-            animationSpec = if (isExitConsidered) spring() else snap()
-        )
-        val playerYUpdated by rememberUpdatedState(playerY)
-
-        var exitProgress by retain {
-            mutableFloatStateOf(
-                when {
-                    miniPlayerPosition == null -> 0f
-                    exitThresholdHeight == 0.dp -> 0f
-                    else -> (playerY / exitThresholdHeight).coerceIn(0f..1f)
-                }
-            )
-        }
-        val animatedExitProgress by animateFloatAsState(
-            targetValue = exitProgress
-        )
-        RetainedEffect(isEntering) {
-            if (isEntering) {
-                playerX = 0.dp
-                playerY = 0.dp
-                isEntering = false
-            }
-            onRetire { }
-        }
-        BackHandler(true) {
-            playerX = screenContentWidth - exitWidth
-            playerY = screenContentHeight - exitHeight
-        }
-        LaunchedEffect(playerY, exitThresholdHeight) {
-            exitProgress = when {
-                exitThresholdHeight > 0.dp -> (playerY / exitThresholdHeight).coerceIn(0f..1f)
-                else -> 0f
-            }
-        }
-        LaunchedEffect(
-            isEntering,
-            exitProgress,
-            isExitConsidered,
-            aspectRatio,
-            exitWidth,
-            exitHeight
+        val safeRatio = if (!ratio.isNaN()) ratio else 16f / 9
+        val direction = LocalLayoutDirection.current
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
         ) {
-            val error = 5.dp // погрешность
-            if (!isEntering && exitProgress == 1f && isExitConsidered) {
-                snapshotFlow { playerXAnimated to playerYAnimated }.collect { (x, y) ->
-                    if ((x >= updatedScreenContentWidth - exitWidth - error || x == 0.dp)
-                        && y >= updatedScreenContentHeight - exitHeight - error
-                    ) {
-                        miniPlayerPosition = MiniPlayerDimensions(
-                            x = playerX.value.toInt(),
-                            y = playerY.value.toInt(),
-                            aspectRatio = aspectRatio
-                        )
-                        onAction(VideoScreenAction.Exit)
-                    }
-                }
+            val screenContentWidth =
+                maxWidth - padding.calculateLeftPadding(direction) - padding.calculateRightPadding(
+                    direction
+                )
+            val screenContentHeight =
+                maxHeight - padding.calculateTopPadding() - padding.calculateBottomPadding()
+
+            val idlePlayerWidth =
+                if (screenContentWidth > 0.dp) screenContentWidth else windowSize.width
+            val idlePlayerHeight =
+                idlePlayerWidth / (if (safeRatio >= 1f) safeRatio else 16f / 9)
+
+            var playerContainerWidth by remember {
+                mutableStateOf(0.dp)
             }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    MaterialTheme.colorScheme.surface.copy(
-                        alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
-                            0f..1f,
-                            0.4f
-                        )
+            var playerContainerHeight by remember {
+                mutableStateOf(0.dp)
+            }
+
+            val miniPlayerMaxDimension = min(screenContentWidth, screenContentHeight) * 0.5f
+            val exitPlayerWidth =
+                if (safeRatio >= 1f) miniPlayerMaxDimension else safeRatio * miniPlayerMaxDimension
+            val exitPlayerHeight =
+                if (safeRatio >= 1f) miniPlayerMaxDimension / safeRatio else miniPlayerMaxDimension
+
+            val exitThresholdHeight = 0.4f * screenContentHeight
+
+            val playerOffset = retain {
+                Animatable(
+                    DpOffset(
+                        x = miniPlayerDimensions?.x?.dp ?: 0.dp,
+                        y = miniPlayerDimensions?.y?.dp ?: 0.dp
+                    ),
+                    DpOffset.VectorConverter
+                )
+            }
+
+
+            fun progressAt(y: Dp) = if (exitThresholdHeight > 0.dp) (y / exitThresholdHeight).coerceIn(0f..1f) else 0f
+            fun playerWidthAt(y: Dp) =
+                exitPlayerWidth + (1 - progressAt(y)) * (idlePlayerWidth - exitPlayerWidth)
+
+            fun playerHeightAt(y: Dp) =
+                exitPlayerHeight + (1 - progressAt(y)) * (idlePlayerHeight - exitPlayerHeight)
+
+            val exitProgress = progressAt(playerOffset.value.y)
+            val currentWidth = playerWidthAt(playerOffset.value.y)
+            val currentHeight = playerHeightAt(playerOffset.value.y)
+
+            suspend fun settle(minimize: Boolean, toLeft: Boolean = true) {
+                playerOffset.animateTo(
+                    targetValue = DpOffset(
+                        x = if (minimize && !toLeft) screenContentWidth - exitPlayerWidth else 0.dp,
+                        y = if (minimize) screenContentHeight - exitPlayerHeight else 0.dp
                     )
                 )
-                .padding(padding)
-                .onGloballyPositioned { coordinates ->
-                    with(density) {
-                        if (screenContentHeight == windowSize.height) {
-                            screenContentHeight = coordinates.size.height.toDp()
-                        }
-                    }
-                },
-        ) {
-            val scrollState = rememberScrollState()
-            val orientation = LocalConfiguration.current.orientation
-            val isSmallWindow = rememberIsSmallWindow()
-            val targetOrientation = remember(isFullScreen, isSmallWindow) {
-                if (isSmallWindow) {
-                    if (isFullScreen && aspectRatio >= 1f) {
-                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    } else {
-                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    }
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                }
             }
-            val isFullScreenReached =
-                remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
-                    if (isSmallWindow) {
-                        isFullScreen && targetOrientation == when (orientation) {
-                            Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                            Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        }
-                    } else {
-                        isFullScreen
-                    }
-                }
-            Box(
+
+            suspend fun exit(toLeft: Boolean = true) {
+                settle(
+                    minimize = true,
+                    toLeft = toLeft
+                )
+                miniPlayerDimensions = MiniPlayerDimensions(
+                    x = playerOffset.value.x.value.toInt(),
+                    y = playerOffset.value.y.value.toInt(),
+                    aspectRatio = safeRatio
+                )
+                onAction(VideoScreenAction.Exit)
+            }
+
+            LaunchedEffect(Unit) {
+                settle(minimize = false)
+            }
+
+            Column(
                 modifier = Modifier
-                    .then(
-                        when (isFullScreenReached) {
-                            true -> Modifier.fillMaxSize()
-                            false -> Modifier
-                                .padding(
-                                    top = playerYAnimated,
-                                    start = playerXAnimated
-                                )
-                                .background(
-                                    Color.Black.copy(
-                                        alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
-                                            0f..1f,
-                                            0.4f
-                                        )
-                                    )
-                                )
-                                .then(
-                                    when {
-                                        aspectRatio.isNaN() ->
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .aspectRatio(16f / 9)
-                                        else -> {
-                                            val idleWidth =
-                                                if (screenContentWidth > 0.dp) screenContentWidth else windowSize.width
-                                            val idleHeight =
-                                                idleWidth / (if (aspectRatio >= 1f) aspectRatio else 16f / 9)
-                                            val currentWidth =
-                                                exitWidth + (1 - exitProgress) * (idleWidth - exitWidth)
-                                            val currentHeight =
-                                                exitHeight + (1 - exitProgress) * (idleHeight - exitHeight)
-                                            Modifier.size(
-                                                width = currentWidth,
-                                                height = currentHeight
-                                            )
-                                        }
-                                    }
-                                )
-                        }
-                    )
-                    .clip(RoundedCornerShape(animatedExitProgress * 10.dp))
+                    .fillMaxSize()
                     .background(
-                        Color.Black.copy(
-                            alpha = 1 - animatedExitProgress.coerceWithBreakPoint(
+                        MaterialTheme.colorScheme.surface.copy(
+                            alpha = 1 - exitProgress.coerceWithBreakPoint(
                                 0f..1f,
                                 0.4f
                             )
                         )
                     )
-                    .then(
-                        when (isFullScreenReached) {
-                            true -> Modifier
-                            false -> Modifier.pointerInput(Unit) {
-                                val onInteractionEnd = {
-                                    playerX = when {
-                                        playerYUpdated < exitThresholdHeight -> 0.dp
-                                        else -> {
-                                            val screenCenter =
-                                                updatedScreenContentWidth / 2
-                                            val leftPortion =
-                                                (screenCenter - playerXUpdated).coerceIn(
-                                                    0.dp..playerContainerUpdatedWidth
-                                                )
-                                            val rightPortion =
-                                                (playerXUpdated + playerContainerUpdatedWidth - screenCenter).coerceIn(
-                                                    0.dp..playerContainerUpdatedWidth
-                                                )
-                                            when {
-                                                leftPortion > rightPortion -> 0.dp
-                                                else -> updatedScreenContentWidth - playerContainerUpdatedWidth
+                    .padding(padding),
+            ) {
+                val scrollState = rememberScrollState()
+                val orientation = LocalConfiguration.current.orientation
+                val isSmallWindow = rememberIsSmallWindow()
+                val targetOrientation = remember(isFullScreen, isSmallWindow) {
+                    if (isSmallWindow) {
+                        if (isFullScreen && safeRatio >= 1f) {
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        } else {
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        }
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    }
+                }
+                val isFullScreenReached =
+                    remember(isFullScreen, orientation, targetOrientation, isSmallWindow) {
+                        if (isSmallWindow) {
+                            isFullScreen && targetOrientation == when (orientation) {
+                                Configuration.ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                            }
+                        } else {
+                            isFullScreen
+                        }
+                    }
+                BackHandler(true) {
+                    if (isFullScreenReached) {
+                        isFullScreen = false
+                    } else {
+                        coroutineScope.launch {
+                            exit()
+                        }
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .then(
+                            when (isFullScreenReached) {
+                                true -> Modifier.fillMaxSize()
+                                false -> Modifier
+                                    .padding(
+                                        top = playerOffset.value.y,
+                                        start = playerOffset.value.x
+                                    )
+                                    .then(
+                                        when {
+                                            safeRatio.isNaN() ->
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(16f / 9)
+
+                                            else -> Modifier.size(
+                                                width = currentWidth,
+                                                height = currentHeight
+                                            )
+                                        }
+                                    )
+                                    .clip(RoundedCornerShape(exitProgress * 10.dp))
+                            }
+                        )
+                        .background(
+                            Color.Black.copy(
+                                alpha = 1 - exitProgress.coerceWithBreakPoint(
+                                    0f..1f,
+                                    0.4f
+                                )
+                            )
+                        )
+                        .then(
+                            when (isFullScreenReached) {
+                                true -> Modifier
+                                false -> Modifier.pointerInput(
+                                    screenContentWidth,
+                                    screenContentHeight,
+                                    exitPlayerWidth,
+                                    exitPlayerHeight
+                                ) {
+                                    var targetOffset = playerOffset.value
+                                    val onRelease: () -> Unit = {
+                                        val minimize = targetOffset.y >= exitThresholdHeight
+                                        val screenCenter = screenContentWidth / 2
+                                        val playerCenter = playerWidthAt(targetOffset.y) / 2
+                                        val toLeft = targetOffset.x + playerCenter <= screenCenter
+                                        coroutineScope.launch {
+                                            if (minimize) {
+                                                exit(toLeft)
+                                            } else {
+                                                settle(minimize, toLeft)
                                             }
                                         }
                                     }
-                                    playerY = when {
-                                        playerYUpdated < exitThresholdHeight -> 0.dp
-                                        else -> updatedScreenContentHeight - playerContainerUpdatedHeight
-                                    }
-                                    isExitConsidered = true
-                                }
-                                detectDragGestures(
-                                    onDragStart = {
-                                        isExitConsidered = false
-                                    },
-                                    onDragEnd = onInteractionEnd,
-                                    onDragCancel = onInteractionEnd
-                                ) { change, _ ->
-                                    if (!(playerYUpdated == 0.dp && change.positionChange().y.toDp() <= 0.dp)) {
-                                        playerX =
-                                            (playerXUpdated + change.positionChange().x.toDp())
-                                                .coerceIn(0.dp..(updatedScreenContentWidth - playerContainerUpdatedWidth))
-                                        playerY =
-                                            (playerYUpdated + change.positionChange().y.toDp())
-                                                .coerceIn(0.dp..(updatedScreenContentHeight - playerContainerUpdatedHeight))
+                                    detectDragGestures(
+                                        onDragStart = {
+                                            targetOffset = playerOffset.value
+                                        },
+                                        onDragEnd = onRelease,
+                                        onDragCancel = onRelease
+                                    ) { change, gragAmount ->
+                                        if (targetOffset.y == 0.dp && gragAmount.y.toDp() <= 0.dp) {
+                                            return@detectDragGestures
+                                        }
+                                        val nextTargetOffset = targetOffset.copy(
+                                            x = (targetOffset.x + gragAmount.x.toDp()).coerceIn(
+                                                0.dp..(screenContentWidth - playerWidthAt(
+                                                    targetOffset.y
+                                                )).coerceAtLeast(0.dp)
+                                            ),
+                                            y = (targetOffset.y + gragAmount.y.toDp()).coerceIn(
+                                                0.dp..(screenContentHeight - playerHeightAt(
+                                                    targetOffset.y
+                                                )).coerceAtLeast(0.dp)
+                                            )
+                                        )
+                                        targetOffset = nextTargetOffset
+                                        coroutineScope.launch {
+                                            playerOffset.snapTo(targetValue = nextTargetOffset)
+                                        }
                                         change.consume()
-                                    } else {
-                                        // Player dragging not consumed
                                     }
                                 }
-
                             }
-                        }
+                        )
+                        .onGloballyPositioned { coordinates ->
+                            with(density) {
+                                playerContainerWidth = coordinates.size.width.toDp()
+                                playerContainerHeight = coordinates.size.height.toDp()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    PlayerComponent(
+                        modifier = Modifier.matchParentSize(),
+                        playerProvider = playerProvider,
+                        onRatioObtained = {
+                            ratio = it
+                        },
+                        isFullScreen = isFullScreen,
+                        onFullscreen = {
+                            isFullScreen = it
+                        },
+                        controlsImage = !playerState.inPipMode
                     )
-                    .onGloballyPositioned { coordinates ->
-                        with(density) {
-                            playerContainerWidth = coordinates.size.width.toDp()
-                            playerContainerHeight = coordinates.size.height.toDp()
+                }
+                RetainedEffect(isFullScreenReached) {
+                    playerState = playerState.copy(fullScreen = isFullScreenReached)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val window = activity.window
+                        WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
+                        if (isFullScreenReached) {
+                            window.insetsController?.let {
+                                it.hide(WindowInsetsCompat.Type.systemBars())
+                                it.systemBarsBehavior =
+                                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                            }
+                        } else {
+                            window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
                         }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                PlayerComponent(
-                    modifier = Modifier.matchParentSize(),
-                    playerProvider = playerProvider,
-                    onRatioObtained = {
-                        aspectRatio = it
-                    },
-                    isFullScreen = isFullScreen,
-                    onFullscreen = {
-                        isFullScreen = it
-                    },
-                    controlsImage = !playerState.inPipMode
-                )
-            }
-            RetainedEffect(isFullScreenReached) {
-                playerState = playerState.copy(fullScreen = isFullScreenReached)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    val window = activity.window
-                    WindowCompat.setDecorFitsSystemWindows(window, !isFullScreenReached)
-                    if (isFullScreenReached) {
-                        window.insetsController?.let {
-                            it.hide(WindowInsetsCompat.Type.systemBars())
-                            it.systemBarsBehavior =
-                                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                        }
-                    } else {
-                        window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
+                    }
+                    onRetire {}
+                }
+                RetainedEffect(targetOrientation) {
+                    activity.requestedOrientation = targetOrientation
+                    onRetire {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     }
                 }
-                onRetire {}
-            }
-            RetainedEffect(targetOrientation) {
-                activity.requestedOrientation = targetOrientation
-                onRetire {
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                }
-            }
-            if (state.video != null) {
-                if (!isFullScreenReached) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .alpha(1 - animatedExitProgress.coerceWithBreakPoint(0f..1f, 0.4f))
-                            .background(Black)
-                            .clip(
-                                RoundedCornerShape(
-                                    topStart = 10.dp,
-                                    topEnd = 10.dp
-                                )
-                            )
-                            .background(MaterialTheme.colorScheme.background)
-                            .padding(12.dp)
-                            .onGloballyPositioned { coordinates ->
-                                val newHeight = with(density) {
-                                    coordinates.size.height.toDp()
-                                }
-                                if (bottomSheetHeight != newHeight) {
-                                    bottomSheetHeight = newHeight
-                                }
-                            }
-                            .verticalScroll(scrollState)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = state.video.videoTitle,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 20.sp,
-                                maxLines = 2,
-                                lineHeight = 22.sp
-                            )
-                        }
-                        var isDescriptionVisible by rememberSaveable {
-                            mutableStateOf(false)
-                        }
-                        Row(
+                if (state.video != null) {
+                    if (!isFullScreenReached) {
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxSize()
+                                .alpha(1 - exitProgress.coerceWithBreakPoint(0f..1f, 0.4f))
+                                .background(Black)
+                                .clip(
+                                    RoundedCornerShape(
+                                        topStart = 10.dp,
+                                        topEnd = 10.dp
+                                    )
+                                )
                                 .background(MaterialTheme.colorScheme.background)
-                                .padding(vertical = 7.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(12.dp)
+                                .onGloballyPositioned { coordinates ->
+                                    val newHeight = with(density) {
+                                        coordinates.size.height.toDp()
+                                    }
+                                    if (bottomSheetHeight != newHeight) {
+                                        bottomSheetHeight = newHeight
+                                    }
+                                }
+                                .verticalScroll(scrollState)
                         ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = state.video.views.toViews(),
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Icon(
-                                    modifier = Modifier.size(12.dp),
-                                    imageVector = Icons.Rounded.Visibility,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    contentDescription = state.video.views.toViews()
-                                )
-                                Text(
-                                    text = state.video.dateTime.format(context),
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 16.sp
+                                    text = state.video.videoTitle,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontSize = 20.sp,
+                                    maxLines = 2,
+                                    lineHeight = 22.sp
                                 )
                             }
+                            var isDescriptionVisible by rememberSaveable {
+                                mutableStateOf(false)
+                            }
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.End),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .padding(vertical = 7.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (state.userId == state.video.ownerId) {
-                                    var isDeletingDialogOpen by rememberSaveable {
-                                        mutableStateOf(false)
-                                    }
-                                    var isAdvancedDialogOpen by rememberSaveable {
-                                        mutableStateOf(false)
-                                    }
-                                    Box {
-                                        EditButton(
-                                            modifier = Modifier.size(24.dp),
-                                            imageVector = Icons.Rounded.MoreVert,
-                                            onClick = {
-                                                isAdvancedDialogOpen = true
-                                            }
-                                        )
-                                        if (isAdvancedDialogOpen) {
-                                            ContextMenu(
-                                                modifier = Modifier,
-                                                isExpanded = true,
-                                                menuItems = listOf(
-                                                    MenuItem(
-                                                        title = stringResource(R.string.video_edit_button),
-                                                        onClick = {
-                                                            onAction(VideoScreenAction.Edit)
-                                                        }
-                                                    ),
-                                                    MenuItem(
-                                                        title = stringResource(R.string.video_delete_button),
-                                                        onClick = {
-                                                            isDeletingDialogOpen = true
-                                                        }
-                                                    )
-                                                ),
-                                                onDismiss = {
-                                                    isAdvancedDialogOpen = false
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = state.video.views.toViews(),
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Icon(
+                                        modifier = Modifier.size(12.dp),
+                                        imageVector = Icons.Rounded.Visibility,
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        contentDescription = state.video.views.toViews()
+                                    )
+                                    Text(
+                                        text = state.video.dateTime.format(context),
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        lineHeight = 16.sp
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        5.dp,
+                                        Alignment.End
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (state.userId == state.video.ownerId) {
+                                        var isDeletingDialogOpen by rememberSaveable {
+                                            mutableStateOf(false)
+                                        }
+                                        var isAdvancedDialogOpen by rememberSaveable {
+                                            mutableStateOf(false)
+                                        }
+                                        Box {
+                                            EditButton(
+                                                modifier = Modifier.size(24.dp),
+                                                imageVector = Icons.Rounded.MoreVert,
+                                                onClick = {
+                                                    isAdvancedDialogOpen = true
                                                 }
+                                            )
+                                            if (isAdvancedDialogOpen) {
+                                                ContextMenu(
+                                                    modifier = Modifier,
+                                                    isExpanded = true,
+                                                    menuItems = listOf(
+                                                        MenuItem(
+                                                            title = stringResource(R.string.video_edit_button),
+                                                            onClick = {
+                                                                onAction(VideoScreenAction.Edit)
+                                                            }
+                                                        ),
+                                                        MenuItem(
+                                                            title = stringResource(R.string.video_delete_button),
+                                                            onClick = {
+                                                                isDeletingDialogOpen = true
+                                                            }
+                                                        )
+                                                    ),
+                                                    onDismiss = {
+                                                        isAdvancedDialogOpen = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                        if (isDeletingDialogOpen) {
+                                            Dialog(
+                                                onSubmit = {
+                                                    onAction(VideoScreenAction.Remove)
+                                                },
+                                                isLoading = state.isRemoving,
+                                                onDismiss = {
+                                                    isDeletingDialogOpen = false
+                                                },
+                                                dialogTitle = stringResource(R.string.video_delete_warning_title),
+                                                dialogDescription = stringResource(R.string.video_delete_warning_message)
                                             )
                                         }
                                     }
-                                    if (isDeletingDialogOpen) {
-                                        Dialog(
-                                            onSubmit = {
-                                                onAction(VideoScreenAction.Remove)
-                                            },
-                                            isLoading = state.isRemoving,
-                                            onDismiss = {
-                                                isDeletingDialogOpen = false
-                                            },
-                                            dialogTitle = stringResource(R.string.video_delete_warning_title),
-                                            dialogDescription = stringResource(R.string.video_delete_warning_message)
+                                    if (state.video.videoDescription != null) {
+                                        MoreButton(
+                                            isVisible = isDescriptionVisible,
+                                            onClick = {
+                                                isDescriptionVisible = !isDescriptionVisible
+                                            }
                                         )
                                     }
                                 }
-                                if (state.video.videoDescription != null) {
-                                    MoreButton(
-                                        isVisible = isDescriptionVisible,
-                                        onClick = {
-                                            isDescriptionVisible = !isDescriptionVisible
+                            }
+                            if (state.video.videoDescription != null) {
+                                Description(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    isVisible = isDescriptionVisible,
+                                    description = state.video.videoDescription
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .clickable {
+                                            onAction(VideoScreenAction.OpenChannel)
                                         }
+                                        .weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AsyncImage(
+                                        model = state.video.channelLogo,
+                                        contentDescription = stringResource(R.string.channel_link),
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    )
+                                    Text(
+                                        text = state.video.channelTitle,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 13.dp),
+                                        fontSize = 15.sp,
+                                        lineHeight = 17.sp,
+                                        overflow = TextOverflow.Ellipsis,
+                                        maxLines = 1
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Text(
+                                        text = state.video.subscribers.toSubscribers(),
+                                        fontSize = 13.sp,
+                                        modifier = Modifier.padding(end = 5.dp)
+                                    )
+                                    Icon(
+                                        modifier = Modifier.size(14.dp),
+                                        imageVector = Icons.Rounded.Person,
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        contentDescription = state.video.subscribers.toSubscribers()
+                                    )
+                                }
+                                PrimaryToggleButton(
+                                    toggled = state.video.subscription == SUBSCRIBED,
+                                    onClick = {
+                                        val subscriptionState = when (state.video.subscription) {
+                                            SUBSCRIBED -> NOT_SUBSCRIBED
+                                            else -> SUBSCRIBED
+                                        }
+                                        onAction(VideoScreenAction.Subscribe(subscriptionState))
+                                    },
+                                    toggledOffText = stringResource(R.string.subscribe_button),
+                                    toggledOnText = stringResource(R.string.unsubscribe_button)
+                                )
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                val likeVector = when (state.video.liking) {
+                                    LIKED -> Icons.Rounded.ThumbUp
+                                    else -> Icons.Outlined.ThumbUp
+                                }
+                                ActionButton(
+                                    icon = likeVector,
+                                    text = state.video.likes.toRoundString(),
+                                    onClick = {
+                                        onAction(VideoScreenAction.Like(if (state.video.liking != LIKED) LIKED else NONE))
+                                    }
+                                )
+                                val dislikeVector = when (state.video.liking) {
+                                    DISLIKED -> Icons.Rounded.ThumbDown
+                                    else -> Icons.Outlined.ThumbDown
+                                }
+                                ActionButton(
+                                    icon = dislikeVector,
+                                    text = state.video.dislikes.toRoundString(),
+                                    onClick = {
+                                        onAction(VideoScreenAction.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
+                                    }
+                                )
+                                ActionButton(
+                                    icon = Icons.Rounded.Share,
+                                    text = stringResource(R.string.video_share),
+                                    onClick = {
+                                        onAction(VideoScreenAction.Share)
+                                    }
+                                )
+                                ActionButton(
+                                    icon = Icons.Outlined.Download,
+                                    text = stringResource(R.string.video_download_button),
+                                    onClick = {
+                                        onAction(VideoScreenAction.DownLoad)
+                                    }
+                                )
+                            }
+                            ConstraintLayout(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                    .clickable {
+                                        coroutineScope.launch {
+                                            sheetState.show()
+                                        }
+                                    }
+                                    .padding(vertical = 6.dp, horizontal = 10.dp),
+                            ) {
+                                val (label, button) = createRefs()
+                                Text(
+                                    modifier = Modifier.constrainAs(label) {
+                                        start.linkTo(parent.start)
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                    },
+                                    text = stringResource(R.string.comments_title),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                val buttonBg = MaterialTheme.colorScheme.tertiaryContainer.let {
+                                    it.copy(
+                                        red = it.red - 20f / 255,
+                                        green = it.green - 20f / 255,
+                                        blue = it.blue - 20f / 255
+                                    )
+                                }
+                                IconButton(
+                                    modifier = Modifier.constrainAs(button) {
+                                        end.linkTo(parent.end)
+                                        top.linkTo(parent.top)
+                                        bottom.linkTo(parent.bottom)
+                                    },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sheetState.show()
+                                        }
+                                    },
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        containerColor = buttonBg,
+                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.size(20.dp),
+                                        imageVector = Icons.Default.ModeComment,
+                                        contentDescription = null
                                     )
                                 }
                             }
                         }
-                        if (state.video.videoDescription != null) {
-                            Description(
-                                modifier = Modifier.fillMaxWidth(),
-                                isVisible = isDescriptionVisible,
-                                description = state.video.videoDescription
+                        if (sheetState.isVisible) {
+                            CommentsBottomSheet(
+                                modifier = Modifier.height(bottomSheetHeight - BottomSheetDefaults.SheetPeekHeight - imeInset),
+                                userId = state.userId,
+                                sheetState = sheetState,
+                                commentsState = state.commentsState,
+                                onAction = onAction
                             )
                         }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(24.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .clickable {
-                                        onAction(VideoScreenAction.OpenChannel)
-                                    }
-                                    .weight(1f),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AsyncImage(
-                                    model = state.video.channelLogo,
-                                    contentDescription = stringResource(R.string.channel_link),
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                                )
-                                Text(
-                                    text = state.video.channelTitle,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 13.dp),
-                                    fontSize = 15.sp,
-                                    lineHeight = 17.sp,
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = 1
-                                )
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Text(
-                                    text = state.video.subscribers.toSubscribers(),
-                                    fontSize = 13.sp,
-                                    modifier = Modifier.padding(end = 5.dp)
-                                )
-                                Icon(
-                                    modifier = Modifier.size(14.dp),
-                                    imageVector = Icons.Rounded.Person,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    contentDescription = state.video.subscribers.toSubscribers()
-                                )
-                            }
-                            PrimaryToggleButton(
-                                toggled = state.video.subscription == SUBSCRIBED,
-                                onClick = {
-                                    val subscriptionState = when (state.video.subscription) {
-                                        SUBSCRIBED -> NOT_SUBSCRIBED
-                                        else -> SUBSCRIBED
-                                    }
-                                    onAction(VideoScreenAction.Subscribe(subscriptionState))
-                                },
-                                toggledOffText = stringResource(R.string.subscribe_button),
-                                toggledOnText = stringResource(R.string.unsubscribe_button)
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            val likeVector = when (state.video.liking) {
-                                LIKED -> Icons.Rounded.ThumbUp
-                                else -> Icons.Outlined.ThumbUp
-                            }
-                            ActionButton(
-                                icon = likeVector,
-                                text = state.video.likes.toRoundString(),
-                                onClick = {
-                                    onAction(VideoScreenAction.Like(if (state.video.liking != LIKED) LIKED else NONE))
-                                }
-                            )
-                            val dislikeVector = when (state.video.liking) {
-                                DISLIKED -> Icons.Rounded.ThumbDown
-                                else -> Icons.Outlined.ThumbDown
-                            }
-                            ActionButton(
-                                icon = dislikeVector,
-                                text = state.video.dislikes.toRoundString(),
-                                onClick = {
-                                    onAction(VideoScreenAction.Like(if (state.video.liking != DISLIKED) DISLIKED else NONE))
-                                }
-                            )
-                            ActionButton(
-                                icon = Icons.Rounded.Share,
-                                text = stringResource(R.string.video_share),
-                                onClick = {
-                                    onAction(VideoScreenAction.Share)
-                                }
-                            )
-                            ActionButton(
-                                icon = Icons.Outlined.Download,
-                                text = stringResource(R.string.video_download_button),
-                                onClick = {
-                                    onAction(VideoScreenAction.DownLoad)
-                                }
-                            )
-                        }
-                        ConstraintLayout(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.tertiaryContainer)
-                                .clickable {
-                                    coroutineScope.launch {
-                                        sheetState.show()
-                                    }
-                                }
-                                .padding(vertical = 6.dp, horizontal = 10.dp),
-                        ) {
-                            val (label, button) = createRefs()
-                            Text(
-                                modifier = Modifier.constrainAs(label) {
-                                    start.linkTo(parent.start)
-                                    top.linkTo(parent.top)
-                                    bottom.linkTo(parent.bottom)
-                                },
-                                text = stringResource(R.string.comments_title),
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                            val buttonBg = MaterialTheme.colorScheme.tertiaryContainer.let {
-                                it.copy(
-                                    red = it.red - 20f / 255,
-                                    green = it.green - 20f / 255,
-                                    blue = it.blue - 20f / 255
-                                )
-                            }
-                            IconButton(
-                                modifier = Modifier.constrainAs(button) {
-                                    end.linkTo(parent.end)
-                                    top.linkTo(parent.top)
-                                    bottom.linkTo(parent.bottom)
-                                },
-                                onClick = {
-                                    coroutineScope.launch {
-                                        sheetState.show()
-                                    }
-                                },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = buttonBg,
-                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(20.dp),
-                                    imageVector = Icons.Default.ModeComment,
-                                    contentDescription = null
-                                )
+                        LaunchedEffect(sheetState.isVisible) {
+                            if (sheetState.isVisible && state.commentsState.hasMore) {
+                                onAction(VideoScreenAction.LoadNextCommentsPart)
                             }
                         }
                     }
-                    if (sheetState.isVisible) {
-                        CommentsBottomSheet(
-                            modifier = Modifier.height(bottomSheetHeight - BottomSheetDefaults.SheetPeekHeight - imeInset),
-                            userId = state.userId,
-                            sheetState = sheetState,
-                            commentsState = state.commentsState,
-                            onAction = onAction
-                        )
-                    }
-                    LaunchedEffect(sheetState.isVisible) {
-                        if (sheetState.isVisible && state.commentsState.hasMore) {
-                            onAction(VideoScreenAction.LoadNextCommentsPart)
+                } else if (state.isStarting) {
+                    StartingComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface)
+                    )
+                } else if (state.error != null) {
+                    ErrorComponent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface),
+                        onRetry = {
+                            onAction(VideoScreenAction.Restart)
                         }
-                    }
+                    )
                 }
-            } else if (state.isStarting) {
-                StartingComponent(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
-                )
-            } else if (state.error != null) {
-                ErrorComponent(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface),
-                    onRetry = {
-                        onAction(VideoScreenAction.Restart)
-                    }
-                )
             }
         }
     }
