@@ -23,28 +23,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import kotlinx.coroutines.delay
-import mikhail.shell.video.hosting.ui.theme.VideoHostingTheme
 import mikhail.shell.video.hosting.ui.theme.White
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 @Preview(widthDp = 400, heightDp = 700)
 private fun PlayerControlsPreview() {
-    VideoHostingTheme {
-        var isPlaying by rememberSaveable {
-            mutableStateOf(false)
-        }
-        var position by rememberSaveable {
-            mutableLongStateOf(0)
-        }
-        val duration = 100_000L
-        LaunchedEffect(isPlaying) {
-            if (isPlaying) {
-                while (position < duration) {
-                    delay(1000)
-                    position += 1000
-                }
+    var isPlaying by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var position by rememberSaveable {
+        mutableLongStateOf(0)
+    }
+    val duration = 100_000L
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (position < duration) {
+                delay(1.seconds)
+                position += 1000
             }
         }
+    }
+    Box {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(Color.Black)
+        )
         PlayerControls(
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,35 +80,33 @@ private fun PlayerControlsPreview() {
 @Preview
 @Composable
 private fun StadiumShapePreview() {
-    VideoHostingTheme {
-        ConstraintLayout(
+    ConstraintLayout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9)
+            .background(Color.Blue)
+    ) {
+        val (seekBack, seekForward) = createRefs()
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9)
-                .background(Color.Blue)
-        ) {
-            val (seekBack, seekForward) = createRefs()
-            Box(
-                modifier = Modifier
-                    .constrainAs(seekBack) {
-                        start.linkTo(parent.start)
-                    }
-                    .fillMaxWidth(0.4f)
-                    .fillMaxHeight()
-                    .clip(createStadiumShape(Direction.Ltr))
-                    .background(White)
-            )
-            Box(
-                modifier = Modifier
-                    .constrainAs(seekForward) {
-                        end.linkTo(parent.end)
-                    }
-                    .fillMaxWidth(0.4f)
-                    .fillMaxHeight()
-                    .clip(createStadiumShape(Direction.Rtl))
-                    .background(White)
-            )
-        }
+                .constrainAs(seekBack) {
+                    start.linkTo(parent.start)
+                }
+                .fillMaxWidth(0.4f)
+                .fillMaxHeight()
+                .clip(createStadiumShape(Direction.Ltr))
+                .background(White)
+        )
+        Box(
+            modifier = Modifier
+                .constrainAs(seekForward) {
+                    end.linkTo(parent.end)
+                }
+                .fillMaxWidth(0.4f)
+                .fillMaxHeight()
+                .clip(createStadiumShape(Direction.Rtl))
+                .background(White)
+        )
     }
 }
 
@@ -116,7 +119,7 @@ fun ShimmerEffectPreview() {
             .shimmer(
                 direction = Direction.Ltr,
                 baseColor = Color(255f, 255f, 255f, 0.15f),
-                accentColor = Color(255f, 255f, 255f, 0.5f),
+                accentColor = Color(255f, 255f, 255f, 0.5f)
             )
     )
 }
