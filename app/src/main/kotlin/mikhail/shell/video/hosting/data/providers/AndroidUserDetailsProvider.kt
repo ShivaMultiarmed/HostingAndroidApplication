@@ -60,16 +60,19 @@ class UserDetailsSerializer : Serializer<UserDetails> {
                 deserializer = UserDetails.serializer(),
                 string = json
             )
-            ud.copy(token = CryptoUtils.decrypt(ud.token))
+            try {
+                ud.copy(token = CryptoUtils.decrypt(ud.token))
+            } catch (_: Exception) {
+                UserDetails()
+            }
         }
     }
     override suspend fun writeTo(t: UserDetails, output: OutputStream) {
         withContext(Dispatchers.Default) {
             val bytes = Json.encodeToString(
-                    serializer = UserDetails.serializer(),
-                    value = t.copy(token = CryptoUtils.encrypt(t.token))
-                )
-                .encodeToByteArray()
+                serializer = UserDetails.serializer(),
+                value = t.copy(token = CryptoUtils.encrypt(t.token))
+            ).encodeToByteArray()
             output.use {
                 it.write(bytes)
             }
