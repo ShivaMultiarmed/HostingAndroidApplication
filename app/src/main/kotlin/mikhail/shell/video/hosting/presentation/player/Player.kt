@@ -1,5 +1,3 @@
-@file:kotlin.OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-
 package mikhail.shell.video.hosting.presentation.player
 
 import android.media.AudioFocusRequest

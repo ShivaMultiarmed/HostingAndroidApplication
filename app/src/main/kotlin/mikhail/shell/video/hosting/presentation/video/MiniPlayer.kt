@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -46,8 +47,9 @@ fun MiniPlayer(
     var parentHeight by remember {
         mutableStateOf(0.dp)
     }
-    var miniPlayerMaxDimension by remember {
-        mutableStateOf(0.dp)
+    val (width, height) = LocalWindowInfo.current.containerDpSize
+    var miniPlayerMaxDimension by remember(width, height) {
+        mutableStateOf(min(width, height) * 0.5f)
     }
     val density = LocalDensity.current
     FloatingContainer(

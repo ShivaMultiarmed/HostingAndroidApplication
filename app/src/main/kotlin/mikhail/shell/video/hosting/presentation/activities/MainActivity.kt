@@ -214,7 +214,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                    Box {
+                    Box (
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         Scaffold(
                             modifier = Modifier.fillMaxSize(),
                             bottomBar = {
